@@ -1,0 +1,40 @@
+<script data-th-inline="javascript">
+    let columns = /*[(${layout.getDataTableColumns("sk.iway.iwcm.components.forms.RegExpEntity")})]*/ '';
+</script>
+<script type="text/javascript">
+    var regExpDataTable;
+
+    window.domReady.add(function () {
+
+        window.helpLink = "/redactor/apps/form/regexps";
+
+        WJ.breadcrumb({
+            id: "regexps",
+            tabs: [
+                {
+                    url: '/apps/form/admin/',
+                    title: '[[#{forms.formsList.js}]]',
+                    active: false
+                },
+                {
+                    url: '/apps/form/admin/regexps/',
+                    title: '[[#{components.form.admin_form.table_reg_exp}]]',
+                    active: true
+                }
+            ]
+        });
+
+        let url = "/admin/rest/forms_regexp";
+
+        regExpDataTable = WJ.DataTable({
+            url: url,
+            serverSide: true,
+            columns: columns,
+            id: "regExpDataTable",
+            fetchOnEdit: true,
+            fetchOnCreate: true
+        });
+    });
+    </script>
+
+    <table id="regExpDataTable" class="datatableInit table"></table>

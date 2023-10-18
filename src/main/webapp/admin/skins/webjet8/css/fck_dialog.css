@@ -1,0 +1,352 @@
+/*
+ * FCKeditor - The text editor for Internet - http://www.fckeditor.net
+ * Copyright (C) 2003-2007 Frederico Caldeira Knabben
+ *
+ * == BEGIN LICENSE ==
+ *
+ * Licensed under the terms of any of the following licenses at your
+ * choice:
+ *
+ *  - GNU General Public License Version 2 or later (the "GPL")
+ *    http://www.gnu.org/licenses/gpl.html
+ *
+ *  - GNU Lesser General Public License Version 2.1 or later (the "LGPL")
+ *    http://www.gnu.org/licenses/lgpl.html
+ *
+ *  - Mozilla Public License Version 1.1 or later (the "MPL")
+ *    http://www.mozilla.org/MPL/MPL-1.1.html
+ *
+ * == END LICENSE ==
+ *
+ * Styles used by the dialog boxes.
+ */
+
+body { margin: 0px; padding: 0px;}
+
+a:focus, li:focus, input:focus { outline: none;}
+
+.checkbox{ border: 0px;}
+
+body, td, input, select, textarea, label, div label { font-size: 12px; font-family: Arial, Helvetica, sans-serif;}
+
+ input[type="text"], input[type="password"], select, textarea {
+	border: 1px solid #DDD;
+	margin-top: 0px;
+	background-color: #FFF !important;
+	height: auto;
+	min-height:30px;
+	padding: 4px 6px;
+	font-size: 14px;
+	line-height: 1.42857;
+	color: #555;
+	/*background-image: none;*/
+	border-radius: 0;
+	box-shadow: 0px 1px 1px rgba(0, 0, 0, 0.075) inset;
+	transition: border-color 0.15s ease-in-out 0s, box-shadow 0.15s ease-in-out 0s;
+	max-width:530px;
+}
+
+
+input, select, textarea, #iframePreview { border: 1px solid #bdbcbc;}
+label{ cursor: pointer; font-size:13px; line-height:16px; }
+.PopupBody { margin: 0px; padding: 0px; background-color: #ECEEF0;}
+hr{ border: 0px; height: 0px; font-size: 0px; line-height: 0px; display: none;}
+iframe#docLink{ border: 1px solid #bdbcbc; background-color: #ffffff;}
+.PopupTitle
+{
+	font-weight: bold;
+	font-size: 14pt;
+	color: InfoText;
+	background-color2: #e3e3c7;
+	padding: 3px 10px 3px 10px;
+}
+
+.PopupButtons { height:50px; width:100%; padding: 0; }
+.PopupButtons table { border-top:1px solid #d7d7d7; background-color: #fff; width: 100%; height:50px; position:absolute; bottom:0; }
+.PopupButtons table td{ padding: 10px;}
+
+.Button2
+{
+	border-right: #737357 1px solid;
+	border-top: #737357 1px solid;
+	border-left: #737357 1px solid;
+	color: #3b3b1f;
+	border-bottom: #737357 1px solid;
+	background-color: #c7c78f;
+}
+
+/*
+#btnHelp, .button{ background: url(/admin/skins/webjet6/images/button-90x20.png) left top no-repeat; width: 90px; height: 20px; color: #ffffff; border: 0px;}
+
+#btnOk, #btnCancel, #btnSaveAs, body .button70 { background: url(/admin/skins/webjet6/images/button-70x20.png) left top no-repeat; width: 70px; height: 20px; color: #ffffff; border: 0px;}
+.button220x20{ background: url(/admin/skins/webjet6/images/button-220x20.png) left top no-repeat; width: 220px; height: 20px; color: #ffffff; border: 0px;}
+.button150x20{ background: url(/admin/skins/webjet6/images/button-150x20.png) left top no-repeat; width: 150px; height: 20px; color: #ffffff; border: 0px;}
+.button50, .button100, .button150, a.button50, a.button100, a.button150, a.button100:link, a.button100:visited{ border: 0px; color: #fff; width: 90px; height: 20px; line-height: 20px; background: transparent url(/admin/skins/webjet6/images/button-90x20.png) no-repeat left top; overflow: hidden; white-space: nowrap; text-align: center; padding: 0px; cursor: pointer;}
+.button100, a.button100, a.button100:link, a.button100:visited { background-image: url(/admin/skins/webjet6/images/button-150x20.png); width: 150px !important;}
+.button150, a.button150 { background-image: url(/admin/skins/webjet6/images/button-220x20.png); width: 220px !important;}
+*/
+
+#btnOk, #btnCancel, #btnSaveAs, body .button70,
+.button220x20,
+.button150x20,
+.button50, .button100, .button150, a.button50, a.button100, a.button150, a.button100:link, a.button100:visited,
+.button100, a.button100, a.button100:link, a.button100:visited,
+.button150, a.button150, #btnHelp, .button {
+
+	border-width: 0px;
+	padding: 7px 14px;
+	font-size: 14px;
+	outline: medium none !important;
+	background-image: none !important;
+	filter: none;
+	box-shadow: none;
+	text-shadow: none;
+	color: #FFF;
+	background-color: #0063fb;
+	cursor:pointer;
+	border-radius: 6px !important;
+}
+
+#btnOk:hover, #btnCancel:hover, #btnSaveAs:hover, body .button70:hover,
+.button220x20:hover,
+.button150x20:hover,
+.button50:hover, .button100:hover, .button150:hover, a.button50:hover, a.button100:hover, a.button150:hover,
+.button100:hover, a.button100:hover,
+.button150:hover, a.button150:hover,#btnHelp:hover, .button:hover {
+ background-color:#004fc9;
+ color:white;
+ text-decoration:none;
+}
+
+#btnCancel { background-color: white; color:#13151b; border-color: #868ea5; border-width: 1px; }
+#btnCancel:hover { background-color: #13151b; border-color: #13151b; color: white; }
+
+#btnHelp { background-color: #fabd00; color:#13151b; }
+#btnHelp:hover { background-color: #fbc41a; color:#13151b; }
+
+
+.DarkBackground { background-color: ButtonFace;}
+
+.LightBackground { background-color: ButtonHighlight; }
+
+.PopupTitleBorder { border-bottom: #d5d59d 1px solid;}
+
+.PopupTabArea { color: #46494d;}
+.PopupTabArea { padding: 10px 0px 0px 0px; background: url("/admin/skins/webjet6/images/bg-tab.png") repeat-x scroll right top #8B9397;}
+#Tabs{ }
+#Tabs td{ vertical-align: bottom; line-height: 18px;}
+#Tabs .PopupTabEmptyArea { padding: 0px 0px 0px 100px; /*background: url("/admin/skins/webjet6/images/bg-tab.png") repeat-x scroll right top #8B9397;*/}
+
+.PopupTab, .PopupTabSelected { padding: 3px 5px; color: #000000;}
+.PopupTab { cursor: pointer; cursor: hand;}
+.PopupTabSelected { font-weight: bold;}
+.PopupSelectionBox {  cursor: pointer; cursor: hand;}
+
+ul.tab_menu{ float: left; clear: both; list-style-type: none; line-height: 18px; padding: 2px 0px 0px 105px; margin: 0px;}
+ul.tab_menu li a, ul.tab_menu li a:hover{ position: relative; float: left; display: block; padding: 0px 10px; margin: 0px;  font-weight: normal; color: #676768; text-decoration: none;}
+ul.tab_menu li{ float: left; padding: 0px; margin: 0px;}
+
+/*
+ul.tab_menu li a,
+ul.tab_menu li a,
+ul.tab_menu li a:hover{ padding: 0px 25px 0px 5px; margin: 0px 0px 0px 0px; background: url(/admin/skins/webjet6/images/tab-anchor.png) 100% 0px no-repeat; font-size: 11px; color: #808080;} */
+
+
+/* ul.tab_menu li a,
+ul.tab_menu li a,
+ul.tab_menu li a:hover{ padding: 0px 25px 0px 5px; margin: 0px 0px 0px 0px; background: transparent; font-size: 11px; color: #808080;} */
+
+ul.tab_menu li a,
+ul.tab_menu li a,
+ul.tab_menu li a:hover{ padding: 10px 16px; margin: 0px 1px; background: transparent; font-size: 13px; color: #fff;  border-top: 3px solid transparent; }
+
+ul.tab_menu li.openFirst a,
+ul.tab_menu li a.activeTab,
+ul.tab_menu li a.activeTab:hover{ padding: 10px 16px; margin: 0px 1px; background: #f6f6f6; font-size: 13px; color: #555;  border-top: 3px solid #29c01a; }
+
+/* ul.tab_menu li.last a,
+ul.tab_menu li.last a:hover{ background: url(/admin/skins/webjet6/images/tab-anchor-last.png) 100% 0px no-repeat;}
+
+ul.tab_menu li.last a,
+ul.tab_menu li.last a:hover{ background:transparent;  border-top: 3px solid transparent; }
+
+ ul.tab_menu li.first a,
+ul.tab_menu li.first a:hover{ padding: 0px 20px 0px 0px;}
+
+ul.tab_menu li.first a,
+ul.tab_menu li.first a:hover{ padding:10px 12px;}
+
+ul.tab_menu li.first { background: url(/admin/skins/webjet6/images/tab-center-first.png) 0px 0px no-repeat; padding: 0px 0px 0px 10px;}
+
+ ul.tab_menu li.first { background: transparent; padding: 0px 0px 0px 10px;}
+
+ul.tab_menu li.first { background: transparent; padding: 0;}
+
+ul.tab_menu li.open,
+ul.tab_menu li.openLast{ background: red; margin: 0px 0px 0px -20px; position: relative;}
+
+ ul.tab_menu li.openFirst{ background: url(/admin/skins/webjet6/images/tab-center-open-first.png) left top no-repeat; padding: 0px 0px 0px 5px;}
+ ul.tab_menu li.openFirst{ background: #f5f5f5; padding: 0px 0px 0px 5px;}
+
+ul.tab_menu li.openFirst{ background: #f5f5f5; padding: 0;}
+
+
+ul.tab_menu li.openOnlyFirst{ background: url(/admin/skins/webjet6/images/tab-center-open-first.png) left top no-repeat; padding: 0px 0px 0px 5px; margin: 0px 0px 0px 0px;}
+
+ ul.tab_menu li.openLast{ background: url(/admin/skins/webjet6/images/tab-center-open.png) left top no-repeat;}
+
+ul.tab_menu li.openLast{ background: transparent;}
+*
+ul.tab_menu li.open,
+ul.tab_menu li.open a:hover { padding: 10px 12px; margin: 0px; background: #f6f6f6; font-size: 11px; color: #fff;  border-top: 3px solid transparent; }
+
+ul.tab_menu li.open a,
+ul.tab_menu li.open a:hover { color: #000000; background: transparent; margin: 0px 0px 0px 20px;}
+
+ ul.tab_menu li.openFirst a,
+ul.tab_menu li.openFirst a:hover{ color: #000000; background: url(/admin/skins/webjet6/images/tab-anchor-open.png) right top no-repeat; padding: 0px 20px 0px 0px; margin: 0px 0px 0px 5px;}
+
+ ul.tab_menu li.openFirst a,
+ul.tab_menu li.openFirst a:hover{ color: #000000; background-color: #f5f5f5; padding: 0px 20px 0px 0px; margin: 0px 0px 0px 5px;}
+
+ul.tab_menu li.openFirst a,
+ul.tab_menu li.openFirst a:hover{ color: #000000; background-color: #f5f5f5; padding: 10px 12px; margin: 0; border-top: 3px solid #29c01a; }
+
+ ul.tab_menu li.openLast a,
+ul.tab_menu li.openLast a:hover{ color: #000000; background: url(/admin/skins/webjet6/images/tab-anchor-open-last.png) right top no-repeat; margin: 0px 0px 0px 20px;}
+
+ul.tab_menu li.openLast a,
+ul.tab_menu li.openLast a:hover{ color: #000000; background: #f5f5f5; margin: 0px 0px 0px 20px;  border-top: 3px solid #29c01a;}
+
+ul.tab_menu li.openOnlyFirst a,
+ul.tab_menu li.openOnlyFirst a:hover{ color: #000000; background: url(/admin/skins/webjet6/images/tab-anchor-open-only.png) right top no-repeat; padding: 0px 20px 0px 0px; margin: 0px 0px 0px 5px;}
+*/
+/* Toto je definovane aj v fck_dialog.css a style.css */
+
+.iconDelete, .iconLaunch, .iconReplace, .iconJumpToLine, .iconUndo, .iconRedo, .iconHistory, .iconStat, .iconLeft, .iconRight, .iconPreview, .iconFolderOpen, a.iconSend, a.iconRefresh, .iconEdit, .iconEditTemplate, .iconForum, .iconForumDisabled, .iconBasket, .iconPageSearch, a.iconUserGroupAdd, a.iconUserGroupDelete, a.iconUserGroupRemove, .iconRestriction, .iconArchive, .iconCompare, .iconExcel, .iconConfirm, .iconLink, .iconSearch, .iconSidebar, .iconSidebar, .iconRotateLeft, .iconRotateRight, .iconRotate{ padding: 0px 8px 2px 8px; line-height: 17px; text-decoration: none; cursor: pointer;}
+a.iconDelete:hover, a.iconLaunch:hover, a.iconReplace:hover, a.iconJumpToLine:hover, a.iconUndo:hover, a.iconRedo:hover, a.iconHistory:hover, a.iconSend:hover, a.iconRefresh:hover, a.iconLeft:hover, .iconRight:hover, a.iconStat:hover, a.iconPreview:hover,a.iconFolderOpen:hover, a.iconEdit:hover, a.iconEditTemplate:hover, a.iconForum:hover, a.iconForumDisabled:hover, a.iconBasket:hover, a.iconPageSearch:hover, a.iconUserGroupAdd:hover, a.iconUserGroupDelete:hover, a.iconUserGroupRemove:hover, a.iconRestriction:hover, a.iconArchive:hover, .iconCompare:hover, .iconExcel:hover, .iconLink:hover,.iconSearch:hover, .iconSidebar:hover, .iconRotateLeft:hover, .iconRotateRight:hover, .iconRotate:hover { text-decoration: none;}
+
+/* safari v tabulke usekava ikonky */
+
+.sort_table .iconDelete, .sort_table .iconLaunch, .sort_table .iconReplace, .sort_table .iconJumpToLine, .sort_table .iconUndo, .sort_table .iconRedo, .sort_table .iconHistory, .sort_table .iconStat, .sort_table .iconLeft, .sort_table .iconRight, .sort_table .iconPreview, .sort_table .iconFolderOpen, a.iconSend, a.iconRefresh, .sort_table .iconEdit, .sort_table .iconEditTemplate, .sort_table .iconForum, .sort_table .iconForumDisabled, .sort_table .iconBasket, .sort_table .iconPageSearch, a.iconUserGroupAdd, a.iconUserGroupDelete, a.iconUserGroupRemove, .sort_table .iconRestriction, .sort_table .iconArchive, .sort_table .iconCompare, .sort_table .iconExcel, .sort_table .iconConfirm, .sort_table .iconLink, .sort_table .iconSearch, .sort_table .iconSidebar, .sort_table .iconSidebar, .sort_table .iconRotateLeft, .sort_table .iconRotateRight, .sort_table .iconRotate, .sort_table .iconUsers { float: left; }
+
+.iconDelete { background: url(/admin/skins/webjet6/images/icon/icon-delete.png) 0px 1px no-repeat; padding: 0px 7px 2px 7px;}
+.iconSearch{ background: url(/admin/skins/webjet6/images/icon/icon-search.png) 2px 0px no-repeat;}
+.iconReplace{ background: url(/admin/skins/webjet6/images/icon/icon-replace.png) 2px 0px no-repeat;}
+.iconJumpToLine{ background: url(/admin/skins/webjet6/images/icon/icon-jump-to-line.png) 2px 0px no-repeat;}
+.iconUndo{ background: url(/admin/skins/webjet6/images/icon/icon-undo.png) 2px 0px no-repeat;}
+.iconRedo{ background: url(/admin/skins/webjet6/images/icon/icon-redo.png) 2px 0px no-repeat;}
+.iconHistory { background: url(/admin/skins/webjet6/images/icon/icon-history.png) 3px 0px no-repeat;}
+.iconStat { background: url(/admin/skins/webjet6/images/icon/icon-stat.png) 0px 1px no-repeat;}
+.iconPreview { background: url(/admin/skins/webjet6/images/icon/icon-preview.png) 1px 0px no-repeat; padding: 0px 12px 2px 0px;}
+.iconFolder { background: url(/admin/skins/webjet6/images/icon/icon-folder.png) 1px 0px no-repeat; padding: 0px 8px 2px 10px;}
+.iconFolderOpen { background: url(/admin/skins/webjet6/images/icon/icon-folder-open.gif) 1px 0px no-repeat; padding: 0px 8px 2px 10px;}
+.iconRefresh { background: url(/admin/skins/webjet6/images/icon/arrow-refresh.gif) 1px 3px no-repeat; height: 16px;}
+.iconEdit { background: url(/admin/skins/webjet6/images/icon/icon-edit.png) 1px 0px no-repeat; padding: 0px 8px 2px 10px;}
+.iconEditTemplate { background: url(/admin/skins/webjet6/images/icon/icon-edit.png) 0px 0px no-repeat; padding: 2px 12px 2px 5px;}
+.iconUsers { background: url(/admin/skins/webjet6/images/icon/icon-users.png) 0px 2px no-repeat; padding: 2px 12px 2px 0px;}
+.iconUserGroupAdd { background: url(/admin/skins/webjet6/images/icon/icon-users-group-add.png) 0px 0px no-repeat; padding: 2px 12px 2px 0px;}
+.iconUserGroupDelete { background: url(/admin/skins/webjet6/images/icon/icon-users-group-delete.png) 0px 0px no-repeat; padding: 2px 12px 2px 0px;}
+.iconUserGroupRemove { background: url(/admin/skins/webjet6/images/icon/icon-users-group-remove.png) 0px 0px no-repeat; padding: 2px 12px 2px 0px;}
+.iconForum { background: url(/admin/skins/webjet6/images/icon/icon-forum.png) 0px -2px no-repeat;}
+.iconForumDisabled { background: url(/admin/skins/webjet6/images/icon/icon-forum.png) 0px 0px no-repeat;}
+.iconBasket { background: url(/admin/skins/webjet6/images/icon/icon-basket.png) 0px 0px no-repeat;}
+.iconPageSearch { background: url(/admin/skins/webjet6/images/icon/icon-page-search.png) center 0px no-repeat;}
+.iconRestriction { background: url(/admin/skins/webjet6/images/icon/icon-restriction.png) 0px 0px no-repeat;padding: 2px 12px 4px 0px;}
+.iconArchive { background: url(/admin/skins/webjet6/images/icon/icon-archive.png) 0px 0px no-repeat;padding: 2px 12px 4px 0px;}
+.iconCompare { background: url(/admin/skins/webjet6/images/icon/icon-compare.png) 1px 1px no-repeat;}
+.iconExcel { background: url(/admin/skins/webjet6/images/icon/icon-excel.png) 0px 0px no-repeat; padding: 2px 12px 4px 0px;}
+.iconConfirm { background: url(/admin/skins/webjet6/images/icon/icon-confirm.png) 0px 2px no-repeat; padding: 2px 12px 4px 0px;}
+.iconLink { background: url(/admin/skins/webjet6/images/icon/icon-link.png) 0px 3px no-repeat; margin: 0px 0px 0px 6px;}
+.iconSidebar{ background: url(/admin/skins/webjet6/images/icon/icon-insidebar.png) no-repeat 0px 0px; float: right; text-indent: -10000px; cursor: pointer; padding: 0px; width: 19px; height: 17px;}
+.iconSend { background: url(/admin/skins/webjet6/images/icon/icon-send.png) 0px 0px no-repeat; height: 16px;}
+.iconLeft { background: url(/admin/skins/webjet6/images/icon/arrow-left.png) 0px 2px no-repeat;}
+.iconRight { background: url(/admin/skins/webjet6/images/icon/arrow-right.png) 0px 2px no-repeat;}
+.iconRotate { background: url(/admin/skins/webjet6/images/icon/arrow-rotate.png) 0px 0px no-repeat;}
+.iconRotateLeft { background: url(/admin/skins/webjet6/images/icon/arrow-rotate-left.png) 0px 3px no-repeat;}
+.iconRotateRight { background: url(/admin/skins/webjet6/images/icon/arrow-rotate-right.png) 0px 3px no-repeat;}
+.iconLaunch { background: url(/admin/skins/webjet6/images/icon/icon_run.gif) 2px 1px no-repeat; padding: 0px 12px 4px 0px;}
+
+#sidebar .iconSidebar{ background: url(/admin/skins/webjet6/images/icon/icon-outsidebar.png) no-repeat 0px 0px;}
+
+
+table { border-collapse: collapse;}
+table.noPadding td{ padding: 2px 0px;}
+
+.padding10{ padding: 10px 10px 0px 10px; width: 100%; background:#f6f6f6; }
+* HTML BODY .padding10{ width: 100%;}
+
+.size input{ margin: 0px 5px 0px 0px;}
+.size span{ padding: 0px 5px 0px 0px;}
+/*
+.jScrollPaneContainer { position: relative; overflow: hidden; z-index: 1;}
+.jScrollPaneTrack { position: absolute;cursor: pointer; right: 7px; top: 0; height: 100%; background: #aaa; }
+.jScrollPaneDrag { position: absolute; background: #666; cursor: pointer; overflow: hidden; }
+.jScrollPaneDragTop { position: absolute; top: 0; left: 0; overflow: hidden; }
+.jScrollPaneDragBottom { position: absolute; bottom: 0; left: 0; overflow: hidden; }
+a.jScrollArrowUp { display: block; position: absolute; z-index: 1;top: 0; right: 7px; text-indent: -2000px; overflow: hidden;  height: 9px; }
+
+a.jScrollArrowDown { display: block; position: absolute; z-index: 1; bottom: 0; right: 7px; text-indent: -2000px; overflow: hidden;   height: 9px;}
+
+.jScrollPaneTrack { background: url(/admin/skins/webjet6/images/scrollPane/windows_track.gif) repeat-y 50% 0;}
+.jScrollPaneDrag { background: url(/admin/skins/webjet6/images/scrollPane/windows_drag_middle.gif) repeat-y 0 50%;}
+.jScrollPaneDragTop { background: url(/admin/skins/webjet6/images/scrollPane/windows_drag_top.gif) no-repeat; height: 3px;}
+.jScrollPaneDragBottom { background: url(/admin/skins/webjet6/images/scrollPane/windows_drag_bottom.gif) no-repeat; height: 3px;}
+a.jScrollArrowUp { height: 17px; background: url(/admin/skins/webjet6/images/scrollPane/windows_arrow_up.gif) no-repeat 0 0; }
+a.jScrollArrowDown { height: 17px; background: url(/admin/skins/webjet6/images/scrollPane/windows_arrow_down.gif) no-repeat 0 100%; }
+a.jScrollActiveArrowButton, .winXP a.jScrollActiveArrowButton:hover { background-position: 0 -40px;}
+*/
+
+/*
+ * CSS Styles that are needed by jScrollPane for it to operate correctly.
+ *
+ * Include this stylesheet in your site or copy and paste the styles below into your stylesheet - jScrollPane
+ * may not operate correctly without them.
+ */
+
+.jspContainer { overflow: hidden; position: relative; }
+.jspPane { position: absolute; }
+.jspVerticalBar { position: absolute; top: 0; right: 0px; width: 12px; height: 100%; }
+.webTreeMenu .jspVerticalBar { background: #ffffff; }
+.jspHorizontalBar { position: absolute;	bottom: 0; left: 0; width: 100%; height: 5px; }
+.jspVerticalBar *,
+.jspHorizontalBar * { margin: 0; padding: 0; }
+.jspCap { display: none; }
+.jspHorizontalBar .jspCap { float: left; }
+
+.jspHorizontalBar .jspTrack { background: url(/admin/skins/webjet6/images/scrollPane/horizontal_track.gif) repeat-x 0 50%; position: relative; }
+.jspHorizontalBar .jspDrag { background: url(/admin/skins/webjet6/images/scrollPane/horizontal_drag_middle.gif) repeat-x 50% 50%; position: relative; top: 0; left: 0; cursor: pointer; }
+
+.jspVerticalBar .jspTrack { background: url(/admin/skins/webjet6/images/scrollPane/vertical_track.gif) repeat-y 2px 0; position: relative; }
+.jspVerticalBar .jspDrag { background: url(/admin/skins/webjet6/images/scrollPane/vertical_drag_middle.gif) repeat-y 0% 50%; position: relative; top: 0; left: 0; cursor: pointer; }
+
+.jspHorizontalBar .jspTrack,
+.jspHorizontalBar .jspDrag { float: left; height: 100%; }
+.jspArrow { /*background: #50506d;*/ text-indent: -20000px; display: block; cursor: pointer; }
+.jspArrow.jspDisabled { cursor: default; }
+.jspVerticalBar .jspArrow { height: 16px; }
+.jspHorizontalBar .jspArrow { width: 16px; float: left; height: 5px; }
+.jspVerticalBar .jspArrow:focus { outline: none; }
+.jspCorner { background: #eeeef4; float: left; height: 100%; }
+
+.jspHorizontalBar .jspDragLeft { background: url(/admin/skins/webjet6/images/scrollPane/horizontal_drag_top.gif) no-repeat 0% 0%; height: 5px; width: 3px; position: absolute; top: 0; left: 0; overflow: hidden;}
+.jspHorizontalBar .jspDragRight { background: url(/admin/skins/webjet6/images/scrollPane/horizontal_drag_bottom.gif) no-repeat 0% 0%; height: 5px; width: 3px; position: absolute; top: 0; right: 0; overflow: hidden;}
+
+.jspVerticalBar .jspDragTop { background: url(/admin/skins/webjet6/images/scrollPane/vertical_drag_top.gif) no-repeat 0% 0%; height: 3px; width: 5px; position: absolute; top: 0; left: 0; overflow: hidden;}
+.jspVerticalBar .jspDragBottom { background: url(/admin/skins/webjet6/images/scrollPane/vertical_drag_bottom.gif) no-repeat 0% 0%; height: 3px; width: 5px; position: absolute; bottom: 0; left: 0; overflow: hidden;}
+
+a.jspArrowLeft { width: 17px; background: url(/admin/skins/webjet6/images/scrollPane/horizontal_arrow_up.gif) no-repeat 50% 0; }
+a.jspArrowRight { width: 17px; background: url(/admin/skins/webjet6/images/scrollPane/horizontal_arrow_down.gif) no-repeat 50% 100%; }
+
+a.jspArrowUp { height: 17px; background: url(/admin/skins/webjet6/images/scrollPane/vertical_arrow_up.gif) no-repeat 0% 0; }
+a.jspArrowDown { height: 17px; background: url(/admin/skins/webjet6/images/scrollPane/vertical_arrow_down.gif) no-repeat 0% 100%; }
+a.jspActiveArrowButton, .winXP a.jspActiveArrowButton:hover { background-position: 0 -40px;}
+
+/* Yuk! CSS Hack for IE6 3 pixel bug :( */
+* html .jspCorner { margin: 0 -3px 0 0; }
+
+#topTitleTr { height: 36px; background-color: white; }
+#topTitleTr td { color: #608811; font-family: Trebuchet MS,arial,helvetica; font-size: 18px; font-weight: normal; border-bottom: 1px solid #BDBCBC; padding-left: 10px; }
+
+#XXXcomponentsWindowTable { border: 1px solid red; }
+#XXXcomponentsWindowTableMainDiv { border: 1px solid blue; }

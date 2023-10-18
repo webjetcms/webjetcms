@@ -1,0 +1,8 @@
+.required {
+	background: url(/components/form/required.gif) top right no-repeat;
+	background-color: #DBEAF5; 
+}
+
+.invalid {
+	background-color: #FFF2BF;
+}

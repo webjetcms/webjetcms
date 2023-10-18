@@ -1,0 +1,46 @@
+include ../pug/mixins
+
+div(id="dt-upload" class="drop-zone-box dropzone " style="visibility:hidden; opacity:0")
+
+div(id="upload-wrapper" style="display: none;")
+    div.upload-wrapper-header
+        span(data-th-text="\#{datatables.upload.title}" data-th-remove="tag") Nahravanie suborov
+        span
+            i.fa.fa-times.fa-pull-right(id="upload-wrapper-close")
+
+    div.toast-container-progress
+        <span data-th-text="\#{datatables.upload.totalUploaded}">Celkovo nahrate</span>
+        <svg class="fa-progress-bar fa-pull-right" xmlns="http://www.w3.org/2000/svg" viewBox="-1 -1 34 34">
+            <circle cx="16" cy="16" r="15"class="fa-progress-bar__background" />
+            <circle cx="16" cy="16" r="15"class="fa-progress-bar__progress" style="stroke-dashoffset: 100px;" />
+        </svg>
+    div(id="toast-container-upload")
+
+    div.upload-wrapper-footer
+        div.process-all(style="display: none;")
+            <label class="toast-label" data-th-text="\#{user.multioperations.applyto.entire.records}">Aplikovat na vsetky</label>
+
+            <div class="toast-links">
+                <a id="btn-toast-skip-all" data-th-title="\#{wspellcheck.ignore}" data-th-text="\#{wspellcheck.ignore}">Preskocit</a>
+                <a id="btn-toast-overwrite-all" data-th-title="\#{datatables.upload.overwrite}" data-th-text="\#{datatables.upload.overwrite}">Prepisat</a>
+                <a id="btn-toast-keepboth-all" data-th-title="\#{datatables.upload.keepBoth}" data-th-text="\#{datatables.upload.keepBoth}">Ponechat oba</a>
+            </div>
+
+div(id="upload-toastr-template" style="display:none;")
+    <i class="far fa-image-polaroid"></i>
+    <span>{FILE_NAME}</span>
+    <i class="far fa-check-circle fa-pull-right"></i>
+    <i class="fas fa-exclamation-triangle fa-pull-right"></i>
+    <i class="fas fa-circle-notch fa-spin fa-pull-right"></i>
+    <i class="far fa-exclamation-circle fa-pull-right"></i>
+    <svg class="fa-progress-bar fa-pull-right" xmlns="http://www.w3.org/2000/svg" viewBox="-1 -1 34 34">
+        <circle cx="16" cy="16" r="15"class="fa-progress-bar__background" />
+        <circle cx="16" cy="16" r="15"class="fa-progress-bar__progress" style="stroke-dashoffset: 100px;" />
+    </svg>
+    <span class="exist" data-th-text="\#{datatables.upload.allreadyExists}">Uz existuje</span>
+    <div class="toast-error-message"></div>
+    <div class="toast-links">
+        <a class="btn-toast-skip" data-th-title="\#{wspellcheck.ignore}" data-th-text="\#{wspellcheck.ignore}">Preskocit</a>
+        <a class="btn-toast-overwrite" data-th-title="\#{datatables.upload.overwrite}" data-th-text="\#{datatables.upload.overwrite}">Prepisat</a>
+        <a class="btn-toast-keepboth" data-th-title="\#{datatables.upload.keepBoth}" data-th-text="\#{datatables.upload.keepBoth}">Ponechat oba</a>
+    </div>

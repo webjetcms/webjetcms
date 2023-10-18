@@ -1,0 +1,76 @@
+/*
+ * Javascript WYSIWYG HTML control
+ * Version 0.1
+ *
+ * Copyright (c) 2004 Paul James
+ * All rights reserved.
+ *
+ * This software is covered by the BSD License, please find a copy of this
+ * license at http://peej.co.uk/sandbox/wysiwyg/
+ */
+
+.wysiwyg iframe {
+   background-color: white;   
+    width: 322px;
+    height: 171px;
+    *height: 181px; /* IE */
+}
+
+div.toolbar {
+    width: 240px;
+    height: 26px;
+    background-color: #f0f0f0;
+    margin: 0px;
+}
+
+div.toolbar a, div.toolbar span {
+    display: block;
+    float: left;
+    width: 20px;
+    height: 20px;
+    margin: 2px;
+    cursor: pointer;
+    text-indent: -9999px;
+    background-position: center center;
+    border: 1px solid #f0f0f0;
+}
+
+div.toolbar a:hover, div.toolbar span:hover {
+    border-top: 1px solid ButtonHighlight;
+    border-left: 1px solid ButtonHighlight;
+    border-bottom: 1px solid ButtonShadow;
+    border-right: 1px solid ButtonShadow;
+}
+
+div.toolbar div.divider {
+    float: left;
+    width: 0;
+    height: 20px;
+    border-left: 0px solid ButtonHighlight;
+    border-right: 0px solid ButtonShadow;
+    margin: 0px;
+}
+
+div.toolbar a.toolbarButtonBold, div.toolbar span.toolbarButtonBold { background-image: url(/components/_common/wysiwyg/bold.gif); }
+div.toolbar a.toolbarButtonItalic, div.toolbar span.toolbarButtonItalic { background-image: url(/components/_common/wysiwyg/italic.gif); }
+div.toolbar a.toolbarButtonLink, div.toolbar span.toolbarButtonLink { background-image: url(/components/_common/wysiwyg/link.gif); }
+div.toolbar a.toolbarButtonUnlink, div.toolbar span.toolbarButtonUnlink { background-image: url(/components/_common/wysiwyg/unlink.gif); }
+div.toolbar a.toolbarButtonImage, div.toolbar span.toolbarButtonImage { background-image: url(/components/_common/wysiwyg/image.gif); }
+div.toolbar a.toolbarButtonHR, div.toolbar span.toolbarButtonHR { background-image: url(/components/_common/wysiwyg/hr.gif); }
+div.toolbar a.toolbarButtonH1, div.toolbar span.toolbarButtonH1 { background-image: url(/components/_common/wysiwyg/h1.png); }
+div.toolbar a.toolbarButtonH2, div.toolbar span.toolbarButtonH2 { background-image: url(/components/_common/wysiwyg/h2.png); }
+div.toolbar a.toolbarButtonH3, div.toolbar span.toolbarButtonH3 { background-image: url(/components/_common/wysiwyg/h3.png); }
+div.toolbar a.toolbarButtonP, div.toolbar span.toolbarButtonP { background-image: url(/components/_common/wysiwyg/p.png); }
+div.toolbar a.toolbarButtonPre, div.toolbar span.toolbarButtonPre { background-image: url(/components/_common/wysiwyg/pre.png); }
+div.toolbar a.toolbarButtonUL, div.toolbar span.toolbarButtonUL { background-image: url(/components/_common/wysiwyg/ul.gif); }
+div.toolbar a.toolbarButtonOL, div.toolbar span.toolbarButtonOL { background-image: url(/components/_common/wysiwyg/ol.gif); }
+
+div.toolbar a.toolbarButtonSrc, div.toolbar span.toolbarButtonSrc {
+    width: auto;
+    height: 16px;
+    text-indent: 0;
+    color: #000;
+    font-size: 70%;
+    text-decoration: none;
+    padding: 2px;
+}

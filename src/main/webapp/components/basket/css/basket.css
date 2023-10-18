@@ -1,0 +1,1560 @@
+div.products {
+    padding: 15px 0 0 0;
+    width: 1040px;
+    margin: 0 0 0 -35px;
+    clear: both;
+}
+
+div.products div.itemDiv {
+    float: left;
+    width: 190px;
+    margin: 0 35px 25px 35px;
+    padding: 0 0 65px 0;
+    overflow: hidden;
+    position: relative;
+}
+
+div.products div.itemDiv h2 {
+    padding: 0;
+    margin: 0;
+}
+
+div.products div.itemDiv h2 a {
+    display: block;
+    font-size: 13px;
+    line-height: 16px;
+    text-decoration: none;
+    font-weight: bold;
+    height: 32px;
+    overflow: hidden;
+}
+
+div.products div.itemDiv a.info {
+    font-size: 12px;
+    display: block;
+    position: absolute;
+    left: 0;
+}
+
+div.products div.itemDiv a.cart {
+    display: block;
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    text-indent: -10000px;
+    background: #000;
+    width: 40px;
+    height: 25px;
+    -webkit-border-radius: 4px;
+    -moz-border-radius: 4px;
+    border-radius: 4px;
+}
+
+div.products div.itemDiv a.cart img {
+    display: block;
+    margin: 0 auto;
+    margin-top: 8px;
+}
+
+div.products div.itemDiv span.cena {
+    display: block;
+    height: 25px;
+    line-height: 25px;
+    position: absolute;
+    right: 50px;
+    bottom: 0;
+    font-size: 13px;
+}
+
+div.itemDiv div.itemImageDiv {
+    width: 190px;
+}
+
+div.itemDiv div.itemImageDiv img {
+    display: block;
+    margin: 0 auto;
+}
+
+#content table.basketOrderTable {
+    border: 0;
+    border-collapse: collapse;
+    width: 100%;
+    margin: 15px 0 25px 0;
+}
+
+#content table.basketOrderTable td,
+#content table.basketOrderTable th {
+    padding: 10px 15px 10px 0;
+    vertical-align: top;
+    line-height: 30px;
+}
+
+#content table.basketOrderTable td input {
+    background-color: #fff;
+    padding: 0 10px;
+    height: 30px;
+    line-height: 30px;
+    width: 200px;
+    border: 1px solid #000;
+}
+
+#content table.basketOrderTable td label {
+    height: 30px;
+    line-height: 30px;
+    display: block;
+}
+
+#content table.basketOrderTable td.basketOrderTableHeader {
+    font-weight: bold;
+}
+
+#content table.basketOrderTable select {
+    border: 1px solid #000;
+    padding: 4px;
+    margin: 0;
+    width: 200px;
+    left: auto !important;
+}
+
+#content table.basketOrderTable textarea {
+    border: 1px solid #000;
+    padding: 2%;
+    margin: 0;
+    width: 96%;
+    height: 120px;
+    -webkit-border-radius: 7px;
+    -moz-border-radius: 7px;
+    border-radius: 7px;
+}
+
+#content table.basketOrderTable td input.btn {
+    background: #000;
+    color: #fff;
+    height: 30px;
+    line-height: 30px;
+    padding: 0;
+    cursor: pointer;
+    float: right;
+}
+
+#cL {
+    float: left;
+    width: 390px;
+    padding: 15px 0 0 0;
+}
+
+body.editorOn #cL {
+    display: none;
+}
+
+#cR {
+    float: right;
+    width: 570px;
+    padding: 35px 0 0 0;
+}
+
+body.editorOn #cR {
+    width: 100%;
+}
+
+body #cL ul.thumbs li {
+    width: 120px!important;
+    height: 80px!important;
+    padding: 0;
+    margin: 0 15px 11px 0;
+}
+
+#cL div#thumbs img {
+    width: 120px!important;
+}
+
+#cL ul.thumbs li a {
+    height: 80px!important;
+    padding: 0;
+    border: 0;
+    margin: 0;
+    line-height: 100%;
+}
+
+#cR span.priceSpan {
+    display: block;
+    border-top: 1px solid #000;
+    padding: 15px 50px 15px 0;
+    height: 25px;
+    line-height: 25px;
+    position: relative;
+    text-align: right;
+    font-size: 13px;
+}
+
+#cR span.priceSpan a {
+    display: block;
+    position: absolute;
+    right: 0;
+    bottom: 15px;
+    text-indent: -10000px;
+    background: #000;
+    width: 40px;
+    height: 25px;
+    -webkit-border-radius: 4px;
+    -moz-border-radius: 4px;
+    border-radius: 4px;
+}
+
+#cR span.priceSpan a img {
+    display: block;
+    margin: 7px auto 0 auto;
+}
+
+#cR span.priceSpan span.cena {
+    font-weight: bold;
+}
+
+#cR span.priceSpan span.cenaOld {
+    text-decoration: line-through;
+}
+
+div.productGallery ul {
+    margin: 0 0 0 -10px;
+}
+
+div.productGallery ul li {
+    margin: 5px 5px;
+    width: 110px!important;
+}
+
+div.productGallery ul li a {
+    display: block;
+    padding: 0;
+    border: 0;
+    background: none;
+    height: 58px!important;
+    width: 90px!important;
+}
+
+div.productGallery ul li a img {
+    display: block;
+    width: 90px!important;
+    height: auto!important;
+}
+
+
+/* Basket */
+
+div.basketSmallBox {
+    position: absolute;
+    top: 14px;
+    z-index: 999;
+    width: 143px;
+    height: 36px;
+}
+
+div.basketSmallBox a {
+    display: block;
+    width: 40px;
+    height: 30px;
+    background: url(/components/basket/img/basket-icon.png) center no-repeat;
+    text-indent: -10000px;
+    position: absolute;
+    top: 3px;
+    right: 0;
+    -webkit-border-radius: 4px;
+    -moz-border-radius: 4px;
+    border-radius: 4px;
+}
+
+div.basketSmallBox span.basketSmallPrice {
+    display: block;
+    width: 90px;
+    height: 30px;
+    position: absolute;
+    left: 3px;
+    top: 3px;
+    -webkit-border-radius: 4px;
+    -moz-border-radius: 4px;
+    border-radius: 4px;
+}
+
+div.basketSmallBox span.basketSmallPrice span {
+    display: block;
+    width: 76px;
+    height: 36px;
+    padding: 0 10px;
+    line-height: 36px;
+    text-align: right;
+    position: absolute;
+    top: -3px;
+    left: -3px;
+}
+
+div.basketSmallBox span.basketSmallItems {
+    display: block;
+    width: 25px;
+    padding: 0 2px 0 0;
+    height: 27px;
+    background: url(/components/basket/img/basket-items.png);
+    position: absolute;
+    top: -5px;
+    left: -6px;
+    z-index: 1;
+    line-height: 25px;
+    text-align: center;
+    color: #fff;
+}
+
+div.basketBox {
+    position: absolute;
+    top: 0;
+    left: 20px;
+    width: 980px;
+    z-index: 1000;
+    padding: 0 0 72px 0;
+    background: url(/components/basket/img/basketbox-shadow.png) bottom no-repeat;
+    color: black;
+}
+
+div.basketBox table.basketListTable {
+    width: 100%;
+    border: 0;
+    border-collapse: collapse;
+    margin: 0;
+}
+
+div.basketBox table.basketListTable th {
+    padding: 20px 20px;
+    font-size: 14px;
+    font-weight: normal;
+    text-align: left;
+    border: 0;
+}
+
+div.basketBox table.basketListTable th strong {
+    font-size: 20px;
+    font-weight: normal;
+}
+
+div.basketBox table.basketListTable td {
+    text-align: left;
+    padding: 20px;
+    font-size: 14px;
+    border: 0;
+}
+
+div.basketBox table.basketListTable a.deleteItem {
+    display: block;
+    text-indent: -10000px;
+    background: url(/components/basket/img/basketbox-delete.png) center no-repeat;
+    width: 30px;
+}
+
+div.basketBox table.basketListTable th a.closeBasket {
+    display: block;
+    text-indent: -10000px;
+    width: 30px;
+    height: 30px;
+    background: url(/components/basket/img/basketbox-close.png) center no-repeat;
+    -webkit-border-radius: 7px;
+    -moz-border-radius: 7px;
+    border-radius: 7px;
+}
+
+div.basketBox table.basketListTable input.basketQty {
+    display: block;
+    width: 65px;
+    height: 30px;
+    border-width: 1px;
+    border-style: solid;
+    text-align: center;
+    line-height: 30px;
+    font-size: 14px;
+    float: left;
+    margin: 0 5px;
+}
+
+div.basketBox table.basketListTable a.addItem,
+div.basketBox table.basketListTable a.removeItem {
+    display: block;
+    width: 20px;
+    height: 20px;
+    float: left;
+    text-indent: -10000px;
+    margin: 6px 0 0 0;
+    -webkit-border-radius: 4px;
+    -moz-border-radius: 4px;
+    border-radius: 4px;
+}
+
+div.basketBox table.basketListTable a.addItem {
+    background: url(/components/basket/img/basketbox-plus.png) center no-repeat;
+}
+
+div.basketBox table.basketListTable a.removeItem {
+    background: url(/components/basket/img/basketbox-minus.png) center no-repeat;
+}
+
+div.basketBox table.basketListTable td.first a {
+    font-size: 16px;
+    display: block;
+    text-decoration: none;
+}
+
+div.basketBox table.basketListTable tr.basketListTableTotalVat td {
+    padding: 30px 20px;
+}
+
+div.basketBox table.basketListTable td.first a.closeBasket {
+    text-align: left;
+    font-size: 12px;
+    text-decoration: underline;
+    display: block;
+    height: 36px;
+    line-height: 36px;
+}
+
+div.basketBox table.basketListTable span.basketPrice {
+    display: block;
+    width: 76px;
+    height: 30px;
+    background: url(/components/basket/img/basketbox-total.png);
+    padding: 4px 10px 2px 10px;
+    ;
+    line-height: 30px;
+    text-align: right;
+    font-size: 12px;
+    float: right;
+}
+
+div.basketBox table.basketListTable span#orderButton a {
+    display: block;
+    display: block;
+    width: 100px;
+    height: 30px;
+    margin: 3px 0 0 15px;
+    float: right;
+    text-align: center;
+    text-decoration: none;
+    line-height: 30px;
+    -webkit-border-radius: 4px;
+    -moz-border-radius: 4px;
+    border-radius: 4px;
+}
+
+div.basketBox table.basketListTable span.mob {
+    display: none;
+}
+
+@media screen and (max-width: 979px) {
+    div.products {
+        width: auto;
+        margin: 0 0 0 -18px;
+    }
+    div.products div.itemDiv {
+        margin: 0 30px 25px 30px;
+    }
+    #cR {
+        width: 329px;
+    }
+    div.basketBox {
+        width: 732px;
+        left: 15px;
+    }
+    div.basketSmallBox {
+        right: 15px;
+    }
+    div.productGallery div.photoSwipe {
+        width: auto;
+    }
+}
+
+@media screen and (max-width: 767px) {
+    #cR h1,
+    #cR h2,
+    #cR h3,
+    #cR h4,
+    #cR h5,
+    #cR p {
+        padding-left: 0;
+        padding-right: 0;
+    }
+    div.products div.itemDiv {
+        margin: 0 0 25px 30px;
+    }
+    div.products {
+        margin: 0;
+    }
+    #cL {
+        float: none;
+        width: 90%;
+        padding: 0 5%;
+    }
+    #cL img {
+        max-width: 100%;
+    }
+    #cR {
+        width: 90%;
+        padding: 25px 5% 0 5%;
+        float: none;
+        clear: both;
+    }
+    h1.detailHead {
+        border: 0;
+    }
+    div.basketSmallBox {
+        position: relative;
+        top: 0;
+        right: 0;
+        margin: 0 auto 20px auto;
+    }
+    div.basketBox {
+        width: 100%;
+        left: 0px;
+    }
+    div.basketBox table.basketListTable th {
+        display: none;
+    }
+    #content div.basketBox table.basketListTable td {
+        display: block;
+        width: 90%!important;
+        padding: 5px 5%!important;
+    }
+    div.basketBox table.basketListTable td.first a {
+        margin: 15px 0 0 0;
+    }
+    #content div.basketBox table.basketListTable tr {
+        position: relative;
+        display: block;
+    }
+    #content div.basketBox table.basketListTable td.fL {
+        float: left;
+        width: auto!important;
+        padding: 5px 15px!important;
+        line-height: 32px;
+    }
+    #content div.basketBox table.basketListTable td.delete {
+        clear: both;
+        float: none;
+    }
+    div.basketBox table.basketListTable td span.mob {
+        display: block;
+        float: left;
+        margin: 0 10px 0 0;
+    }
+    div.basketBox table.basketListTable a.addItem,
+    div.basketBox table.basketListTable a.removeItem {
+        display: none;
+    }
+    div.basketBox table.basketListTable a.deleteItem {
+        position: absolute;
+        top: 4px;
+        right: 0;
+        width: 50px;
+        height: 50px;
+    }
+    #content div.basketBox table.basketListTable tr.basketListTableTotalVat td {
+        padding: 0 5%!important;
+    }
+    div.basketBox table.basketListTable td.first a.closeBasket {
+        display: block;
+        text-align: center;
+        padding: 15px 0;
+    }
+    #content div.basketBox table.basketListTable tr.basketListTableTotalVat td.last {
+        height: 50px;
+    }
+    div.basketBox table.basketListTable span#orderButton a {
+        float: right;
+        margin: 3px 0 0 0;
+    }
+    div.basketBox table.basketListTable span.basketPrice {
+        float: left;
+    }
+    #content table.basketOrderTable {
+        width: 90%!important;
+    }
+    #content table.basketOrderTable td {
+        padding: 5px 5%!important;
+    }
+    #content table.basketOrderTable table td {
+        padding: 0!important;
+        width: auto!important;
+    }
+    #content table.basketOrderTable textarea {
+        width: 95%;
+    }
+    #content table.basketOrderTable td input.btn {
+        float: none;
+        margin: -20px 0 0 0;
+    }
+    #content table.basketOrderTable tr.last td {
+        padding: 0;
+    }
+    #content table.basketOrderTable table {
+        width: auto!important;
+    }
+}
+
+@media screen and (max-width: 450px) {
+    div.products div.itemDiv {
+        float: none;
+        margin: 0 auto 25px auto;
+    }
+    div.photoSwipe ul li {
+        margin: 0 auto 15px auto;
+        float: none;
+    }
+    div.productGallery ul li {
+        float: left;
+        margin: 0 0 5px 0;
+        width: 33%!important;
+    }
+    div.productGallery ul li img {
+        max-width: 100%!important;
+    }
+    div.productGallery {
+        padding: 0;
+        width: 100%;
+    }
+    div.productGallery ul {
+        margin: 0;
+        padding: 0;
+        width: 100%;
+    }
+}
+
+
+/* COLORS */
+
+div.basketSmallBox a {
+    background-color: #3fc7f3;
+}
+
+div.basketSmallBox span.basketSmallPrice {
+    background-color: #3fc7f3;
+}
+
+div.basketSmallBox span.basketSmallPrice span {
+    color: #000;
+}
+
+div.basketBox table.basketListTable {
+    background: #fff;
+}
+
+div.basketBox table.basketListTable th {
+    background: #cfeaf3;
+}
+
+div.basketBox table.basketListTable th a.closeBasket {
+    background-color: #3fc7f3;
+}
+
+div.basketBox table.basketListTable input.basketQty {
+    background: #fff;
+    border-color: #dcdcdc;
+}
+
+div.basketBox table.basketListTable td.first a {
+    color: #000;
+}
+
+div.basketBox table.basketListTable a.addItem,
+div.basketBox table.basketListTable a.removeItem {
+    background-color: #c5c5c5;
+}
+
+div.basketBox table.basketListTable a.addItem:hover,
+div.basketBox table.basketListTable a.removeItem:hover {
+    background-color: #3fc7f3;
+}
+
+div.basketBox table.basketListTable tr.basketListTableTotalVat td {
+    background: #cfeaf3;
+}
+
+div.basketBox table.basketListTable span#orderButton a {
+    background: #3fc7f3;
+    color: #000;
+}
+
+div.productsOrder {
+    float: right;
+}
+
+div.productsOrder select {
+    background: #fff;
+    border: 1px solid #d4d4d4;
+    border-radius: 3px;
+    padding: 7px 10px 7px 10px;
+}
+
+div.productsTags a {
+    display: inline-block;
+    padding: 7px 12px;
+    border: 1px solid #d4d4d4;
+    border-radius: 3px;
+    background: #f8f8f8;
+    color: #000;
+    font-size: 12px;
+    text-decoration: none;
+    font-weight: normal;
+    font-family: Arial, Helvetica, sans-serif;
+    height: auto;
+    line-height: 100%;
+    margin-right: 2px;
+}
+
+div.productsTags a:hover {
+    background-color: #eeeeee;
+}
+
+div.productsNavbar {
+    border: 1px solid #d4d4d4;
+    border-radius: 5px;
+    height: 33px;
+    margin-bottom: 15px;
+}
+
+div.productsNavbar ul {
+    height: 33px;
+    margin: 0px;
+    padding: 0px;
+    padding-left: 10px;
+}
+
+div.productsNavbar li {
+    float: left;
+    margin-right: 10px;
+    list-style: none;
+    background: none;
+    line-height: 33px;
+    height: 33px;
+    background: url(/components/basket/img/bg-breadcrumg-li.png) right center no-repeat;
+    padding: 0px;
+}
+
+div.productsNavbar li a {
+    padding: 0 30px 0 10px;
+    display: block;
+}
+
+div.productsNavbar li:before {
+    display: none;
+}
+
+div.products {
+    margin: 0 0 0 -35px;
+    padding: 15px 0 0;
+    /*width: 600px;*/
+}
+
+div.products div.itemDiv {
+    float: left;
+    margin: 0 35px 25px;
+    overflow: hidden;
+    padding: 0 0 65px;
+    position: relative;
+    width: 190px;
+}
+
+div.products div.itemDiv h2 {
+    margin: 0;
+    padding: 0;
+}
+
+div.products div.itemDiv h2 a {
+    display: block;
+    font-size: 13px;
+    font-weight: bold;
+    height: 32px;
+    line-height: 16px;
+    overflow: hidden;
+    text-decoration: none;
+}
+
+div.products div.itemDiv a.info {
+    display: block;
+    font-size: 12px;
+    left: 0;
+    position: absolute;
+}
+
+div.products div.itemDiv a.cart {
+    background: none repeat scroll 0 0 #000;
+    border-radius: 4px;
+    bottom: 0;
+    display: block;
+    height: 25px;
+    position: absolute;
+    right: 0;
+    text-indent: -10000px;
+    width: 40px;
+}
+
+div.products div.itemDiv a.cart img {
+    display: block;
+    margin: 8px auto 0;
+}
+
+div.products div.itemDiv span.cena {
+    bottom: 0;
+    display: block;
+    font-size: 13px;
+    height: 25px;
+    line-height: 25px;
+    position: absolute;
+    right: 50px;
+}
+
+div.itemDiv div.itemImageDiv {
+    width: 190px;
+}
+
+div.itemDiv div.itemImageDiv img {
+    display: block;
+    margin: 0 auto;
+}
+
+#content table.basketOrderTable {
+    border: 0 none;
+    border-collapse: collapse;
+    margin: 15px 0 25px;
+    width: 100%;
+}
+
+#content table.basketOrderTable td,
+#content table.basketOrderTable th {
+    line-height: 30px;
+    padding: 10px 15px 10px 0;
+    vertical-align: top;
+}
+
+#content table.basketOrderTable td input {
+    background-color: #fff;
+    border: 1px solid #000;
+    height: 30px;
+    line-height: 30px;
+    padding: 0 10px;
+    width: 200px;
+}
+
+#content table.basketOrderTable td label {
+    display: block;
+    height: 30px;
+    line-height: 30px;
+}
+
+#content table.basketOrderTable td.basketOrderTableHeader {
+    font-weight: bold;
+}
+
+#content table.basketOrderTable select {
+    border: 1px solid #000;
+    left: auto !important;
+    margin: 0;
+    padding: 4px;
+    width: 200px;
+}
+
+#content table.basketOrderTable textarea {
+    border: 1px solid #000;
+    border-radius: 7px;
+    height: 120px;
+    margin: 0;
+    padding: 2%;
+    width: 96%;
+}
+
+#content table.basketOrderTable td input.btn {
+    background: none repeat scroll 0 0 #000;
+    color: #fff;
+    cursor: pointer;
+    float: right;
+    height: 30px;
+    line-height: 30px;
+    padding: 0;
+}
+
+#cL {
+    float: left;
+    padding: 15px 0 0;
+    width: 390px;
+}
+
+body.editorOn #cL {
+    display: none;
+}
+
+#cR {
+    float: right;
+    padding: 35px 0 0;
+    width: 570px;
+}
+
+body.editorOn #cR {
+    width: 100%;
+}
+
+body #cL ul.thumbs li {
+    height: 80px !important;
+    margin: 0 15px 11px 0;
+    padding: 0;
+    width: 120px !important;
+}
+
+#cL div#thumbs img {
+    width: 120px !important;
+}
+
+#cL ul.thumbs li a {
+    border: 0 none;
+    height: 80px !important;
+    line-height: 100%;
+    margin: 0;
+    padding: 0;
+}
+
+#cR span.priceSpan {
+    border-top: 1px solid #000;
+    display: block;
+    font-size: 13px;
+    height: 25px;
+    line-height: 25px;
+    padding: 15px 50px 15px 0;
+    position: relative;
+    text-align: right;
+}
+
+#cR span.priceSpan a {
+    background: none repeat scroll 0 0 #000;
+    border-radius: 4px;
+    bottom: 15px;
+    display: block;
+    height: 25px;
+    position: absolute;
+    right: 0;
+    text-indent: -10000px;
+    width: 40px;
+}
+
+#cR span.priceSpan a img {
+    display: block;
+    margin: 7px auto 0;
+}
+
+#cR span.priceSpan span.cena {
+    font-weight: bold;
+}
+
+#cR span.priceSpan span.cenaOld {
+    text-decoration: line-through;
+}
+
+div.productGallery ul {
+    margin: 0 0 0 -10px;
+}
+
+div.productGallery ul li {
+    margin: 5px;
+    width: 110px !important;
+}
+
+div.productGallery ul li a {
+    background: none repeat scroll 0 0 rgba(0, 0, 0, 0);
+    border: 0 none;
+    display: block;
+    height: 58px !important;
+    padding: 0;
+    width: 90px !important;
+}
+
+div.productGallery ul li a img {
+    display: block;
+    height: auto !important;
+    width: 90px !important;
+}
+
+div.basketSmallBox {
+    height: 36px;
+    position: relative;
+    width: 175px;
+    z-index: 999;
+    margin-left: auto;
+    margin-right: 0px;
+    margin-bottom: 10px;
+}
+
+div.basketSmallBox a {
+    border-radius: 4px;
+    display: block;
+    height: 30px;
+    position: absolute;
+    right: 0;
+    text-indent: -10000px;
+    top: 3px;
+    width: 40px;
+}
+
+div.basketSmallBox span.basketSmallPrice {
+    border-radius: 4px;
+    display: block;
+    height: 30px;
+    left: 50px;
+    position: absolute;
+    top: 3px;
+    width: 90px;
+}
+
+div.basketSmallBox span.basketSmallPrice span {
+    background: url("/components/basket/img/basket-shadow.png") repeat scroll 0 0 rgba(0, 0, 0, 0);
+    display: block;
+    height: 36px;
+    left: -3px;
+    line-height: 36px;
+    padding: 0 10px;
+    position: absolute;
+    text-align: right;
+    top: -3px;
+    width: 76px;
+}
+
+div.basketSmallBox span.basketSmallItems {
+    background: url("/components/basket/img/basket-items.png") repeat scroll 0 0 rgba(0, 0, 0, 0);
+    color: #fff;
+    display: block;
+    height: 27px;
+    left: -6px;
+    line-height: 25px;
+    padding: 0 2px 0 0;
+    position: absolute;
+    text-align: center;
+    top: -5px;
+    width: 25px;
+    z-index: 1;
+}
+
+div.basketBox {
+    background: url(/components/basket/img/basketbox-shadow.png) no-repeat scroll center bottom rgba(0, 0, 0, 0);
+    padding: 0 0 72px;
+    /* position: absolute; */
+    top: 0px;
+    position: absolute;
+    left: 50% !important;
+    /* top: 50%; */
+    transform: translate(-50%, 0);
+    display: block;
+    z-index: 1000;
+}
+
+div.basketBox table.basketListTable {
+    border: 0 none;
+    border-collapse: collapse;
+    margin: 0;
+    width: 100%;
+}
+
+div.basketBox table.basketListTable th {
+    border: 0 none;
+    font-size: 14px;
+    font-weight: normal;
+    padding: 13px 18px;
+    text-align: left;
+    color: #000;
+}
+
+div.basketBox table.basketListTable th strong {
+    font-size: 20px;
+    font-weight: normal;
+}
+
+div.basketBox table.basketListTable td {
+    border: 0 none;
+    font-size: 14px;
+    padding: 20px;
+    text-align: left;
+    background-color: white;
+}
+
+div.basketBox table.basketListTable a.deleteItem {
+    background: url("/components/basket/img/basketbox-delete.png") no-repeat scroll center center rgba(0, 0, 0, 0);
+    display: block;
+    text-indent: -10000px;
+    width: 30px;
+}
+
+div.basketBox table.basketListTable th:nth-of-type(2),
+div.basketBox table.basketListTable th:nth-of-type(3),
+div.basketBox table.basketListTable th:nth-of-type(4),
+div.basketBox table.basketListTable th:nth-of-type(5) {
+    width: 156px;
+}
+
+div.basketBox table.basketListTable th a.closeBasket {
+    border-radius: 7px;
+    display: block;
+    height: 30px;
+    text-indent: -10000px;
+    width: 30px;
+}
+
+div.basketBox table.basketListTable input.basketQty {
+    border-style: solid;
+    border-width: 1px;
+    display: block;
+    float: left;
+    font-size: 14px;
+    height: 30px;
+    line-height: 30px;
+    margin: 0 5px;
+    text-align: center;
+    width: 65px;
+}
+
+div.basketBox table.basketListTable a.addItem,
+div.basketBox table.basketListTable a.removeItem {
+    border-radius: 4px;
+    display: block;
+    float: left;
+    height: 20px;
+    margin: 6px 0 0;
+    text-indent: -10000px;
+    width: 20px;
+}
+
+div.basketBox table.basketListTable a.addItem {
+    background: url("/components/basket/img/basketbox-plus.png") no-repeat scroll center center rgba(0, 0, 0, 0);
+}
+
+div.basketBox table.basketListTable a.removeItem {
+    background: url("/components/basket/img/basketbox-minus.png") no-repeat scroll center center rgba(0, 0, 0, 0);
+}
+
+div.basketBox table.basketListTable td.first a {
+    display: block;
+    font-size: 16px;
+    text-decoration: none;
+}
+
+div.basketBox table.basketListTable tr.basketListTableTotalVat td {
+    padding: 30px 20px;
+}
+
+div.basketBox table.basketListTable td.first a.closeBasket {
+    display: block;
+    font-size: 12px;
+    height: 36px;
+    line-height: 36px;
+    text-align: left;
+    text-decoration: underline;
+}
+
+div.basketBox table.basketListTable span.basketPrice {
+    background: url("/components/basket/img/basketbox-total.png") repeat scroll 0 0 rgba(0, 0, 0, 0);
+    display: block;
+    float: right;
+    font-size: 12px;
+    height: 30px;
+    line-height: 30px;
+    padding: 4px 10px 2px;
+    text-align: right;
+    width: 76px;
+}
+
+div.basketBox table.basketListTable span#orderButton a {
+    border-radius: 4px;
+    display: block;
+    float: right;
+    height: 30px;
+    line-height: 30px;
+    margin: 3px 0 0 15px;
+    text-align: center;
+    text-decoration: none;
+    width: 100px;
+}
+
+div.basketBox table.basketListTable span.mob {
+    display: none;
+}
+
+div.basketBox table.basketListTable a.addItem,
+div.basketBox table.basketListTable a.removeItem {
+    background-color: #c5c5c5;
+}
+
+div.basketBox table.basketListTable th {
+    background: none repeat scroll 0 0 #cfeaf3;
+}
+
+div.basketBox table.basketListTable tr.basketListTableTotalVat td {
+    background: none repeat scroll 0 0 #cfeaf3;
+}
+
+
+/* zoznam produktov */
+
+div.itemDiv {
+    vertical-align: top;
+}
+
+div.itemDiv h2 {
+    display: inline;
+    margin: 0px;
+    padding: 0px;
+}
+
+div.itemDiv div.itemImageDiv {
+    float: left;
+    padding-right: 5px;
+}
+
+div.itemDiv div.priceDiv {
+    text-align: right;
+}
+
+hr.itemDivCleaner {
+    display: block;
+    height: 1px;
+    border: 0px;
+    color: #ccc;
+    background-color: #ccc;
+    clear: both;
+}
+
+
+/* zoznam produktov koniec */
+
+
+/* nakupny kosik */
+
+img.cart {
+    border: 0px;
+    vertical-align: middle;
+}
+
+table.basketListTable {
+    border: 1px solid #ccc;
+    border-collapse: collapse;
+}
+
+table.basketListTable th {
+    border-bottom: 1px solid #ccc;
+    font-weight: bold;
+}
+
+table.basketListTable td {
+    border-bottom: 1px solid #ccc;
+    padding-left: 4px;
+}
+
+table.basketListTable td input,
+table.basketListTable td select {
+    font-size: 10px;
+}
+
+table.basketListTable tr.basketListTableTotal td,
+table.basketListTable tr.basketListTableTotalVat td {
+    text-align: right;
+    font-weight: bold;
+}
+
+table.basketListTable tr.basketListTableFooter td {
+    text-align: center;
+    font-weight: bold;
+}
+
+
+/* nakupny kosik koniec */
+
+
+/*Novy kosik*/
+
+
+/*Common*/
+
+.basket-label {
+    color: #fff;
+    background-color: red;
+    display: inline-block;
+    padding: 2px 16px;
+    position: absolute;
+    top: 5%;
+    z-index: 100;
+}
+
+
+/*Custom*/
+
+h4 {
+    font-weight: 600;
+}
+
+p {
+    font-size: 12px;
+    margin-top: 5px;
+}
+
+.price {
+    font-size: 15px;
+    color: #333;
+}
+
+.basket .price {
+    margin: 0 auto;
+}
+
+.right {
+    float: right;
+    border-bottom: 2px solid #4B8E4B;
+}
+
+.thumbnail {
+    opacity: 0.70;
+    -webkit-transition: all 0.5s;
+    transition: all 0.5s;
+}
+
+.thumbnail:hover {
+    opacity: 1.00;
+    box-shadow: 0px 0px 10px #4bc6ff;
+}
+
+.line {
+    margin-bottom: 5px;
+}
+
+.productsOrder.bootstrap {
+    float: right;
+    text-align: right;
+    margin-bottom: 10px;
+}
+
+.productsTags {
+    float: left;
+}
+
+.btn-success {
+    color: #fff;
+    background-color: #5cb85c;
+    border-color: #4cae4c;
+}
+
+.btn-success:hover {
+    background-color: #449d44
+}
+
+p.basketPerexText {
+    height: 37px;
+    overflow: hidden;
+}
+
+@media screen and (max-width: 770px) {
+    .right {
+        float: left;
+        width: 100%;
+    }
+}
+
+.ratingTable div {
+    display: none;
+}
+
+.ratingTable div.star {
+    display: inline-block;
+}
+
+.ratingTable td {
+    padding-left: 0px;
+}
+
+.products h4 {
+    padding-bottom: 0px;
+    margin-bottom: 0px;
+}
+
+.basket.style01 .cenaOld {
+    text-decoration: line-through;
+    font-size: 17px;
+    position: absolute;
+    top: -19px;
+    color: red;
+}
+
+.basket.style02 .basket-label {
+    top: 10%;
+}
+
+.product-item {
+    padding: 15px;
+    background: #fff;
+    margin-top: 20px;
+    position: relative;
+}
+
+.product-item:hover {
+    box-shadow: 5px 5px rgba(234, 234, 234, 0.9);
+}
+
+.product-item:after {
+    content: ".";
+    display: block;
+    height: 0;
+    clear: both;
+    visibility: hidden;
+    font-size: 0;
+    line-height: 0;
+}
+
+.sticker {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 63px;
+    height: 63px;
+}
+
+.sticker-new {
+    background: url(http://keenthemes.com/assets/bootsnipp/new.png) no-repeat;
+    left: auto;
+    right: 0;
+}
+
+.pi-img-wrapper {
+    position: relative;
+}
+
+.pi-img-wrapper div {
+    background: rgba(0, 0, 0, 0.3);
+    position: absolute;
+    left: 0;
+    top: 0;
+    display: none;
+    width: 100%;
+    height: 100%;
+    text-align: center;
+}
+
+.product-item:hover>.pi-img-wrapper>div {
+    display: block;
+}
+
+.basket .pi-img-wrapper div .btn {
+    padding: 3px 10px;
+    color: #fff;
+    border: 1px #fff solid;
+    margin: -13px 5px 0;
+    background: transparent;
+    text-transform: uppercase;
+    position: relative;
+    top: 50%;
+    line-height: 1.4;
+    font-size: 12px;
+    float: none;
+}
+
+.product-item .btn:hover {
+    background: #e84d1c;
+    border-color: #c8c8c8;
+}
+
+.product-item h3 {
+    font-size: 14px;
+    font-weight: 300;
+    padding-bottom: 4px;
+    text-transform: uppercase;
+}
+
+.product-item h3 a {
+    color: #3e4d5c;
+}
+
+.product-item h3 a:hover {
+    color: #E02222;
+}
+
+.pi-price {
+    color: #e84d1c;
+    font-size: 18px;
+    float: left;
+    padding-top: 1px;
+}
+
+.basket .product-item .btn {
+    float: right;
+    color: #a8aeb3;
+    border: 1px #ededed solid;
+    padding: 3px 6px;
+    text-transform: uppercase;
+    font-size: 11px;
+    width: auto;
+    height: auto;
+    background-image: none;
+    line-height: 20px;
+}
+
+.product-item .add2cart:hover {
+    color: #fff;
+    background: #e84d1c;
+    border-color: #e84d1c;
+}
+
+.cenaOld {
+    text-decoration: line-through;
+    font-size: 17px;
+    color: #ffba00;
+}
+
+.basket.style03 .productsOrder.bootstrap {
+    float: left;
+}
+
+.container_basket {
+    background-color: #fff;
+    padding-right: 20px;
+    padding-bottom: 20px;
+}
+
+.sideBasket .basketQty {
+    width: 40px;
+}
+
+div.basketSmallBox span.basketSmallPrice span {
+    width: 92px;
+    background-image: none;
+}
+
+.basketBox .btn.btn-success,
+.basketBox .btn.btn-info {
+    width: auto;
+    height: auto;
+    font-size: inherit;
+    background-color: inherit;
+    padding: 13px 12px;
+    line-height: 12px;
+}
+
+ul.preview-thumbnail li a {
+    cursor: pointer;
+}
+
+.basket .btn.btn-success.right.addToBasket {
+    width: auto;
+    height: auto;
+    line-height: 12px;
+    float: right;
+    padding: 9px 7px;
+    display: inline-block;
+    font-size: 11px;
+}
+
+.col-price,
+.col-addToBasket {
+    padding: 0;
+    margin: 0;
+}
+
+.col-addToBasket .btn-success {
+    font-size: 12px;
+}
+
+.col-price p.price {
+    margin: 0
+}

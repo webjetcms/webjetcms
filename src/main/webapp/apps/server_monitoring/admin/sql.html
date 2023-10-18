@@ -1,0 +1,80 @@
+<script data-th-inline="javascript">
+    var columns = /*[(${layout.getDataTableColumns('sk.iway.iwcm.components.monitoring.jpa.ExecutionEntry')})]*/ '';
+</script>
+<script type="text/javascript">
+    let monitoringSqlDataTable;
+    let urlBase = "/admin/rest/monitoring-node";
+    let tableUrl = urlBase + "?showType=sql"
+    let order = [];
+    order.push([1, 'desc']);
+    var clusterRefreshTime;
+
+    WJ.breadcrumb({
+            id: "sql",
+            tabs: [
+                {
+                    url: '/apps/server_monitoring/admin/sql',
+                    title: '[[#{components.monitor.sql_monitoring}]]',
+                    active: true
+                },
+                {
+                    url: '#myRange',
+                    title: '{filter}',
+                    active: false
+                }
+            ]
+    });
+
+    window.domReady.add(function () {
+        //presun filter do hlavicky
+        $("#pills-myRange-tab").html("");
+        $("div#monitoringSqlDataTable_extfilter").appendTo("#pills-myRange-tab");
+
+        //SET enumeration type select filter
+        $.ajax({url: urlBase + "/all-nodes", success: function(json) {
+            window.appModule.setNodesFilterSelect(json);
+        }});
+
+        //SET clsuter refresh time interval
+        $.ajax({url: urlBase + "/clusterRefreshTime", success: function(time) {
+            clusterRefreshTime = time / 1000;
+        }});
+
+        $("#nodesFilterSelect").on("change", function() {
+            var selectedNodeValue = $('#nodesFilterSelect').val();
+            monitoringSqlDataTable.ajax.url(WJ.urlAddParam(tableUrl, "selectedNode", selectedNodeValue));
+            monitoringSqlDataTable.ajax.reload();
+            //
+            window.appModule.changeButtonVisibility();
+        });
+
+        //rename title column
+        window.WJ.DataTable.mergeColumns(columns, { name: "whatWasExecuted", title: WJ.translate("monitoring.sql.js") });
+
+        monitoringSqlDataTable = WJ.DataTable({
+            url: tableUrl,
+            serverSide: false, //false lebo sa nevyužíva repositár
+            columns: window.appModule.getFilteredColumns(columns, window.appModule.PageType.Sql),
+            id: "monitoringSqlDataTable",
+            order: order
+        });
+
+        //
+        window.appModule.prepareButtons(monitoringSqlDataTable, window.appModule.PageType.Sql);
+
+        //
+        window.appModule.changeButtonVisibility();
+    });
+</script>
+
+<div id="monitoringSqlDataTable_extfilter">
+    <div class="row datatableInit">
+        <div class="col-auto">
+            <select id="nodesFilterSelect"></select>
+        </div>
+    </div>
+</div>
+
+<div id="tableDiv">
+    <table id="monitoringSqlDataTable" class="datatableInit table"></table>
+</div>

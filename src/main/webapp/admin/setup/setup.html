@@ -1,0 +1,192 @@
+<div data-th-include="/admin/setup/layout_top.html" data-th-remove="tag"/>
+
+    <script data-th-inline="javascript">
+    /*<![CDATA[*/
+
+        function isLngSelectDisabled() {
+            var disableSelect = /*[[${disableLng}]]*/ false;
+            return disableSelect;
+        }
+
+        function getSetLanguage() {
+            var setLanguage = /*[[${setupForm.pageLngIndicator}]]*/ 'sk';
+            return setLanguage;
+        }
+
+        function dbUseSuperuserClick(initial) { //In case, that checkbox value isn't set yet during innitialization (use value from BE)
+            var checkbox = false;
+            if(initial) checkbox = /*[[${setupForm.dbUseSuperuser}]]*/ false;
+            else checkbox = document.getElementById("dbUseSuperuser").checked;
+
+            var element = document.getElementById("superuserTr");
+            if (element != null) {
+                if (checkbox) {
+                    element.style.display = "contents";
+                } else {
+                    element.style.display = "none";
+                }
+            }
+        }
+
+        function dbDriverChange() {
+            var value = /*[[${setupForm.dbDriver}]]*/ 'org.mariadb.jdbc.Driver';
+            var dbParameters = "";
+            var tdDbName = document.getElementById("tdDbName");
+            if (tdDbName != null) {
+                tdDbName.innerHTML =  /*[[#{setup.setup.db.name}]]*/ '';
+                tdDbName.innerHTML = tdDbName.innerHTML + ":"
+            }
+            var selectedOptionText = document.getElementById("dbDriver").options[ document.getElementById("dbDriver").selectedIndex ].text;
+            if (selectedOptionText.indexOf("4.1")!=-1) {
+                dbParameters = "";
+            } else if ("net.sourceforge.jtds.jdbc.Driver" == value) {
+                dbParameters = "encoding=utf-8";
+            } else if ("oracle.jdbc.driver.OracleDriver" == value) {
+                dbParameters = /*[[${setupForm.dbParameters}]]*/ '';
+                document.getElementById("dbPort").value = "1521";
+                if (tdDbName != null) tdDbName.innerHTML = "SID:";
+            }
+            document.getElementById("dbParameters").value = dbParameters;
+        }
+
+        //Little bit of hack. We using Ok button but we need to click submit button
+        var allreadySubmit = false;
+        function submitAction() {
+            if (allreadySubmit) {
+                window.alert("Please wait, install in progress...");
+                return;
+            }
+            allreadySubmit = true;
+            document.getElementById("submitBtn").click();
+        }
+    /*]]>*/
+    </script>
+
+    <form data-th-action="@{/wjerrorpages/setup/perform-setup}" data-th-object="${setupForm}" method="post">
+        <h1>[[#{setup.setup.db.headline}]]</h1>
+
+        <!-- Just used to deliver selected language ID to BE -->
+        <input type="text" id="pageLngIndicator" data-th-field="*{pageLngIndicator}" size="30" style="display: none;"/>
+
+        <div data-th-if="${dbConnFail} == true">
+            <div class="error"><b>[[#{setup.setup.error.fill_fail}]]: </b>
+                <div data-th-text="${dbErrMsg}"></div>
+            </div>
+        </div>
+
+        <div data-th-if="${dbCreateErrMsg} != null">
+            <div class="error"><b>[[#{setup.setup.error.connection_fail}]]: </b>
+                <div data-th-text="${dbCreateErrMsg}"></div>
+            </div>
+        </div>
+
+        <table>
+            <tr>
+                <td>[[#{setup.setup.db.type}]]:</td>
+                <td>
+                    <select id="dbDriver" data-th-field="*{dbDriver}" onchange="dbDriverChange()">
+                        <option value="org.mariadb.jdbc.Driver">MariaDB</option>
+                        <option value="net.sourceforge.jtds.jdbc.Driver">Microsoft SQL</option>
+                        <option value="oracle.jdbc.driver.OracleDriver">Oracle</option>
+                    </select>
+                </td>
+            </tr>
+            <tr>
+                <td>[[#{setup.setup.db.domain}]]:</td>
+                <td> <input type="text" data-th-field="*{dbDomain}"  size="30"/> </td>
+            </tr>
+            <tr>
+                <td>[[#{setup.setup.db.port}]]:</td>
+                <td> <input type="text" id="dbPort" data-th-field="*{dbPort}" size="6"/> <small>[[#{setup.setup.db.port_info}]]</small> </td>
+            </tr>
+            <tr>
+                <td>[[#{user.login}]]:</td>
+                <td> <input type="text" data-th-field="*{dbUsername}" size="30"/> </td>
+            </tr>
+            <tr>
+                <td>[[#{user.password}]]:</td>
+                <td> <input type="text" data-th-field="*{dbPassword}" size="30"/> </td>
+            </tr>
+            <tr>
+                <td>[[#{setup.setup.db.parameters}]]:</td>
+                <td> <input type="text" id="dbParameters" data-th-field="*{dbParameters}" size="60"/> </td>
+            </tr>
+            <tr>
+                <td id="tdDbName">[[#{setup.setup.db.name}]]:</td>
+                <td> <input type="text" data-th-field="*{dbName}" size="30"/> </td>
+            </tr>
+            <tr>
+                <td colspan="2">
+                    [[#{setup.setup.db.super_user}]]:
+                    <input id="dbUseSuperuser" type="checkbox" data-th-field="*{dbUseSuperuser}" onclick="dbUseSuperuserClick(false);"/>
+                </td>
+             </tr>
+            <tr id="superuserTr" style="display:none">
+                <td></td>
+                <td>
+                    <table>
+                        <tr>
+                            <td>[[#{user.login}]]:</td>
+                            <td> <input type="text" data-th-field="*{dbSuperuserUsername}" size="30"/> </td>
+                        </tr>
+                        <tr>
+                            <td>[[#{user.password}]]:</td>
+                            <td> <input type="text" data-th-field="*{dbSuperuserPassword}" size="30"/> </td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+        </table>
+
+        <h1>[[#{setup.setup.sys.headline}]]</h1>
+	    <table>
+            <tr>
+                <td>[[#{setup.setup.sys.install_name}]]:</td>
+                <td> <input type="text" data-th-field="*{conf_installName}" size="30"/> </td>
+            </tr>
+            <tr>
+                <td>[[#{components.map.licenseKey}]]:</td>
+                <td> <input type="text" data-th-field="*{conf_license}" size="60"/> </td>
+            </tr>
+            <tr>
+                <td>[[#{setup.setup.sys.smtp_server}]]:</td>
+                <td> <input type="text" data-th-field="*{conf_smtpServer}" size="30"/> </td>
+            </tr>
+            <tr>
+                <td>[[#{setup.setup.sys.default_language}]]:</td>
+                <td>
+                    <select data-th-field="*{conf_defaultLanguage}">
+                        <option value="" >[[#{logon.language.slovak}]]</option>
+                        <option value="en">[[#{logon.language.english}]]</option>
+                        <option value="cz">[[#{logon.language.czech}]]</option>
+                        <option value="de">[[#{logon.language.german}]]</option>
+                    </select>
+                </td>
+             </tr>
+             <tr>
+                <td>[[#{setup.setup.sys.encoding}]]:</td>
+                <td> <input type="text" data-th-field="*{encoding}" size="30"/> </td>
+            </tr>
+            <tr>
+                <td></td>
+                <td></td>
+            </tr>
+            <tr>
+                <td></td>
+                <td></td>
+            </tr>
+            <tr>
+                <td></td>
+                <td></td>
+            </tr>
+        </table>
+        <input type="submit" id="submitBtn" style="display:none"/>
+    </form>
+
+    <script type="text/javascript">
+        dbUseSuperuserClick(true);
+        dbDriverChange();
+    </script>
+
+<div data-th-include="/admin/setup/layout_bottom.html" data-th-remove="tag"/>
+

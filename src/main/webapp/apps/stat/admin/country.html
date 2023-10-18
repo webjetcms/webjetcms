@@ -1,0 +1,139 @@
+<script data-th-inline="javascript">
+    let url = "/admin/rest/stat/country";
+    let columns = /*[(${layout.getDataTableColumns("sk.iway.iwcm.stat.jpa.CountryDTO")})]*/ '';
+</script>
+<script>
+    var countryDataTable;
+
+    WJ.breadcrumb({
+        id: "country",
+        tabs: [
+            {
+                url: '/apps/stat/admin/country',
+                title: '[[#{stat_menu.countries}]]',
+                active: true
+            },
+            {
+                url: '#dateRange',
+                title: '{filter}',
+                active: false
+            }
+        ]
+    });
+
+    window.domReady.add(function () {
+        WJ.showLoader();
+        //presun filter do hlavicky
+        $("#pills-dateRange-tab").html("");
+        $("div#countryDataTable_extfilter").appendTo("#pills-dateRange-tab");
+
+        let lineChartVisits;
+
+        countryDataTable = WJ.DataTable({
+            url: url,
+            serverSide: false, //false lebo sa nevyužíva repositár
+            columns: columns,
+            id: "countryDataTable",
+            idAutoOpener: false,
+            defaultSearch: ChartTools.getSearchCriteria(),
+            autoHeight: false,
+            onPreXhr: function(TABLE, e, settings, data) {
+                data.fixed_searchChartType = ChartTools.ChartType.Not_Chart;
+                data.fixed_searchFilterBotsOut = $('#botFilterOut').is(':checked');
+                data.fixed_searchRootDir = $('#rootDir').val();
+            }
+        });
+
+        ChartTools.initGroupIdSelect();
+
+        countryDataTable.hideButton("import");
+        countryDataTable.hideButton("create");
+        countryDataTable.hideButton("edit");
+        countryDataTable.hideButton("duplicate");
+        countryDataTable.hideButton("celledit");
+        countryDataTable.hideButton("remove");
+
+        //Create and set amchart
+        createAmchart();
+
+        //Onchange events - update amcharts
+        $("#countryDataTable_extfilter").on("click", "button.filtrujem", function() {
+            getDataAndUpdateAmchart();
+        });
+
+        ChartTools.bindFilter(getDataAndUpdateAmchart);
+
+        async function createAmchart() {
+            window.initAmcharts().then(module => {
+                $.ajax({url: getUrl(), success: function(result){
+
+                    lineChartVisits = new ChartTools.LineChartForm(ChartTools.getLineChartYAxeNameObjs(["visits"], [undefined]), "dayDate", '[[#{stat.graph.country}]]', "country-lineCountry", ChartTools.convertDataForLineChart(result), ChartTools.DateType.Days);
+                    ChartTools.createAmchart(lineChartVisits);
+
+                    //After load data
+                    WJ.hideLoader();
+                }});
+            });
+        }
+
+        function getUrl() {
+            let tmpDefURL = "";
+
+            //Load values
+            let rootDir = $('#rootDir').val();
+            let filterBotsOut = $('#botFilterOut').is(':checked');
+            let searchDateValue = ChartTools.getDateRange(30);
+
+            tmpDefURL = url + "/lineChartData?dayDate=" + searchDateValue;
+            tmpDefURL += "&rootDir=" + rootDir + "&filterBotsOut=" + filterBotsOut;
+
+            ChartTools.saveSearchCriteria(countryDataTable.DATA);
+
+            return tmpDefURL;
+        }
+
+        async function getDataAndUpdateAmchart() {
+            WJ.showLoader();
+
+            await $.ajax({url: getUrl(), success: function(result){
+                lineChartVisits.chartData = ChartTools.convertDataForLineChart(result);
+                ChartTools.updateChart(lineChartVisits);
+            }});
+
+            WJ.hideLoader();
+
+            //reload table values
+            countryDataTable.ajax.reload();
+        }
+    });
+</script>
+
+<style>
+    #country-lineCountry { margin-top: 8px; }
+    label[for=botFilterOut]::after {
+        content: "\f544" !important;
+    }
+</style>
+<div id="countryDataTable_extfilter">
+    <div class="row datatableInit">
+        <div class="col-auto dt-extfilter-title-dayDate" style="display: none;"></div>
+        <div class="col-auto dt-extfilter dt-extfilter-dayDate"></div>
+        <div class="col-auto" data-th-title="#{components.stat.filter.showOnlyFromGroup}" data-toggle="tooltip">
+            <input type="text" class="webjet-dte-jstree" id="rootDir" value="-1" data-th-data-text="#{components.stat.stats.root_dirs.all}" data-th-data-text-empty="#{components.stat.stats.root_dirs.all}"/>
+        </div>
+        <div class="col-auto">
+            <div class="btn btn-sm custom-control form-switch" data-toggle="tooltip" data-th-title="#{stat.withoutBots}">
+                <input id="botFilterOut" type="checkbox" class="form-check-input" value="true" />
+                <label for="botFilterOut" class="form-check-label is-icon-arrows-v"></label>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="graphsDiv" class="hide-while-loading">
+    <div id="country-lineCountry" class="amcharts"></div>
+</div>
+
+<div id="tableDiv">
+    <table id="countryDataTable" class="datatableInit table"></table>
+</div>

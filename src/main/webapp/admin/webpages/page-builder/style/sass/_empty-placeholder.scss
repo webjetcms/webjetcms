@@ -1,0 +1,112 @@
+.#{$prefix}-empty-placeholder {
+    display: block;
+    margin: 0 auto;
+    width: $empty-placeholder-width;
+    min-height: $empty-placeholder-min-height;
+
+    &__button {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: $empty-placeholder-button-size;
+        height: $empty-placeholder-button-size;
+        z-index: $empty-placeholder-button-index;
+        background-image: url("../images/plus.png");
+        background-repeat: no-repeat;
+        background-position: center;
+        background-size: auto $empty-placeholder-button-icon-size;
+        border-radius: 50%;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+        transition: all 0.6s cubic-bezier(0.165, 0.84, 0.44, 1);
+
+        &::after {
+            content: "";
+            border-radius: 50%;
+            position: absolute;
+            z-index: -1;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            opacity: 0;
+            transition: all 0.6s cubic-bezier(0.165, 0.84, 0.44, 1);
+            border-width: 2px;
+            border-style: solid;
+        }
+
+        &:hover {
+            cursor: pointer;
+            &::after {
+                transform: scale(1.4, 1.4);
+                opacity: 1;
+            }
+        }
+
+
+    }
+
+    .#{$prefix}-column > & &__button {
+        background-color: $color-gray;
+        &::after {
+            border-color: $color-gray;
+        }
+        background-image: url("../images/pencil.png");
+        &:hover {
+            background-color: darken($color-gray,15%);
+        }
+    }
+    
+    .#{$prefix}-row > & &__button,
+    .#{$prefix}-container > & &__button {
+        background-color: $color-column;
+        &::after {
+            border-color: $color-column;
+        }
+    }
+    
+    .#{$prefix}-row > & &__button:hover,
+    .#{$prefix}-container > & &__button:hover {
+        background-color: darken($color-column,15%);
+    }
+    
+    .#{$prefix}-section > & &__button {
+        background-color: $color-container;
+        &::after {
+            border-color: $color-container;
+        }
+    
+        &:hover {
+            background-color: darken($color-container,15%);
+        }
+    }
+
+    .#{$prefix}-wrapper > & &__button {
+        background-color: $color-wrapper;
+        &::after {
+            border-color: $color-wrapper;
+        }
+
+        &:hover {
+            background-color: darken($color-wrapper,15%);
+        }
+    }
+    
+}
+
+.#{$prefix}-wrapper {
+    &.#{$prefix}-is-moving-child .#{$prefix}-empty-placeholder,
+    &.#{$prefix}-has-child-toolbar-active .#{$prefix}-empty-placeholder {
+        opacity: 0;
+        visibility: hidden;
+    }
+
+    &.#{$prefix}-is-modal-open .#{$prefix}-empty-placeholder__button {
+        display: none !important;
+    }
+
+    &.#{$prefix}-is-library-active .#{$prefix}-empty-placeholder__button {
+        display: none !important;
+    }
+}

@@ -1,0 +1,53 @@
+extends ../../partials/layout
+
+block content
+
+    +breadcrumb(
+        'persistent-cache-objects',
+        [
+            ['#persistent-cache-objects', '[[\#{components.memory_cleanup.persistent_cache_objects.title}]]', true]
+        ]
+    )
+
+    script.
+        var persistentCacheObjectsTable;
+        window.domReady.add(function () {
+            var tabs = [
+                {id: 'descriptionTab', title: '[[\#{components.memory_cleanup.persistent_cache_objects.description_tab}]]', selected: true, content:'<div></div>'},
+                {id: 'basicTab', title: '[[\#{components.memory_cleanup.persistent_cache_objects.basic_tab}]]'}
+            ]
+            var columns = [(${layout.getDataTableColumns('sk.iway.iwcm.system.cache.PersistentCacheBean')})];
+
+            persistentCacheObjectsTable = WJ.DataTable({
+                url: "/admin/rest/settings/persistent-cache-objects",
+                columns: columns,
+                serverSide: true,
+                tabs: tabs,
+                fetchOnEdit: true
+            });
+
+            persistentCacheObjectsTable.hideButton("create");
+
+            persistentCacheObjectsTable.button().add(0, {
+                extends: 'remove',
+                editor: persistentCacheObjectsTable.EDITOR,
+                text: '<i class="far fa-retweet"></i>',
+                action: function (e, dt, node) {
+                    persistentCacheObjectsTable.executeAction("refresh");
+                },
+                init: function ( dt, node, config ) {
+                    $.fn.dataTable.Buttons.showIfRowSelected(this, dt);
+                },
+                className: 'btn btn-outline-secondary',
+                attr: {
+                    title: "[[\#{admin.conf_editor.update}]]",
+                    "data-toggle": "tooltip"
+                }
+            });
+        });
+
+    style.
+        div.DTE_Field_Name_dataResult label { display: none; }
+        .textarea-code { font-size: 10px; }
+
+    <table class="datatableInit table"></table>

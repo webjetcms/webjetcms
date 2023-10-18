@@ -1,0 +1,1 @@
+﻿CKEDITOR.plugins.setLang("about","ca",{copy:"Copyright \x26copy; $1. Tots els drets reservats.",dlgTitle:"Quant al CKEditor 4",moreInfo:"Per informació sobre llicències visiteu el nostre lloc web:"});

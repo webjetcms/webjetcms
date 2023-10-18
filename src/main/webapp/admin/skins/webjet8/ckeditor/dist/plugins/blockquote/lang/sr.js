@@ -1,0 +1,1 @@
+﻿CKEDITOR.plugins.setLang("blockquote","sr",{toolbar:"Блок цитат"});

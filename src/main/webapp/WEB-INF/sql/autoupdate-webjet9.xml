@@ -1,0 +1,1111 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<java version="1.4.1_02" class="java.beans.XMLDecoder">
+    <object class="java.util.ArrayList">
+        <void method="add">
+            <object class="sk.iway.iwcm.system.UpdateDBBean">
+                <void property="author"><string>lpasek</string></void>
+                <void property="date"><string>20.04.2020</string></void>
+                <void property="desc"><string>pkey_generator - gallery_dimension</string></void>
+                <void property="mysql">
+                    <string>
+                        INSERT INTO pkey_generator (name, value, table_name, table_pkey_name) VALUES('gallery_dimension', 1 , 'dimension_id', 'gallery_dimension_id');
+                    </string>
+                </void>
+                <void property="mssql">
+                    <string>
+                        INSERT INTO pkey_generator (name, value, table_name, table_pkey_name) VALUES('gallery_dimension', 1 , 'dimension_id', 'gallery_dimension_id');
+                    </string>
+                </void>
+                <void property="oracle">
+                    <string>
+                        INSERT INTO pkey_generator (name, value, table_name, table_pkey_name) VALUES('gallery_dimension', 1 , 'dimension_id', 'gallery_dimension_id');
+                    </string>
+                </void>
+            </object>
+        </void>
+        <void method="add">
+            <object class="sk.iway.iwcm.system.UpdateDBBean">
+                <void property="author"><string>pgajdos</string></void>
+                <void property="date"><string>13.5.2020</string></void>
+                <void property="desc"><string>Pridanie stlpca update_date do _properties_ tabulky</string></void>
+                <void property="mysql">
+                    <string>
+                        ALTER TABLE _properties_ ADD update_date datetime null;
+                        ALTER TABLE _properties_ ADD id INT AUTO_INCREMENT PRIMARY KEY NOT NULL;
+                    </string>
+                </void>
+                <void property="mssql">
+                    <string>
+                        ALTER TABLE _properties_ ADD update_date datetime null;
+                        ALTER TABLE _properties_ ADD id INT IDENTITY(1,1) PRIMARY KEY NOT NULL;
+                    </string>
+                </void>
+                <void property="oracle">
+                    <string>
+                        ALTER TABLE webjet_properties ADD update_date date null;
+                        CREATE SEQUENCE S_webjet_properties START WITH 1;
+                        CREATE TRIGGER T_webjet_properties BEFORE INSERT ON webjet_properties
+                            FOR EACH ROW
+                                DECLARE
+                                    val INTEGER|
+                                BEGIN
+                                    IF :new.id IS NULL THEN
+                                        SELECT S_webjet_properties.nextval into val FROM dual|
+                                        :new.id:= val|
+                                    END IF|
+                                END|
+                        ;
+                        ALTER TABLE webjet_properties ADD id INT DEFAULT S_webjet_properties.NEXTVAL NOT NULL;
+                    </string>
+                </void>
+            </object>
+        </void>
+
+        <void method="add">
+            <object class="sk.iway.iwcm.system.UpdateDBBean">
+                <void property="author"><string>pgajdos</string></void>
+                <void property="date"><string>08.07.2020</string></void>
+                <void property="desc"><string>Pridanie stlpca task_name do tabulky crontab, umiestnenie stlpca na druhe miesto</string></void>
+                <void property="mysql">
+                    <string>
+                        ALTER TABLE crontab ADD task_name VARCHAR(64) NULL AFTER id;
+                    </string>
+                </void>
+                <void property="mssql">
+                    <string>
+                        ALTER TABLE crontab ADD task_name NVARCHAR(64) NULL;
+                    </string>
+                </void>
+                <void property="oracle">
+                    <string>
+                        ALTER TABLE crontab ADD task_name NVARCHAR2(64);
+                    </string>
+                </void>
+            </object>
+        </void>
+        <void method="add">
+            <object class="sk.iway.iwcm.system.UpdateDBBean">
+                <void property="author"><string>pgajdos</string></void>
+                <void property="date"><string>09.07.2020</string></void>
+                <void property="desc"><string>Zapisanie popisov cronjobov do stlpca task_name, pre tabulku crontab</string></void>
+                <void property="mysql">
+                    <string>
+                        UPDATE crontab SET task_name='Zmazanie starých udalostí v kalendári' WHERE
+                        task='sk.iway.iwcm.calendar.CalendarDB';
+
+                        UPDATE crontab SET task_name='Kontrola pozícií kľúčových slov v Google' WHERE
+                        task='sk.iway.iwcm.components.seo.SeoManager';
+
+                        UPDATE crontab SET task_name='Vytvorenie monitoringu systému' WHERE
+                        task='sk.iway.iwcm.system.monitoring.MonitoringManager';
+
+                        UPDATE crontab SET task_name='Publikovanie zmien v adresároch web stránok' WHERE
+                        task='sk.iway.iwcm.doc.GroupPublisher';
+
+                        UPDATE crontab SET task_name='Zmazanie záznamov heatmapy' WHERE
+                        task='sk.iway.iwcm.stat.heat_map.HeatMapCleaner';
+
+                        UPDATE crontab SET task_name='Zápis štatistiky návštevnosti' WHERE
+                        task='sk.iway.iwcm.stat.StatWriteBuffer';
+
+                        UPDATE crontab SET task_name='Indexovanie suborov pre vyhladavanie v administracii' WHERE
+                        task='sk.iway.iwcm.components.spotlight.FileIndexer';
+
+                        UPDATE crontab SET task_name='Aktualizácia persistent cache' WHERE
+                        task='sk.iway.iwcm.system.cache.PersistentCacheDB';
+
+                        UPDATE crontab SET task_name='Publikovanie zmien v konfigurácii' WHERE
+                        task='sk.iway.iwcm.system.ConfPreparedPublisher';
+
+                        UPDATE crontab SET task_name='Publikovanie zmien súborov v Archíve súborov' WHERE
+                        task='sk.iway.iwcm.components.file_archiv.FileArchivatorInsertLater';
+                    </string>
+                </void>
+                <void property="mssql">
+                    <string>
+                        UPDATE crontab SET task_name='Zmazanie starých udalostí v kalendári' WHERE
+                        task='sk.iway.iwcm.calendar.CalendarDB';
+
+                        UPDATE crontab SET task_name='Kontrola pozícií kľúčových slov v Google' WHERE
+                        task='sk.iway.iwcm.components.seo.SeoManager';
+
+                        UPDATE crontab SET task_name='Vytvorenie monitoringu systému' WHERE
+                        task='sk.iway.iwcm.system.monitoring.MonitoringManager;
+
+                        UPDATE crontab SET task_name='Publikovanie zmien v adresároch web stránok' WHERE
+                        task='sk.iway.iwcm.doc.GroupPublisher;
+
+                        UPDATE crontab SET task_name='Zmazanie záznamov heatmapy' WHERE
+                        task='sk.iway.iwcm.stat.heat_map.HeatMapCleaner;
+
+                        UPDATE crontab SET task_name='Zápis štatistiky návštevnosti' WHERE
+                        task='sk.iway.iwcm.stat.StatWriteBuffer;
+
+                        UPDATE crontab SET task_name='Indexovanie suborov pre vyhladavanie v administracii' WHERE
+                        task='sk.iway.iwcm.components.spotlight.FileIndexer;
+
+                        UPDATE crontab SET task_name='Aktualizácia persistent cache' WHERE
+                        task='sk.iway.iwcm.system.cache.PersistentCacheDB;
+
+                        UPDATE crontab SET task_name='Publikovanie zmien v konfigurácii' WHERE
+                        task='sk.iway.iwcm.system.ConfPreparedPublisher;
+
+                        UPDATE crontab SET task_name='Publikovanie zmien súborov v Archíve súborov' WHERE
+                        task='sk.iway.iwcm.components.file_archiv.FileArchivatorInsertLater;
+                    </string>
+                </void>
+                <void property="oracle">
+                    <string>
+                        UPDATE crontab SET task_name='Zmazanie starých udalostí v kalendári' WHERE
+                        task='sk.iway.iwcm.calendar.CalendarDB';
+
+                        UPDATE crontab SET task_name='Kontrola pozícií kľúčových slov v Google' WHERE
+                        task='sk.iway.iwcm.components.seo.SeoManager';
+
+                        UPDATE crontab SET task_name='Vytvorenie monitoringu systému' WHERE
+                        task='sk.iway.iwcm.system.monitoring.MonitoringManager;
+
+                        UPDATE crontab SET task_name='Publikovanie zmien v adresároch web stránok' WHERE
+                        task='sk.iway.iwcm.doc.GroupPublisher;
+
+                        UPDATE crontab SET task_name='Zmazanie záznamov heatmapy' WHERE
+                        task='sk.iway.iwcm.stat.heat_map.HeatMapCleaner;
+
+                        UPDATE crontab SET task_name='Zápis štatistiky návštevnosti' WHERE
+                        task='sk.iway.iwcm.stat.StatWriteBuffer;
+
+                        UPDATE crontab SET task_name='Indexovanie suborov pre vyhladavanie v administracii' WHERE
+                        task='sk.iway.iwcm.components.spotlight.FileIndexer;
+
+                        UPDATE crontab SET task_name='Aktualizácia persistent cache' WHERE
+                        task='sk.iway.iwcm.system.cache.PersistentCacheDB;
+
+                        UPDATE crontab SET task_name='Publikovanie zmien v konfigurácii' WHERE
+                        task='sk.iway.iwcm.system.ConfPreparedPublisher;
+
+                        UPDATE crontab SET task_name='Publikovanie zmien súborov v Archíve súborov' WHERE
+                        task='sk.iway.iwcm.components.file_archiv.FileArchivatorInsertLater;
+                    </string>
+                </void>
+            </object>
+        </void>
+
+        <void method="add">
+            <object class="sk.iway.iwcm.system.UpdateDBBean">
+             <void property="author"><string>jeeff</string></void>
+             <void property="date"><string>14.10.2020</string></void>
+             <void property="desc"><string>Oprava nazvov stlpcov pkey generatora</string></void>
+             <void property="mysql">
+              <string>
+               UPDATE pkey_generator SET table_pkey_name='insert_script_doc_id' WHERE name='insert_script_doc';
+              </string>
+             </void>
+             <void property="mssql">
+              <string>
+                UPDATE pkey_generator SET table_pkey_name='insert_script_doc_id' WHERE name='insert_script_doc';
+              </string>
+             </void>
+             <void property="oracle">
+              <string>
+                UPDATE pkey_generator SET table_pkey_name='insert_script_doc_id' WHERE name='insert_script_doc';
+              </string>
+             </void>
+            </object>
+        </void>
+
+        <void method="add">
+            <object class="sk.iway.iwcm.system.UpdateDBBean">
+             <void property="author"><string>jeeff</string></void>
+             <void property="date"><string>15.4.2021</string></void>
+             <void property="desc"><string>_conf_prepared_ -> zmena date_prepared aby povoloval null hodnoty</string></void>
+             <void property="mysql"><string>ALTER TABLE _conf_prepared_ MODIFY date_prepared DATETIME NULL;</string></void>
+             <void property="mssql"><string>ALTER TABLE _conf_prepared_ ALTER COLUMN date_prepared DATETIME NULL;</string></void>
+             <void property="oracle"><string></string></void>
+            </object>
+        </void>
+
+        <void method="add">
+            <object class="sk.iway.iwcm.system.UpdateDBBean">
+                <void property="author"><string>sivan</string></void>
+                <void property="date"><string>14.12.2021</string></void>
+                <void property="desc"><string>Pridanie stlpcov temp_field_a_docid ... temp_field_d_docid do tabuľky documents</string></void>
+                <void property="mysql">
+                    <string>
+                        ALTER TABLE documents ADD temp_field_a_docid INT NULL DEFAULT -1;
+                        ALTER TABLE documents ADD temp_field_b_docid INT NULL DEFAULT -1;
+                        ALTER TABLE documents ADD temp_field_c_docid INT NULL DEFAULT -1;
+                        ALTER TABLE documents ADD temp_field_d_docid INT NULL DEFAULT -1;
+                    </string>
+                </void>
+                <void property="mssql">
+                    <string>
+                        ALTER TABLE documents ADD temp_field_a_docid INT NULL DEFAULT -1;
+                        ALTER TABLE documents ADD temp_field_b_docid INT NULL DEFAULT -1;
+                        ALTER TABLE documents ADD temp_field_c_docid INT NULL DEFAULT -1;
+                        ALTER TABLE documents ADD temp_field_d_docid INT NULL DEFAULT -1;
+                    </string>
+                </void>
+                <void property="oracle">
+                    <string>
+                        ALTER TABLE documents ADD temp_field_a_docid INTEGER DEFAULT -1 NULL;
+                        ALTER TABLE documents ADD temp_field_b_docid INTEGER DEFAULT -1 NULL;
+                        ALTER TABLE documents ADD temp_field_c_docid INTEGER DEFAULT -1 NULL;
+                        ALTER TABLE documents ADD temp_field_d_docid INTEGER DEFAULT -1 NULL;
+                    </string>
+                </void>
+            </object>
+        </void>
+
+        <void method="add">
+            <object class="sk.iway.iwcm.system.UpdateDBBean">
+                <void property="author"><string>sivan</string></void>
+                <void property="date"><string>14.12.2021</string></void>
+                <void property="desc"><string>Pridanie stlpcov temp_field_a_docid ... temp_field_d_docid do tabuľky documents_history</string></void>
+                <void property="mysql">
+                    <string>
+                        ALTER TABLE documents_history ADD temp_field_a_docid INT NULL DEFAULT -1;
+                        ALTER TABLE documents_history ADD temp_field_b_docid INT NULL DEFAULT -1;
+                        ALTER TABLE documents_history ADD temp_field_c_docid INT NULL DEFAULT -1;
+                        ALTER TABLE documents_history ADD temp_field_d_docid INT NULL DEFAULT -1;
+                    </string>
+                </void>
+                <void property="mssql">
+                    <string>
+                        ALTER TABLE documents_history ADD temp_field_a_docid INT NULL DEFAULT -1;
+                        ALTER TABLE documents_history ADD temp_field_b_docid INT NULL DEFAULT -1;
+                        ALTER TABLE documents_history ADD temp_field_c_docid INT NULL DEFAULT -1;
+                        ALTER TABLE documents_history ADD temp_field_d_docid INT NULL DEFAULT -1;
+                    </string>
+                </void>
+                <void property="oracle">
+                    <string>
+                        ALTER TABLE documents_history ADD temp_field_a_docid INTEGER DEFAULT -1 NULL;
+                        ALTER TABLE documents_history ADD temp_field_b_docid INTEGER DEFAULT -1 NULL;
+                        ALTER TABLE documents_history ADD temp_field_c_docid INTEGER DEFAULT -1 NULL;
+                        ALTER TABLE documents_history ADD temp_field_d_docid INTEGER DEFAULT -1 NULL;
+                    </string>
+                </void>
+            </object>
+        </void>
+
+        <void method="add">
+            <object class="sk.iway.iwcm.system.UpdateDBBean">
+                <void property="author"><string>sivan</string></void>
+                <void property="date"><string>14.12.2021</string></void>
+                <void property="desc">
+                    <string>Pridanie boolean stlpcov (show_in_navbar, show_in_sitemap, logged_show_in_menu, logged_show_in_navbar, logged_show_in_sitemap) do tabulky documents</string>
+                </void>
+                <void property="mysql">
+                    <string>
+                        ALTER TABLE documents ADD show_in_navbar tinyint(1) NULL;
+                        ALTER TABLE documents ADD show_in_sitemap tinyint(1) NULL;
+                        ALTER TABLE documents ADD logged_show_in_menu tinyint(1) NULL;
+                        ALTER TABLE documents ADD logged_show_in_navbar tinyint(1) NULL;
+                        ALTER TABLE documents ADD logged_show_in_sitemap tinyint(1) NULL;
+                    </string>
+                </void>
+                <void property="mssql">
+                    <string>
+                        ALTER TABLE documents ADD show_in_navbar BIT NULL;
+                        ALTER TABLE documents ADD show_in_sitemap BIT NULL;
+                        ALTER TABLE documents ADD logged_show_in_menu BIT NULL;
+                        ALTER TABLE documents ADD logged_show_in_navbar BIT NULL;
+                        ALTER TABLE documents ADD logged_show_in_sitemap BIT NULL;
+                    </string>
+                </void>
+                <void property="oracle">
+                    <string>
+                        ALTER TABLE documents ADD show_in_navbar SMALLINT NULL;
+                        ALTER TABLE documents ADD show_in_sitemap SMALLINT NULL;
+                        ALTER TABLE documents ADD logged_show_in_menu SMALLINT NULL;
+                        ALTER TABLE documents ADD logged_show_in_navbar SMALLINT NULL;
+                        ALTER TABLE documents ADD logged_show_in_sitemap SMALLINT NULL;
+                    </string>
+                </void>
+            </object>
+        </void>
+
+        <void method="add">
+            <object class="sk.iway.iwcm.system.UpdateDBBean">
+                <void property="author"><string>sivan</string></void>
+                <void property="date"><string>18.12.2021</string></void>
+                <void property="desc">
+                    <string>Pridanie boolean stlpcov (show_in_navbar, show_in_sitemap, logged_show_in_menu, logged_show_in_navbar, logged_show_in_sitemap) do tabulky documents_history</string>
+                </void>
+                <void property="mysql">
+                    <string>
+                        ALTER TABLE documents_history ADD show_in_navbar tinyint(1) NULL;
+                        ALTER TABLE documents_history ADD show_in_sitemap tinyint(1) NULL;
+                        ALTER TABLE documents_history ADD logged_show_in_menu tinyint(1) NULL;
+                        ALTER TABLE documents_history ADD logged_show_in_navbar tinyint(1) NULL;
+                        ALTER TABLE documents_history ADD logged_show_in_sitemap tinyint(1) NULL;
+                    </string>
+                </void>
+                <void property="mssql">
+                    <string>
+                        ALTER TABLE documents_history ADD show_in_navbar BIT NULL;
+                        ALTER TABLE documents_history ADD show_in_sitemap BIT NULL;
+                        ALTER TABLE documents_history ADD logged_show_in_menu BIT NULL;
+                        ALTER TABLE documents_history ADD logged_show_in_navbar BIT NULL;
+                        ALTER TABLE documents_history ADD logged_show_in_sitemap BIT NULL;
+                    </string>
+                </void>
+                <void property="oracle">
+                    <string>
+                        ALTER TABLE documents_history ADD show_in_navbar SMALLINT NULL;
+                        ALTER TABLE documents_history ADD show_in_sitemap SMALLINT NULL;
+                        ALTER TABLE documents_history ADD logged_show_in_menu SMALLINT NULL;
+                        ALTER TABLE documents_history ADD logged_show_in_navbar SMALLINT NULL;
+                        ALTER TABLE documents_history ADD logged_show_in_sitemap SMALLINT NULL;
+                    </string>
+                </void>
+            </object>
+        </void>
+
+        <void method="add">
+            <object class="sk.iway.iwcm.system.UpdateDBBean">
+                <void property="author"><string>sivan</string></void>
+                <void property="date"><string>28.12.2021</string></void>
+                <void property="desc">
+                    <string>Pridanie boolean stlpcov (show_in_navbar, show_in_sitemap, logged_show_in_navbar, logged_show_in_sitemap) do tabulky groups.</string>
+                </void>
+                <void property="mysql">
+                    <string>
+                        ALTER TABLE groups ADD show_in_navbar tinyint(1) NULL;
+                        ALTER TABLE groups ADD show_in_sitemap tinyint(1) NULL;
+                        ALTER TABLE groups ADD logged_show_in_navbar tinyint(1) NULL;
+                        ALTER TABLE groups ADD logged_show_in_sitemap tinyint(1) NULL;
+                    </string>
+                </void>
+                <void property="mssql">
+                    <string>
+                        ALTER TABLE groups ADD show_in_navbar INT NULL;
+                        ALTER TABLE groups ADD show_in_sitemap INT NULL;
+                        ALTER TABLE groups ADD logged_show_in_navbar INT NULL;
+                        ALTER TABLE groups ADD logged_show_in_sitemap INT NULL;
+                    </string>
+                </void>
+                <void property="oracle">
+                    <string>
+                        ALTER TABLE groups ADD show_in_navbar SMALLINT NULL;
+                        ALTER TABLE groups ADD show_in_sitemap SMALLINT NULL;
+                        ALTER TABLE groups ADD logged_show_in_navbar SMALLINT NULL;
+                        ALTER TABLE groups ADD logged_show_in_sitemap SMALLINT NULL;
+                    </string>
+                </void>
+            </object>
+        </void>
+
+        <void method="add">
+            <object class="sk.iway.iwcm.system.UpdateDBBean">
+                <void property="author"><string>sivan</string></void>
+                <void property="date"><string>28.12.2021</string></void>
+                <void property="desc">
+                    <string>Pridanie boolean stlpcov (show_in_navbar, show_in_sitemap, logged_show_in_navbar, logged_show_in_sitemap) do tabulky groups_scheduler.</string>
+                </void>
+                <void property="mysql">
+                    <string>
+                        ALTER TABLE groups_scheduler ADD show_in_navbar tinyint(1) NULL;
+                        ALTER TABLE groups_scheduler ADD show_in_sitemap tinyint(1) NULL;
+                        ALTER TABLE groups_scheduler ADD logged_show_in_navbar tinyint(1) NULL;
+                        ALTER TABLE groups_scheduler ADD logged_show_in_sitemap tinyint(1) NULL;
+                    </string>
+                </void>
+                <void property="mssql">
+                    <string>
+                        ALTER TABLE groups_scheduler ADD show_in_navbar INT NULL;
+                        ALTER TABLE groups_scheduler ADD show_in_sitemap INT NULL;
+                        ALTER TABLE groups_scheduler ADD logged_show_in_navbar INT NULL;
+                        ALTER TABLE groups_scheduler ADD logged_show_in_sitemap INT NULL;
+                    </string>
+                </void>
+                <void property="oracle">
+                    <string>
+                        ALTER TABLE groups_scheduler ADD show_in_navbar SMALLINT NULL;
+                        ALTER TABLE groups_scheduler ADD show_in_sitemap SMALLINT NULL;
+                        ALTER TABLE groups_scheduler ADD logged_show_in_navbar SMALLINT NULL;
+                        ALTER TABLE groups_scheduler ADD logged_show_in_sitemap SMALLINT NULL;
+                    </string>
+                </void>
+            </object>
+        </void>
+
+        <void method="add">
+            <object class="sk.iway.iwcm.system.UpdateDBBean">
+                <void property="author"><string>sivan</string></void>
+                <void property="date"><string>28.12.2021</string></void>
+                <void property="desc">
+                    <string>Pridanie boolean stlpcov url_inherit_group, generate_url_from_title a editor_virtual_path do tabulky documents</string>
+                </void>
+                <void property="mysql">
+                    <string>
+                        ALTER TABLE documents ADD url_inherit_group TinyInt(1) DEFAULT 0;
+                        ALTER TABLE documents ADD generate_url_from_title TinyInt(1) DEFAULT 0;
+                        ALTER TABLE documents ADD editor_virtual_path VARCHAR(255) NULL;
+                    </string>
+                </void>
+                <void property="mssql">
+                    <string>
+                        ALTER TABLE documents ADD url_inherit_group BIT DEFAULT 0;
+                        ALTER TABLE documents ADD generate_url_from_title BIT DEFAULT 0;
+                        ALTER TABLE documents ADD editor_virtual_path NVARCHAR(255) NULL;
+                    </string>
+                </void>
+                <void property="oracle">
+                    <string>
+                        ALTER TABLE documents ADD url_inherit_group NUMBER(1) DEFAULT 0;
+                        ALTER TABLE documents ADD generate_url_from_title NUMBER(1) DEFAULT 0;
+                        ALTER TABLE documents ADD editor_virtual_path NVARCHAR2(255);
+                    </string>
+                </void>
+            </object>
+        </void>
+
+        <void method="add">
+            <object class="sk.iway.iwcm.system.UpdateDBBean">
+                <void property="author"><string>sivan</string></void>
+                <void property="date"><string>4.1.2022</string></void>
+                <void property="desc">
+                    <string>Pridanie boolean stlpcov url_inherit_group, generate_url_from_title a editor_virtual_path do tabulky documents_history</string>
+                </void>
+                <void property="mysql">
+                    <string>
+                        ALTER TABLE documents_history ADD url_inherit_group TinyInt(1) DEFAULT 0;
+                        ALTER TABLE documents_history ADD generate_url_from_title TinyInt(1) DEFAULT 0;
+                        ALTER TABLE documents_history ADD editor_virtual_path VARCHAR(64) NULL;
+                    </string>
+                </void>
+                <void property="mssql">
+                    <string>
+                        ALTER TABLE documents_history ADD url_inherit_group BIT DEFAULT 0;
+                        ALTER TABLE documents_history ADD generate_url_from_title BIT DEFAULT 0;
+                        ALTER TABLE documents_history ADD editor_virtual_path NVARCHAR(64) NULL;
+                    </string>
+                </void>
+                <void property="oracle">
+                    <string>
+                        ALTER TABLE documents_history ADD url_inherit_group NUMBER(1) DEFAULT 0;
+                        ALTER TABLE documents_history ADD generate_url_from_title NUMBER(1) DEFAULT 0;
+                        ALTER TABLE documents_history ADD editor_virtual_path NVARCHAR2(64);
+                    </string>
+                </void>
+            </object>
+        </void>
+
+        <void method="add">
+            <object class="sk.iway.iwcm.system.UpdateDBBean">
+                <void property="author"><string>lbalat</string></void>
+                <void property="date"><string>21.1.2022</string></void>
+                <void property="desc"><string>Nastavenie default hodnoty temp_field_d_docid</string></void>
+                <void property="mysql">
+                    <string>
+                        UPDATE documents SET temp_field_a_docid=-1 WHERE temp_field_a_docid IS NULL;
+                        UPDATE documents SET temp_field_b_docid=-1 WHERE temp_field_b_docid IS NULL;
+                        UPDATE documents SET temp_field_c_docid=-1 WHERE temp_field_c_docid IS NULL;
+                        UPDATE documents SET temp_field_d_docid=-1 WHERE temp_field_d_docid IS NULL;
+                        UPDATE documents_history SET temp_field_a_docid=-1 WHERE temp_field_a_docid IS NULL;
+                        UPDATE documents_history SET temp_field_b_docid=-1 WHERE temp_field_b_docid IS NULL;
+                        UPDATE documents_history SET temp_field_c_docid=-1 WHERE temp_field_c_docid IS NULL;
+                        UPDATE documents_history SET temp_field_d_docid=-1 WHERE temp_field_d_docid IS NULL;
+                    </string>
+                </void>
+                <void property="mssql">
+                    <string>
+                        UPDATE documents SET temp_field_a_docid=-1 WHERE temp_field_a_docid IS NULL;
+                        UPDATE documents SET temp_field_b_docid=-1 WHERE temp_field_b_docid IS NULL;
+                        UPDATE documents SET temp_field_c_docid=-1 WHERE temp_field_c_docid IS NULL;
+                        UPDATE documents SET temp_field_d_docid=-1 WHERE temp_field_d_docid IS NULL;
+                        UPDATE documents_history SET temp_field_a_docid=-1 WHERE temp_field_a_docid IS NULL;
+                        UPDATE documents_history SET temp_field_b_docid=-1 WHERE temp_field_b_docid IS NULL;
+                        UPDATE documents_history SET temp_field_c_docid=-1 WHERE temp_field_c_docid IS NULL;
+                        UPDATE documents_history SET temp_field_d_docid=-1 WHERE temp_field_d_docid IS NULL;
+                    </string>
+                </void>
+                <void property="oracle">
+                    <string>
+                        UPDATE documents SET temp_field_a_docid=-1 WHERE temp_field_a_docid IS NULL;
+                        UPDATE documents SET temp_field_b_docid=-1 WHERE temp_field_b_docid IS NULL;
+                        UPDATE documents SET temp_field_c_docid=-1 WHERE temp_field_c_docid IS NULL;
+                        UPDATE documents SET temp_field_d_docid=-1 WHERE temp_field_d_docid IS NULL;
+                        UPDATE documents_history SET temp_field_a_docid=-1 WHERE temp_field_a_docid IS NULL;
+                        UPDATE documents_history SET temp_field_b_docid=-1 WHERE temp_field_b_docid IS NULL;
+                        UPDATE documents_history SET temp_field_c_docid=-1 WHERE temp_field_c_docid IS NULL;
+                        UPDATE documents_history SET temp_field_d_docid=-1 WHERE temp_field_d_docid IS NULL;
+                    </string>
+                </void>
+            </object>
+        </void>
+
+        <void method="add">
+            <object class="sk.iway.iwcm.system.UpdateDBBean">
+                <void property="author"><string>sivan</string></void>
+                <void property="date"><string>21.12.2021</string></void>
+                <void property="desc"><string>Zmena primarneho kluca tabulky form_regular_exp na nový INT stlpec id</string></void>
+                <void property="mysql">
+                    <string>
+                        ALTER TABLE form_regular_exp DROP PRIMARY KEY;
+                        ALTER TABLE form_regular_exp ADD id INT AUTO_INCREMENT PRIMARY KEY NOT NULL;
+                    </string>
+                </void>
+                <void property="mssql">
+                    <string>
+                        ALTER TABLE form_regular_exp DROP CONSTRAINT {CONSTRAIN:PK};
+                        ALTER TABLE form_regular_exp ADD id INT IDENTITY(1,1) PRIMARY KEY NOT NULL;
+                    </string>
+                </void>
+                <void property="oracle">
+                    <string>
+                        ALTER TABLE form_regular_exp DROP primary key;
+                        CREATE SEQUENCE S_webjet_form_regular_exp START WITH 1;
+                        CREATE OR REPLACE TRIGGER T_webjet_form_regular_exp BEFORE INSERT ON form_regular_exp
+                            FOR EACH ROW
+                                DECLARE
+                                    val INTEGER|
+                                BEGIN
+                                    IF :new.id IS NULL THEN
+                                        SELECT S_webjet_form_regular_exp.nextval into val FROM dual|
+                                        :new.id:= val|
+                                    END IF|
+                                END|
+                        ;
+                        ALTER TABLE form_regular_exp ADD id INT DEFAULT S_webjet_form_regular_exp.NEXTVAL NOT NULL;
+                        ALTER TABLE form_regular_exp ADD PRIMARY KEY (ID);
+                    </string>
+                </void>
+            </object>
+        </void>
+
+        <void method="add">
+            <object class="sk.iway.iwcm.system.UpdateDBBean">
+             <void property="author"><string>jeeff</string></void>
+             <void property="date"><string>18.2.2022</string></void>
+             <void property="desc"><string>users - zmena password aby povoloval null hodnoty</string></void>
+             <void property="mysql"><string></string></void>
+             <void property="mssql"><string>ALTER TABLE users ALTER COLUMN password nvarchar(128) NULL;</string></void>
+             <void property="oracle"><string>ALTER TABLE users MODIFY password nvarchar2(128) NULL;</string></void>
+            </object>
+        </void>
+
+        <void method="add">
+            <object class="sk.iway.iwcm.system.UpdateDBBean">
+                <void property="author"><string>sivan</string></void>
+                <void property="date"><string>04.10.2022</string></void>
+                <void property="desc"><string>Pridanie zmena typu stĺpcov cas_od a cas_do z varchar na datetime.</string></void>
+                <void property="mysql">
+                    <string>
+                        ALTER TABLE reservation_object_times MODIFY COLUMN cas_od varchar(20) null;
+                        UPDATE reservation_object_times SET cas_od = CONCAT('2000-01-01 ', cas_od) WHERE cas_od NOT LIKE '%-%';
+                        ALTER TABLE reservation_object_times MODIFY COLUMN cas_od datetime null;
+
+                        ALTER TABLE reservation_object_times MODIFY COLUMN cas_do varchar(20) null;
+                        UPDATE reservation_object_times SET cas_do = CONCAT('2000-01-01 ', cas_do) WHERE cas_do NOT LIKE '%-%';
+                        ALTER TABLE reservation_object_times MODIFY COLUMN cas_do datetime null;
+                    </string>
+                </void>
+                <void property="mssql">
+                    <string>
+                        ALTER TABLE reservation_object_times ALTER COLUMN cas_od varchar(20) null;
+                        UPDATE reservation_object_times SET cas_od = CONCAT('2000-01-01 ', cas_od) WHERE cas_od NOT LIKE '%-%';
+                        ALTER TABLE reservation_object_times ALTER COLUMN cas_od datetime null;
+
+                        ALTER TABLE reservation_object_times ALTER COLUMN cas_do varchar(20) null;
+                        UPDATE reservation_object_times SET cas_do = CONCAT('2000-01-01 ', cas_do) WHERE cas_do NOT LIKE '%-%';
+                        ALTER TABLE reservation_object_times ALTER COLUMN cas_do datetime null;
+                    </string>
+                </void>
+                <void property="oracle">
+                    <string>
+                        ALTER TABLE reservation_object_times MODIFY cas_od varchar(20);
+                        UPDATE reservation_object_times SET cas_od = CONCAT('2000-01-01 ', cas_od) WHERE cas_od NOT LIKE '%-%';
+                        ALTER TABLE reservation_object_times MODIFY cas_od DATE;
+
+                        ALTER TABLE reservation_object_times MODIFY cas_do varchar(20);
+                        UPDATE reservation_object_times SET cas_do = CONCAT('2000-01-01 ', cas_do) WHERE cas_do NOT LIKE '%-%';
+                        ALTER TABLE reservation_object_times MODIFY cas_do DATE;
+                    </string>
+                </void>
+            </object>
+        </void>
+
+        <void method="add">
+            <object class="sk.iway.iwcm.system.UpdateDBBean">
+                <void property="author"><string>sivan</string></void>
+                <void property="date"><string>04.10.2022</string></void>
+                <void property="desc"><string>Uprava typov stĺpcov reservation_time_from a reservation_time_to z varchar na Datetime, time_unit z varchar na tinyint.</string></void>
+                <void property="mysql">
+                    <string>
+                        ALTER TABLE reservation_object MODIFY COLUMN reservation_time_from varchar(20) null;
+                        UPDATE reservation_object SET reservation_time_from = CONCAT('2000-01-01 ', reservation_time_from) WHERE reservation_time_from NOT LIKE '%-%';
+                        ALTER TABLE reservation_object MODIFY COLUMN reservation_time_from datetime null;
+
+                        ALTER TABLE reservation_object MODIFY COLUMN reservation_time_to varchar(20) null;
+                        UPDATE reservation_object SET reservation_time_to = CONCAT('2000-01-01 ', reservation_time_to) WHERE reservation_time_to NOT LIKE '%-%';
+                        ALTER TABLE reservation_object MODIFY COLUMN reservation_time_to datetime null;
+
+                        ALTER TABLE reservation_object MODIFY COLUMN time_unit tinyint(2) DEFAULT NULL NULL;
+                    </string>
+                </void>
+                <void property="mssql">
+                    <string>
+                        ALTER TABLE reservation_object ADD reservation_time_from2 datetime null;
+                        UPDATE reservation_object SET reservation_time_from2 = CONCAT('2000-01-01 ', reservation_time_from) WHERE reservation_time_from NOT LIKE '%-%';
+                        EXEC sp_rename 'reservation_object.reservation_time_from', 'reservation_time_from_old', 'COLUMN';
+                        EXEC sp_rename 'reservation_object.reservation_time_from2', 'reservation_time_from', 'COLUMN';
+
+                        ALTER TABLE reservation_object ADD reservation_time_to2 datetime null;
+                        UPDATE reservation_object SET reservation_time_to2 = CONCAT('2000-01-01 ', reservation_time_to) WHERE reservation_time_to NOT LIKE '%-%';
+                        EXEC sp_rename 'reservation_object.reservation_time_to', 'reservation_time_to_old', 'COLUMN';
+                        EXEC sp_rename 'reservation_object.reservation_time_to2', 'reservation_time_to', 'COLUMN';
+
+                        ALTER TABLE reservation_object ALTER COLUMN time_unit tinyint NULL;
+                    </string>
+                </void>
+                <void property="oracle">
+                    <string>
+                        ALTER TABLE reservation_object MODIFY reservation_time_from varchar(20);
+                        UPDATE reservation_object SET reservation_time_from = CONCAT('2000-01-01 ', reservation_time_from) WHERE reservation_time_from NOT LIKE '%-%';
+                        ALTER TABLE reservation_object MODIFY reservation_time_from DATE DEFAULT NULL;
+
+                        ALTER TABLE reservation_object MODIFY reservation_time_to varchar(20);
+                        UPDATE reservation_object SET reservation_time_to = CONCAT('2000-01-01 ', reservation_time_to) WHERE reservation_time_to NOT LIKE '%-%';
+                        ALTER TABLE reservation_object MODIFY reservation_time_to DATE DEFAULT NULL;
+
+                        ALTER TABLE reservation_object MODIFY time_unit smallint DEFAULT NULL;
+                    </string>
+                </void>
+            </object>
+        </void>
+
+        <void method="add">
+            <object class="sk.iway.iwcm.system.UpdateDBBean">
+                <void property="author"><string>lbalat</string></void>
+                <void property="date"><string>15.12.2022</string></void>
+                <void property="desc"><string>Pridanie stlpcov field_a-f do tabulky banner_banners</string></void>
+                <void property="mysql">
+                    <string>
+                        ALTER TABLE banner_banners ADD field_a VARCHAR(255), ADD field_b VARCHAR(255), ADD field_c VARCHAR(255), ADD field_d VARCHAR(255), ADD field_e VARCHAR(255), ADD field_f VARCHAR(255);
+                    </string>
+                </void>
+                <void property="mssql">
+                    <string>
+                        ALTER TABLE banner_banners ADD field_a NVARCHAR(255), field_b NVARCHAR(255), field_c NVARCHAR(255), field_d NVARCHAR(255), field_e NVARCHAR(255), field_f NVARCHAR(255);
+                    </string>
+                </void>
+                <void property="oracle">
+                    <string>
+                        ALTER TABLE banner_banners ADD (field_a NVARCHAR2(255), field_b NVARCHAR2(255), field_c NVARCHAR2(255), field_d NVARCHAR2(255), field_e NVARCHAR2(255), field_f NVARCHAR2(255));
+                    </string>
+                </void>
+            </object>
+        </void>
+
+        <void method="add">
+            <object class="sk.iway.iwcm.system.UpdateDBBean">
+             <void property="author"><string>lbalat</string></void>
+             <void property="date"><string>20.12.2022</string></void>
+             <void property="desc"><string>inquiry - podpora vkladania HTML kodu</string></void>
+             <void property="mysql"><string>ALTER TABLE inquiry MODIFY question_text TEXT;</string></void>
+             <void property="mssql"><string>ALTER TABLE inquiry ALTER COLUMN question_text NTEXT;</string></void>
+             <void property="oracle">
+              <string>
+               ALTER TABLE inquiry ADD (question_text2 CLOB);
+               UPDATE inquiry SET question_text2=question_text;
+               ALTER TABLE inquiry DROP COLUMN question_text;
+               ALTER TABLE inquiry RENAME COLUMN question_text2 TO question_text;
+              </string>
+             </void>
+            </object>
+        </void>
+
+        <void method="add">
+            <object class="sk.iway.iwcm.system.UpdateDBBean">
+             <void property="author"><string>lbalat</string></void>
+             <void property="date"><string>22.12.2022</string></void>
+             <void property="desc"><string>users - pridanie stlpca api_key</string></void>
+             <void property="mysql"><string>ALTER TABLE users ADD api_key varchar(255);</string></void>
+             <void property="mssql"><string>ALTER TABLE users ADD api_key nvarchar(255);</string></void>
+             <void property="oracle"><string>ALTER TABLE users ADD api_key nvarchar2(255);</string></void>
+            </object>
+        </void>
+
+        <void method="add">
+            <object class="sk.iway.iwcm.system.UpdateDBBean">
+             <void property="author"><string>lbalat</string></void>
+             <void property="date"><string>07.02.2023</string></void>
+             <void property="desc"><string>pkey-generator - oprava nazvov, fix oracle documents</string></void>
+             <void property="mysql"><string>
+                update pkey_generator set table_pkey_name = 'cookie_id' where name = 'cookies' and table_name = 'cookies';
+            </string></void>
+             <void property="mssql"><string>
+                update pkey_generator set table_pkey_name = 'cookie_id' where name = 'cookies' and table_name = 'cookies';
+            </string></void>
+             <void property="oracle"><string>
+                update pkey_generator set table_pkey_name = 'cookie_id' where name = 'cookies' and table_name = 'cookies';
+                DELETE FROM documents WHERE doc_id=-1;
+                DELETE FROM documents_history WHERE doc_id=-1;
+            </string></void>
+            </object>
+        </void>
+
+        <void method="add">
+            <object class="sk.iway.iwcm.system.UpdateDBBean">
+             <void property="author"><string>lbalat</string></void>
+             <void property="date"><string>11.03.2023</string></void>
+             <void property="desc"><string>vypnutie FileIndexer cron jobu</string></void>
+             <void property="mysql"><string>DELETE FROM crontab WHERE task='sk.iway.iwcm.components.spotlight.FileIndexer'</string></void>
+             <void property="mssql"><string>DELETE FROM crontab WHERE task='sk.iway.iwcm.components.spotlight.FileIndexer'</string></void>
+             <void property="oracle"><string>DELETE FROM crontab WHERE task='sk.iway.iwcm.components.spotlight.FileIndexer'</string></void>
+            </object>
+        </void>
+        <void method="add">
+            <object class="sk.iway.iwcm.system.UpdateDBBean">
+                <void property="author"><string>lbalat</string></void>
+                <void property="date"><string>27.3.2023</string></void>
+                <void property="desc"><string>Pridanie stlpcov publish_after_start do tabulky documents_history pre historicke uchovanie stavu publikovania</string></void>
+                <void property="mysql"><string>ALTER TABLE documents ADD publish_after_start TINYINT(1) DEFAULT 0; ALTER TABLE documents_history ADD publish_after_start TINYINT(1) DEFAULT 0;</string></void>
+                <void property="mssql"><string>ALTER TABLE documents ADD publish_after_start BIT DEFAULT 0; ALTER TABLE documents_history ADD publish_after_start BIT DEFAULT 0;</string></void>
+                <void property="oracle"><string>ALTER TABLE documents ADD publish_after_start SMALLINT DEFAULT 0; ALTER TABLE documents_history ADD publish_after_start SMALLINT DEFAULT 0;</string></void>
+            </object>
+        </void>
+
+        <void method="add">
+            <object class="sk.iway.iwcm.system.UpdateDBBean">
+                <void property="author"><string>lbalat</string></void>
+                <void property="date"><string>13.04.2023</string></void>
+                <void property="desc"><string>reservation_object_times - fix Oracle</string></void>
+                <void property="mysql"><string></string></void>
+                <void property="mssql"><string></string></void>
+                <void property="oracle"><string>ALTER TABLE reservation_object_times ADD den INTEGER;</string></void>
+            </object>
+        </void>
+
+        <void method="add">
+            <object class="sk.iway.iwcm.system.UpdateDBBean">
+                <void property="author"><string>pbielik</string></void>
+                <void property="date"><string>18.04.2023</string></void>
+                <void property="desc"><string>JTB-1630 - conf_prepared value length</string></void>
+                <void property="oracle"><string>
+                    alter table WEBJET_CONF_PREPARED modify VALUE NVARCHAR2(2000);
+                </string></void>
+            </object>
+        </void>
+
+        <void method="add">
+            <object class="sk.iway.iwcm.system.UpdateDBBean">
+                <void property="author"><string>lbalat</string></void>
+                <void property="date"><string>21.4.2023</string></void>
+                <void property="desc"><string>Pridanie stlpca id do doc_atr tabulky</string></void>
+                <void property="mysql">
+                    <string>
+                        ALTER TABLE doc_atr DROP PRIMARY KEY;
+                        ALTER TABLE doc_atr ADD id INT AUTO_INCREMENT PRIMARY KEY NOT NULL;
+                    </string>
+                </void>
+                <void property="mssql">
+                    <string>
+                        ALTER TABLE doc_atr ADD id INT IDENTITY(1,1) NOT NULL;
+                    </string>
+                </void>
+                <void property="oracle">
+                    <string>
+                        CREATE SEQUENCE S_doc_atr START WITH 1;
+                        CREATE TRIGGER T_doc_atr BEFORE INSERT ON doc_atr
+                            FOR EACH ROW
+                                DECLARE
+                                    val INTEGER|
+                                BEGIN
+                                    IF :new.id IS NULL THEN
+                                        SELECT S_doc_atr.nextval into val FROM dual|
+                                        :new.id:= val|
+                                    END IF|
+                                END|
+                        ;
+                        ALTER TABLE doc_atr ADD id INT DEFAULT S_doc_atr.NEXTVAL NOT NULL;
+                    </string>
+                </void>
+            </object>
+        </void>
+
+        <void method="add">
+            <object class="sk.iway.iwcm.system.UpdateDBBean">
+                <void property="author"><string>lbalat</string></void>
+                <void property="date"><string>25.4.2023</string></void>
+                <void property="desc"><string>doc_atr_def - pridanie domain_id</string></void>
+                <void property="mysql"><string>ALTER TABLE doc_atr_def ADD domain_id INT(11) DEFAULT 1 NOT NULL; UPDATE doc_atr_def SET domain_id=1;</string></void>
+                <void property="mssql"><string>ALTER TABLE doc_atr_def ADD domain_id int DEFAULT 1 NOT NULL; UPDATE doc_atr_def SET domain_id=1;</string></void>
+                <void property="oracle"><string>ALTER TABLE doc_atr_def ADD domain_id INT DEFAULT 1 NOT NULL; UPDATE doc_atr_def SET domain_id=1;</string></void>
+            </object>
+        </void>
+
+        <void method="add">
+            <object class="sk.iway.iwcm.system.UpdateDBBean">
+                <void property="author"><string>lbalat</string></void>
+                <void property="date"><string>11.5.2023</string></void>
+                <void property="desc"><string>Banner - oprava NULL stlpcov</string></void>
+                <void property="mysql"><string>
+                    UPDATE banner_banners SET width = 0 WHERE width IS NULL;
+                    UPDATE banner_banners SET height = 0 WHERE height IS NULL;
+                    UPDATE banner_banners SET stat_views = 0 WHERE stat_views IS NULL;
+                    UPDATE banner_banners SET stat_clicks = 0 WHERE stat_clicks IS NULL;
+                    UPDATE banner_banners SET frame_rate = 0 WHERE frame_rate IS NULL;
+                    UPDATE banner_banners SET client_id = -1 WHERE client_id IS NULL;
+                </string></void>
+                <void property="mssql"><string>
+                    UPDATE banner_banners SET width = 0 WHERE width IS NULL;
+                    UPDATE banner_banners SET height = 0 WHERE height IS NULL;
+                    UPDATE banner_banners SET stat_views = 0 WHERE stat_views IS NULL;
+                    UPDATE banner_banners SET stat_clicks = 0 WHERE stat_clicks IS NULL;
+                    UPDATE banner_banners SET frame_rate = 0 WHERE frame_rate IS NULL;
+                    UPDATE banner_banners SET client_id = -1 WHERE client_id IS NULL;
+                </string></void>
+                <void property="oracle"><string>
+                    UPDATE banner_banners SET width = 0 WHERE width IS NULL;
+                    UPDATE banner_banners SET height = 0 WHERE height IS NULL;
+                    UPDATE banner_banners SET stat_views = 0 WHERE stat_views IS NULL;
+                    UPDATE banner_banners SET stat_clicks = 0 WHERE stat_clicks IS NULL;
+                    UPDATE banner_banners SET frame_rate = 0 WHERE frame_rate IS NULL;
+                    UPDATE banner_banners SET client_id = -1 WHERE client_id IS NULL;
+                </string></void>
+            </object>
+        </void>
+
+        <void method="add">
+            <object class="sk.iway.iwcm.system.UpdateDBBean">
+                <void property="author"><string>sivan</string></void>
+                <void property="date"><string>26.05.2023</string></void>
+                <void property="desc"><string>Pridanie novej tabuľky response_headers</string></void>
+                <void property="mysql">
+                    <string>
+                        CREATE TABLE response_headers (
+                            response_header_id INT AUTO_INCREMENT PRIMARY KEY NOT NULL,
+                            url varchar(255) NOT NULL,
+                            header_name varchar(255) NOT NULL,
+                            header_value varchar(255) NOT NULL,
+                            change_date datetime NOT NULL,
+                            note varchar(255),
+                            domain_id int NOT NULL
+                        );
+                    </string>
+                </void>
+                <void property="mssql">
+                    <string>
+                        CREATE TABLE response_headers (
+                            [response_header_id] [INT] IDENTITY(1,1) PRIMARY KEY NOT NULL,
+                            [url] [varchar](255) NOT NULL,
+                            [header_name] [varchar](255) NOT NULL,
+                            [header_value] [varchar](255) NOT NULL,
+                            [change_date] [datetime] NOT NULL,
+                            [note] [varchar](255),
+                            [domain_id] [INT] NOT NULL,
+                        ) ON [PRIMARY]
+                    </string>
+                </void>
+
+                <void property="oracle">
+                    <string>
+                        CREATE TABLE response_headers (
+                            response_header_id INT NOT NULL,
+                            url VARCHAR2(255) NOT NULL,
+                            header_name VARCHAR2(255) NOT NULL,
+                            header_value VARCHAR2(255) NOT NULL,
+                            change_date DATE NOT NULL,
+                            note VARCHAR2(255),
+                            domain_id INT NOT NULL
+                        );
+                        CREATE SEQUENCE S_response_headers START WITH 1;
+                        CREATE TRIGGER T_response_headers BEFORE INSERT ON response_headers
+                            FOR EACH ROW
+                                DECLARE
+                                    val INTEGER|
+                                BEGIN
+                                    IF :new.response_header_id IS NULL THEN
+                                        SELECT S_response_headers.nextval into val FROM dual|
+                                        :new.response_header_id:= val|
+                                    END IF|
+                                END|
+                        ;
+                    </string>
+                </void>
+            </object>
+        </void>
+
+        <void method="add">
+            <object class="sk.iway.iwcm.system.UpdateDBBean">
+                <void property="author"><string>sivan</string></void>
+                <void property="date"><string>8.6.2023</string></void>
+                <void property="desc"><string>media - pridanie stlpca domain_id</string></void>
+                <void property="mysql">
+                    <string>ALTER TABLE media ADD domain_id INT(11) DEFAULT 1 NOT NULL;</string>
+                </void>
+                <void property="mssql">
+                    <string>ALTER TABLE media ADD domain_id int DEFAULT 1 NOT NULL;</string>
+                </void>
+                <void property="oracle">
+                    <string>ALTER TABLE media ADD domain_id INT DEFAULT 1 NOT NULL;</string>
+                </void>
+            </object>
+        </void>
+
+        <void method="add">
+            <object class="sk.iway.iwcm.system.UpdateDBBean">
+                <void property="author"><string>sivan</string></void>
+                <void property="date"><string>05.06.2023</string></void>
+                <void property="desc"><string>#55285 - WebJET9 - Banner adresarova struktura zobrazenia</string></void>
+                <void property="mysql">
+                    <string>
+                        CREATE TABLE banner_gr (
+                            id INT AUTO_INCREMENT PRIMARY KEY NOT NULL,
+                            group_id INT,
+                            banner_id INT
+                        );
+                        CREATE TABLE banner_doc (
+                            id INT AUTO_INCREMENT PRIMARY KEY NOT NULL,
+                            doc_id INT,
+                            banner_id INT
+                        );
+                    </string>
+                </void>
+                <void property="mssql">
+                    <string>
+                        CREATE TABLE banner_gr (
+                            id INT IDENTITY(1,1) PRIMARY KEY NOT NULL,
+                            group_id INT,
+                            banner_id INT
+                        );
+                        CREATE TABLE banner_doc (
+                            id INT IDENTITY(1,1) PRIMARY KEY NOT NULL,
+                            doc_id INT,
+                            banner_id INT
+                        );
+                    </string>
+                </void>
+                <void property="oracle">
+                    <string>
+                        CREATE TABLE banner_gr (
+                            id INTEGER NOT NULL PRIMARY KEY,
+                            group_id INTEGER,
+                            banner_id INTEGER
+                        );
+                        CREATE SEQUENCE S_banner_gr START WITH 1;
+                        CREATE TABLE banner_doc (
+                            id INTEGER NOT NULL PRIMARY KEY,
+                            doc_id INTEGER,
+                            banner_id INTEGER
+                        );
+                        CREATE SEQUENCE S_banner_doc START WITH 1;
+                    </string>
+                </void>
+            </object>
+        </void>
+
+        <void method="add">
+            <object class="sk.iway.iwcm.system.UpdateDBBean">
+             <void property="author"><string>lbalat</string></void>
+             <void property="date"><string>14.6.2022</string></void>
+             <void property="desc"><string>users - zmena password aby povoloval null hodnoty aj pre mysql</string></void>
+             <void property="mysql"><string>ALTER TABLE users MODIFY password varchar(128) NULL;</string></void>
+             <void property="mssql"><string></string></void>
+             <void property="oracle"><string></string></void>
+            </object>
+        </void>
+
+        <void method="add">
+            <object class="sk.iway.iwcm.system.UpdateDBBean">
+             <void property="author"><string>lbalat</string></void>
+             <void property="date"><string>7.7.2023</string></void>
+             <void property="desc"><string>Oracle - nastavenie COLLATE bez ohladu na velkost pismen pre vyhladavanie</string></void>
+             <void property="mysql"><string></string></void>
+             <void property="mssql"><string></string></void>
+             <void property="oracle"><string>
+                CREATE or REPLACE TRIGGER tgg_after_logon_ci_ai
+                AFTER LOGON ON SCHEMA
+                DECLARE
+                BEGIN
+                    EXECUTE IMMEDIATE 'ALTER SESSION SET NLS_SORT=BINARY_AI NLS_COMP=LINGUISTIC'|
+                END|
+             </string></void>
+            </object>
+        </void>
+
+        <void method="add">
+            <object class="sk.iway.iwcm.system.UpdateDBBean">
+                <void property="author"><string>sivan</string></void>
+                <void property="date"><string>20.07.2023</string></void>
+                <void property="desc"><string>cluster_monitoring - zvacsenie pola pre content</string></void>
+                <void property="mysql"><string>ALTER TABLE cluster_monitoring CHANGE COLUMN content content mediumtext</string></void>
+                <void property="mssql"><string></string></void>
+                <void property="oracle"><string></string></void>
+            </object>
+        </void>
+
+        <void method="add">
+            <object class="sk.iway.iwcm.system.UpdateDBBean">
+                <void property="author"><string>lbalat</string></void>
+                <void property="date"><string>17.08.2023</string></void>
+                <void property="desc"><string>export_dat - rename xml format to rss</string></void>
+                <void property="mysql"><string>UPDATE export_dat SET format='rss' WHERE format='xml'</string></void>
+                <void property="mssql"><string>UPDATE export_dat SET format='rss' WHERE format='xml'</string></void>
+                <void property="oracle"><string>UPDATE export_dat SET format='rss' WHERE format='xml'</string></void>
+            </object>
+        </void>
+
+        <void method="add">
+            <object class="sk.iway.iwcm.system.UpdateDBBean">
+                <void property="author"><string>sivan</string></void>
+                <void property="date"><string>10.08.2023</string></void>
+                <void property="desc"><string>seo_keywords - pridanie stlpca actual_position</string></void>
+                <void property="mysql">
+                    <string>ALTER TABLE seo_keywords ADD actual_position INT(11) DEFAULT -1;</string>
+                </void>
+                <void property="mssql">
+                    <string>ALTER TABLE seo_keywords ADD actual_position int DEFAULT -1;</string>
+                </void>
+                <void property="oracle">
+                    <string>ALTER TABLE seo_keywords ADD actual_position INT DEFAULT -1;</string>
+                </void>
+            </object>
+        </void>
+
+        <void method="add">
+            <object class="sk.iway.iwcm.system.UpdateDBBean">
+             <void property="author"><string>lbalat</string></void>
+             <void property="date"><string>14.09.2023</string></void>
+             <void property="desc"><string>proxy - podpora viacerych lokalnych URL adries</string></void>
+             <void property="mysql"><string>ALTER TABLE proxy MODIFY local_url TEXT;</string></void>
+             <void property="mssql"><string>ALTER TABLE proxy ALTER COLUMN local_url NTEXT;</string></void>
+             <void property="oracle">
+              <string>
+               ALTER TABLE proxy ADD (local_url2 CLOB);
+               UPDATE proxy SET local_url2=local_url;
+               ALTER TABLE proxy DROP COLUMN local_url;
+               ALTER TABLE proxy RENAME COLUMN local_url2 TO local_url;
+              </string>
+             </void>
+            </object>
+        </void>
+
+        <void method="add">
+            <object class="sk.iway.iwcm.system.UpdateDBBean">
+                <void property="author"><string>sivan</string></void>
+                <void property="date"><string>14.09.2023</string></void>
+                <void property="desc"><string>Pridanie stlpcov field_a-f do tabulky media</string></void>
+                <void property="mysql">
+                    <string>
+                        ALTER TABLE media ADD field_a VARCHAR(255), ADD field_b VARCHAR(255), ADD field_c VARCHAR(255), ADD field_d VARCHAR(255), ADD field_e VARCHAR(255), ADD field_f VARCHAR(255);
+                    </string>
+                </void>
+                <void property="mssql">
+                    <string>
+                        ALTER TABLE media ADD field_a NVARCHAR(255), field_b NVARCHAR(255), field_c NVARCHAR(255), field_d NVARCHAR(255), field_e NVARCHAR(255), field_f NVARCHAR(255);
+                    </string>
+                </void>
+                <void property="oracle">
+                    <string>
+                        ALTER TABLE media ADD (field_a NVARCHAR2(255), field_b NVARCHAR2(255), field_c NVARCHAR2(255), field_d NVARCHAR2(255), field_e NVARCHAR2(255), field_f NVARCHAR2(255));
+                    </string>
+                </void>
+            </object>
+        </void>
+
+    </object>
+</java>

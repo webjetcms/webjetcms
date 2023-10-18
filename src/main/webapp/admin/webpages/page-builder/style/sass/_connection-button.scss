@@ -1,0 +1,95 @@
+
+
+.#{$prefix}-connection-button {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%,-50%);
+    display: none;
+    width: 30px;
+    height: 30px;
+    background-color: orange;
+    border-radius: 50%;
+    z-index: $toolbar-index;
+    box-shadow: 0 5px 15px -5px rgba(0, 0, 0, 0.5);
+    transition: all 0.3s ease-in-out;
+    background-image: url("../images/link.png");
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: auto 16px;
+    border-radius: 50%;
+
+    &::after {
+        content: "";
+        border-radius: 50%;
+        position: absolute;
+        z-index: -1;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        opacity: 0;
+        transition: all 0.6s cubic-bezier(0.165, 0.84, 0.44, 1);
+        border-width: 2px;
+        border-style: solid;
+        border-color: orange;
+    }
+    .#{$prefix}-has-same-style > &,
+    &:hover {
+        cursor: pointer;
+        background-color: darken(orange,15%);
+
+        &::after {
+            transform: scale(1.4, 1.4);
+            opacity: 1;
+        }
+    }
+
+    .#{$prefix}-grid-element.#{$prefix}-is-styling > &,
+    .#{$prefix}-grid-element.#{$prefix}-is-style-connected:not(.#{$prefix}-has-same-style) > & {
+        display: none !important;
+    }
+}
+
+.#{$prefix}-wrapper {
+    &.#{$prefix}-is-styling-column {
+        .#{$prefix}-column.#{$prefix}-has-same-style.#{$prefix}-is-style-connected,
+        .#{$prefix}-column:hover {
+            > .#{$prefix}-connection-button {
+                display: block;
+            }
+        }
+        .#{$prefix}-column:not(.#{$prefix}-is-style-connected):not(.#{$prefix}-is-styling):hover {
+            > .#{$prefix}-highlighter {
+                display: block !important;
+            }
+        }
+    }
+    &.#{$prefix}-is-styling-container {
+        .#{$prefix}-container.#{$prefix}-has-same-style.#{$prefix}-is-style-connected,
+        .#{$prefix}-container:hover {
+            > .#{$prefix}-connection-button {
+                display: block;
+            }
+        }
+        .#{$prefix}-container:not(.#{$prefix}-is-style-connected):not(.#{$prefix}-is-styling):hover {
+            > .#{$prefix}-highlighter {
+                display: block !important;
+            }
+        }
+    }
+    &.#{$prefix}-is-styling-section {
+        .#{$prefix}-section.#{$prefix}-has-same-style.#{$prefix}-is-style-connected,
+        .#{$prefix}-section:hover {
+            > .#{$prefix}-connection-button {
+                display: block;
+            }
+        }
+        .#{$prefix}-section:not(.#{$prefix}-is-style-connected):not(.#{$prefix}-is-styling):hover {
+            > .#{$prefix}-highlighter {
+                display: block !important;
+            }
+        }
+    }
+}

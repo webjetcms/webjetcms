@@ -1,0 +1,1 @@
+﻿CKEDITOR.plugins.setLang("webjetmagicline","en",{title:"Magic line",insertTextHere:"Insert text here",insert:"Insert",text:"Text",image:"Image",app:"App",temp:"Block"});

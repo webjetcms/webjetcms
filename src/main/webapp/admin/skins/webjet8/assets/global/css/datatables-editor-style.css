@@ -1,0 +1,403 @@
+
+/* Zakladne nastavenia modalu */
+
+.modal.wj8-modal .modal-body { overflow: hidden; padding:0; }
+.modal.wj8-modal .modal-body .datatables-editor { display:block !important; }
+
+.modal.wj8-modal .modal-dialog { min-width: 500px; }
+
+
+/* Header + navigacia */
+.modal.wj8-modal .modal-header {
+    display: none;
+}
+.modal.wj8-modal .modal-content .editor-popup-header {
+    padding: 30px;
+    cursor: move;
+}
+.modal.wj8-modal .modal-content .editor-popup-header.nav-tabs-space {
+    padding: 30px 30px 70px;
+}
+.modal.wj8-modal .modal-content {
+    background: #f5f5f5 url(/admin/skins/webjet8/assets/global/img/wj/popup_bg_header.png) no-repeat top left;
+    border: none !important;
+}
+.modal.wj8-modal .modal-content h2,
+.modal.wj8-modal .modal-content .editor-popup-header p {
+    margin: 0 0 15px;
+    color: #fff;
+}
+.modal.wj8-modal .datatables-editor .tabbable-custom > .nav-tabs {
+    margin-top: -60px;
+    background: none;
+    border-top: 0px;
+    padding: 0px 30px 0 30px;
+}
+.modal.wj8-modal .datatables-editor .tabbable-custom > .nav.nav-tabs > li:hover {
+    border-top: 4px solid #29c01a;
+}
+.modal.wj8-modal .datatables-editor .tabbable-custom > .nav.nav-tabs > li > a {
+    color: #fff;
+    margin: 0;
+}
+
+.modal.wj8-modal .datatables-editor .tabbable-custom > .nav.nav-tabs > li:hover > a,
+.modal.wj8-modal .datatables-editor .tabbable-custom > .nav.nav-tabs > li.active > a {
+    color: #000;
+    background: #f5f5f5 !important;
+}
+.modal.wj8-modal .modal-body .datatables-editor .tabbable-custom  > .tab-content {
+    padding: 30px;
+    padding-bottom: 0;
+}
+
+/* Typografia */
+.modal.wj8-modal label {
+    cursor: pointer;
+}
+.modal.wj8-modal .btn:hover {
+    background-color: #cacaca;
+}
+.modal.wj8-modal .btn.btn-outline-primary {
+    color: #428bca;
+    border: 1px solid #428bca;
+    background: transparent;
+}
+.modal.wj8-modal .btn.btn-outline-primary:hover {
+    color: #fff;
+    background: #428bca
+}
+.modal.wj8-modal .btn.btn-success {
+    background:#29c01a;
+}
+.modal.wj8-modal .btn.btn-success:hover {
+    background-color: #218838;
+}
+.modal.wj8-modal .btn.btn-danger:hover {
+   background-color: #b92027;
+}
+.modal.wj8-modal p.empty-fields {
+    text-align: center;
+}
+
+
+.modal.wj8-modal .modal-body .datatables-editor legend {
+    font-size: 16px;
+    line-height: 120%;
+    text-align: left;
+    font-weight: 600;
+    border-bottom: 0;
+    margin: 0;
+    text-align: center;
+}
+.modal.wj8-modal .modal-body .datatables-editor legend:first-of-type { margin-top: 0; }
+.modal.wj8-modal .modal-body .datatables-editor legend i{
+    font-size: 20px;
+    margin-right: 10px;
+}
+
+
+/* vseobecne */
+.modal.wj8-modal .modal-body .datatables-editor fieldset {
+    margin: 15px 0 30px;
+    padding: 10px 0;
+}
+.modal .DTE_Field [class*='col-']{
+    vertical-align: top;
+    float: none !important;
+    display: inline-block;
+}
+
+.modal.wj8-modal .modal-body .datatables-editor label.checkbox {
+    margin-bottom: 0;
+    line-height: 1.4;
+    padding-top: 7px;
+
+}
+
+/* calendar */
+.modal.wj8-modal .modal-body .datatables-editor .calendar-icon {
+    position: absolute;
+    right: 25px;
+    bottom: 12px;
+}
+
+/* single docId field, single groupId field */
+.modal.wj8-modal .modal-body .singleDocIdField,
+.modal.wj8-modal .modal-body .singleGroupField {
+    position : relative;
+}
+.modal.wj8-modal .modal-body .singleDocIdField button,
+.modal.wj8-modal .modal-body .singleGroupField button {
+    position: absolute;
+    top: 0;
+    right: 15px;
+}
+
+
+/* Radio buttony
+    - pre datatables editor polia */
+.modal.wj8-modal .modal-body .datatables-editor .DTE_Field_Type_radio .DTE_Field_InputControl label {
+    position: relative;
+    cursor: pointer;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    padding-top: 7px;
+    padding-left: 35px;
+}
+.modal.wj8-modal .modal-body .datatables-editor .DTE_Field_Type_radio .DTE_Field_InputControl input{
+    position: absolute;
+    opacity: 0;
+    cursor: pointer;
+    height: 0;
+    width: 0;
+}
+.modal.wj8-modal .modal-body .datatables-editor .DTE_Field_Type_radio .DTE_Field_InputControl label:before {
+    content: '';
+    position: absolute;
+    top: 7px;
+    left: 0px;
+    height: 20px;
+    width: 20px;
+    background-color: #fff;
+    border: 2px solid #29c01a;
+    border-radius: 15px;
+}
+.modal.wj8-modal .modal-body .datatables-editor .DTE_Field_Type_radio .DTE_Field_InputControl label:after {
+    content: '';
+    position: absolute;
+    top:12px;
+    left: 5px;
+    width: 10px;
+    height: 10px;
+    border-radius: 50px;
+    background: #29c01a;
+    opacity: 0;
+}
+.modal.wj8-modal .modal-body .datatables-editor .DTE_Field_Type_radio .DTE_Field_InputControl label:hover:after {
+    opacity: 0.5;
+}
+.modal.wj8-modal .modal-body .datatables-editor .DTE_Field_Type_radio .DTE_Field_InputControl input:checked ~ label:after {
+    opacity: 1;
+}
+
+/* CHECKBOXY
+     - pre datatables editor polia
+     - pre samotne stojace checkboxy ( potrebuju mat strukturu: <label class="checkbox"><input type="checkbox"/><div class="checkmark"></div</label> ) */
+.modal.wj8-modal .modal-body .datatables-editor .DTE_Field_Type_checkbox .DTE_Field_InputControl > div > div,
+.modal.wj8-modal .modal-body .datatables-editor label.checkbox {
+    position:relative;
+    /*cursor: pointer;*/
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+.modal.wj8-modal .modal-body .datatables-editor label.checkbox {
+    display: block;
+    position: relative;
+    padding-left: 35px;
+}
+
+.modal.wj8-modal .modal-body .datatables-editor .DTE_Field_Type_checkbox .DTE_Field_InputControl > div > div input,
+.modal.wj8-modal .modal-body .datatables-editor label.checkbox input {
+    position: absolute;
+    opacity: 0;
+    cursor: pointer;
+    height: 0;
+    width: 0;
+}
+
+.modal.wj8-modal .modal-body .datatables-editor .DTE_Field_Type_checkbox .DTE_Field_InputControl > div > div label {
+    padding: 7px 0 0px 35px;
+    /*width: 100%;*/
+    margin-bottom: 0;
+}
+.modal.wj8-modal .modal-body .datatables-editor .DTE_Field_Type_checkbox .DTE_Field_InputControl > div > div label:before,
+.modal.wj8-modal .modal-body .datatables-editor label.checkbox .checkmark {
+    position: absolute;
+    height: 20px;
+    width: 20px;
+    background-color: #fff;
+    border: 2px solid #29c01a;
+}
+.modal.wj8-modal .modal-body .datatables-editor label.checkbox .checkmark {
+    top: 7px;
+    left: 0px;
+}
+.modal.wj8-modal .modal-body .datatables-editor .DTE_Field_Type_checkbox .DTE_Field_InputControl > div > div label:before {
+    content: '';
+    left: 0px;
+    top: 7px;
+}
+
+.modal.wj8-modal .modal-body .datatables-editor .DTE_Field_Type_checkbox .DTE_Field_InputControl > div > div input ~ label:hover:before,
+.modal.wj8-modal .modal-body .datatables-editor label.checkbox:hover input ~ .checkmark {
+    background-color: #29c01a;
+    opacity: 0.5;
+}
+
+.modal.wj8-modal .modal-body .datatables-editor .DTE_Field_Type_checkbox .DTE_Field_InputControl > div > div input:checked ~ label:before,
+.modal.wj8-modal .modal-body .datatables-editor label.checkbox input:checked ~ .checkmark {
+    background-color: #29c01a;
+    opacity: 1;
+}
+
+.modal.wj8-modal .modal-body .datatables-editor .DTE_Field_Type_checkbox .DTE_Field_InputControl > div > div:hover input:checked ~ label:after,
+.modal.wj8-modal .modal-body .datatables-editor .DTE_Field_Type_checkbox .DTE_Field_InputControl > div > div input:checked ~ label:after,
+.modal.wj8-modal .modal-body .datatables-editor label.checkbox:hover input:checked ~ .checkmark:after,
+.modal.wj8-modal .modal-body .datatables-editor label.checkbox input:checked ~ .checkmark:after {
+    opacity:1;
+}
+
+.modal.wj8-modal .modal-body .datatables-editor .DTE_Field_Type_checkbox .DTE_Field_InputControl > div > div:hover input ~ label:after,
+.modal.wj8-modal .modal-body .datatables-editor label.checkbox:hover input ~ .checkmark:after {
+    opacity:0.5;
+}
+
+.modal.wj8-modal .modal-body .datatables-editor .DTE_Field_Type_checkbox .DTE_Field_InputControl > div > div label:after,
+.modal.wj8-modal .modal-body .datatables-editor label.checkbox .checkmark:after {
+    content: "";
+    position: absolute;
+    opacity: 0;
+    left: 5px;
+    top: 0px;
+    width: 7px;
+    height: 13px;
+    border-radius: 0px;
+    border: solid white;
+    border-width: 0 3px 3px 0;
+    -webkit-transform: rotate(45deg);
+    -ms-transform: rotate(45deg);
+    transform: rotate(45deg);
+}
+.modal.wj8-modal .modal-body .datatables-editor .DTE_Field_Type_checkbox .DTE_Field_InputControl > div > div label:after {
+    left: 7px;
+    top: 9px;
+}
+
+
+/* custom polia - skupina checkboxov*/
+.modal.wj8-modal .modal-body .datatables-editor .datatables-editor-multi-checkbox label.control-label {
+    display: none;
+}
+.modal.wj8-modal .modal-body .datatables-editor .datatables-editor-multi-checkbox .controls {
+    width: 100%;
+}
+
+/* custom polia - pole na celu sirku, label na celu sirku */
+.modal.wj8-modal .modal-body .datatables-editor .full-width-field [class^="col-"] {
+    width:100%;
+    text-align: left;
+    padding-left: 0;
+    padding-right: 0;
+}
+
+
+/* datatables tabulka */
+.modal.wj8-modal .modal-body .datatables-editor .table-scrollable {
+    padding-bottom: 0;
+}
+.modal.wj8-modal .modal-body .datatables-editor table.dataTable {
+    width: 100% !important;
+    background: #fff;
+}
+.modal.wj8-modal .modal-body .datatables-editor table.dataTable thead{
+    display:none;
+}
+.modal.wj8-modal .modal-body .datatables-editor table.dataTable tr {
+    height:40px;
+    font-size: 15px;
+    border-bottom: 1px solid #f5f5f5;
+    transition: background .3s ease-in-out;
+}
+
+.modal.wj8-modal .modal-body .datatables-editor table.dataTable tr td:first-of-type {
+    width: 40px;
+    text-align: center;
+    padding-left: 10px;
+}
+.modal.wj8-modal .modal-body .datatables-editor table.dataTable.column-2-w30 tr td:nth-of-type(2){
+    width: 30px;
+}
+.modal.wj8-modal .modal-body .datatables-editor table.dataTable.column-3-w70 tr td:nth-of-type(3){
+    width: 70px;
+}
+.modal.wj8-modal .modal-body .datatables-editor table.dataTable tr td:last-of-type {
+    padding-right: 20px;
+    text-align: right;
+    width: 100px;
+}
+.modal.wj8-modal .modal-body .datatables-editor table.dataTable>tbody>tr:nth-child(2n)>td,
+.modal.wj8-modal .modal-body .datatables-editor table.dataTable>tbody>tr:nth-child(2n)>th {
+    background-color: #f6f9fb;
+}
+.modal.wj8-modal .modal-body .datatables-editor table.dataTable >tbody> tr:hover td {
+    background-color: #e5eef9;
+}
+.modal.wj8-modal .modal-body .datatables-editor table.dataTable tr td select {
+    float: right;
+    width: 200px;
+}
+.modal.wj8-modal .modal-body .datatables-editor table.dataTable tr td.dataTables_empty {
+    padding: 10px;
+    text-align: center;
+}
+.modal.wj8-modal .modal-body .datatables-editor table.dataTable i {
+    font-size: 18px;
+
+}
+.modal.wj8-modal .modal-body .datatables-editor table.dataTable a.tool {
+    color: #252525;
+    text-decoration: none;
+    transition: color .3s ease-in-out;
+}
+.modal.wj8-modal .modal-body .datatables-editor table.dataTable a.tool:hover {  color: #4d98f6;  }
+.modal.wj8-modal .modal-body .datatables-editor table.dataTable a.tool i{
+    color: #4d98f6;
+    margin-left: 10px;
+    transition: color .3s ease-in-out;
+}
+
+.modal.wj8-modal .modal-body .datatables-editor table.dataTable a.tool.tool_delete { color: #ff0000;  }
+.modal.wj8-modal .modal-body .datatables-editor table.dataTable a.tool.tool_delete:hover {  color: #b50606;  }
+.modal.wj8-modal .modal-body .datatables-editor table.dataTable a.tool.tool_delete i { color: #ff0000; }
+.modal.wj8-modal .modal-body .datatables-editor table.dataTable a.tool.tool_delete:hover i {  color: #b50606;  }
+
+
+/* heslo */
+.modal.wj8-modal .modal-body .datatables-editor #password-group .password-tool.form-group {
+    padding-left: 190px;
+}
+.modal.wj8-modal .modal-body .datatables-editor #password-group .password-tool.form-group label {
+    padding-left: 35px;
+    margin-left: 8px;
+}
+
+/* file upload */
+.modal.wj8-modal .modal-body .datatables-editor .upload-input-wrapper .upload-buttons {
+    margin-left: calc(33% - 2px);
+}
+.modal.wj8-modal .modal-body .datatables-editor .upload-input-wrapper .upload-buttons a:first-of-type {
+    margin-left: 18px;
+}
+.modal.wj8-modal .modal-body .datatables-editor .upload-input-wrapper .cell .drop,
+.modal.wj8-modal .modal-body .datatables-editor .upload-input-wrapper .row:not(.second) {
+    display: none;
+}
+.modal.wj8-modal .modal-body .datatables-editor .editor_upload .cell {
+    padding-left: 15px;
+}
+.modal.wj8-modal .modal-body .datatables-editor .editor_upload img {
+    max-width: calc(100% - 15px);
+    max-height: 200px;
+}
+.modal.wj8-modal .modal-body .datatables-editor .cell .rendered span {
+    display: block;
+    width: 200px;
+    border: 2px dashed;
+    padding: 10px;
+    cursor: pointer;
+}

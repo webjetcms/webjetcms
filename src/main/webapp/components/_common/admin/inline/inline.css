@@ -1,0 +1,868 @@
+div.webjetToolbar { top: 50px !important; }
+
+#inlineEditorToolbar,
+#inlineEditorToolbarTop { background-color: white; margin-top: 0; padding: 0; border-bottom: 1px solid #d4e1ea; }
+
+#inlineEditorToolbarTop,
+#inlineEditorToolbarTopPlaceHolder { height: 123px; transition: height 0.6s ease-in-out; }
+
+body.is-view-mode #inlineEditorToolbarTop,
+body.is-view-mode #inlineEditorToolbarTopPlaceHolder { height: 31px !important; }
+
+body.is-view-mode.is-toolbar-hidden #inlineEditorToolbarTop,
+body.is-view-mode.is-toolbar-hidden #inlineEditorToolbarTopPlaceHolder { height: 1px; }
+
+
+div.inlineComponentsEditorToolbar { border-bottom-right-radius: 0px !important; border-bottom-left-radius: 0px !important; margin-bottom: 0px !important; }
+
+div.inlineComponentButtons a.inlineComponentButton span { display: block; height: 100%; width: 100%; }
+
+
+#inlineEditorToolbarTop { position: fixed; left: 0px; top: 0px; width: 100%; z-index: 99999; width: 100%; margin: 0; border-radius: 0px; padding: 0 10px; box-sizing: border-box; }
+#inlineEditorToolbarTop span.inlineToolbarLogo,
+#inlineEditorToolbarTop a.inlineToolbarLogo { width: 130px; height: 45px; display: block; float: left; background-image: url(/components/_common/admin/inline/toptoolbar/logo.png); background-repeat: no-repeat; background-position: left center; margin-right: 10px; background-color: transparent;
+	background-size: 100% auto;  -webkit-background-size: 100% auto;  -moz-background-size: 100% auto;
+}
+
+#inlineEditorToolbarTop span.inlineToolbarLogo.cloudLogo,
+#inlineEditorToolbarTop a.inlineToolbarLogo.cloudLogo{background-image: url(/components/_common/admin/inline/toptoolbar/cloud-logo.png);}
+
+#inlineQuitEditing,
+#inlineLogoff { padding-right: 80px; text-align: right; float: right !important; width: 280px; }
+#inlineLogoff { padding-right: 10px; }
+#inlineQuitEditing a.inlineComponentButton { float: right; padding-right: 16px; }
+span.inlineComponentButtonImage { border: 0px none !important; float: left !important; padding-right: 5px !important; }
+span.inlineComponentButtonImage img { display: inline !important; border-radius: 0px !important; }
+div.inlineEditorToolbarTopNotBody { position: static !important; height: 40px !important; }
+div.inlineEditorToolbarTopNotBody a.inlineComponentButton { padding-top: 10px !important; }
+div.inlineEditorToolbarTopNotBody a.inlineComponentButton { height: 20px !important; }
+div.inlineComponentEditButtonsTop { display: none; }
+
+div.inlineComponentButtons a.inlineComponentButtonPublish span { margin-top: 6px; width: auto; padding: 0px; padding-left: 20px; padding-right: 20px; color: white !important; background-color: #05ac30; border-radius: 6px; height: 30px; line-height: 30px; }
+div#inlineEditorToolbarTop a.inlineComponentButtonPublish span { margin-top: 9px; }
+
+a.inlineComponentButton { color: black; height: auto;
+    min-height: 18px;
+    transform: translateZ(0px);
+
+    display: inline-block;
+    padding: 4px 6px;
+    outline: 0;
+    cursor: default;
+    float: left;
+    border: 0;
+}
+
+a.cke_button { cursor: pointer; }
+a.cke_button:hover::before, a.cke_button:focus::before, a.cke_button:active::before {
+    left: 0;
+    right: 0;
+}
+a.cke_button::before {
+    background: none repeat scroll 0 0 #29c01a;
+    bottom: 0;
+    content: "";
+    height: 3px;
+    left: 50%;
+    position: absolute;
+    right: 50%;
+    transition-duration: .25s;
+    transition-property: left,right;
+    transition-timing-function: ease-out;
+}
+
+/* zmena toolbarov pre inline editaciu na male verzie ako je to v editore */
+body div.inlineComponentButtons { height: 20px; margin: 0px; width: auto; }
+
+
+
+
+#inlineEditorToolbarTop, #inlineEditorToolbarTop a { font-weight: normal; font-family: "Open Sans", sans-serif !important; font-size: 13px !important; }
+#inlineEditorToolbarTop a { text-decoration: none }
+div.adminBar strong { font-size: 13px; }
+div.adminBar .pageActive {  }
+div.adminBar .pageDisabled { color: red !important; font-weight: bold; }
+
+div.adminBar ul { margin:0; padding: 0; }
+div.adminBar ul li { list-style: none; float: left; position: relative; padding: 0; margin: 0; background: none; }
+div.adminBar ul.buttons > li > a, div.adminBar li.add > a {
+	display: inline-block; position: relative; height: 45px; line-height: 45px; z-index: 1000 !important; float: left; color: #505e70; text-decoration: none;
+	padding: 0 30px 0 15px; background: transparent no-repeat center right 10px;
+	border: 1px solid transparent; border-top: 0; border-bottom: 0;
+}
+	div.adminBar ul.bar-left-menu > li > a:focus,
+	div.adminBar ul.bar-right-menu > li > a:focus { outline: none; background-color: transparent; }
+	div.adminBar ul.bar-left-menu > li > a:hover,
+	div.adminBar li.add > a:hover { background-color: #6d6e71; color: #fff; text-decoration: none; outline: none; }
+
+div.adminBar ul li.add > a { background-image: url("/components/_common/admin/inline/toptoolbar/arrow-down.png"); }
+div.adminBar ul li.add > a:hover { background-image: url("/components/_common/admin/inline/toptoolbar/arrow-down-white.png"); }
+div.adminBar ul li.add.open > a { background-color: #f6f9fb; border-color: #d4e1ea;  }
+div.adminBar ul li.add.open > a:hover { background-color: #f6f9fb; color: #505e70; background-image: url("/components/_common/admin/inline/toptoolbar/arrow-down.png"); }
+
+div.adminBar ul.bar-left-menu { display: inline-block; height: 100%; width: auto; background-color: transparent; }
+div.adminBar ul.bar-left-menu #inlineToolbarPublishPage a,
+div.adminBar ul.bar-left-menu #inlineToolbarSaveEditing a,
+div.adminBar ul.bar-left-menu #inlineToolbarQuitEditing a,
+div.adminBar ul.bar-left-menu #inlineToolbarEditPage a,
+div.adminBar ul.bar-left-menu #inlineToolbarSaveInlineEditing a,
+div.adminBar ul.bar-left-menu #inlineToolbarQuitInlineEditing a {
+	background-color: #35aa47; padding: 0 15px; color: #fff; height: 45px; line-height: 45px; margin:0;
+}
+
+div.adminBar ul.bar-left-menu #inlineToolbarSaveEditing a, div.adminBar ul.bar-left-menu #inlineToolbarSaveInlineEditing a { background-color: #35aa47; }
+div.adminBar ul.bar-left-menu #inlineToolbarQuitEditing a, div.adminBar ul.bar-left-menu #inlineToolbarQuitInlineEditing a, div.adminBar ul.bar-right-menu .red a { background-color: #ff0066; color:#fff;}
+
+div.adminBar ul.bar-left-menu #inlineToolbarPublishPage a:hover,
+div.adminBar ul.bar-left-menu #inlineToolbarEditPage a:hover { background-color: #2b8b3a; }
+div.adminBar ul.bar-left-menu #inlineToolbarSaveEditing a:hover { background-color: #c06803; }
+div.adminBar ul.bar-left-menu #inlineToolbarQuitEditing a:hover, div.adminBar ul.bar-right-menu .red a { background-color: #e4025c; color:#fff !important; }
+
+div.adminBar ul.bar-right-menu { display: inline-block; float: right; height: 100%; width: auto; background-color: transparent; }
+div.adminBar ul.bar-right-menu li.add ul { left: auto !important; right: 0 !important; }
+div.adminBar ul.bar-right-menu a.userSettings {  }
+div.adminBar ul.bar-right-menu a.userSettings img.userImage { border-radius: 50%; -webkit-border-radius: 50%; -moz-border-radius: 50%; vertical-align: middle; }
+div.adminBar ul.bar-right-menu a.userSettings span { display: inline-block; width: auto; height: auto; padding: 0; }
+
+div.adminBar li.add ul { position: absolute; left: 0; top: 100%; z-index: 99999; background: #f6f9fb; border: 1px solid #d4e1ea; border-top: 0 none; margin: 0; padding: 20px 0; }
+div.adminBar li.add ul li { float: none; margin: 0px; display: block; }
+div.adminBar li.add ul li a {
+	height: 30px; line-height: 30px; padding: 0 20px; margin: 0px; min-width: 190px; float: none; display: block;
+	white-space: nowrap; background-color: transparent; font-size: 13px; font-weight: normal; color: #505e70; }
+	div.adminBar li.add ul li a:focus { outline: none; }
+	div.adminBar li.add ul li a:hover { background-color: #6d6e71; color: #fff; text-decoration: none; outline: none; }
+div.adminBar li.add ul li a strong { display: block; font-size: 12px; }
+
+div.adminBar ul ul li a.lastChange { margin-top: 16px; }
+div.adminBar ul ul li a.lastChange,
+div.adminBar ul ul li a.pageStats,
+div.adminBar ul ul li a.mainDir,
+div.adminBar ul ul li a.template { height: auto; line-height: 16px; padding-top: 10px; padding-bottom: 10px; }
+
+div.adminBar a.showHideToolbar {
+	position: absolute; left: 0; top: 74px; display: inline-block; width: 40px; height: 20px; line-height: 20px;
+	background: #fff url("/components/_common/admin/inline/toptoolbar/arrow-up.png") no-repeat center center; border: 1px solid #d4e1ea; border-top: 0; border-left: 0;
+	-webkit-border-bottom-right-radius: 6px;
+	-moz-border-radius-bottomright: 6px;
+	border-bottom-right-radius: 6px;
+	text-decoration: none;
+}
+div.adminBar a.showHideToolbar:focus,
+div.adminBar a.showHideToolbar:hover { outline: none; text-decoration: none; }
+
+/* Inline components editor */
+div.inlineComponentEdit
+{
+	position: relative;
+	min-height: 30px;
+}
+
+div.inlineComponentEdit:hover {  }
+div.inlineComponentEdit:before {
+  content: " ";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 9999;
+  border: 2px solid transparent;
+  pointer-events: none;
+  outline: solid 2px transparent;
+  transition: all 0.3s ease-out;
+}
+div.inlineComponentEdit:hover:before { border-color: #fceba9; outline: solid 2px #F7CA18 !important; }
+
+body.is-toolbar-hidden div.inlineComponentEdit:hover > div.inlineComponentButtonsWrapper,
+body.is-view-mode div.inlineComponentEdit:hover > div.inlineComponentButtonsWrapper { top: -9999px !important; }
+
+body.is-toolbar-hidden div.inlineComponentEdit:hover:before,
+body.is-view-mode div.inlineComponentEdit:hover:before { outline: solid 2px transparent !important; border-color: transparent !important; }
+body.is-view-mode span.cke_floatingtools { display: none; }
+
+
+div.inlineComponentEdit:after { clear: both; content: " "; display: table; }
+/* tu neclearujeme */
+div.header-wrapper div.inlineComponentEdit:after, .inlineDoNotClear div.inlineComponentEdit:after { clear: inherit; }
+div.inlineComponentButtonsWrapper a, div.inlineComponentButtonsWrapper span {font-family: "Helvetica Neue",Helvetica,Arial,sans-serif !important;}
+div.inlineComponentButtonsWrapper { text-align: left; z-index: 99999; }
+div.inlineComponentEdit:hover > div.inlineComponentButtonsWrapper { top: -40px; }
+
+div.inlineComponentButtonsWrapper
+{
+	padding: 0; margin:0;
+	position: absolute;
+
+	/* jeeff: zrusene na celu velkost aby appka fungovala
+	bottom: 0; left: 0; width: 100%; height: 100%; z-index: 999;
+	opacity: 1;
+	background-color: #25a13d; background-color: rgba(37,161,61,0.2);
+	*/
+	top: -9999px;
+	left: 0;
+	right: 0;
+	background-color: rgba(255, 255, 255, 0); /* nemoze byt transparent kvoli ie */
+}
+div.inlineComponentButtonsWrapper div.inlineComponentButtons { display: inline-block; height: auto; min-height: 25px; padding: 5px 5px 5px 0; width: auto; background-color: transparent; left: 50%; transform: translateX(-50%); position: relative; bottom: 9px; border: 1px solid #F7CA18; background-color: #fceba9; opacity: 0; transition: all 0.5s ease-out; }
+div.inlineComponentButtonsWrapper div.inlineComponentButtons:before
+{
+	width: 0; height: 0; border-left: 10px solid transparent; border-right: 10px solid transparent; border-top: 10px solid #F7CA18;
+   content: " ";
+   position: absolute;
+   bottom: -10px;
+   left: 50%;
+   margin-left: -10px;
+}
+div.inlineComponentButtonsWrapper div.inlineComponentButtons:after
+{
+	width: 0; height: 0; border-left: 9px solid transparent; border-right: 9px solid transparent; border-top: 9px solid #fceba9;
+   content: " ";
+   position: absolute;
+   bottom: -9px;
+   left: 50%;
+   margin-left: -9px;
+}
+div.inlineComponentEdit:hover div.inlineComponentButtons { opacity: 1; }
+
+div.inlineComponentButtonsWrapper div.inlineComponentButtons { border-radius:3px; padding:4px 3px 2px 3px;}
+div.inlineComponentButtonsWrapper div.inlineComponentButtons a.inlineComponentButton { display: inline-block; float: left; cursor: pointer;  padding: 4px 6px; background-repeat: no-repeat; }
+div.inlineComponentButtonsWrapper div.inlineComponentButtons a.inlineComponentButton.cke_button span::before {bottom:-6px;}
+div.inlineComponentButtonsWrapper div.inlineComponentButtons a.inlineComponentButton span { background-size: 100% 100%;width:16px;height:16px; margin-bottom: 3px; text-indent: -9999px;}
+
+body.editorOn #wjTopButtons  { display: none; }
+body.editorOn #wjTopButtons .form-group:first-child { display: none; }
+
+/* wraper buttonov v inline editore */
+body.editPeviewWindow {}
+body.editPeviewWindow div.inlineComponentEdit { outline: none !important; position: absolute; top: 0px; bottom: 0px; left: 0px; right: 0px; width: 100%; height: 100%; }
+body.editPeviewWindow div.inlineComponentButtonsWrapper { background-color: transparent; z-index: 99999; }
+body.editPeviewWindow.is-view-mode div.inlineComponentEdit { display: none; }
+
+#webjetEditorIframe #wjTopButtons { display: none !important; }
+
+@media screen and (max-width:1199px) {
+	#inlineEditorToolbarTop { padding: 0 10px; }
+	#inlineEditorToolbarTop span.inlineToolbarLogo, #inlineEditorToolbarTop a.inlineToolbarLogo { margin-right: 10px; }
+	div.adminBar ul.bar-left-menu > li > a, div.adminBar ul.bar-right-menu > li > a { padding: 0 28px 0 9px; }
+}
+
+@media screen and (max-width:991px) {
+	div.adminBar ul.bar-left-menu > li > a, div.adminBar ul.bar-right-menu > li > a { font-size: 12px; padding: 0 27px 0 8px; }
+	div.adminBar ul.bar-right-menu a.userSettings span { display: none; }
+	div.adminBar ul.bar-left-menu #inlineToolbarPublishPage a,
+	div.adminBar ul.bar-left-menu #inlineToolbarSaveEditing a,
+	div.adminBar ul.bar-left-menu #inlineToolbarQuitEditing a,
+	div.adminBar ul.bar-left-menu #inlineToolbarEditPage a { font-size: 12px; padding: 0 10px; }
+	#inlineEditorToolbarTop span.inlineToolbarLogo, #inlineEditorToolbarTop a.inlineToolbarLogo { width: 110px; }
+}
+@media screen and (max-width:767px) {
+	#inlineEditorToolbarTop { padding: 0 2px; }
+	#inlineEditorToolbarTop span.inlineToolbarLogo, #inlineEditorToolbarTop a.inlineToolbarLogo { display: none !important; }
+}
+@media screen and (max-width:700px) {
+	div.adminBar .supportBlock { display: none !important; }
+}
+@media screen and (max-width:600px) {
+	div.adminBar .addItem { display: none !important; }
+}
+@media screen and (max-width:500px) {
+	div.adminBar .globalSettings { display: none !important; }
+}
+
+/*Fix pre cloud */
+#inlineEditorToolbarTop.isCloud li:before{
+	display:none !important;
+}
+.isCloud .inlineComponentButton{text-decoration:none;}
+
+/* asi uz netreba, robi problem na fontane body.webjetcloud #header { overflow: visible !important; z-index: 99999; } */
+
+body.is-edit-mode div.wjInlineHighlighter { display: block; pointer-events: none; position: absolute; transition: all 0.3s ease; outline: 2px solid green; z-index:100;}
+body.is-view-mode div.wjInlineHighlighter { display: none; }
+body.is-edit-mode div.wjInlineHighlighter span.wjInlineHighlighterHint { padding: 7px 15px; color:#fff; font-weight:800; background-color: #29c01a; position:absolute; bottom:-34px; right:-2px; text-align:center;}
+body.is-edit-mode div.wjInlineHighlighter.footerEditor span.wjInlineHighlighterHint{top: -34px; bottom:auto;}
+
+.cke_top { background: #f5f5f5/*edeff1*/ !important; padding: 4px !important; }
+.cke_chrome { border: 0px none !important; }
+.cke_toolbar { border-right: 1px solid #edeff1 !important; }
+.cke_bottom { background: #e5eef9 !important; }
+
+#wjInlineCkEditorToolbarElement { width: 980px; z-index: 10009; /* pozor na zindex 10010 ma popup okno */ }
+div.cke_panel { z-index: 10009 !important; }
+
+
+#inlineEditorToolbarTop .nav-tabs { border-bottom: 2px solid #DDD; }
+#inlineEditorToolbarTop .nav-tabs > li.active > a { border-width: 0; }
+#inlineEditorToolbarTop .nav-tabs > li > a { border: none; color: #666; }
+#inlineEditorToolbarTop .nav-tabs > li.active > a { border: none; color: #4285F4 !important; background: transparent; }
+#inlineEditorToolbarTop .nav-tabs > li > a::after { content: ""; background: #4285F4; height: 2px; position: absolute; width: 100%; left: 0px; bottom: -1px; transition: all 250ms ease 0s; transform: scale(0); }
+#inlineEditorToolbarTop .nav-tabs > li.active > a::after { transform: scale(1); }
+#inlineEditorToolbarTop .tab-nav > li > a::after { background: #21527d none repeat scroll 0% 0%; color: #fff; }
+
+#inlineEditorToolbarTop ul.buttons li { float: left; }
+#inlineEditorToolbarTop .cke_chrome {box-shadow: none;}
+#inlineEditorToolbarTop .cke_top { border-bottom: 0px solid; }
+
+/* toto nastavime inak nam prekryval floating toolbar dialogy pre obrazok a vlastnosti divov */
+.cke_dialog {z-index: 999999 !important; }
+
+
+/* novy toolbar od martinka */
+.wj-toolbar-panel,
+.wj-toolbar-panel * { box-sizing: border-box; }
+
+.clearfix { clear: both;}
+
+/* TOOLBAR PANEL  */
+.wj-toolbar-panel {
+    z-index: 100000;
+    position: fixed; top: 0; left: 0; right: 0;
+    min-height: 30px; height: auto;
+    background-color: white;
+    transition: all 0.6s ease-in-out;
+}
+.wj-toolbar-panel.is-toolbar-hidden {
+    top: -30px;
+}
+
+
+/* CONTROL LINE */
+.wj-toolbar-panel .wj-control-line {
+    z-index: 100020;
+    position: relative;
+    width: 100%; height: 31px;
+    padding: 0 30px;
+    background-color: white;
+    border-bottom: 1px solid #e5e5e5;
+    transition: all 0.6s ease-in-out;
+}
+.wj-toolbar-panel.is-toolbar-hidden .wj-control-line {
+    border-bottom: 2px solid #29c01a;
+}
+
+/* LOGO */
+.wj-toolbar-panel a.wj-logo {
+    display: block; float: left;
+    width: auto; height: 30px;
+    background-color: transparent;
+}
+.wj-toolbar-panel a.wj-logo:hover {
+    text-decoration: none;
+}
+.wj-toolbar-panel a.wj-logo img {
+    display: block; width: auto; height: 12px;
+    margin: 9px;
+}
+
+/* TOOLBAR TOGGLER */
+.wj-toolbar-panel .wj-toolbar-toggler {
+    z-index: 100010;
+    position: absolute; right: 30%; top: -30px;
+    display: inline-block; height: 25px; width: 105px; overflow: hidden;
+    margin: 0; padding: 0 30px 0 12px;
+    background-color: #f5f5f5; background-image: url("/components/_common/admin/inline/toptoolbar/wj-icon-arrow-up.png");
+    background-repeat: no-repeat; background-position: center right 12px;
+    border-bottom-left-radius: 4px;
+    border-bottom-right-radius: 4px;
+    line-height: 25px; font-size: 12px; color: #666; white-space: nowrap;
+    transition: top 1s ease-in-out, right 0.5s ease-in-out, width 0.3s ease-in-out, color 0.5s ease-in-out, background 0.3s ease-in-out;
+}
+.wj-toolbar-panel .wj-toolbar-toggler:hover {
+    cursor: pointer;
+}
+.wj-toolbar-panel.is-view-mode .wj-toolbar-toggler {
+    top: 30px; right: 10px;
+}
+.wj-toolbar-panel.is-toolbar-hidden .wj-toolbar-toggler {
+    top: 30px;
+    min-width: auto; padding: 0; width: 32px;
+    background-color: #29c01a; background-image: url("/components/_common/admin/inline/toptoolbar/wj-icon-arrow-down-white.png");
+    color: #29c01a;
+}
+.wj-toolbar-panel .wj-toolbar-toggler span.state-b { display: none; }
+.wj-toolbar-panel.is-toolbar-hidden .wj-toolbar-toggler span.state-a { display: none; }
+.wj-toolbar-panel.is-toolbar-hidden .wj-toolbar-toggler span.state-b { display: block; }
+
+
+/* TAB MENU */
+.wj-toolbar-panel ul.wj-tab-menu {
+    visibility: visible; opacity: 1;
+    display: block; float: left;
+    list-style: none; margin: 0; padding: 0;
+    transition: all 0.3s ease-in-out;
+}
+.wj-toolbar-panel.is-view-mode ul.wj-tab-menu {
+    visibility: hidden; opacity: 0;
+}
+.wj-toolbar-panel ul.wj-tab-menu > li {
+    display: block; float: left;
+    width: auto; height: 30px;
+    margin: 0; padding: 0;
+}
+.wj-toolbar-panel ul.wj-tab-menu > li > a {
+    display: block;
+    width: auto; height: 30px; line-height: 30px;
+    margin: 0; padding: 0 20px;
+    background-color: white;
+    border-top: 2px solid white;
+    text-decoration: none; font-size: 13px; color: black;
+    transition: all 0.3s ease-in-out;
+}
+.wj-toolbar-panel ul.wj-tab-menu > li > a:hover,
+.wj-toolbar-panel ul.wj-tab-menu > li.is-active > a {
+    height: 31px;
+    background-color: #f5f5f5;
+    border-top: 2px solid #29c01a;
+    color: #555555;
+}
+
+
+/* RIGHT MENU */
+.wj-toolbar-panel ul.wj-right-menu {
+    float: right;
+    margin: 0; padding: 0;
+}
+
+@media (max-width: 1250px) {
+	.wj-toolbar-panel ul.wj-right-menu { display: none; }
+}
+
+.wj-toolbar-panel ul.wj-right-menu > li {
+    position: relative;
+    display: block; float: left;
+    width: auto; height: 30px;
+    margin: 0; padding: 0;
+}
+.wj-toolbar-panel ul.wj-right-menu > li > a {
+    display: block; box-sizing: border-box;
+    width: auto; height: 30px; line-height: 30px;
+    margin: 0; padding: 0 20px;
+    background-color: white; background-repeat: no-repeat; background-position: center right 20px;
+    text-decoration: none; font-size: 13px; color: black;
+    transition: all 0.3s ease-in-out;
+}
+.wj-toolbar-panel ul.wj-right-menu > li > a:hover,
+.wj-toolbar-panel ul.wj-right-menu > li.is-active > a {
+    background-color: #f6f9fb;
+    color: #43555e;
+}
+.wj-toolbar-panel ul.wj-right-menu > li.wj-has-ul > a {
+    padding-right: 35px;
+    background-image: url("/components/_common/admin/inline/toptoolbar/wj-icon-arrow-down.png");
+}
+
+.wj-toolbar-panel ul.wj-right-menu > li.is-active.wj-has-ul > a {
+    background-image: url("/components/_common/admin/inline/toptoolbar/wj-icon-arrow-up.png");
+}
+
+/* SUBMENU */
+.wj-toolbar-panel ul.wj-right-menu > li > ul.wj-sub-menu {
+    display:none; position: absolute; top: 100%; right: 0;
+    width: 220px; height: auto;
+    list-style: none; margin: 0; padding: 0;
+}
+.wj-toolbar-panel ul.wj-right-menu > li.is-active > ul.wj-sub-menu {
+    display: block;
+    border: 1px solid #d3e1ea;
+}
+
+.wj-toolbar-panel ul.wj-right-menu > li > ul.wj-sub-menu > li {
+    width: 100%; height: auto;
+    margin: 0; padding: 0;
+    overflow: hidden; white-space: nowrap;
+}
+.wj-toolbar-panel ul.wj-right-menu > li > ul.wj-sub-menu > li > a {
+    display: block;
+    width: auto; height: 30px; line-height: 30px;
+    margin: 0; padding: 0 20px;
+    background-color: #f6f9fb;
+    text-decoration: none; font-size: 13px; color: black;
+    transition: all 0.3s ease-in-out;
+}
+.wj-toolbar-panel ul.wj-right-menu > li > ul.wj-sub-menu > li > a:hover {
+    background-color: #d3e1ea;
+    color: #555555;
+}
+
+
+/* SWITCHER */
+.wj-toolbar-panel  .wj-switcher {
+    float: left; width: 200px;
+    padding: 0 10px;
+}
+.wj-toolbar-panel  .wj-switcher a {
+    display: inline-block; float: left;
+    width: auto; height: 30px; line-height: 30px;
+    margin: 0; padding: 0 8px;
+    text-decoration: none; font-size: 13px; color: black;
+    transition: all 0.5s ease-in-out;
+}
+.wj-toolbar-panel  .wj-switcher a:hover {
+    color: #29c01a;
+}
+.wj-toolbar-panel .wj-shower {
+    position: relative; float: left;
+    display: inline-block; width: 40px; height: 20px;
+    margin: 5px 0; padding: 0;
+    border-radius: 40px;
+    background-color: #29c01a;
+}
+.wj-toolbar-panel .wj-shower:hover {
+    cursor: pointer;
+}
+.wj-toolbar-panel .wj-shower .wj-circle {
+    position: absolute; left: 2px; top: 2px;
+    display: inline-block; width: 16px; height: 16px;
+    border-radius: 50%;
+    background-color: white; background-image: url("/components/_common/admin/inline/toptoolbar/wj-icon-arrow-green.png"); background-position: center; background-repeat: no-repeat;
+    transition: left 0.5s ease-in-out, transform 0.3s ease-in-out;
+}
+.wj-toolbar-panel.is-view-mode .wj-shower .wj-circle {
+    left: 22px;
+    transform: rotate(180deg);
+}
+
+/* CONTENT */
+.wj-toolbar-panel .wj-content-line {
+    z-index: 100010;
+    clear: both;
+    position: absolute; top: 30px; left: 0; right: 0;
+    width: 100%; height: auto;
+    margin: 0; padding: 0;
+    background-color: #f5f5f5;
+    visibility: visible; opacity: 1;
+    transition: all 0.5s ease-in-out;
+	box-shadow: 0 6px 15px rgba(0,0,0,0.2);
+}
+.wj-toolbar-panel.is-view-mode  {
+	box-shadow: 0 6px 15px rgba(0,0,0,0.2);
+}
+.wj-toolbar-panel.is-view-mode .wj-content-line {
+    /*visibility: hidden; opacity: 0;*/
+    position: absolute; left: 0; top: -200px;
+}
+.wj-toolbar-panel .wj-content-box {
+    display: none; width: 100%; height: auto;
+    padding: 10px; overflow: hidden;
+    background-color: #f5f5f5;
+    min-height: 76px;
+}
+.wj-toolbar-panel .wj-content-box.is-active {
+    display: block;
+}
+.wj-toolbar-panel .wj-content-box .wj-col-1 {
+    display: block;
+}
+.wj-toolbar-panel .wj-content-box .wj-col-2 {
+    display: block; float: left; width: 50%;
+    border-right: 1px solid #e5e5e5;
+}
+.wj-toolbar-panel .wj-content-box .wj-col-3 {
+    display: block; float: left; width: 33.333%;
+    border-right: 1px solid #e5e5e5;
+}
+.wj-toolbar-panel .wj-content-box .wj-col-3.last,
+.wj-toolbar-panel .wj-content-box .wj-col-2.last {
+    border: 0;
+}
+.wj-toolbar-panel .wj-content-box .wj-row {
+    clear: both; padding: 3px 5px;
+    /*overflow: hidden;*/
+}
+.wj-toolbar-panel .wj-content-box .wj-row .wj-row-headline {
+    padding-left: 10px; padding-right: 10px;
+    font-size: 11px; line-height: 25px; color: black; font-weight: 400; text-transform: uppercase; color: #808080; text-align: center;
+}
+.wj-toolbar-panel .wj-content-box .wj-row .wj-row-content {
+    width: 100%; padding: 0 10px; font-size: 12px; line-height: 16px;
+}
+.wj-toolbar-panel .wj-content-box .wj-row .wj-row-label {
+    float: left; width: 22.5%; padding: 0  0  0 10px;
+}
+.wj-toolbar-panel .wj-content-box .wj-row .wj-row-input {
+    float: left; width: 27.5%; padding: 0 10px;
+}
+
+.wj-toolbar-panel .wj-content-box .wj-row.wj-half-width .wj-row-label { width: 45%; }
+.wj-toolbar-panel .wj-content-box .wj-row.wj-half-width .wj-row-input { width: 55%; }
+
+.wj-toolbar-panel .wj-content-box .wj-row.wj-full-width .wj-row-label { width: 100%; }
+.wj-toolbar-panel .wj-content-box .wj-row.wj-full-width .wj-row-input { width: 100%; }
+
+.wj-toolbar-panel .wj-content-box label {
+
+    display: inline-block; width: auto; padding: 5px 0;
+    font-size: 12px; line-height: 16px; font-weight: normal; color: black;
+    border: 0px;
+}
+.wj-toolbar-panel .wj-content-box label.has-tooltip {
+    position: relative; padding-right: 25px;
+}
+.wj-toolbar-panel .wj-content-box input {
+    display: block; width: 100%; height: 25px;
+    border: 1px solid #e5e5e5;
+    font-size: 12px; padding: 0 5px; line-height: 25px; color: #333; outline: none;
+}
+.wj-toolbar-panel .wj-content-box .wj-row-input.has-action { position: relative; padding-right: 35px; }
+.wj-toolbar-panel .wj-content-box .wj-row-input.has-action input {
+    float: left; width: 100%;
+}
+.wj-toolbar-panel .wj-content-box .wj-row-input.has-action .wj-action-icon {
+    position: absolute; top: 0; right: 10px;
+    display: block; width: 25px; height: 25px; line-height: 25px;
+    text-align: center; text-decoration: none;
+    background-color: #e5e5e5;
+    padding-left: 4px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+
+.wj-tooltip-link {
+    position: absolute; top: 5px; right: 0; display: inline-block;
+    width: 15px; height: 15px; line-height: 15px; text-align: center;
+    border-radius: 50%;
+    background: #333;
+    color: #fff; font-size: 11px; font-weight: bold;
+    cursor: help;
+    margin: 0; padding: 0;
+    -webkit-transform: translateZ(0);
+    -webkit-font-smoothing: antialiased;
+}
+.wj-tooltip-link .wj-tooltip-text {
+    z-index: 100030;
+    position: absolute; right:-20px; top: 100%;
+    display: block; width: auto; max-width: 300px;
+    margin-top: 5px; padding: 6px;
+    background: #333;
+    border-radius: 4px;
+    color: #fff; font-size: 11px; line-height: 14px;
+    opacity: 0;
+    white-space: nowrap;
+    pointer-events: none;
+    transition: all .25s ease-out;
+    box-shadow: 2px 2px 6px rgba(0, 0, 0, 0.28);
+}
+.wj-tooltip-link .wj-tooltip-text:before {
+    position: absolute; left: 0; bottom: -20px;
+    display: block; height: 20px; width: 100%;
+    content: " ";
+}
+.wj-tooltip-link .wj-tooltip-text:after {
+    position: absolute; top: -4px; right: 23px;
+    height: 0; width: 0;
+    border-left: solid transparent 4px;
+    border-right: solid transparent 4px;
+    border-bottom: solid #333 4px;
+    content: " ";
+}
+.wj-tooltip-link:hover .wj-tooltip-text {
+    opacity: 1;
+    pointer-events: auto;
+}
+div.wj-control-line img.userImage { border-radius: 50%; -webkit-border-radius: 50%; -moz-border-radius: 50%; vertical-align: middle; margin-right: 6px; width: 26px; padding-bottom: 1px; }
+
+.wj-toolbar-panel ul.basket-media-images li{
+	display:inline-block;
+	margin-right:5px;
+	margin-top:5px;
+	  cursor:pointer;
+}
+.wj-toolbar-panel ul.basket-media-images li.add-media-image{
+    width: 57px;
+    height: 55px;
+    border: 1px solid #e5e5e5;
+}
+.wj-toolbar-panel ul.basket-media-images li img{border: 1px solid #e5e5e5;}
+
+ .wj-toolbar-panel ul.basket-media-images li span.remove-icon{
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    color: #ff0000;
+    transform: translate(-50%, -50%);
+    opacity: 0;
+  -webkit-transition: opacity 0.3s ease-in-out;
+  -moz-transition: opacity 0.3s ease-in-out;
+  -ms-transition: opacity 0.3s ease-in-out;
+  -o-transition: opacity 0.3s ease-in-out;
+  transition: opacity 0.3s ease-in-out;
+ }
+.wj-toolbar-panel ul.basket-media-images li.delete-media img{
+     -webkit-transition: opacity 0.3s ease-in-out;
+  -moz-transition: opacity 0.3s ease-in-out;
+  -ms-transition: opacity 0.3s ease-in-out;
+  -o-transition: opacity 0.3s ease-in-out;
+  transition: opacity 0.3s ease-in-out;
+     }
+   .wj-toolbar-panel ul.basket-media-images li.add-media-image{
+     -webkit-transition: background-color 0.3s linear;
+    -ms-transition: background-color 0.3s linear;
+    transition: background-color 0.3s linear;
+
+   }
+  .wj-toolbar-panel ul.basket-media-images li span.add-icon{
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    color: #29c01a;
+    transform: translate(-50%, -50%);
+ }
+ #inlineEditorToolbarTop  .wj-toolbar-panel ul.basket-media-images li:hover span.remove-icon{opacity:1;}
+ #inlineEditorToolbarTop  .wj-toolbar-panel ul.basket-media-images li.add-media-image:hover {background-color:#fff;}
+ #inlineEditorToolbarTop  .wj-toolbar-panel ul.basket-media-images li.delete-media:hover {background-color:#fff;}
+ #inlineEditorToolbarTop  .wj-toolbar-panel ul.basket-media-images li.delete-media:hover img{opacity:0.2;}
+
+ #inlineEditorToolbarTop  .wj-toolbar-panel .wj-content-line .wj-edit-settings .wj-row-input { text-align:center; }
+ #inlineEditorToolbarTop  .wj-toolbar-panel .wj-content-line .wj-edit-settings a.inlineComponentButton {
+  	margin: 0 4px !important; float:none; width:62px; height:61px; margin:0 auto; font-size:9px !important; line-height:10px; color:#808080; text-align:center;
+  	background-image:url("/components/_common/admin/inline/toptoolbar/wj-icon-editor-custom.png");
+  	background-repeat:no-repeat; background-position:center bottom 10px; background-color:transparent;
+  	padding-left: 0px; padding-right: 0px; white-space: nowrap;
+  }
+#inlineEditorToolbarTop  .wj-toolbar-panel .wj-content-line  .wj-edit-settings a.inlineComponentButton.wj-edit-header { background-image:url("/components/_common/admin/inline/toptoolbar/wj-icon-editor-header.png"); }
+#inlineEditorToolbarTop  .wj-toolbar-panel .wj-content-line  .wj-edit-settings a.inlineComponentButton.wj-edit-footer { background-image:url("/components/_common/admin/inline/toptoolbar/wj-icon-editor-footer.png"); }
+#inlineEditorToolbarTop  .wj-toolbar-panel .wj-content-line  .wj-edit-settings a.inlineComponentButton.wj-edit-structure { background-image:url("/components/_common/admin/inline/toptoolbar/wj-icon-editor-structure.png"); }
+#inlineEditorToolbarTop  .wj-toolbar-panel .wj-content-line  .wj-edit-settings a.inlineComponentButton.wj-edit-settings { background-image:url("/components/_common/admin/inline/toptoolbar/wj-icon-editor-settings.png"); }
+#inlineEditorToolbarTop  .wj-toolbar-panel .wj-content-line  .wj-edit-settings a.inlineComponentButton.wj-edit-left-menu { background-image:url("/components/_common/admin/inline/toptoolbar/wj-icon-editor-left-menu.png"); }
+#inlineEditorToolbarTop  .wj-toolbar-panel .wj-content-line  .wj-edit-settings a.inlineComponentButton.wj-edit-right-menu { background-image:url("/components/_common/admin/inline/toptoolbar/wj-icon-editor-right-menu.png"); }
+#inlineEditorToolbarTop  .wj-toolbar-panel .wj-content-line  .wj-edit-settings a.inlineComponentButton.wj-edit-styles { background-image:url("/components/_common/admin/inline/toptoolbar/wj-icon-editor-styles.png"); }
+
+.sport_settings a img{ margin-bottom: 5px;}
+.sport_settings a{ cursor: pointer; color:black;}
+.sport_settings{
+    border-right: 1px solid #d4d4d4;
+    padding: 15px;
+    padding-top: 0px;
+    padding-bottom: 0;
+    text-align: center;
+    max-width: 120px;
+    margin-bottom: 10px;
+    display: inline-block;
+    margin-bottom: 0;
+    position: relative;
+    top: -8px;
+}
+.sport_settings .wj-row-headline, .draggableList .wj-row-headline{
+    font-size: 11px;
+    line-height: 25px;
+    color: black;
+    font-weight: 400;
+    text-transform: uppercase;
+    color: #808080;
+    text-align: center;
+}
+.sport_settings .wj-row-headline{
+bottom: -8px;
+position: relative;
+}
+
+div.noOverflow { overflow: initial !important; }
+div.insertArea { border: 2px dotted #990000; height: 50px; }
+
+#apps { margin: 0px; padding: 0px; list-style-type: none; font-size: 0px;}
+#apps li:hover {
+    box-shadow: 0 0 4px 0px rgba(0, 0, 0, 0.22);
+    background-color: rgba(255, 255, 255, 0.88);}
+#apps li {
+    width: 84px;
+    height: 84px;
+    text-align: center;
+    -webkit-transition: all 0.3s;
+    transition: all 0.3s;
+    margin-left: 10px;
+}
+#apps li img, .sport_settings img{
+    max-height: 34px;
+}
+/*#apps li img{  height: 43px;}*/
+#apps li a { display: block; width: 100%; height: 100%; cursor: move;
+    background-color: transparent;
+    z-index: 100110;
+    position: absolute;
+
+  }
+span.app-name, span.drag-tip {
+    margin-top: 11px;
+    /* position: relative; */
+    display: block;
+    color: #808080;
+    font-size: 9px;
+    /*text-transform: uppercase;*/
+    font-weight: normal; font-family: "Open Sans", sans-serif !important;
+}
+
+span.app-name{
+    display: inline-block;
+    min-height: 30px;
+}
+#draggableList-sport, .draggableList{display: inline-block;}
+span.drag-tip{text-transform: none; font-size: 11px; margin-top: 0; margin-bottom: 7px;}
+span.drag-tip .fa{color: #29c01a;}
+
+.bg-gray { padding: 20px; background: #dadada; color: #000000; }
+.bg-gray h1, .bg-gray h2 { margin: 0px; }
+.bg-red { padding: 20px; background: #990000; color: #ffffff; }
+.bg-red h1, .bg-red h2 { margin: 0px; }
+
+.insertHover { background: #ff0000; }
+div.insertArea:hover { background: #000000; }
+a.draggable{color:#000;}
+div.droppable  { display: block; height: 9px; min-height: 8px; background: #dadada; -webkit-transition: all 0.3s linear; -moz-transition: all 0.3s linear; -ms-transition: all 0.3s linear; -o-transition: all 0.3s linear; transition: all 0.3s linear; background: #f2f2f2; min-height: 100px; border: 2px dashed #dadada; }
+
+div.showDroppable { display: block; }
+div.ui-state-active { background: #f2f2f2; min-height: 100px; border: 2px dashed #dadada; }
+/*.red { background: red; }*/
+
+
+
+
+.wj-toolbar-panel ul.wj-tab-menu > li > a.top_save_button{
+    background-color: #29c01a;
+    color: #fff;
+    margin-right: 31px;
+    border: none;
+    cursor: pointer;
+    }
+
+.wj-toolbar-panel ul.wj-tab-menu > li > a.top_save_button:hover{
+    background-color: #1ea211;
+    }
+/*body.dragObject div#wjInline-docdata { height: 400px; overflow: scroll; }*/
+
+/*fix pre zobrazovanie ikoniek pri sekciach aj pri inych taboch*/
+#wjInlineCkEditorToolbarOffsetElement .wj-content-box[data-id=tab-01]{
+     display: block;
+     min-height: 0 !important;
+     height: 0;
+ }
+#wjInlineCkEditorToolbarOffsetElement .wj-content-box.is-active[data-id=tab-01]{
+    display: block;
+    height: auto;
+    min-height: 76px !important;
+}
+
+body.page-builder-in-admin #wjInlineCkEditorToolbarOffsetElement .wj-content-box.is-active[data-id=tab-01] {
+    min-height: 93px !important;
+}
+
+#doc_headerEditor iframe.wj_component[data-cke-realelement*="menu_ul_li.jsp"]{
+    outline:none !important;
+    opacity:1;
+    box-shadow: none;
+}
+
+/* fix pre LI elementy pokazene z web stylu */
+.wj-toolbar-panel li::before, .wj-toolbar-panel li::after {
+    display: none;
+	visibility: hidden;
+}
+
+div.wj-control-line img.userImage {
+    margin-bottom: 0 !important;
+}
+
+/* fix z-index on editor_component/ckeditor dialogs - above toolbar */
+.cke_dialog_container {
+    z-index: 101004 !important;
+}

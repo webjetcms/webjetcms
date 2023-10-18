@@ -1,0 +1,103 @@
+<script data-th-inline="javascript">
+    let columns = /*[(${layout.getDataTableColumns("sk.iway.iwcm.components.enumerations.model.EnumerationTypeBean")})]*/ '';
+</script>
+<script type="text/javascript">
+    var enumerationTypeDataTable;
+    var isAllSet = false;
+    var lastIgnoredId = null;
+
+    var tabs = [
+            { id: 'basic', title: '[[#{datatable.tab.basic}]]', selected: true},
+            { id: 'strings', title: '[[#{enum_type.strings}]]'},
+            { id: 'numbers', title: '[[#{enum_type.numbers}]]'},
+            { id: 'booleans', title: '[[#{enum_type.booleans}]]'},
+            { id: 'dates', title: '[[#{enum_type.dates}]]'},
+        ];
+
+    window.domReady.add(function () {
+        WJ.breadcrumb({
+            id: "enumeration-type",
+            tabs: [
+                {
+                    url: '/apps/enumeration/admin/',
+                    title: '[[#{components.enumerations.list}]]',
+                    active: false
+                },
+                {
+                    url: '/apps/enumeration/admin/enumeration-type',
+                    title: '[[#{components.enumerations.modinfo.properties.typy_ciselnikov}]]',
+                    active: true
+                }
+            ]
+        });
+
+        let url = "/admin/rest/enumeration/enumeration-type";
+
+        enumerationTypeDataTable = WJ.DataTable({
+            url: url,
+            serverSide: true,
+            columns: columns,
+            tabs: tabs,
+            id: "enumerationTypeDataTable",
+            customFieldsUpdateColumns: true,
+            fetchOnCreate: true,
+            fetchOnEdit: true
+        });
+
+        enumerationTypeDataTable.EDITOR.on('open', function (e, mode, action) {
+            if(!isAllSet) {
+                $("#DTE_Field_allowChildEnumerationType_0").on("click", function(e) { handleCheckbox("allowChildEnumerationType") });
+                $("#DTE_Field_allowParentEnumerationData_0").on("click", function(e) { handleCheckbox("allowParentEnumerationData") });
+                isAllSet = true;
+            }
+
+            if(action === 'create')
+                setChildEnumTypeSelect(null);
+
+            if(action === 'edit') {
+                var selectedEnumId = e.currentTarget.currentJson['enumerationTypeId'];
+                setChildEnumTypeSelect(selectedEnumId);
+            }
+        });
+
+        function handleCheckbox(clickEvent) {
+            if(clickEvent === null || clickEvent === undefined) return;
+
+            //The allowChildEnumerationType and allowParentEnumerationData checkboxs CANT be true at same time
+            if(clickEvent === "allowChildEnumerationType") {
+                if($("#DTE_Field_allowChildEnumerationType_0").is(':checked'))
+                    if($("#DTE_Field_allowParentEnumerationData_0").is(':checked'))
+                        $("#DTE_Field_allowParentEnumerationData_0").prop('checked', false);
+
+            } else if(clickEvent === "allowParentEnumerationData") {
+                if($("#DTE_Field_allowParentEnumerationData_0").is(':checked'))
+                    if($("#DTE_Field_allowChildEnumerationType_0").is(':checked'))
+                        $("#DTE_Field_allowChildEnumerationType_0").prop('checked', false);
+            }
+        }
+
+        function setChildEnumTypeSelect(idToIgnore) {
+            //Find deleted options and disabled it
+            //EnumTypes are just soft deleted in DB because of reference logic
+            $("#DTE_Field_editorFields-childEnumTypeId option").each(function() {
+                var deletedPrefix = WJ.translate("enum_type.deleted_type_mark.js");
+                if(deletedPrefix !== undefined && deletedPrefix !== null && deletedPrefix !== "")
+                    if($(this).text().startsWith('(!deleted)_'))
+                        $('#DTE_Field_editorFields-childEnumTypeId option[value="' + $(this).val() + '"]').prop('disabled', true);
+            });
+
+            //Enable last disabled select option
+            if(lastIgnoredId !== null)
+                $('#DTE_Field_editorFields-childEnumTypeId option[value="' + lastIgnoredId + '"]').prop('disabled', false);
+
+            //Disable select option
+            $('#DTE_Field_editorFields-childEnumTypeId option[value="' + idToIgnore + '"]').prop('disabled', true);
+            //Refresh select
+            $("#DTE_Field_editorFields-childEnumTypeId").selectpicker('refresh');
+            //Save last disabled option, so next time this option can be enabled
+            lastIgnoredId = idToIgnore;
+        }
+    });
+    </script>
+
+    <table id="enumerationTypeDataTable" class="datatableInit table"></table>

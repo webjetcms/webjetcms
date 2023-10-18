@@ -1,0 +1,395 @@
+.cookies-top.cookies-bar-wrapper {
+	display: none;
+	width: 550px;
+	z-index: 99990;
+	background-color: #fff;
+	border-radius: 4px;
+	position: fixed;
+	bottom: 50px; right: 50px;
+	box-shadow: 0px 11px 47px 3px rgba(0,0,0,0.11);
+}
+div.cookies-list span.close {
+	font-size: 0px;
+	position: absolute;
+	right: 14px; top: 5px;
+	width: 40px; height: 40px;
+}
+div.cookies-list span.close:after {
+	width: 40px; height: 40px;
+	display: block;
+	content: "+";
+	line-height: 30px;
+	text-align: center;
+	font-size: 40px;
+	font-weight: normal;
+	font-family: Arial, "Helvetica Neue", Helvetica, sans-serif;
+	transform: rotate(45deg);
+
+}
+.cookies-top .cookies-bar {
+	padding: 30px 35px 0 35px;
+	font-size: 16px; line-height: 24px;
+	z-index: 99999;
+}
+.cookies-bar-wrapper h2 {
+	font-size: 20px;
+	line-height: 25px;
+}
+.cookies-bar-wrapper p {
+	font-size: 16px;
+	line-height: 24px;
+}
+.cookies-bar-wrapper .bottom-buttons {
+	padding-bottom: 20px;
+}
+.cookies-bar-wrapper .btn {
+	max-width: 42%;
+	margin-bottom: 4px;
+}
+
+div.cookies-list .btn.btn-primary {
+	position: absolute;
+	left: 20px; bottom: 33px;
+}
+.bottom-buttons a.more.btn:focus,
+.bottom-buttons a.more.btn:active {
+	box-shadow: inset 0 0 0px;
+}
+.menu.resp-tabs-list {
+	padding: 26px 0 0 0;
+	margin: 0 10px 20px 10px;
+	list-style-type: none;
+	font-size: 0;
+	border-bottom: 2px solid #c4c4c4;
+	position: relative;
+	height: 70px;
+	max-height: 70px;
+	overflow: visible;
+}
+.menu.resp-tabs-list li {
+	display: inline-block;
+	height: 42px;
+	line-height: 42px;
+	background: none;
+	margin: 0 8px;
+	padding: 0px 13px 0px 13px;
+	border: 1px solid transparent;
+	border-bottom: 2px;
+	position: relative;
+	top: 2px;
+	border-radius: 4px 4px 0 0;
+}
+.menu.resp-tabs-list li.resp-tab-active {
+	border: 1px solid #c4c4c4;
+	border-bottom: 2px solid #fff;
+}
+.menu.resp-tabs-list li a {
+	text-decoration: none;
+	font-size: 20px;
+	font-weight: 400;
+	color: #000;
+}
+.menu.resp-tabs-list li:hover a,
+.menu.resp-tabs-list li.resp-tab-active a {
+	color: #009fdf;
+}
+
+div.cookies-list {
+	display: none;
+	position: fixed;
+	top: 50%; left: 50%;
+	width: 960px;
+	height: 640px;
+	max-width: 95%;
+	max-height: 95vh;
+	transform: translateX(-50%) translateY(-50%);
+	background: #fff;
+	border-radius: 4px;
+	position: fixed;
+	bottom: 50px; right: 50px;
+	box-shadow: 0px 11px 47px 3px rgba(0,0,0,0.11);
+	z-index: 99995;
+}
+
+.cookies-bar .table-responsive table{
+	width: 100%;
+}
+
+.cookies-list-menu {
+	margin: 0 20px 0 0;
+	width: 170px;
+	float: left;
+	list-style-type: none;
+	padding-left: 0;
+	list-style-type: none;
+	height: auto;
+	max-height: inherit;
+}
+.cookies-list-menu li {
+	margin: 0; padding: 10px;
+	background: none;
+}
+.cookies-list-menu li:last-child {
+	border-bottom: none;
+}
+.cookies-list-menu a {
+	font-size: 15px; font-weight: 500; color: #000;
+}
+.cookies-list-menu a:hover, .cookies-list-menu a:focus {
+	text-decoration: none;
+}
+.cookies-list-menu li.active a {
+	color: #009fdf;
+}
+
+.cookies-list-content {
+	width: 100%;
+	display: none;
+	padding-left: 190px;
+	padding-top: 20px;
+}
+.cookies-list-content > div {
+	padding-right: 20px;
+	min-height: 135px;
+	max-height: 400px;
+}
+.cookies-list-content > div.table-responsive {
+	overflow: auto;
+}
+.cookies-list-content p {
+	font-size: 13px;
+}
+
+div.container-inner div.container-padding {
+	padding: 20px;
+}
+
+div.container-inner{
+	width: 100%;
+}
+
+.cookies-bar div.table-responsive {
+	overflow-y: auto;
+	height: 370px;
+	padding: 0 20px 0 0;
+	width: 100%;
+}
+.cookies-bar div.table-responsive::-webkit-scrollbar {
+width: 7px; height: 7px;
+}
+
+.cookies-bar div.table-responsive::-webkit-scrollbar-track {
+	background: #fff;
+}
+.cookies-bar div.table-responsive::-webkit-scrollbar-thumb {
+	background: #c4c4c4;
+}
+.cookies-bar div.table-responsive::-webkit-scrollbar-thumb:hover {
+	background: #555;
+}
+
+div.in-page-nav ul.nav-tabs {
+	margin-top: 10px
+}
+div.in-page-nav ul.nav-tabs li:first-child {
+	margin-left: 16px;
+}
+
+/* .checkboxAccept */
+.cookies-list .checkboxAccept label {
+	text-indent: -1000px;
+}
+.checkboxAccept {
+	display: inline-block;
+	width: 20px;
+	height: 20px;
+	position: relative;
+	margin: 0 12px 0 0;
+	background: #b8b8b8;
+	border-radius: 0px;
+	border-radius: 3px;
+}
+.checkboxAccept label {
+	width: 18px;
+	height: 18px;
+	position: absolute;
+	top: 1px;
+	left: 1px;
+	cursor: pointer;
+	background: #eaeaea;
+	background-image: radial-gradient(circle, #ffffff, #f9f9f9, #f2f2f2, #ececec, #e6e6e6);
+	border-radius: 0;
+	border: none;
+	border-radius: 3px;
+	text-indent: -1000px;
+}
+.checkboxAccept label:after {
+	content: '';
+	width: 12px;
+	height: 8px;
+	position: absolute;
+	top: 50%; left: 50%;
+	margin-top: -5px; margin-left: -6px;
+	border: 4px solid #009fdf;
+	border-top: none;
+	border-right: none;
+	background: transparent;
+	opacity: 0;
+	transform: rotate(-45deg);
+	border-radius: 2px;
+}
+.checkboxAccept label.chck-nutne:after {
+	border-color: #c4c4c4;
+}
+.checkboxAccept label:hover::after {
+	opacity: 0.3;
+}
+.checkboxAccept input[type=checkbox] {
+	visibility: hidden;
+}
+.checkboxAccept input[type=checkbox]:checked + label:after {
+	opacity: 1;
+}
+/* end .checkboxAccept */
+
+table.cookies-table {
+	font-size: 12px;
+	margin-bottom: 10px;
+}
+table.cookies-table tr th {
+	font-weight: bold;
+	border-left: 1px solid #ddd;
+	border-top: 1px solid #ddd;
+	padding: 8px;
+
+}
+table.cookies-table tr td {
+	border-left: 1px solid #ddd;
+	padding: 15px 8px;
+	border-top: 0;
+}
+table.cookies-table tr:nth-child(odd) td {
+	background-color: #f8f8f8;
+}
+div.cb-overlay {
+	display: none;
+	width: 100%; height: 100%;
+	position: fixed;
+	left: 0; top: 0;
+	background: #000;
+	z-index: 99995;
+}
+div#cookies-nutne {
+	display: block;
+}
+div.cookies-list #o-cookies {
+	height: 375px;
+	overflow-y: auto;
+}
+
+div.cookies-list #o-cookies::-webkit-scrollbar {
+width: 7px; height: 7px;
+}
+div.cookies-list #o-cookies::-webkit-scrollbar-track {
+	background: #fff;
+}
+div.cookies-list #o-cookies::-webkit-scrollbar-thumb {
+	background: #c4c4c4;
+}
+div.cookies-list #o-cookies::-webkit-scrollbar-thumb:hover {
+	background: #555;
+}
+
+@media (max-height: 520px) {
+	.cookies-top.cookies-bar-wrapper {
+		position: absolute;
+		top: 20px;
+		height: 244px;
+	}
+	div.cookies-list {
+		position: absolute;
+		top: 20px;
+		margin-top: 0;
+	}
+}
+@media (max-width: 768px) {
+	div.cookies-list {
+		position: fixed;
+		top: 20px; left: 20px;
+		transform: none;
+		margin-top: 0; margin-left: 0;
+		width: calc(100% - 40px);
+		height: calc(100% - 40px);
+		overflow-y: auto;
+	}
+	.cookies-list-content {
+		padding-left: 20px;
+		padding-right: 20px;
+		float: none;
+	}
+	.cookies-bar div.table-responsive {
+		width: 100%;
+		padding-right: 0;
+		height: auto;
+		border: 0px none;
+	}
+	.cookies-bar div.table-responsive::-webkit-scrollbar {
+		width: 0px; height: 0px;
+	}
+	.cookies-list-menu {
+		float: none;
+		width: 100%;
+		padding-bottom: 20px;
+	}
+	div.cookies-list .btn.btn-primary {
+		position: relative;
+		margin-top: 50px;
+	}
+}
+@media (max-width: 650px) {
+	.cookies-top.cookies-bar-wrapper {
+		top: 20px; left: 20px; bottom: inherit;
+		width: calc(100% - 40px)
+	}
+}
+@media (max-width: 580px) {
+	.cookies-list-content > div {
+		height: auto;
+	}
+	.container-inner.resp-tab-content {
+		width: 100%;
+		max-width: 	100%;
+	}
+	.cookies-list-content {
+		width: 100%;
+		max-width: 100%;
+	}
+	.cookies-bar div.table-responsive {
+		width: 100%;
+		max-width: 100%;
+		overflow-x: scroll;
+	}
+}
+@media (max-width: 430px) {
+	div.bottom-buttons {
+		text-align: center;
+	}
+	div.bottom-buttons a {
+		clear: both !important;
+		float: none;
+	}
+}
+@media (max-width: 390px) {
+	.menu.resp-tabs-list {
+		height: auto;
+		max-height: inherit;
+		border: 0;
+	}
+	.menu.resp-tabs-list li {
+		display: block;
+		text-align: center;
+	}
+	.menu.resp-tabs-list li.resp-tab-active {
+		border: 0;
+	}
+}

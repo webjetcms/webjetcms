@@ -1,0 +1,351 @@
+@charset "UTF-8";
+
+@import "~dropzone/dist/dropzone.css";
+
+#dt-upload
+{
+    /* positions to point 0,0 - required for z-index */
+    position: fixed; top: 0; left: 0;
+    /* above all elements, even if z-index is used elsewhere
+    it can be lowered as needed, but this value surpasses
+    all elements when used on YouTube for example. */
+    z-index: 9999999999;
+    /* takes up 100% of page */
+    width: 100%; height: 100%;
+    /* dim the page with 50% black background when visible */
+    background-color: rgba(0,0,0,0.5);
+    /* a nice fade effect, visibility toggles after 175ms, opacity will animate for 175ms. note display:none cannot be animated.  */
+    transition: visibility 175ms, opacity 175ms;
+
+    div.dz-message {
+        display: block !important;
+    }
+    i.fa-upload {
+        font-size: 120px;
+        color: #343a40;
+    }
+}
+
+.dropzone .dz-preview {
+    display: none !important;
+}
+
+.dropzone .dz-message {
+    margin: 0 !important;
+}
+
+#upload-wrapper {
+    position: fixed;
+    z-index: 999999;
+
+    border-radius: 10px;
+    box-shadow: 0 20px 30px 0 rgba(0, 0, 0, 0.28), 0 5px 10px 0 rgba(0, 0, 0, 0.08);
+    background-color: #ffffff;
+
+    bottom: 12px;
+    right: 12px;
+
+    width: 325px;
+
+    .upload-wrapper-header {
+        height: 50px;
+        background-color: #1f2022;
+        display: block;
+        border-radius: 10px 10px 0px 0px;
+        color: white;
+        padding-top: 15px;
+        padding-left: 25px;
+        font-size: 15px;
+        padding-right: 15px;
+
+        #upload-wrapper-close {
+            cursor: pointer;
+        }
+    }
+
+    .toast-container-progress {
+        & {
+            padding: 10px 10px 15px 32px;
+        }
+        span {
+            font-size: 13px;
+            position: relative;
+            top: 2px;
+        }
+        .fa-progress-bar {
+            & {
+                height: 30px;
+                -webkit-transform: rotate(-90deg);
+                        transform: rotate(-90deg);
+                width: 30px;
+            }
+            &__background {
+                fill: none;
+                stroke: #dddfe6;
+                stroke-width: 3;
+            }
+            &__progress {
+                fill: none;
+                stroke: #dddfe6;
+                stroke: #00be9f;
+                stroke-dasharray: 100 100;
+                stroke-dashoffset: 100;
+                stroke-linecap: round;
+                stroke-width: 3;
+                -webkit-transition: stroke-dashoffset 1s ease-in-out;
+                transition: stroke-dashoffset 1s ease-in-out;
+            }
+        }
+    }
+
+    .upload-wrapper-footer {
+        display: block;
+        border-radius: 0px 0px 10px 10px;
+        padding: 14px 30px;
+
+        a {
+            font-size: 13px;
+            color: #007eff;
+            display: inline-block;
+            margin-right: 15px;
+            cursor: pointer;
+        }
+        a.active {
+            font-weight: bold;
+        }
+        input[type="checkbox"] {
+            display: none;
+        }
+        .toast-label {
+            & {
+                font-size: 13px;
+                position: relative;
+                display: inline-block;
+            }
+        }
+        input:checked + .toast-label::after {
+            transform: scale(1);
+        }
+    }
+}
+
+#toast-container-upload * {
+    box-sizing: border-box;
+  }
+#toast-container-upload > div {
+    border: 0px;
+    border-bottom: 1px solid #dddfe6;
+    position: relative;
+    overflow: hidden;
+    margin: 0px;
+    width: 100%;
+    border-radius: 0px;
+    color: #ffffff;
+    opacity: 0.8;
+    font-size: 13px;
+    padding-top: 9px;
+    padding-bottom: 9px;
+    padding-right: 15px;
+    box-shadow: unset;
+    transition: all .4s ease;
+
+    .toast-close-button {
+        display: none;
+    }
+
+    &:first-child {
+        border-top: 1px solid #dddfe6;
+    }
+
+    span {
+        display: inline-block;
+        max-width: 180px;
+        max-height: 20px;
+        position: relative;
+        top: 5px;
+        text-overflow: ellipsis;
+        overflow: hidden;
+        white-space: nowrap;
+    }
+
+    i.fa-exclamation-triangle,
+    i.fa-check-circle,
+    .fa-progress-bar,
+    i.fa-spin,
+    i.fa-exclamation-circle {
+        display: none;
+        position: relative;
+        top: 4px;
+    }
+
+    i.fa-image-polaroid {
+        color: #007eff;
+        padding-left: 12px;
+        padding-right: 7px;
+    }
+
+    i.fa-check-circle {
+        color: #00be9f;
+        font-size: 20px;
+    }
+
+    i.fa-exclamation-triangle {
+        font-size: 9px;
+        color: #ffc000;
+        width: 20px;
+        height: 20px;
+        border: solid 2px #ffc000;
+        border-radius: 50%;
+        text-align: center;
+        padding: 3px 2px 1px 1px;
+    }
+
+    i.fa-spin {
+        color: #ffc000;
+        font-size: 20px;
+    }
+
+    i.fa-exclamation-circle {
+        color: #ff4852;
+        font-size: 20px;
+    }
+
+    span.exist {
+        position: absolute;
+        right: 40px;
+        font-size: 12px;
+        color: #868ea5;
+        display: none;
+        top: 15px;
+    }
+
+    div.toast-error-message {
+        font-size: 12px;
+        color: #ff4852;
+        display: none;
+        padding-left: 13px;
+        padding-top: 2px;
+    }
+
+    .fa-progress-bar {
+        & {
+            height: 20px;
+            -webkit-transform: rotate(-90deg);
+                    transform: rotate(-90deg);
+            width: 20px;
+        }
+        &__background {
+            fill: none;
+            stroke: #dddfe6;
+            stroke-width: 4;
+        }
+        &__progress {
+            fill: none;
+            stroke: #dddfe6;
+            stroke: #007eff;
+            stroke-dasharray: 100 100;
+            stroke-dashoffset: 100;
+            stroke-linecap: round;
+            stroke-width: 4;
+            -webkit-transition: stroke-dashoffset 1s ease-in-out;
+            transition: stroke-dashoffset 1s ease-in-out;
+        }
+    }
+
+
+    :last-child {
+        border-radius: 0px 0px 10px 10px;
+    }
+}
+
+#toast-container-upload {
+
+    max-height: 270px;
+    overflow: scroll;
+
+
+    [data-upload-status="progress"] {
+        .fa-progress-bar {
+            display: block
+        }
+    }
+
+    [data-upload-status="success"] {
+        i.fa-check-circle {
+            display: block
+        }
+    }
+
+    [data-upload-status="exist"] {
+        i.fa-exclamation-triangle {
+            display: block
+        }
+        span.exist {
+            display:inline-block
+        }
+        .toast-links {
+            display: block;
+        }
+    }
+    [data-upload-status="processing"] {
+        i.fa-spin {
+            display: block
+        }
+        i.fa-exclamation-triangle {
+            display: none
+        }
+        span.exist {
+            display: none
+        }
+        .toast-links {
+            display: none;
+        }
+    }
+
+    [data-upload-status="waitforprocess"] {
+        i.fa-spin {
+            color: #dddfe6;
+            display: block;
+        }
+        i.fa-exclamation-triangle {
+            display: none
+        }
+        span.exist {
+            display: none
+        }
+        .toast-links {
+            display: none;
+        }
+    }
+
+    [data-upload-status="error"] {
+        i.fa-exclamation-circle,
+        div.toast-error-message {
+            display: block
+        }
+    }
+
+    .toast-links {
+        padding: 8px 35px 0;
+        display: none;
+
+        a {
+            font-size: 13px;
+            color: #007eff;
+            display: inline-block;
+            margin-right: 15px;
+            cursor: pointer;
+        }
+    }
+}
+
+
+#toast-container-upload > div.toast.toast-dzpreview {
+    color: black;
+    background-color: white;
+}
+
+#toast-container-upload > div.toast.toast-dzpreview:hover {
+    opacity: 1;
+    background-color: #f3f3f6;
+}

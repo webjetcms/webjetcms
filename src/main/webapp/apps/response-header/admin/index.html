@@ -1,0 +1,34 @@
+<script data-th-inline="javascript">
+    let columns = /*[(${layout.getDataTableColumns("sk.iway.iwcm.components.response_header.jpa.ResponseHeaderEntity")})]*/ '';
+</script>
+<script type="text/javascript">
+    var responseHeadersDataTable;
+
+    window.domReady.add(function () {
+
+        WJ.breadcrumb({
+            id: "responseHeadersDataTable",
+            tabs: [
+                {
+                    url: '/apps/headers/admin/',
+                    title: '[[#{apps.response-header.table_name}]]',
+                    active: true
+                }
+            ]
+        });
+
+        let url = "/admin/rest/response-header";
+
+        responseHeadersDataTable = WJ.DataTable({
+            url: url,
+            serverSide: true,
+            columns: columns,
+            id: "responseHeadersDataTable",
+            fetchOnEdit: true,
+            fetchOnCreate: true
+        });
+
+    });
+</script>
+
+<table id="responseHeadersDataTable" class="datatableInit table"></table>

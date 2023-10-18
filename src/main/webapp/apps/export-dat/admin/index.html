@@ -1,0 +1,60 @@
+<script type="text/javascript">
+    var exportDatDataTable;
+
+    window.domReady.add(function () {
+
+        window.helpLink = "/redactor/apps/export/README";
+
+        WJ.breadcrumb({
+            id: "exportdat",
+            tabs: [
+                {
+                    url: '/apps/export-dat/admin/',
+                    title: '[[#{components.export.dialog_title}]]',
+                    active: true
+                }
+            ]
+        });
+
+        let url = "/admin/rest/export-dat";
+        let columns = [(${layout.getDataTableColumns("sk.iway.iwcm.components.export.ExportDatBean")})];
+
+        var tabs = [
+            { id: 'basic', title: '[[#{editor.tab.basic_info}]]', selected: true },
+            { id: 'filter', title: '[[#{editor.tab.filter}]]', selected: false },
+            { id: 'sort', title: '[[#{editor.tab.sort}]]', selected: false }
+        ];
+
+        exportDatDataTable = WJ.DataTable({
+            url: url,
+            serverSide: true,
+            columns: columns,
+            tabs: tabs,
+            id: "exportDatDataTable",
+            fetchOnEdit: true,
+            fetchOnCreate: true
+        });
+
+        //preview page
+        exportDatDataTable.button().add(4, {
+            text: '<i class="far fa-eye"></i>',
+            action: function (e, dt, node) {
+                let selectedRows = dt.rows({ selected: true }).data();
+                for (let i=0; i<selectedRows.length; i++) {
+                    let row = selectedRows[i];
+                    window.open(row.urlAddress);
+                }
+            },
+            init: function ( dt, node, config ) {
+                $.fn.dataTable.Buttons.showIfRowSelected(this, dt);
+            },
+            className: 'btn btn-outline-secondary buttons-history-preview buttons-divider',
+            attr: {
+                'title': '[[#{button.show}]]',
+                'data-toggle': 'tooltip'
+            }
+        });
+    });
+</script>
+
+<table id="exportDatDataTable" class="datatableInit table"></table>

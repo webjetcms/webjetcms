@@ -1,0 +1,51 @@
+<script data-th-inline="javascript">
+    let columns = /*[(${layout.getDataTableColumns("sk.iway.iwcm.components.qa.jpa.QuestionsAnswersEntity")})]*/ '';
+</script>
+<script type="text/javascript">
+var qaDataTable;
+
+window.domReady.add(function () {
+
+    window.helpLink = "/redactor/apps/qa/README";
+
+    WJ.breadcrumb({
+        id: "qa",
+        tabs: [
+            {
+                url: '/apps/qa/admin/',
+                title: '[[#{qa.list}]]',
+                active: true
+            }
+        ]
+    });
+
+    let url = "/admin/rest/qa";
+
+    var tabs = [
+        { id: 'basic', title: '[[#{editor.tab.basic_info}]]', selected: true },
+        { id: 'answer', title: '[[#{components.qa.qa_tab}]]', selected: false },
+        { id: 'fields', title: '[[#{editor.tab.fields}]]' }
+    ];
+
+    var order = [];
+    order.push([0, 'desc']);
+
+    qaDataTable = WJ.DataTable({
+        url: url,
+        serverSide: true,
+        columns: columns,
+        tabs: tabs,
+        order: order,
+        id: "qaDataTable",
+        fetchOnEdit: true,
+        fetchOnCreate: true
+    });
+});
+</script>
+<style type="text/css">
+    table.datatableInit tbody tr.is-not-answered td {
+        color: #FF4B58;
+    }
+</style>
+
+<table id="qaDataTable" class="datatableInit table"></table>

@@ -1,0 +1,44 @@
+{
+  "name": "webjet9test",
+  "version": "1.0.0",
+  "description": "Automatizovane testovanie",
+  "scripts": {
+    "codeceptjs": "codeceptjs run --steps",
+    "codeceptjs:ui": "codecept-ui --app",
+    "all": "CODECEPT_RESTART='session' CODECEPT_SHOW=false CODECEPT_AUTODELAY='true' codeceptjs run -p allure",
+    "all:prod": "CODECEPT_URL='http://demotest.webjetcms.sk' CODECEPT_RESTART='session' CODECEPT_SHOW=false CODECEPT_AUTODELAY='true' codeceptjs run -p allure",
+    "all:show": "CODECEPT_RESTART='session' CODECEPT_AUTODELAY='true' codeceptjs run -p allure",
+    "parallel2": "CODECEPT_RESTART='session' CODECEPT_SHOW=false CODECEPT_AUTODELAY='true' codeceptjs run-workers --suites 2 -p allure --grep '(?=.*)^(?!.*@singlethread)'",
+    "parallel4": "CODECEPT_RESTART='session' CODECEPT_SHOW=false CODECEPT_AUTODELAY='true' codeceptjs run-workers --suites 4 -p allure --grep '(?=.*)^(?!.*@singlethread)'",
+    "parallel6": "CODECEPT_RESTART='session' CODECEPT_SHOW=false CODECEPT_AUTODELAY='true' codeceptjs run-workers --suites 6 -p allure --grep '(?=.*)^(?!.*@singlethread)'",
+    "parallel8": "CODECEPT_RESTART='session' CODECEPT_SHOW=false CODECEPT_AUTODELAY='true' codeceptjs run-workers --suites 8 -p allure --grep '(?=.*)^(?!.*@singlethread)'",
+    "parallel12": "CODECEPT_RESTART='session' CODECEPT_SHOW=false CODECEPT_AUTODELAY='true' codeceptjs run-workers --suites 12 -p allure --grep '(?=.*)^(?!.*@singlethread)'",
+    "singlethread": "CODECEPT_RESTART='session' CODECEPT_SHOW=false CODECEPT_AUTODELAY='true' codeceptjs run -p allure --grep '@singlethread'",
+    "pause": "CODECEPT_RESTART='session' CODECEPT_AUTODELAY='true' codeceptjs run --steps -p pauseOnFail",
+    "pause:prod": "CODECEPT_URL='http://demotest.webjetcms.sk' CODECEPT_RESTART='session' CODECEPT_AUTODELAY='true' codeceptjs run --steps -p pauseOnFail",
+    "current": "CODECEPT_RESTART='session' CODECEPT_AUTODELAY='true' codeceptjs run --steps -p pauseOnFail --grep '@current'",
+    "current:prod": "CODECEPT_URL='http://demotest.webjetcms.sk' CODECEPT_RESTART='session' CODECEPT_AUTODELAY='true' codeceptjs run --steps -p pauseOnFail --grep '@current'",
+    "ff:all": "CODECEPT_RESTART='session' CODECEPT_BROWSER=firefox CODECEPT_SHOW=false codeceptjs run -p allure",
+    "ff:all:show": "CODECEPT_RESTART='session' CODECEPT_BROWSER=firefox codeceptjs run -p allure",
+    "ff:current": "CODECEPT_RESTART='session' CODECEPT_BROWSER=firefox codeceptjs run --steps -p pauseOnFail --grep '@current'",
+    "ff:current:hide": "CODECEPT_RESTART='session' CODECEPT_BROWSER=firefox CODECEPT_SHOW=false codeceptjs run --steps -p pauseOnFail --grep '@current'",
+    "ff:pause": "CODECEPT_BROWSER=firefox codeceptjs run --steps -p pauseOnFail",
+    "scr": "CODECEPT_AUTODELAY='true' codeceptjs run --override '{ \"tests\": \"./screenshots/generator/**/*.js\"}' --steps -p pauseOnFail",
+    "scr:current": "CODECEPT_AUTODELAY='true' codeceptjs run --override '{ \"tests\": \"./screenshots/generator/**/*.js\"}' --steps -p pauseOnFail --grep '@current'"
+  },
+  "author": "Lubos Balat, InterWay, a. s.",
+  "devDependencies": {
+    "@codeceptjs/configure": "^0.8.0",
+    "@codeceptjs/ui": "^0.4.7",
+    "acorn": "^8.8.0",
+    "allure-commandline": "^2.18.1",
+    "codeceptjs": "^3.3.5",
+    "codeceptjs-chai": "^2.3.3",
+    "mochawesome": "^7.1.3",
+    "moment": "^2.29.4",
+    "playwright": "^1.25.1"
+  },
+  "dependencies": {
+    "codeceptjs-pixelmatchhelper": "^1.0.5"
+  }
+}

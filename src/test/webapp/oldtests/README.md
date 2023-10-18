@@ -1,0 +1,1 @@
+Tento adresár obsahuje staršie testy, ktoré sa nevykonávajú štandardne ale je potrebné ich pustiť manuálne.

@@ -1,0 +1,119 @@
+include ../pug/mixins
+
+-
+    var tabsFolders = [
+        [ 'basic', '[[\#{datatable.tab.basic}]]', true ],
+        [ 'template', '[[\#{editor.tab.template}]]', false ],
+        [ 'access', '[[\#{editor.tab.permissions}]]', false ],
+        [ 'publishing', '[[\#{editor.tab.publishing}]]', false ],
+        [ 'history', '[[\#{editor.tab.history}]]', false ]
+    ]
+
+<div class="dt-header-row clearfix wp-header-tree">
+    <div class="row">
+        <div class="col-auto">
+            <div class="dt-buttons" style="padding-right: 71px">
+                <button class="btn btn-sm buttons-create noperms-addSubdir btn-success buttons-divider" type="button" data-toggle="tooltip" data-th-title="\#{button.add}">
+                    <span><i class="far fa-plus"></i></span>
+                </button>
+                <button class="btn btn-sm buttons-selected buttons-edit noperms-editDir btn-warning" data-toggle="tooltip" data-th-title="\#{groupedit.editButton}">
+                    <span><i class="far fa-pencil"></i></span>
+                </button>
+                <button class="btn btn-sm buttons-selected buttons-remove noperms-deleteDir btn-danger buttons-divider" data-toggle="tooltip" data-th-title="\#{button.delete}">
+                    <span><i class="far fa-trash-alt"></i></span>
+                </button>
+                <button class="btn btn-sm btn-outline-secondary buttons-refresh" data-toggle="tooltip" data-th-title="\#{datatables.button.reload.js}">
+                    <span><i class="fa-duotone fa-rotate"></i></span>
+                </button>
+                <div class="btn btn-sm custom-control form-switch noperms-editDir" data-toggle="tooltip" data-th-title="\#{groupedit.allowDragDrop}">
+                    <input type="checkbox" class="form-check-input" id="treeAllowDragDrop" value="true"/>
+                    <label class="form-check-label is-icon-arrows-v" for="treeAllowDragDrop"></label>
+                </div>
+                <button class="btn btn-sm btn-outline-secondary buttons-jstree-settings" data-toggle="tooltip" data-th-title="\#{datatables.button.settings.js}">
+                    <span><i class="far fa-wrench"></i></span>
+                </button>
+                <div id="folderIdInputWrapper" class="col-auto col-pk-input ps-0">
+                    <label for="tree-folder-id">ID: </label>
+                    <input type="text" autocomplete="off" class="js-tree-doc-id__input" id="tree-folder-id" data-toggle="tooltip" data-th-title="\#{webstranky.folder_id}"/>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="SomStromcek" data-rest-url="/admin/rest/groups/tree?click=dt-tree-group-filter-system-trash" data-rest-param-name="id">
+
+</div>
+
+#jstreeSettingsModal.modal.DTED.fade(tabindex='-1' role='dialog' aria-labelledby='jstreeSettingsModalLabel' aria-hidden='true')
+  .modal-dialog.modal-dialog-scrollable.modal-lg(role='document')
+    .DTE_Action_Edit.modal-content
+      .modal-header
+        .row
+          .col-sm-4
+            h5.modal-title.ui-draggable-handle [[\#{datatables.button.settings.js}]]
+      .DTE_Body.modal-body.modal-body-notabs
+        .modal-body-bg
+          #pills-jstreesettingsData.DTE_Action_Edit.tab-content
+            #pills-jstreesettings-basic.tab-pane.fade.show.active(role='tabpanel' aria-labelledby='pills-jstreesettings-basic-tab')
+              .form-group.row.DTE_Field_Type_checkbox
+                label.col-sm-4.col-form-label [[\#{button.view}]]
+                .col-sm-7
+                  .DTE_Field_InputControl
+                    .custom-control.form-switch
+                      input#jstree-settings-showid.form-check-input(type='checkbox' name='jstree-settings-showid' value='true')
+                      label.form-check-label(for='jstree-settings-showid') [[\#{datatables.id.js}]]
+                .col-sm-1.form-group-tooltip
+                  button.btn.btn-link(type='button' data-toggle='tooltip' data-th-title='\#{webpages.jstree.showid.tooltip}')
+                    i.far.fa-info-circle
+              .form-group.row.DTE_Field_Type_checkbox
+                label.col-sm-4.col-form-label
+                .col-sm-7
+                  .DTE_Field_InputControl
+                    .custom-control.form-switch
+                        input#jstree-settings-showorder.form-check-input(type='checkbox' name='jstree-settings-showorder' value='true')
+                        label.form-check-label(for='jstree-settings-showorder') [[\#{editor.sort_order}]]
+                .col-sm-1.form-group-tooltip
+                  button.btn.btn-link(type='button' data-toggle='tooltip' data-th-title='\#{webpages.jstree.showorder.tooltip}')
+                    i.far.fa-info-circle
+              .form-group.row.DTE_Field_Type_checkbox
+                label.col-sm-4.col-form-label
+                .col-sm-7
+                  .DTE_Field_InputControl
+                    .custom-control.form-switch
+                        input#jstree-settings-showpages.form-check-input(type='checkbox' name='jstree-settings-showpages' value='true')
+                        label.form-check-label(for='jstree-settings-showpages') [[\#{admin.fck.web_pages}]]
+                .col-sm-1.form-group-tooltip
+                  button.btn.btn-link(type='button' data-toggle='tooltip' data-th-title='\#{webpages.jstree.showpage.tooltip}')
+                    i.far.fa-info-circle
+              .form-group.row.DTE_Field_Type_checkbox
+                label.col-sm-4.col-form-label
+                .col-sm-7
+                  .DTE_Field_InputControl
+                    .custom-control.form-switch
+                        input#jstree-settings-showfolders-dt.form-check-input(type='checkbox' name='jstree-settings-showfolders-dt' value='true')
+                        label.form-check-label(for='jstree-settings-showfolders-dt') [[\#{webpages.jstree.showfolders-dt}]]
+                .col-sm-1.form-group-tooltip
+                  button.btn.btn-link(type='button' data-toggle='tooltip' data-th-title='\#{webpages.jstree.showfolders-dt.tooltip}')
+                    i.far.fa-info-circle
+              .form-group.row.DTE_Field_Type_select.DTE_Field_treeWidth
+                label.col-sm-4.col-form-label [[\#{webpages.jstree.treeWidth}]]
+                .col-sm-7
+                  .DTE_Field_InputControl
+                      select#jstree-settings-treeWidth.form-control.form-select.col-12
+                        each val in [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
+                          option(value=val) #{val}:#{12-val}
+                .col-sm-1.form-group-tooltip
+                  button.btn.btn-link(type='button' data-toggle='tooltip' data-th-title='\#{webpages.jstree.treeWidth.tooltip}')
+                    i.far.fa-info-circle
+      .modal-footer.DTE_Footer
+        .DTE_Form_Error
+        button.btn.btn-link(type='button' onclick='WJ.showHelpWindow()')
+          i.far.fa-question-circle
+          |  [[\#{button.help}]]
+        button.btn.btn-outline-secondary.btn-close-editor(type='button' data-bs-dismiss='modal')
+          i.fal.fa-times
+          |  [[\#{button.cancel}]]
+        button#jstree-settings-submit.btn.btn-primary(type='button')
+          i.fal.fa-check
+          |  [[\#{button.submit}]]

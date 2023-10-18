@@ -1,0 +1,357 @@
+.#{$prefix}-library {
+    font-family: 'Roboto', sans-serif;
+    opacity: 0;
+    visibility: hidden;
+    transform: scale(0.4);
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    height: auto;
+    width: 380px;
+    z-index: $library-index;
+    background-color: $modal-color;
+
+    border-radius: $modal-radius;
+    overflow: hidden;
+    box-shadow: 0 1px 14px 0px rgba(0, 0, 0, 0.1);
+
+    transition: opacity 0.2s ease-in-out, visibility 0.2s ease-in-out, transform 0.3s ease-in-out;
+
+    &__header {
+        position: relative;
+        overflow: hidden;
+        padding: 0 0 12px 0;
+
+        &__title {
+            display: block;
+            float: left;
+            background-color: transparent;
+            line-height: 44px;
+            font-size: 14px;
+            font-weight: 700;
+            color: #4e5e70;
+            margin-left: $modal-padding;
+
+            &:hover {
+                cursor: move;
+            }
+        }
+
+        .library-tab-menu {
+                margin: 0 12px 0 0;
+                float: right;
+    
+            .library-tab-link {
+                position: relative;
+                display: inline-block;
+                padding: 0 10px;
+                background-color: transparent;
+                color: #7e9bc0;
+                line-height: 44px;
+                font-size: 13px;
+                font-weight: 400;
+    
+                &:first-child {
+                    border-top-left-radius: 8px;
+                }
+                &:last-child {
+                    border-top-right-radius: 8px;
+                }
+    
+                &.active {
+                    color: #fbfcfc;
+                    font-weight: 500;
+                }
+                &:hover {
+                    cursor: pointer;
+                }
+            }
+    
+        }
+
+    }
+
+    &__content {
+        padding:0;
+        overflow-y: auto;
+        width: 100%;
+        max-height: 60vh;
+
+        .library-tab-content {
+            border-radius: $modal-radius;
+            overflow: hidden;
+            overflow: hidden;
+            clear: both;
+            width: 100%;
+    
+            .library-tab-item {
+                display: none;
+                overflow: hidden;
+                margin: 0 $modal-padding;
+
+                &.#{$prefix}-library__favorites {
+                    span.library-tab-item-button {
+                        width: 90%;
+                        position: relative;
+
+                        aside.library-tab-item-delete-favorite {
+                            display: none;
+                            position: absolute;
+                            right: -20px;
+                            top: 5px;
+                            width: 20px;
+                            height: 20px;
+                            background-image: url("../images/remove.png");
+                            background-repeat: no-repeat;
+                            background-position: right;
+                            background-size: auto 14px;
+                        }
+
+                        &:hover aside.library-tab-item-delete-favorite {
+                            display: block;
+                        }
+                    }
+                }
+
+                span.library-tab-item-button__toggler,
+                span.library-tab-item-button {
+                    display: block; 
+                    width: 100%;
+                    margin: 0 0 6px 0;
+                    padding: 0 10px;
+                    color: #ffffff;
+                    font-size: 13px;
+                    line-height: 30px;
+                    font-weight: 400;
+                    text-align: center;
+                    background-color: #304866;
+                    border-radius: $modal-radius;
+                    transition: background 0.3s ease-in-out;
+
+                    &:last-child {
+                        margin-bottom: 0;
+                    }
+    
+                    &.active {
+                        color: #152942;
+                        font-weight: 700;
+                        &:nth-child(1) { background-image: linear-gradient(to right, #3bb6b5, #21c2b5, #0eceaf, #22daa5, #42e496); }
+                        &:nth-child(2) { background-image: linear-gradient(to right, #7e72fe, #a375fd, #c279fc, #dd7dfa, #f583f7); }
+                        &:nth-child(3) { background-image: linear-gradient(to right, #bea6a0, #b49a99, #a98f92, #9d848d, #907a87); }
+                        &:nth-child(4) { background-image: linear-gradient(to right, #f48e82, #fb9f7e, #feb27e, #fec581, #fbd889); }
+                        &:nth-child(5) { background-image: linear-gradient(to right, #5190e7, #00a8f3, #00bef3, #00d1ea, #1de2db); }
+                        &:nth-child(6) { background-image: linear-gradient(to right, #f6529d, #fa5893, #fd608a, #fe6882, #fe717b); }
+                    }
+    
+                    &:hover {
+                        cursor: pointer;
+                        background-color: darken(#304866, 5%);
+                    }
+                }
+
+                .library-full-width-item__wrapper {
+                    display: none;
+                }
+
+                span.library-tab-item-button__toggler.active+.library-full-width-item__wrapper {
+                    display: block;
+                }
+
+                span.library-full-width-item {
+                    position: relative;
+                    display: block;
+                    width: 100%;
+                    height: auto;
+                    padding-top: 56.25%;
+                    margin: 0 0 26px 0;
+                    color: #ffffff;
+                    font-size: 13px;
+                    line-height: 40px;
+                    font-weight: 400;
+                    text-align: center;
+                    background-color: #304866;
+                    border-radius: $modal-radius;
+                    transition: background 0.3s ease-in-out;
+                    background-size: cover;
+                    &:hover {
+                        cursor: pointer;
+                        background-color: darken(#304866, 5%);
+                    }
+
+                    i {
+                        display: block;
+                        position: absolute;
+                        top: 100%;
+                        left: 0;
+                        right: 0;
+                        font-size: 12px;
+                        line-height: 20px;
+                        color: white;
+
+                    }
+                }
+
+                &.active {
+                    display: block;
+                }
+                
+            }
+
+            .library-template-block {
+                overflow: hidden;
+                display: none;
+                
+                &--section,
+                &--container,
+                &--column {
+                    span.library-tab-item-button {
+                        padding: 1%;
+                        height: 36px;
+                        span {
+                            display: block;
+                            float: left;
+                            background-color: $color-column;
+                            height: 100%;
+                            border-radius: 8px;
+                            &.#{$prefix}-col-12 { width: 100%; }
+                            &.#{$prefix}-col-11\.5 { width: 94%; margin-right: 2%; }
+                            &.#{$prefix}-col-11 { width: 91.1%; margin-right: 2%; }
+                            &.#{$prefix}-col-10\.5 { width: 86.5%; margin-right: 2%; }
+                            &.#{$prefix}-col-10 { width: 82.6%; margin-right: 2%; }
+                            &.#{$prefix}-col-9\.5 { width: 78.5%; margin-right: 2%; }
+                            &.#{$prefix}-col-9 { width: 74.5%; margin-right: 2%; }
+                            &.#{$prefix}-col-8\.5 { width: 69.5%; margin-right: 2%; }
+                            &.#{$prefix}-col-8 { width: 66%; margin-right: 2%; }
+                            &.#{$prefix}-col-7\.5 { width: 61%; margin-right: 2%; }
+                            &.#{$prefix}-col-7 { width: 57.5%; margin-right: 2%; }
+                            &.#{$prefix}-col-6\.5 { width: 52.5%; margin-right: 2%; }
+                            &.#{$prefix}-col-6 { width: 49%; margin-right: 2%; }
+                            &.#{$prefix}-col-5\.5 { width: 45%; margin-right: 2%; }
+                            &.#{$prefix}-col-5 { width: 40.3%; margin-right: 2%; }
+                            &.#{$prefix}-col-4\.5 { width: 36.5%; margin-right: 2%; }
+                            &.#{$prefix}-col-4 { width: 32%; margin-right: 2%; }
+                            &.#{$prefix}-col-3\.5 { width: 28%; margin-right: 2%; }
+                            &.#{$prefix}-col-3 { width: 23.5%; margin-right: 2%; }
+                            &.#{$prefix}-col-2\.5 { width: 19.5%; margin-right: 2%; }
+                            &.#{$prefix}-col-2 { width: 15%; margin-right: 2%; }
+                            &.#{$prefix}-col-1\.5 { width: 11%; margin-right: 2%; }
+                            &.#{$prefix}-col-1 { width: 6.5%; margin-right: 2%; }
+                            &.#{$prefix}-col-0\.5 { width: 3.3%; margin-right: 2%; }
+                            &:last-child { margin-right: 0; }
+                        }
+
+                        &:hover {
+                            background-color: $color-container;
+                        }
+                    }
+                }
+            }
+
+            .library-tab-item--basic {
+
+                .library-template-block {
+                    &--column {
+                        span.library-tab-item-button {
+                            float: left;
+                            width: 49%;
+                            &:nth-child(2n) {
+                                margin-left: 2%;
+                            }
+                        }
+                    }
+                }
+            }
+
+
+        }
+
+        span {
+            font-weight: 500;
+            font-size: 16px;
+            display: block;
+        }
+    }
+
+    &__footer {
+        height: auto;
+        padding: $modal-padding;
+        overflow: hidden;
+        clear: both;
+        text-align: center;
+
+        &__button {
+            display: inline-block;
+            width: auto;
+            height: 30px;
+            line-height: 30px;
+            padding: 0 16px;
+            font-size: 13px;
+            font-weight: 600;
+            opacity: 0.8;
+            text-align: center;
+            border-radius: $modal-radius;
+            transition: all 0.3s ease-in-out;
+
+            float: left;
+            border: 2px solid #ea4c7f;
+            background-color: transparent;
+            color: #ea4c7f;
+
+            &:hover {
+                cursor: pointer;
+                opacity: 1;
+            }
+        }
+    
+    }
+
+    .#{$prefix}-wrapper.#{$prefix}-is-library-active & {
+        opacity: 1;
+        visibility: visible;
+        transform: scale(1);
+    }
+
+    &--column .library-template-block--column,
+    &--row .library-template-block--column,
+    &--container .library-template-block--container,
+    &--section .library-template-block--section {
+        display: block !important;
+    }
+
+    &.show-group {
+        transition: opacity 0.2s ease-in-out, visibility 0.2s ease-in-out, transform 0.3s ease-in-out, top 0.3s ease-in-out, left 0.3s ease-in-out;
+        top: 20px !important;
+        left: 20px !important;
+
+        .#{$prefix}-library__header,
+        .library-tab-menu,
+        .library-tab-item-button {
+            display: none !important;
+        }
+    }
+
+    &--column.show-group .library-template-block--column,
+    &--row.show-group .library-template-block--row,
+    &--container.show-group .library-template-block--container,
+    &--section.show-group .library-template-block--section {
+        .library-full-width-item {
+            display: block !important;
+        }
+    }
+
+}
+
+/* JEEFF zmeny pre library */
+// .#{$prefix}-library {
+//     position: fixed;
+//     top: 0px;
+//     left: 0px;
+//     height: 100%;
+//   }
+//   .#{$prefix}-library__content {
+//     overflow: scroll;
+//     height: 100%;
+//   }
+  .library-tab-item-group {
+    color: white;
+  }

@@ -1,0 +1,589 @@
+extends ../../partials/layout
+
+block content
+
+    div.row
+        div.col-md-4.tree-col
+
+            +breadcrumb(
+                'gallery',
+                [
+                    [ 'gallery', '[[\#{webpages.tab.folders}]]', true ]
+                ]
+            )
+
+            include ../../partials/folder-tree-galleria
+
+        div.col-md-8.datatable-col
+
+            +breadcrumb(
+                'images',
+                [
+                    [ 'images', '[[\#{admin.fck_image.images}]]', true ]
+                ]
+            )
+
+            style.
+                #pills-dt-galleryTable-photoeditor, #pills-dt-galleryTable-areaOfInterest { padding-bottom: 0px; }
+
+            script.
+                var galleryTable = null;
+                var galleryDimensionDatatable = null;
+                var selectedNode = null;
+                var galleryDimensionDatatableClickButtonAfterXhr = null;
+                var adminUpload = null;
+                let imageEditorInstance = null;
+
+                var somStromcek = null;
+
+                const queryString = window.location.search;
+                const urlParams = new URLSearchParams(queryString);
+                let dir = urlParams.get('dir')
+                //console.log("dir=", dir);
+                if (dir == null) dir = "[(${baseDir})]";
+
+                window.getJstreeUrl = function() {
+                    if (somStromcek==null) somStromcek = $('#SomStromcek');
+                    let url = somStromcek.data("rest-url");
+                    if (dir != null) url = WJ.urlAddParam(url, "dir", dir);
+                    //console.log("Returning URL=", url);
+                    return url;
+                }
+
+                window.domReady.add(function () {
+
+                    var urlDimension= "/admin/rest/components/gallery-dimension";
+                    var tabsDimension = [
+                        {id: 'basic', title: '[[\#{datatable.tab.basic}]]', selected: true},
+                        {id: 'sizes', title: '[[\#{components.carousel_slider.sliderDimensions}]]', selected: false},
+                        {id: 'watermark', title: '[[\#{components.gallery.watermark}]]', selected: false}
+                     ];
+
+                    var columnsDimension = [(${layout.getDataTableColumns("sk.iway.iwcm.components.gallery.GalleryDimension")})];
+
+                    galleryDimensionDatatable = WJ.DataTable({
+                        url: urlDimension,
+                        serverSide: false,
+                        columns: columnsDimension,
+                        id: "galleryDimensionDatatable",
+                        hideTable: true,
+                        tabs: tabsDimension,
+                        fetchOnCreate: true,
+                        fetchOnEdit: true,
+                        idAutoOpener: false,
+                        onXhr: function ( TABLE, e, settings, json, xhr ) {
+
+                            let buttonName = galleryDimensionDatatableClickButtonAfterXhr;
+                            galleryDimensionDatatableClickButtonAfterXhr = null;
+
+                            if (buttonName != null) {
+                                setTimeout(() => {
+                                    galleryDimensionDatatable.row(0).select();
+                                    var button = getGalleryDimensionButton(buttonName);
+                                    //console.log("button=", button);
+                                    if (button != null) {
+                                        $(button).click();
+                                    }
+                                }, 10);
+                            }
+
+                            $('.tree-col .dt-header-row .buttons-edit').removeClass("processing");
+                        }
+                    });
+
+                    var url = "/admin/rest/components/gallery";
+
+                    var tabs = [
+                        { id: 'description', title: '[[\#{components.catalog.desc}]]', selected: true },
+                        { id: 'metadata', title: '[[\#{gallery.admin.metadata.title}]]', selected: false },
+                        {
+                            id: 'photoeditor',
+                            title: '[[\#{admin.editor.title}]]',
+                            selected: false,
+                            content: '<div id="photoEditorContainer" class="dte-tab-autoheight"></div>'
+                        },
+                        {
+                            id: 'areaOfInterest',
+                            title: '[[\#{components.gallery.areaOfInterest}]]',
+                            selected: false,
+                            content: '<div class="dte-tab-autoheight" style="overflow:scroll;"><div id="cropper-app"><webjet-cropper-component ref="vueCropper"></webjet-cropper-component></div></div>'
+                        }
+                    ];
+
+                    var columns = [(${layout.getDataTableColumns('sk.iway.iwcm.components.gallery.GalleryEntity')})];
+
+                    window.WJ.DataTable.mergeColumns(columns, {
+                        name: "datatableImage",
+                        render: function (data, type, row) {
+                            return '<div class="img" style="background-image:url(/thumb' + row.imagePath + '/' + row.imageName + '?w=600&h=400&ip=4&c=ffffff&q=90&v=' + (new Date()).getTime() + ');"></div>';
+                        },
+                        className: "dt-image",
+                        renderFormat: "dt-format-none"
+                    })
+
+                    window.WJ.DataTable.mergeColumns(columns, {
+                        name: "uploadDatetime",
+                        editor: {
+                            opts: {
+                                momentLocale: window.userLng
+                            }
+                        }
+                    });
+
+                    //console.log(JSON.stringify(columns));
+
+                    //console.log("tabsFolders", tabsFolders);
+
+                    //nastav CSS triedu podla storage
+                    let size = WJ.getAdminSetting("gallerySize");
+                    //console.log("Size from storage=", size);
+                    if (typeof size == "undefined" || size == null) {
+                        size = "S";
+                    }
+                    if (size != '') $("table.datatableInit").addClass('cardView cardView'+size);
+
+                    galleryTable = WJ.DataTable( {
+                        url: url,
+                        serverSide: true,
+                        columns: columns,
+                        id: "galleryTable",
+                        tabs: tabs,
+                        fetchOnCreate: true,
+                        fetchOnEdit: true,
+                        idAutoOpener: false
+                    });
+                    //- console.log("galleryTable 6", galleryTable);
+                    //- console.log("galleryTable buttons", galleryTable.button());
+
+                    galleryTable.hideButton("create");
+                    galleryTable.hideButton("import");
+                    galleryTable.hideButton("export");
+
+                    var userLng = window.userLng;
+
+                    galleryTable.EDITOR.field('selectedHeight').hide();
+                    galleryTable.EDITOR.field('selectedY').hide();
+                    galleryTable.EDITOR.field('selectedX').hide();
+                    galleryTable.EDITOR.field('selectedWidth').hide();
+
+                    function switchGallerySize(e, dt, node, size)
+                    {
+                        $(dt.table().node()).removeClass('cardView cardViewS cardViewM cardViewL');
+
+                        if (size != '')
+                        {
+                            //table.datatableInit je povodny header
+                            $("table.datatableInit").addClass('cardView cardView'+size);
+                            $(dt.table().node()).addClass('cardView cardView'+size);
+                            $("body").addClass("datatableNoHeader");
+                        }
+                        else
+                        {
+                            $("body").removeClass("datatableNoHeader");
+                            $("table.datatableInit").removeClass('cardView cardViewS cardViewM cardViewL');
+                        }
+
+                        $("button.btn-gallery-size.active").removeClass('active');
+                        $(node).addClass('active');
+
+                        //zmen velkost stranky
+                        galleryTable.calculateAutoPageLength(true);
+
+                        //uloz do nastaveni
+                        WJ.setAdminSetting("gallerySize", size);
+                    }
+
+                    galleryTable.button().add(0, {
+                        extends: 'create',
+                        text: '<i class="far fa-plus"></i>',
+                        className: 'btn-success buttons-divider',
+                        action: function (e, dt, node) {
+                            adminUpload.hiddenFileInput.click();
+                        },
+                        attr :{
+                            title: "[[\#{button.add}]]",
+                            "data-toggle": "tooltip"
+                        }
+                    });
+
+                    var buttonCounter = 5;
+
+                    galleryTable.button().add(buttonCounter++, {
+                        text: '<i class="far fa-eye"></i>',
+                        action: function (e, dt, node) {
+                            let selectedRows = dt.rows({ selected: true }).data();
+                            for (let i=0; i<selectedRows.length; i++) {
+                                let row = selectedRows[i];
+                                window.open(row.imagePath+"/"+row.imageName);
+                            }
+                        },
+                        init: function ( dt, node, config ) {
+                            $.fn.dataTable.Buttons.showIfRowSelected(this, dt);
+                        },
+                        className: 'btn btn-outline-secondary buttons-history-preview',
+                        attr: {
+                            'title': '[[\#{components.map.lookup}]]',
+                            'data-toggle': 'tooltip'
+                        }
+                    });
+
+                    galleryTable.button().add(buttonCounter++, {
+                        extends: 'remove',
+                        editor: galleryTable.EDITOR,
+                        text: '<i class="far fa-rotate-left"></i>',
+                        action: function (e, dt, node) {
+                            //console.log("Rotate, e=",e," dt=",dt," node=",node);
+                            galleryTable.executeAction("rotateLeft");
+                        },
+                        init: function ( dt, node, config ) {
+                            $.fn.dataTable.Buttons.showIfRowSelected(this, dt);
+                        },
+                        className: 'btn btn-outline-secondary',
+                        attr: {
+                            'title': '[[\#{image_editor.rotate}]]',
+                            'data-toggle': 'tooltip'
+                        }
+                    });
+
+                    galleryTable.button().add(buttonCounter++, {
+                        extends: 'remove',
+                        editor: galleryTable.EDITOR,
+                        text: '<i class="far fa-rotate-right"></i>',
+                        action: function (e, dt, node) {
+                            //console.log("Rotate, e=",e," dt=",dt," node=",node);
+                            galleryTable.executeAction("rotateRight");
+                        },
+                        init: function ( dt, node, config ) {
+                            $.fn.dataTable.Buttons.showIfRowSelected(this, dt);
+                        },
+                        className: 'btn btn-outline-secondary',
+                        attr: {
+                            'title': '[[\#{image_editor.rotate}]]',
+                            'data-toggle': 'tooltip'
+                        }
+                    });
+
+                    //refresh button
+                    //buttonCounter++;
+
+                    galleryTable.button().add(buttonCounter++, {
+                        'text': 'S',
+                        'action': function (e, dt, node) {
+                            switchGallerySize(e, dt, node, 'S');
+                        },
+                        'className': 'btn btn-outline-secondary btn-gallery-size btn-gallery-size-s'+((size=="S")?' active':''),
+                        'attr': {
+                            'title': '[[\#{components.gallery.sizeS}]]',
+                            "data-toggle": "tooltip"
+                        }
+                    });
+
+                    galleryTable.button().add(buttonCounter++, {
+                        'text': 'M',
+                        'action': function (e, dt, node) {
+                            switchGallerySize(e, dt, node, 'M');
+                        },
+                        'className': 'btn btn-outline-secondary btn-gallery-size btn-gallery-size-m'+((size=="M")?' active':''),
+                        'attr': {
+                            'title': '[[\#{components.gallery.sizeM}]]',
+                            "data-toggle": "tooltip"
+                        }
+                    });
+
+                    galleryTable.button().add(buttonCounter++, {
+                        'text': 'L',
+                        'action': function (e, dt, node) {
+                            switchGallerySize(e, dt, node, 'L');
+                        },
+                        'className': 'btn btn-outline-secondary btn-gallery-size btn-gallery-size-l'+((size=="L")?' active':''),
+                        'attr': {
+                            'title': '[[\#{components.gallery.sizeL}]]',
+                            "data-toggle": "tooltip"
+                        }
+                    });
+
+                    galleryTable.button().add(buttonCounter++, {
+                        'text': '<i class="far fa-th-list"></i>',
+                        'action': function (e, dt, node) {
+                            switchGallerySize(e, dt, node, '');
+                            galleryTable.columns.adjust();
+                        },
+                        'className': 'btn btn-outline-secondary btn-gallery-size btn-gallery-size-table'+((size=="")?' active':''),
+                        'attr': {
+                            'title': '[[\#{components.gallery.tableView}]]',
+                            "data-toggle": "tooltip"
+                        }
+                    });
+
+                    $('.btn-gallery-size').wrapAll('<div class="btn-group-wrapper buttons-divider-both"><div class="btn-group btn-group-toggle gallery-buttons-size" /></div>');
+                    if ($("table.datatableInit").hasClass('cardView')) $("body").addClass("datatableNoHeader");
+
+                    adminUpload = window.AdminUpload({
+                        element: "#dt-upload",
+                        uploadType: "image",
+                        acceptedFiles: ".jpg,.jpeg,.mp4,.gif,.png",
+                        destinationFolder: "/images/gallery",
+                        writeDirectlyToDestination: true
+                    });
+                    window.addEventListener("WJ.AdminUpload.success", function(e) {
+                        //console.log("Upload success", e);
+                        //refreshni DT
+                        galleryTable.ajax.reload();
+                    });
+
+
+                    $('#SomStromcek').on("changed.jstree", function(e, data) {
+                        //console.log("changed.jstree e=", e, "data=", data);
+
+                        if ("deselect_all"==data.action) return;
+
+                        var node = selectedNode = data.instance.get_node(data.selected);
+                        //console.log("node", node);
+
+                        if (node === false) return;
+
+                        setCurrentGalleryDimension(node.original.galleryDimension);
+
+                        if (node == null) {
+                            console.warn("Node null");
+                            return;
+                        }
+
+                        if (node) {
+                            var virtualPath = node.original.virtualPath;
+                            setGalleryTablePath(virtualPath);
+                        }
+                    });
+
+                    function setGalleryTablePath(virtualPath) {
+                        //https://datatables.net/reference/type/column-selector
+                        galleryTable.columns("imagePath:name").search("^"+virtualPath+"$").draw();
+                        adminUpload.setDestinationFolder(virtualPath);
+                    }
+
+                    $('.tree-col .dt-header-row .buttons-create').click(function () {
+                        galleryDimensionDatatableClickButtonAfterXhr = "buttons-create";
+
+                        var button = getGalleryDimensionButton('buttons-refresh');
+                        //console.log("Refresh button : ", button);
+                        if (button != null) {
+                            $(button).click();
+                        }
+                    });
+
+                    $('.tree-col .dt-header-row .buttons-edit').click(function () {
+                        $(this).addClass("processing");
+                        galleryDimensionDatatableClickButtonAfterXhr = "buttons-edit";
+
+                        var button = getGalleryDimensionButton('buttons-refresh');
+                        if (button != null) {
+                            $(button).click();
+                        }
+                    });
+
+                    $('.tree-col .dt-header-row .buttons-remove').click(function () {
+                        galleryDimensionDatatable.row(0).select();
+                        var button = getGalleryDimensionButton('buttons-remove');
+                        if (button != null) {
+                            $(button).click();
+                        }
+                    });
+
+                    galleryDimensionDatatable.EDITOR.on('postSubmit', function (e, json, data) {
+                        $('#SomStromcek').jstree(true).refresh();
+                    });
+                    window.addEventListener('WJ.DTE.forceReload', (e) => {
+                        $('#SomStromcek').jstree(true).refresh();
+                    }, false);
+
+                    function setCurrentGalleryDimension(galleryDimension) {
+                        window.lastGalleryDimension = galleryDimension;
+                        loadTablesForGalleryDimesnion(galleryDimension.id, galleryDimension.path);
+                    }
+
+                    function loadTablesForGalleryDimesnion(dimensionId, path) {
+
+                        galleryDimensionDatatable.ajax.url(urlDimension + "?dimensionId=" + dimensionId + "&path=" + encodeURIComponent(path));
+
+                        if (galleryDimensionDatatable.rows().count()==0) {
+                            galleryDimensionDatatable.row.add(window.lastGalleryDimension);
+                        } else {
+                            galleryDimensionDatatable.row(0).data(window.lastGalleryDimension);;
+                        }
+                        galleryDimensionDatatable.draw();
+                    }
+
+                    function getGalleryDimensionButton(cssClass) {
+                        let buttons = galleryDimensionDatatable.buttons();
+                        var button = $.grep(buttons, function(n){
+                            //console.log(n);
+                            //console.log($(n.node));
+                            //console.log($(n.node).hasClass(cssClass));
+                            return $(n.node).hasClass(cssClass);
+                        });
+
+                        //console.log('button', button);
+
+                        if (button.length > 0) {
+                            return button[0].node;
+                        }
+
+                        return null;
+                    }
+
+                    $.each( $('.datepicker'), function( key, dateInput ) {
+
+                        new $.fn.dataTable.Editor.DateTime( $(dateInput), {
+                            format:  'L',
+                            opts: {
+                                keyInput: false
+                            }
+                        });
+
+                    });
+
+                    galleryTable.EDITOR.on('submitSuccess', function (e, json, data, action) {
+                        if (imageEditorInstance != null) imageEditorInstance.onPostEditedImage('/admin/upload/chunk');
+                    });
+                    galleryTable.EDITOR.on('open', function (e, type, action) {
+                        $("div.modal.DTED > div.modal-dialog").addClass("modal-xl");
+                        //console.log("Reseting imageEditorInstance");
+                        //zresetuj image editor instance
+                        if (imageEditorInstance != null) imageEditorInstance.resetData();
+                    });
+                });
+
+            include ../../partials/datatables-upload
+
+            table.datatableInit.table(id="galleryTable")
+
+            script.
+                const initializeImageEditor = event => {
+                    //dynamicky vytvaram image editor
+                    //TODO: upravit aby sa neinicializoval zakazdym, ale len prepouzil
+                    imageEditor().then(module => {
+                        let now = (new Date()).getTime();
+                        const options = {
+                            includeUI: {
+                                loadImage: {
+                                    path: `${$("#DTE_Field_imagePath").val()}/o_${$("#DTE_Field_imageName").val()}?v=${now}`,
+                                    name: $("#DTE_Field_imageName").val(),
+                                },
+                                menu: ['crop', 'flip', 'rotate', 'draw', 'shape', 'icon', 'text', 'mask', 'filter'],
+                                locale: {
+                                    'Crop': '[[\#{components.gallery.tui-image-editor.Crop}]]',
+                                    'Invert': '[[\#{components.gallery.tui-image-editor.Invert}]]',
+                                    'Remove White': '[[\#{components.gallery.tui-image-editor.Remove_White}]]',
+                                    'Color Filter': '[[\#{components.gallery.tui-image-editor.Color_Filter}]]',
+                                    'DeleteAll': '[[\#{components.gallery.tui-image-editor.DeleteAll}]]',
+                                    'Rotate': '[[\#{components.gallery.tui-image-editor.Rotate}]]',
+                                    'Undo': '[[\#{components.gallery.tui-image-editor.Undo}]]',
+                                    'Redo': '[[\#{components.gallery.tui-image-editor.Redo}]]',
+                                    'Reset': '[[\#{components.gallery.tui-image-editor.Reset}]]',
+                                    'Delete': '[[\#{components.gallery.tui-image-editor.Delete}]]',
+                                    'Flip': '[[\#{components.gallery.tui-image-editor.Flip}]]',
+                                    'Flip X': '[[\#{components.gallery.tui-image-editor.Flip_X}]]',
+                                    'Flip Y': '[[\#{components.gallery.tui-image-editor.Flip_Y}]]',
+                                    'Range': '[[\#{components.gallery.tui-image-editor.Range}]]',
+                                    'Free': '[[\#{components.gallery.tui-image-editor.Free}]]',
+                                    'Load Mask Image': '[[\#{components.gallery.tui-image-editor.Load_Mask_Image}]]',
+                                    'Left': '[[\#{components.gallery.tui-image-editor.Left}]]',
+                                    'Text size': '[[\#{components.gallery.tui-image-editor.Text_size}]]',
+                                    'Custom icon': '[[\#{components.gallery.tui-image-editor.Custom_icon}]]',
+                                    'Rectangle': '[[\#{components.gallery.tui-image-editor.Rectangle}]]',
+                                    'Circle': '[[\#{components.gallery.tui-image-editor.Circle}]]',
+                                    'Triangle': '[[\#{components.gallery.tui-image-editor.Triangle}]]',
+                                    'Fill': '[[\#{components.gallery.tui-image-editor.Fill}]]',
+                                    'Stroke': '[[\#{components.gallery.tui-image-editor.Stroke}]]',
+                                    'Center': '[[\#{components.gallery.tui-image-editor.Center}]]',
+                                    'Right': '[[\#{components.gallery.tui-image-editor.Right}]]',
+                                    'Underline': '[[\#{components.gallery.tui-image-editor.Underline}]]',
+                                    'Bold': '[[\#{components.gallery.tui-image-editor.Bold}]]',
+                                    'Italic': '[[\#{components.gallery.tui-image-editor.Italic}]]',
+                                    'Straight': '[[\#{components.gallery.tui-image-editor.Straight}]]',
+                                    'Color': '[[\#{components.gallery.tui-image-editor.Color}]]',
+                                    'Draw': '[[\#{components.gallery.tui-image-editor.Draw}]]',
+                                    'Shape': '[[\#{components.gallery.tui-image-editor.Shape}]]',
+                                    'Icon': '[[\#{components.gallery.tui-image-editor.Icon}]]',
+                                    'Mask': '[[\#{components.gallery.tui-image-editor.Mask}]]',
+                                    'Apply': '[[\#{components.gallery.tui-image-editor.Apply}]]',
+                                    'Cancel': '[[\#{components.gallery.tui-image-editor.Cancel}]]',
+                                    'Custom': '[[\#{components.gallery.tui-image-editor.Custom}]]',
+                                    'Square': '[[\#{components.gallery.tui-image-editor.Square}]]',
+                                },
+                                theme: {
+                                    'common.bisize.width': '251px',
+                                    'common.bisize.height': '40px',
+                                    'common.backgroundColor': '#fff',
+                                },
+                                uiSize: {
+                                    width: '100%',
+                                    height: galleryTable.EDITOR.editorHeightLatest+'px'
+                                }
+                            },
+                            cssMaxWidth: "1207",
+                            //64 je vyska spodnej nastrojovej listy
+                            cssMaxHeight: galleryTable.EDITOR.editorHeightLatest-64-6
+
+                        }
+                        imageEditorInstance = new module.ImageEditor(document.querySelector("#photoEditorContainer"), options);
+                        //console.log("ImageEditor initialized");
+                    });
+                };
+
+                /* counter - kontrolujem ci bola vytvorena vue instance */
+                let counter = 0;
+                let cropperVm = null;
+                const createVueInstance = () => {
+                    return window.VueTools.createApp({
+                        components: {
+                            'webjet-cropper-component': window.VueTools.getComponent('webjet-cropper-component')
+                        },
+                        methods: {
+                            refresh() {
+                                this.$refs.vueCropper.refresh();
+                            },
+                            resize() {
+                                this.$refs.vueCropper.resetVisibleArea();
+                            }
+                        }
+                    }).mount('#cropper-app');
+                }
+
+                const initializeAreaOfInterest = () => {
+                    counter += 1;
+                    if (counter <= 1) {
+                        cropperVm = createVueInstance();
+                        //window.crop = cropperVm;
+                    } else {
+                        /* pokial je uz vytvorena len refreshujem, nevytvaram nove vue */
+                        cropperVm.refresh();
+                    }
+                    window.addEventListener('WJ.DTE.closeclick', () => {
+                        cropperVm.$refs.vueCropper.imageIsReady = false;
+                    }, false);
+                }
+
+                window.addEventListener('WJ.DTE.tabclick', function (e) {
+                    //console.log("tabclick, id=", e.detail.id, " e=", e);
+                    if (e.detail.id === 'galleryTable-areaOfInterest') initializeAreaOfInterest(e);
+                    if (e.detail.id === 'galleryTable-photoeditor') {
+                        initializeImageEditor(e);
+                    }
+                }, false);
+
+                window.addEventListener('WJ.DTE.resize', function (e) {
+                    if (cropperVm != null) {
+                        cropperVm.resize();
+                    }
+                    if (imageEditorInstance != null) {
+                        imageEditorInstance.resizeCanvasDimension({
+                            width: $("#galleryTable_modal div.DTE").width(),
+                            height: galleryTable.EDITOR.editorHeightLatest-64-6
+                        });
+                    }
+                });
+
+            //include ../../partials/images-list
+
+            <table id="galleryDimensionDatatable" class="table"></table>

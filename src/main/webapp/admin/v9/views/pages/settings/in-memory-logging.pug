@@ -1,0 +1,100 @@
+extends ../../partials/layout
+
+block content
+
+    +breadcrumb(
+        'in-memory-logging',
+        [
+            [ '/admin/v9/apps/audit-search/', '[[#{components.adminlog.adminlog}]]', false ],
+            [ '/admin/v9/settings/in-memory-logging/', '[[#{components.in-memory-logging.title}]]', true ]
+        ]
+    )
+
+    <table class="datatableInit table"></table>
+
+    script.
+
+        let table,
+            url = "/admin/rest/in-memory-logging";
+
+        window.domReady.add(function () {
+            let columns = [(${layout.getDataTableColumns("sk.iway.iwcm.system.logging.InMemoryLoggingEvent")})];
+            //console.log(columns);
+
+            let tabs = [
+                { id: 'main', title: '[[\#{components.in-memory-logging.tab.basic_info}]]', selected: true },
+                { id: 'description', title: '[[\#{components.in-memory-logging.tab.stack-trace}]]', content: '<div></div>' }
+            ];
+
+            var order = [];
+            order.push([3, 'desc']);
+
+            table = WJ.DataTable({
+                url: url,
+                serverSide: false,
+                columns: columns,
+                paging: true,
+                tabs: tabs,
+                order: order,
+                idAutoOpener: false,
+                onXhr: function (a1, a2, a3, a4) {
+                    if (!a4.options.currentNode) {
+                        return;
+                    }
+
+                    let currentNode = a4.options.currentNode,
+                        nodes = a4.options.nodes;
+
+                    createNodeSelect(currentNode[0], nodes);
+                }
+            });
+
+            table.hideButton("create");
+            table.hideButton("edit");
+            table.hideButton("remove");
+            table.hideButton("celledit");
+            table.hideButton("import");
+            table.hideButton("duplicate");
+
+            if ([(${layout.getConstantBoolean('loggingInMemoryEnabled')})]==false) {
+                WJ.notifyWarning("[[\#{components.in-memory-logging.notEnabled.title}]]", "[[\#{components.in-memory-logging.notEnabled.desc}]]");
+            }
+        });
+
+        function createNodeSelect(currentNode, nodes) {
+            if ( $('select#nodes').length > 0) {
+                return;
+            }
+
+            $('#pills-in-memory-logging').append('<li><select id="nodes"></select></li>');
+            $('select#nodes').append($('<option class="currentNode" selected="selected" value="' + currentNode.value + '">' + currentNode.label + '</option>'));
+
+            $(nodes).each(function(i, v){
+                 $('select#nodes').append($('<option>', {
+                      value: v.value,
+                      text: v.label
+                 }));
+            });
+
+            $('#nodes').on('change', function(){
+                let val = $(this).val();
+                if (val !== currentNode) {
+                    let clusterRefreshTimeout = "[(${layout.getConstant('clusterRefreshTimeout')})]",
+                        text = '[[\#{components.in-memory-logging.notify.text}]]';
+
+                    text = text.replace('{1}', clusterRefreshTimeout / 1000);
+                    WJ.notifyWarning(' [[\#{components.in-memory-logging.notify.title}]]', text, 10000);
+                }
+
+                var newUrl = $(this).val() !== '' ? WJ.urlAddParam(url, "node", $(this).val()) : url;
+                table.ajax.url(newUrl);
+                table.ajax.reload();
+            });
+        }
+
+    style.
+        div.DTE_Footer button.btn-primary { display: none; }
+        div.DTE_Field_Name_stackTrace label { display: none; }
+        div.DTE_Field_Name_stackTrace div.col-sm-7 { max-width: 100%; flex: 0 0 100%; }
+        div.DTE_Field_Name_stackTrace textarea.textarea-code { font-size: 10px; width: 99%; }
+        #DTE_Field_mdcPropertyMap { height: 250px; font-size: 13px; }

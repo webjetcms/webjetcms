@@ -1,0 +1,431 @@
+import { VueTools } from '../../src/js/libs/tools/vuetools';
+import WJ from '../../src/js/webjet';
+
+function getEmptyStringFieldValue() {
+    return "";
+}
+
+function isNumeric(str) {
+    if (typeof str != "string") return false // we only process strings!
+    return !isNaN(str) && // use type coercion to parse the _entirety_ of the string (`parseFloat` alone does not do this)...
+           !isNaN(parseFloat(str)) // ...and ensure strings of whitespace fail
+  }
+
+function getFieldValue(value, action, fieldType) {
+    //
+    if(fieldType === "number") {
+        if(isNumeric(value)) return Number(value);
+        else return "";
+    } else if(fieldType === "none") {
+        return "";
+    } else if(fieldType === "boolean") {
+        if(value === "1" || value === 1 || (typeof value==="string" && value.toUpperCase() === "TRUE")) return true;
+        else return false;
+    } else {
+        value = value.replace(/"/gi, "&quot;");
+        if(action === "create") return getEmptyStringFieldValue();
+        else if(value == null) return getEmptyStringFieldValue();
+        else return value;
+    }
+}
+
+function disableField(isDisabled) {
+    if(isDisabled === undefined || isDisabled === null || isDisabled === false) return '';
+    return 'disabled="disabled"';
+}
+
+function isDateEmpty(dateValue) {
+    if(dateValue === undefined || dateValue === null || dateValue.length < 1 || (dateValue.trim()).length < 1) return true;
+    else return false;
+}
+
+export function update(EDITOR, action) {
+
+    function fixNullData(data, click) {
+        //console.log("fixNullData, data=", data, "click=", click);
+        //ak to je pole neriesime, ponechame bezo zmeny
+        if (click.indexOf("-array")!=-1) return data;
+        //ak to nie je pole, musime nafejkovat jeden objekt aby sa pole aspon zobrazilo (a dala sa zmenit hodnota)
+        if (data.length==0) {
+            let emptyItem = {
+                fullPath: ""
+            }
+            if (click.indexOf("dt-tree-page")!=-1) emptyItem.docId = -1;
+            else if (click.indexOf("dt-tree-group")!=-1) emptyItem.groupId = -1;
+            else emptyItem.id = -1;
+
+            return [emptyItem];
+        }
+        return data;
+    }
+
+    let datatable = EDITOR.TABLE;
+    let json = EDITOR.currentJson;
+
+    if (typeof json == "undefined") {
+        //je to novy zaznam, ziskaj nastavenia z prveho zaznamu
+        try {
+            json = EDITOR.TABLE.DATA.json[0];
+            //zduplikuj
+            json = JSON.parse(JSON.stringify(json));
+            //console.log("json=", json);
+            for (let field of json?.editorFields?.fieldsDefinition) {
+                //vymaz values
+                field.value = null;
+            }
+        } catch (e) {
+            //console.log(e);
+        }
+    }
+
+    if (typeof json == "undefined" || json == null || typeof json.editorFields == "undefined" || json.editorFields == null || typeof json.editorFields.fieldsDefinition == "undefined" || json.editorFields.fieldsDefinition == null) return;
+
+    //WJ.log("CustomFields.update, json=", json);
+
+    //pomen mena poli
+    var textTemplate = '<input id="DTE_Field_{customPrefix}{identifier}" maxlength="{maxlength}" data-warningLength="{warninglength}" data-warningMessage="{warningMessage}" value="{value}" {disabled} class="form-control" type="text">';
+    var textAreaTemplate = '<textarea id="DTE_Field_{customPrefix}{identifier}" {disabled} class="form-control">{value}</textarea>';
+    var autocompleteTemplate = '<div class="input-group"> <span class="input-group-text"><i class="far fa-search"></i></span> <input type="text" class="form-control autocomplete" name="field{identifier}" value="{value}" id="DTE_Field_field{identifier}"/> </div>';
+    var selectTemplate = '<select id="DTE_Field_field{identifier}" class="form-control form-select">{options}</select>';
+    var labelTemplate = '<div class="input-group"> <span class="input-group-text noborders field-type-label">{value}</span> <input value="{value}" id="DTE_Field_{customPrefix}{identifier}" class="form-control" type="hidden"></div>';
+    var numberTemplate = '<input id="DTE_Field_{customPrefix}{identifier}" type="number" value="{value}" {disabled} class="form-control">';
+    var booleanTemplate = '<div><div class="custom-control form-switch"><input id="DTE_Field_{customPrefix}{identifier}" type="checkbox" {disabled} class="form-check-input"><label for="DTE_Field_{customPrefix}{identifier}" class="form-check-label">Áno</label></div></div>';
+
+    var dateTemplate = '<input id="DTE_Field_{customPrefix}{identifier}" type="text" autocomplete="off" class="form-control">';
+
+    //JICH - add
+    var hiddenTemplate = '<input value="{value}" id="DTE_Field_field{identifier}" class="form-control" type="hidden"><div id="fieldDisplay{identifier}"></div>';
+    //JICH - add end
+    var fields = json.editorFields.fieldsDefinition;
+
+    action = (action === undefined || action === null) ? "" : action;
+
+    //console.log("Fields=", fields);
+
+    $.each(fields, function(i, v) {
+        //If we use numberIdentifier no change, or we use alphabet identifier then upperCase
+        var identifier = v.key;
+        try {
+            identifier = v.key.toUpperCase();
+        } catch (e) {}
+
+        //if ("B"==identifier) console.log("Updating field "+identifier, v);
+
+        //Custom prefix can change field prefix name, if this prefix is not set, use default value "field"
+        var customPrefix = v.customPrefix;
+        if(customPrefix === undefined || customPrefix === null || customPrefix.length < 1) customPrefix = "field";
+
+        //
+        var value = v.value;
+        if(value == null) {
+            //nebolo poslane v datach, ziskajme priamo z JSONu
+            value = json[customPrefix+identifier];
+        }
+        if(value == null || value == "null") {
+            value = getEmptyStringFieldValue();
+        }
+        let valueUnescaped = value;
+        if(v.type !== "number" && v.type !== "boolean" && v.type !== "date" && v.type !== "none")
+            value = value.replace(/"/gi, "&quot;");
+
+        //nastav label
+        //console.log("#" + datatable.DATA.id + "_modal .DTE_Field_Name_" + customPrefix + identifier + " label");
+        //toto nastane v buble editacii
+        if ($("#" + datatable.DATA.id + "_modal .DTE_Field_Name_" + customPrefix + identifier + " label").length < 1) return;
+
+        $("#"+datatable.DATA.id + "_modal .DTE_Field_Name_" + customPrefix + identifier + " label").contents().first()[0].textContent = v.label;
+
+        //over typ pola a zmen ak treba
+        var	container = $("#" + datatable.DATA.id + "_modal .DTE_Field_Name_" + customPrefix + identifier),
+        input = container.find('input, select, textarea'),
+        inputBox = input.closest('.DTE_Field_InputControl');
+
+        container.show();
+
+        //if ("B"==identifier) console.log("container=", container, "input=", input, "inputBox=", inputBox);
+
+        var maxlength = v.maxlength;
+        var warninglength;
+        var warningMessage;
+
+        if (v.warninglength <= 0) {
+            warninglength = "";
+        } else {
+            warninglength = v.warninglength;
+        }
+        if (v.warningMessage == null) {
+            warningMessage = "";
+        } else {
+            warningMessage = v.warningMessage;
+        }
+
+        //DEFAULT template, "textTemplate"
+        var template = textTemplate.replace(new RegExp('{customPrefix}', 'g'), customPrefix).replace(new RegExp('{identifier}', 'g'), identifier).replace(new RegExp('{value}', 'g'), getFieldValue(value, action, v.type)).replace(new RegExp('{maxlength}', 'g'), maxlength).replace(new RegExp('{warninglength}', 'g'), warninglength).replace(new RegExp('{warningMessage}', 'g'), warningMessage).replace(new RegExp('{disabled}', 'g'), disableField(v.disabled));
+
+        if (v.type == 'textarea') {
+            template = textAreaTemplate.replace(new RegExp('{customPrefix}', 'g'), customPrefix).replace(new RegExp('{identifier}', 'g'), identifier).replace(new RegExp('{value}', 'g'), getFieldValue(value, action, v.type)).replace(new RegExp('{disabled}', 'g'), disableField(v.disabled));
+        } else if(v.type == 'number') {
+            template = numberTemplate.replace(new RegExp('{customPrefix}', 'g'), customPrefix).replace(new RegExp('{identifier}', 'g'), identifier).replace(new RegExp('{value}', 'g'), getFieldValue(value, action, v.type)).replace(new RegExp('{disabled}', 'g'), disableField(v.disabled));
+        } else if(v.type == 'boolean') {
+            template = booleanTemplate.replace(new RegExp('{customPrefix}', 'g'), customPrefix).replace(new RegExp('{identifier}', 'g'), identifier).replace(new RegExp('{disabled}', 'g'), disableField(v.disabled));
+        } else if(v.type == 'date') {
+            //console.log("DATE");
+            template = dateTemplate.replace(new RegExp('{customPrefix}', 'g'), customPrefix).replace(new RegExp('{identifier}', 'g'), identifier);
+        } else if (v.type == 'select') {
+            var options = '';
+            $.each(v.typeValues, function(it, val){
+                var selected = v.multiple ? value.split("|").indexOf(val.value) > -1 : val.value == value;
+                options += '<option ' + (selected ? ' selected="true"' : "") + ' value="' + val.value + '">' + val.label + '</option>';
+            });
+
+            template = selectTemplate.replace('{options}', options).replace(new RegExp('{identifier}', 'g'), identifier);
+            if(v.multiple) {
+                template = template.replace("<select", "<select multiple");
+            }
+        } else if (v.type == 'autocomplete') {
+            template = autocompleteTemplate.replace(new RegExp('{identifier}', 'g'), identifier).replace(new RegExp('{value}', 'g'), value);
+        } else if (v.type == 'label') {
+            template = labelTemplate.replace(new RegExp('{customPrefix}', 'g'), customPrefix).replace(new RegExp('{identifier}', 'g'), identifier).replace(new RegExp('{value}', 'g'), WJ.escapeHtml(valueUnescaped));
+        } else if (v.type == 'image') {
+            let backgroundImage = "none";
+            let prependClassName = "";
+            if (value != "") {
+                backgroundImage = "url("+value+")";
+                prependClassName = " has-image";
+            }
+            template = '<div class="input-group"> <span class="input-group-text'+prependClassName+'" style="background-image: '+backgroundImage+';"><i class="far fa-image"></i></span> ' + template + ' <button class="btn btn-outline-secondary" type="button" onclick="WJ.openElFinderButton(this);"><i class="far fa-pencil"></i></button> </div>';
+        } else if (v.type == 'link') {
+            template = '<div class="input-group"> ' + template + ' <button class="btn btn-outline-secondary" type="button" onclick="WJ.openElFinderButton(this);"><i class="far fa-pencil"></i></button> </div>';
+        } else if (v.type == 'dir') {
+            template = '<div class="input-groupxxx"> ' + template + ' <div class="vueComponent" id="DTE_Field_field'+identifier+'"><webjet-dte-jstree :data-table-name="dataTableName" :data-table="dataTable" :click="click" :id-key="idKey" :data="data" :attr="attr"></webjet-dte-jstree></div> </div>';
+        } else if (v.type == 'none') {
+            // LPA
+            container.hide();
+        } else if (v.type == 'hidden') {
+            //JICH - add
+            var button = "";
+            if (v.typeValues[0] != null) {
+                var dialogScript = v.typeValues[0].label;
+                if (dialogScript.indexOf("?") > 0) {
+                    dialogScript += "&";
+                } else {
+                    dialogScript += "?";
+                }
+                var dialogScript2 = dialogScript + "fieldName=fieldInput" + identifier + "&fieldValue=" + value;
+
+                if (v.typeValues[0].value == null || v.typeValues[0].value == "") {
+                    //kdyz nemame displayScript prepneme na textTemplate
+                    button = "<span type=\"button\" id=\"fieldButton" + identifier + "\" class=\"btn green input-group-addon\"><i class=\"fa fa-pencil\"></i></span>";
+                    hiddenTemplate = textTemplate;
+                    hiddenTemplate = hiddenTemplate + button;
+                } else {
+                    button = "<span type=\"button\" id=\"fieldButton" + identifier + "\" class=\"float-end btn green\"><i class=\"fa fa-pencil\"></i></span>";
+                    hiddenTemplate = button + hiddenTemplate;
+                }
+            }
+            template = hiddenTemplate.replace(new RegExp('{identifier}', 'g'), identifier).replace(new RegExp('{value}', 'g'), value);
+        }
+        //JICH - add end
+
+        inputBox.html(template);
+
+        if(v.type == 'boolean') {
+            var origType = EDITOR.field(customPrefix + identifier).s.opts["type"];
+            var booleanValue = getFieldValue(value, action, v.type);
+            var input;
+
+            //If origType is TEXT, we changing text fiel to checkbox field
+            //If origType is CHECKBOX, we are using same field type
+            if(origType == "text") {
+                //It's checkbox input inside text column
+                input = inputBox.find('input');
+
+                //Need to add ON-CHANGE event to set value
+                input.on("change", function() {
+                    var $this = $(this);
+                    $this.prop("value", ""+$this.is(":checked"));
+                });
+
+                //Firts time we must set value, or "ON" string will be saved (TEXT value)
+                input.prop("value", "" +  booleanValue);
+
+                //!! For som reason, boolean does not change it's value on true inside web page tab, with nested table Media
+                //Looks like duplicite code because we set checked value below with "attr" but it must stay here
+                input.prop("checked", booleanValue);
+
+            } else {
+                //In original editor it's set to parent/parent div wrapper
+                input = inputBox.find('input').parent().parent();
+            }
+
+            //Set prepared input in editor field
+            EDITOR.field(customPrefix + identifier).s.opts._input = input;
+
+            //set field value for checked state
+            inputBox.find('input')[0]._editor_val = true;
+
+            //Set booelan via jQuery because we cant set checkbox throu html template
+            $('#DTE_Field_' + customPrefix + identifier).attr('checked', booleanValue);
+        } else if(v.type == 'date') {
+            var opts = EDITOR.field(customPrefix + identifier).s.opts;
+            opts._input = inputBox.find('input');
+
+            input._picker = new $.fn.dataTable.DateTime(opts._input, $.extend({
+                format: 'L',
+                momentLocale: window.userLng,
+                locale: window.userLng,
+                i18n: EDITOR.i18n.datetime
+            }, opts));
+
+            //FIX - if string (aka date) is valid, set this value into input
+            if(!isDateEmpty(value)) {
+                $(opts._input).val(value);
+            }
+
+        } else {
+            EDITOR.field(customPrefix + identifier).s.opts._input = inputBox.find('input, select, textarea');
+        }
+
+        if (v.type == 'select') {
+            inputBox.find('select').selectpicker(EDITOR.DT_SELECTPICKER_OPTS_EDITOR);
+        }
+        else if (v.type == 'autocomplete') {
+
+            new AutoCompleter("#"+datatable.DATA.id+"_modal .DTE_Field_Name_field" + identifier + " input.autocomplete").setUrl('/admin/FCKeditor/_editor_autocomplete.jsp?keyPrefix=' + json.editorFields?.fieldsDefinitionKeyPrefix + '&template=' + json.tempId + '&field=' + identifier).transform();
+
+        } else if (v.type == "dir") {
+            let conf = {};
+            let id = 'DTE_Field_field'+identifier;
+
+            //There must by allso prefix of datatable.DATA.id, because table can be nested in another table with same columns
+            //And first-child because it's text input to hide and second child will be VUE component
+            var textFieldInput  = $("#" + datatable.DATA.id + "_modal #" + id + ":first-child");
+            textFieldInput.hide();
+
+            conf._id = id;
+            conf._el = inputBox.find('div.vueComponent')[0];
+            conf.className = "dt-tree-dir-simple";
+            let dataTableName = datatable.DATA.id;
+            conf.jsonData = [{
+                virtualPath: value,
+                type: "DIR",
+                id: value
+            }];
+            const vm = window.VueTools.createApp({
+                components: {},
+                data() {
+                    return {
+                        data: null,
+                        idKey: null,
+                        dataTable: null,
+                        dataTableName: null,
+                        click: null,
+                        attr: null
+                    }
+                },
+                created() {
+                    this.data = fixNullData(conf.jsonData, conf.className);
+                    //console.log("JS created, data=", this.data, " conf=", conf, " val=", conf._input.val());
+                    this.idKey = conf._id;
+                    this.dataTableName = dataTableName;
+                    //co sa ma stat po kliknuti prenasame z atributu className datatabulky (pre jednoduchost zapisu), je to hodnota obsahujuca dt-tree-
+                    //priklad: className: "dt-row-edit dt-style-json dt-tree-group", click=dt-tree-group
+                    const confClassNameArr = conf.className.split(" ");
+                    for (var i=0; i<confClassNameArr.length; i++) {
+                        let className = confClassNameArr[i];
+                        if (className.indexOf("dt-tree-")!=-1) this.click = className;
+                    }
+                    //console.log("click=", this.click);
+                    this.dataTable = EDITOR.TABLE;
+                    if (typeof(conf.attr)!="undefined") this.attr = conf.attr;
+                },
+                methods: {
+                    remove(id) {
+                        //console.log("REMOVE impl, id=", id, "click=", this.click);
+                        let that = this;
+                        this.data = this.data.filter(function( obj ) {
+                            //console.log("Testing ", obj.groupId+" doc=", obj.docId);
+                            if (that.click.indexOf("dt-tree-page")!=-1) return obj.docId !== id;
+                            else if (that.click.indexOf("dt-tree-group")!=-1) return obj.groupId !== id;
+                            else return obj.id !== id;
+                        });
+                        window.$(textFieldInput).val(JSON.stringify(this.data, undefined, 4));
+                    }
+                }
+            });
+            VueTools.setDefaultObjects(vm);
+
+            vm.component('webjet-dte-jstree', window.VueTools.getComponent('webjet-dte-jstree'));
+            vm.mount(conf._el);
+        }
+
+        //JICH - add
+        //musime AJAXem zavolat skript pro zobrazeni custom obsahu
+        if (v.type == 'hidden') {
+            //console.log("jch, v=", v);
+            if (v.typeValues[0] != null) {
+                var displayScript = v.typeValues[0].value
+                if (displayScript.indexOf("?") > 0) {
+                    displayScript += "&";
+                } else {
+                    displayScript += "?";
+                }
+                displayScript += "fieldName=" + identifier + "&fieldValue=" + value;
+                $.ajax({
+                    type : "GET",
+                    url : displayScript,
+                    success : function(data) {
+                        $("#fieldDisplay" + identifier).html($.trim(data));
+                        //upravime tlacitku click udalost
+                        $("#fieldButton" + identifier).on("click", function() {
+                            var dialogScript2 = dialogScript + "fieldName=field" + identifier + "&fieldValue=" + value;
+                            //WJ.openPopupDialog(dialogScript2, 800, 500);
+                            WJ.openIframeModal({
+                                url: dialogScript2,
+                                width: 800,
+                                height: 500,
+                                okclick: function() {
+                                    document.getElementById("modalIframeIframeElement").contentWindow.Ok();
+                                    return false;
+                                }
+                            });
+                        });
+                    },
+                    async : false
+                });
+            } else {
+                $("#fieldButton" + identifier).on("click", function() {
+                    var dialogScript2 = dialogScript + "fieldName=field" + identifier + "&fieldValue=" + value;
+                    //WJ.openPopupDialog(dialogScript2, 800, 500);
+                    WJ.openIframeModal({
+                        url: dialogScript2,
+                        width: 800,
+                        height: 500,
+                        okclick: function() {
+                            document.getElementById("modalIframeIframeElement").contentWindow.Ok();
+                            return false;
+                        }
+                    });
+                });
+            }
+        }
+        //JICH - add end
+    });
+
+    //zapni zobrazenie varovania pre warninglength
+    $("#"+datatable.DATA.id+"_modal input.form-control").each(function(){
+        var input = $(this);
+        var dataWarningLength = $(this).attr('data-warninglength');
+        var dataWarningMessage = $(this).attr('data-warningmessage');
+        if (dataWarningLength > 0) {
+            input.on('input', function(){
+                if (dataWarningLength <= input.val().length) {
+                    toastr.remove();
+                    toastr["warning"](dataWarningMessage);
+                } else {
+                    toastr.remove();
+                }
+            })
+        }
+    });
+}

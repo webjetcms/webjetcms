@@ -1,0 +1,72 @@
+extends ../../partials/layout
+
+block content
+
+    +breadcrumb(
+        'linkcheck',
+        [
+            [ 'brokenLinks', '[[\#{linkcheck.linkcheck_vypis.broken_links}]]', true ],
+            [ 'hiddenPages', '[[\#{linkcheck.linkcheck_vypis.hidden_pages}]]', false ],
+            [ 'emptyPages', '[[\#{linkcheck.linkcheck_vypis.empty_pages}]]', false ]
+        ]
+    )
+
+    script.
+        var linkCheckUrl = "";
+        var linkCheckDataTable = null;
+
+        setTableDefaultUrl();
+
+        window.editWebPage = function(id) {
+            window.open("/admin/v9/webpages/web-pages-list/?docid=" + id);
+        }
+
+        window.openLink = function(link) {
+            if(link) window.open(link);
+        }
+
+        window.domReady.add(function () {
+            var linkCheckColumns = [(${layout.getDataTableColumns('sk.iway.iwcm.editor.rest.LinkCheckDto')})];
+
+            linkCheckDataTable = WJ.DataTable({
+                url: linkCheckUrl,
+                serverSide: false,
+                columns: linkCheckColumns,
+                id: "links",
+                fetchOnEdit: true,
+                fetchOnCreate: true
+            });
+            linkCheckDataTable.hideButton("create");
+            linkCheckDataTable.hideButton("edit");
+            linkCheckDataTable.hideButton("duplicate");
+            linkCheckDataTable.hideButton("remove");
+            linkCheckDataTable.hideButton("celledit");
+            linkCheckDataTable.hideButton("import");
+        });
+
+        function setTableDefaultUrl() {
+            const queryString = window.location.search;
+            const urlParams = new URLSearchParams(queryString);
+            const groupIdParam = "?groupId=" + urlParams.get('groupId')
+            const baseUrl = "/admin/rest/link-check";
+
+            linkCheckUrl = baseUrl + groupIdParam + "&tableType=brokenLinks";
+        }
+
+        //pills-linkcheck
+        $('#pills-linkcheck a[data-bs-toggle="tab"]').on('click', function (e) {
+            let selectedTab = e.target.id;
+
+            if(selectedTab === "pills-brokenLinks-tab") {
+                linkCheckDataTable.ajax.url(WJ.urlUpdateParam(linkCheckUrl, "tableType", "brokenLinks"));
+                linkCheckDataTable.ajax.reload();
+            } else if(selectedTab === "pills-hiddenPages-tab") {
+                linkCheckDataTable.ajax.url(WJ.urlUpdateParam(linkCheckUrl, "tableType", "hiddenPages"));
+                linkCheckDataTable.ajax.reload();
+            } else if(selectedTab === "pills-emptyPages-tab") {
+                linkCheckDataTable.ajax.url(WJ.urlUpdateParam(linkCheckUrl, "tableType", "emptyPages"));
+                linkCheckDataTable.ajax.reload();
+            }
+        });
+
+    <table id="links" class="datatableInit table"></table>

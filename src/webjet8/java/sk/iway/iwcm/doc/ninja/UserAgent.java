@@ -1,0 +1,105 @@
+package sk.iway.iwcm.doc.ninja;
+
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.stat.BrowserDetector;
+
+import java.util.Hashtable;
+import java.util.Map;
+
+public class UserAgent {
+    private Ninja ninja;
+    private Map<String, Integer> minimalBrowserVersion = new Hashtable<>();
+    BrowserDetector bd = null;
+
+    public UserAgent(Ninja ninja) {
+        this.ninja = ninja;
+
+        for (BrowserType browserType : BrowserType.values()) {
+            minimalBrowserVersion.put(browserType.getBrowser(), Tools.getIntValue(ninja.getConfig("minBrowserVersion."+browserType), browserType.defaultMinimalVersion));
+        }
+    }
+
+    /**
+     * Funkcia na vr?tenie verzie prehliada?a. Verzia sa zis?uje na z?klade UserAdent
+     * @return String - verzia prehliada?a
+     */
+    public String getBrowserVersion(){
+        String browserVersion = String.valueOf(Math.round(getBrowserDetector().getBrowserVersion()));
+        return browserVersion;
+    }
+
+    /**
+     * Funkcia ktora vrati nazov prehliadaca
+     * @return String - nazov prehliadaca:
+     * ie
+     * chrome
+     * safari
+     * firefox
+     * opera
+     * edge
+     * webview
+     * android browser
+     * maxthon
+     * blackberry
+     */
+    public String getBrowserName(){
+        String browserName = getBrowserDetector().getBrowserName();
+        if (browserName != null) {
+            return browserName.toLowerCase();
+        }
+        return "";
+    }
+
+    /**
+     * Metoda vracajuca typ zariadenia
+     * @return String - ketegoria zariadenia:
+     * game console
+     * other
+     * pda
+     * personal computer
+     * smart tv
+     * smartphone
+     * tablet
+     * wearable computer
+     * prazdny string ak nepozna typ
+     */
+    public String getDeviceType(){
+        String deviceType = getBrowserDetector().getBrowserDeviceType();
+        if (deviceType == null) deviceType = "desktop";
+        return deviceType.toLowerCase();
+    }
+
+    public String getDeviceOS(){
+        String deviceOs = getBrowserDetector().getBrowserPlatform()+" "+getBrowserDetector().getBrowserSubplatform();
+        return deviceOs.toLowerCase();
+    }
+
+    public boolean isBrowserOutdated()
+    {
+        int browserVersion = getMinimalBrowserVersion(getBrowserName());
+        //pre nezdetekovany browser vratime false, zhodni sme sa na tom s MHO ze to je lepsie
+        if (browserVersion < 1) return false;
+        return Tools.getIntValue(getBrowserVersion(), 999) < browserVersion;
+    }
+
+    public int getMinimalBrowserVersion(String browser){
+        Integer version =  minimalBrowserVersion.get(browser);
+        if (version == null || version <1) return -1;
+        return version;
+    }
+
+    public boolean isBlind(){
+        BrowserDetector instance = BrowserDetector.getInstance(ninja.getRequest());
+        boolean isBlind = false;
+        if("blind".equals(instance.getBrowserDeviceType())){
+            isBlind = true;
+        }
+        return isBlind;
+    }
+
+    private BrowserDetector getBrowserDetector()
+    {
+        if (bd == null) bd = BrowserDetector.getInstance(ninja.getRequest());
+        return bd;
+    }
+}

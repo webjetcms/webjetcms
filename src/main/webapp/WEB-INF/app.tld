@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<!DOCTYPE taglib
+  PUBLIC "-//Sun Microsystems, Inc.//DTD JSP Tag Library 1.1//EN"
+  "http://java.sun.com/j2ee/dtds/web-jsptaglibrary_1_1.dtd">
+<taglib>
+	<tlibversion>1.0</tlibversion>
+	<jspversion>1.1</jspversion>
+	<shortname>Application Tag Library</shortname>
+	<uri>http://jakarta.apache.org/taglibs/struts-example-1.0</uri>
+	<info>
+		This tag library contains functionality specific to the Struts
+		Example Application.
+  </info>
+	<tag>
+		<name>checkLogon</name>
+		<tagclass>sk.iway.iwcm.tags.CheckLogonTag</tagclass>
+		<bodycontent>empty</bodycontent>
+		<info>
+			Validate that there is a currently logged on user, by checking for
+			the existence of a session-scope bean under the specified name.
+			If there is no such bean, forward control to the specified page,
+			which will typically be a logon form.
+			name - Name of the session-scope bean to check for [user]
+			page - Context-relative path to the logon page [/logon.jsp]
+    </info>
+		<attribute>
+			<name>name</name>
+			<required>false</required>
+			<rtexprvalue>true</rtexprvalue>
+		</attribute>
+		<attribute>
+			<name>page</name>
+			<required>false</required>
+			<rtexprvalue>true</rtexprvalue>
+		</attribute>
+	</tag>
+
+	<tag>
+		<name>request</name>
+		<tagclass>sk.iway.tags.RequestAttributeTag</tagclass>
+		<bodycontent>empty</bodycontent>
+		<info>
+			print toString() value of atribute from HTTP request object
+			name - name of attribute [required]          
+        </info>
+		<attribute>
+			<name>name</name>
+			<required>true</required>
+			<rtexprvalue>true</rtexprvalue>
+		</attribute>
+	</tag>
+	<tag>
+		<name>curr</name>
+		<tagclass>sk.iway.tags.CurrencyTag</tagclass>
+		<bodycontent>JSP</bodycontent>
+		<info>
+			format number (e.g. 123456.0) to currency (e.g. 123.456,00)
+          </info>
+	</tag>
+	<tag>
+		<name>menu</name>
+		<tagclass>sk.iway.iwcm.tags.MenuTag</tagclass>
+		<bodycontent>JSP</bodycontent>
+		<info>
+			testuje ci ma dany user povolene dane menu
+          </info>
+		<attribute>
+			<name>name</name>
+			<required>false</required>
+			<rtexprvalue>true</rtexprvalue>
+		</attribute>
+		<attribute>
+			<name>notName</name>
+			<required>false</required>
+			<rtexprvalue>true</rtexprvalue>
+		</attribute>
+	</tag>
+
+	<tag>
+		<name>text</name>
+		<tagclass>sk.iway.magma.tags.TextTag</tagclass>
+		<bodycontent>empty</bodycontent>
+		<info>
+			i18n tag for text value
+     </info>
+		<attribute>
+			<name>key</name>
+			<required>true</required>
+			<rtexprvalue>true</rtexprvalue>
+		</attribute>
+	</tag>
+
+</taglib>

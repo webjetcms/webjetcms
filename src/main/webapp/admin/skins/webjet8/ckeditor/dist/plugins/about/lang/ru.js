@@ -1,0 +1,1 @@
+﻿CKEDITOR.plugins.setLang("about","ru",{copy:"Copyright \x26copy; $1. Все права защищены.",dlgTitle:"О CKEditor 4",moreInfo:"Для получения информации о лицензии, пожалуйста, перейдите на наш сайт:"});

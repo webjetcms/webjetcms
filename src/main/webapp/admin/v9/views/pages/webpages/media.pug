@@ -1,0 +1,100 @@
+extends ../../partials/layout
+
+block content
+
+    +breadcrumb(
+        'media',
+        [
+            [ '/admin/v9/webpages/media/', '[[\#{components.media.media_page_name}]]', true]
+        ]
+    )
+
+    script.
+        var mediaTable;
+
+        window.domReady.add(function () {
+
+            window.helpLink = "/redactor/webpages/media";
+
+            //- let order = [];
+            //- order.push([0, 'desc'])
+            let url = "/admin/rest/media?isCalledFromTable=true";
+            let columns = [(${layout.getDataTableColumns("sk.iway.spirit.model.Media")})];
+
+            //pridaj tam stlpce s docid a media tabulkou, tu to potrebujeme vidiet
+            columns.push({
+                "data" : "editorFields.docDetails",
+                "name" : "editorFields.docDetails",
+                "title" : "[[\#{user.editablePages.label}]]",
+                "className" : "dt-style-json dt-tree-page required",
+                "renderFormat" : "dt-format-json",
+                "editor" : {
+                    "type" : "json",
+                    "required" : true
+                },
+                "sortAfter" : "",
+                "perms" : "",
+                "array" : false
+                },
+                {
+                    "data" : "mediaFkTableName",
+                    "name" : "mediaFkTableName",
+                    "title" : "[[\#{components.data.deleting.view.table}]]",
+                    "renderFormat" : "dt-format-text",
+                    "editor" : {
+                        "type" : "text",
+                        "required" : false
+                    },
+                    "visible" : false,
+                    "sortAfter" : "mediaFkId",
+                    "perms" : "",
+                    "array" : false
+                }
+            );
+
+            //console.log("COLUMNS: ", columns);
+
+            var mediaTabs = [
+                { id: 'basic', title: '[[\#{datatable.tab.basic}]]', selected: true },
+                { id: 'fields', title: '[[\#{editor.tab.fields}]]' }
+            ];
+
+            mediaTable = WJ.DataTable({
+                url: url,
+                serverSide: true,
+                columns: columns,
+                id: "mediaTable",
+                tabs: mediaTabs,
+                fetchOnEdit: true,
+                fetchOnCreate: true
+            });
+
+            //pridaj automaticke nastavenie title po zmene linky
+            let linkChangeHandlerSet = false;
+            mediaTable.EDITOR.on( 'open', function( e, mode, action ) {
+                //pri prvom nacitani nastav on change listener na reload dat
+                if (linkChangeHandlerSet == false) {
+                    let input = $(mediaTable.EDITOR.node("mediaLink")).find("input.form-control")[0];
+                    $(input).on("change", function() {
+                        let val = $(mediaTable.EDITOR.node("mediaLink")).find("input.form-control").val();
+                        //console.log("ZMENA, val=", val);
+                        if (val == "") return;
+
+                        //ziskaj z linky meno suboru a skus pouzit ako nazov
+                        let i = val.lastIndexOf("/");
+                        let j = val.lastIndexOf(".");
+                        if (i>0 && j>i) {
+                            val = val.substring(i+1, j);
+                            val = val.replace(/[-_]/gi, " ");
+                        }
+                        if ($("#DTE_Field_mediaTitleSk").val()=="") {
+                            //console.log("Setting val=", val);
+                            $("#DTE_Field_mediaTitleSk").val(val);
+                        }
+                    });
+                    templatesGroupChangeHandlerSet = true;
+                }
+            });
+        })
+
+    <table id="mediaTable" class="datatableInit table"></table>

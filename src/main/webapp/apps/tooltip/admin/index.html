@@ -1,0 +1,35 @@
+
+    <script>
+        var tooltipDataTable;
+
+        window.domReady.add(function () {
+
+            window.helpLink = "/redactor/apps/tooltip/README";
+
+            WJ.breadcrumb({
+                id: "tooltip",
+                tabs: [
+                    {
+                        url: '/apps/tooltip/admin/',
+                        title: '[[#{components.tooltip.dialog_title}]]',
+                        active: true
+                    }
+                ]
+            });
+
+            let url = "/admin/rest/tooltip";
+            let columns = [(${layout.getDataTableColumns("sk.iway.iwcm.components.dictionary.model.DictionaryBean")})];
+
+            tooltipDataTable = WJ.DataTable({
+                url: url,
+                serverSide: false, //false lebo sa nevyužíva repositár ale DictionaryDB
+                columns: columns,
+                id: "tooltipDataTable",
+                fetchOnEdit: true,
+                fetchOnCreate: true
+            });
+        });
+
+    </script>
+
+    <table id="tooltipDataTable" class="datatableInit table"></table>

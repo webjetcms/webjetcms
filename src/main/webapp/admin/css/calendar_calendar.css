@@ -1,0 +1,90 @@
+.CAL-DN
+{
+    FONT-SIZE: 10px;
+    CURSOR: default;
+    FONT-FAMILY: Verdana, "Arial CE", "helvetica CE", Arial, Helvetica;
+    TEXT-ALIGN: center
+}
+.CAL-WDN
+{
+    FONT-SIZE: 10px;
+    CURSOR: default;
+    FONT-FAMILY: Verdana, "Arial CE", "helvetica CE", Arial, Helvetica;
+    LETTER-SPACING: 1px;
+    TEXT-ALIGN: center
+}
+.CAL-Seven
+{
+    PADDING-RIGHT: 2px;
+    FONT-SIZE: 9px;
+    CURSOR: default;
+    COLOR: silver;
+    MARGIN-RIGHT: 2px;
+    FONT-FAMILY: Verdana, "Arial CE", "helvetica CE", Arial, Helvetica;
+    TEXT-DECORATION: none
+}
+.CAL-Seven A
+{
+    COLOR: dimgray;
+    FONT-FAMILY: Verdana, "Arial CE", "helvetica CE", Arial, Helvetica;
+    FONT-SIZE: 9px;
+    TEXT-DECORATION: none
+}
+.CAL-Seven A:hover
+{
+    COLOR: white;
+    FONT-FAMILY: Verdana, "Arial CE", "helvetica CE", Arial, Helvetica;
+    FONT-SIZE: 9px;
+    BACKGROUND-COLOR: #307ba5
+}
+.CAL-Day
+{
+    FONT-SIZE: 9px;
+    COLOR: dimgray;
+    FONT-FAMILY: Verdana, "Arial CE", "helvetica CE", Arial, Helvetica;
+    TEXT-DECORATION: none
+}
+.CAL-DaySelected
+{
+    FONT-SIZE: 9px;
+    COLOR: white;
+    FONT-FAMILY: Verdana, "Arial CE", "helvetica CE", Arial, Helvetica;
+    background: #9CA1D5;
+    TEXT-DECORATION: none
+}
+.CAL-DayD
+{
+    FONT-SIZE: 9px;
+    CURSOR: default;
+    COLOR: silver;
+    FONT-FAMILY: Verdana, "Arial CE", "helvetica CE", Arial, Helvetica
+}
+.CAL-select {
+    BORDER-BOTTOM: #666699 0px solid;
+    BORDER-LEFT: #666699 0px solid;
+    BORDER-RIGHT: #666699 0px solid;
+    BORDER-TOP: #666699 0px solid;
+    COLOR: #FFFFFF   ;
+    FONT-FAMILY: Verdana, "Arial CE", "helvetica CE", Arial, Helvetica;
+    background: #9CA1D5;
+    FONT-SIZE: 8pt  
+}
+.CAL-table {border:solid #000000 1px}
+.CAL-text
+{   
+    COLOR: #000080;
+    FONT-FAMILY: Verdana, "Arial CE", "helvetica CE", Arial, Helvetica;
+    FONT-SIZE: 8pt
+}
+.CAL-note
+{  
+   FONT-FAMILY: Verdana, "Arial CE", "helvetica CE", Arial, Helvetica;
+   font-size: 8pt; 
+   height: 98%; width: 100%;
+   BORDER-BOTTOM: #CCCCFF 2px solid;
+   BORDER-LEFT: #21337B 2px solid;
+   BORDER-RIGHT: #CCCCFF 2px solid;
+   BORDER-TOP: #21337B 2px solid;
+   COLOR: #000080;
+   background:#EEEEFF   
+}

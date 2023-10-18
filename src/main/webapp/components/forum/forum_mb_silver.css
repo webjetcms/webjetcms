@@ -1,0 +1,107 @@
+h1.maintitle {
+			font-weight: bold; font-size: 22px; font-family: "Trebuchet MS",Verdana, Arial, Helvetica, sans-serif;
+			text-decoration: none; line-height : 120%; color : #006699;
+}
+
+p.mainSubtitle
+{
+   margin-top: 0px;
+   margin-bottom: 8px;
+   font-weight: bold;
+}
+
+.forumline	{ background-color: #FFFFFF; border: 2px #006699 solid; } 
+.forumline th { text-align: center; padding-left: 6px; padding-right: 6px; }
+
+.forumline a:link,.forumline a:active,.forumline a:visited { color : #006699; }
+.forumline a:hover		{ text-decoration: underline; color : #DD6900; }
+.forumline hr	{ height: 0px; border: solid #D1D7DC 0px; border-top-width: 1px;} 
+
+.forumline td.row1	{ background-color: #EFEFEF; }
+.forumline td.row2	{ background-color: #DEE3E7; }
+.forumline td.row3	{ background-color: #D1D7DC; } 
+
+.forumline td.rowpic {
+		background-color: #FFFFFF;
+		background-image: url(/components/forum/images/subSilver/cellpic2.jpg);
+		background-repeat: repeat-y;
+} 
+
+.forumline th	{
+	color: #FFA34F; font-size: 11px; font-weight : bold;
+	background-color: #006699; height: 25px;
+	background-image: url(/components/forum/images/subSilver/cellpic3.gif);
+} 
+
+.forumline td.catLeft {
+   padding-left: 6px;
+}
+.forumline td.cat,.forumline td.catHead,.forumline td.catSides,.forumline td.catLeft,.forumline td.catRight,.forumline td.catBottom {
+			background-image: url(/components/forum/images/subSilver/cellpic1.gif);
+			background-color:#D1D7DC; border: #FFFFFF; border-style: solid; 
+			height: 28px;
+			_height: 24px;
+} 
+
+.forumline td.cat,.forumline td.catHead,.forumline td.catBottom {
+	height: 28px;
+	_height: 24px;
+	border-width: 0px 0px 0px 0px;
+} 
+
+.forumline th.thHead,.forumline th.thSides,.forumline th.thTop,.forumline th.thLeft,.forumline th.thRight,.forumline th.thBottom,.forumline th.thCornerL,.forumline th.thCornerR {
+	font-weight: bold; border: #FFFFFF; border-style: solid; height: 28px; } 
+	
+.forumline th.thHead,.forumline td.catHead { font-size: 12px; border-width: 1px 1px 0px 1px; } 
+.forumline th.thSides,.forumline td.catSides,.forumline td.spaceRow	 { border-width: 0px 1px 0px 1px; }
+.forumline th.thRight,.forumline td.catRight,.forumline td.row3Right	 { border-width: 0px 1px 0px 0px; }
+.forumline th.thLeft,.forumline td.catLeft	  { border-width: 0px 0px 0px 1px; }
+.forumline th.thBottom,.forumline td.catBottom  { border-width: 0px 1px 1px 1px; }
+.forumline th.thTop	 { border-width: 1px 0px 0px 0px; }
+.forumline th.thCornerL { border-width: 1px 0px 0px 1px; }
+.forumline th.thCornerR { border-width: 1px 1px 0px 0px; } 
+
+.forumline td.row3Right,.forumline td.spaceRow { background-color: #D1D7DC; border: #FFFFFF; border-style: solid; } 
+
+.forumline .cattitle		{ font-weight: bold; font-size: 12px ; letter-spacing: 1px; color : #006699}
+.forumline a.cattitle		{ text-decoration: none; color : #006699; }
+.forumline a.cattitle:hover{ text-decoration: underline; } 
+
+.forumline .forumlink		{ font-weight: bold; font-size: 12px; color : #006699; }
+.forumline a.forumlink 	{ text-decoration: none; color : #006699; }
+.forumline a.forumlink:hover{ text-decoration: underline; color : #DD6900; } 
+
+.forumline .genmed { font-size : 11px; } 
+
+.forumNav .nav			{ font-weight: bold; font-size: 11px; color : #000000;}
+.forumNav a.nav			{ text-decoration: none; color : #006699; }
+.forumNav a.nav:hover		{ text-decoration: underline; } 
+
+.forumNav .gensmall { font-size : 10px; } 
+
+div.forumSearchBox
+{
+	text-align: right;
+}
+div.forumSearchBox img { border: 0px; }
+
+/* forum_mb_open.jsp */
+.forumline .name			{ font-size : 11px; color : #000000; } 
+.forumline .postdetails		{ font-size : 10px; color : #000000; } 
+
+.forumline tr.row1 td	{ background-color: #EFEFEF; }
+.forumline tr.row2 td	{ background-color: #DEE3E7; }
+.forumline tr.row3 td	{ background-color: #D1D7DC; } 
+
+.forumline td.post { padding: 3px; border: 3px; }
+.forumline td.post p { margin: 0px; margin-bottom: 3px;}
+
+.forumline .forumQuote {
+	font-family: Verdana, Arial, Helvetica, sans-serif; font-size: 11px; color: #444444; line-height: 125%;
+	background-color: #FAFAFA; border: #D1D7DC; border-style: solid;
+	border-left-width: 1px; border-top-width: 1px; border-right-width: 1px; border-bottom-width: 1px;
+	padding-left: 3px;
+	padding-right: 3px;
+	margin-bottom: 10px;
+}
+.forumline td.post p.forumQuoteUser { padding: 0px; margin: 0px; margin-top: 10px; font-weight: bold; }

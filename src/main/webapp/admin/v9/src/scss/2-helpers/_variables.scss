@@ -1,0 +1,40 @@
+@charset "UTF-8";
+
+$wjTest : "martinko";
+
+
+
+$wj-install-name : "webjet8";
+$wj-template-name : "ninja-starter-kit";
+$wj-assets : "/templates/#{$wj-install-name}/#{$wj-template-name}/assets/";
+$wj-images : "#{$wj-assets}images/";
+$wj-fonts : "#{$wj-assets}fonts/";
+
+//BREAKPOINT
+$bp-dinosaur : 576px;
+$bp-mobile : 768px;
+$bp-tablet : 992px;
+$bp-laptop : 1200px;
+$bp-desktop : 1600px;
+
+//BASIC COLOR PALLETE
+$c-selection-bg: DodgerBlue;
+
+// FONT FAMILIES
+$base-font-family: 'Asap', sans-serif;
+$secondary-font-family: 'Asap', sans-serif;
+
+//WIDTH
+//$w-element-name:1px;
+
+//HEIGHT
+//$h-element-name:1px;
+
+//PADDING
+//$p-element-name:1px;
+
+//MARGIN
+//$m-element-name:1px;
+
+//Z-INDEX
+//$z-element-name: 1;

@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="sk">
+
+<head>
+    <meta charset="UTF-8">
+    <title>WebJET CMS v2023 - Dokumentácia</title>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+    <meta name="description" content="Dokumentácia WebJET CMS">
+    <meta property="og:image" content="https://www.interway.sk/images/css/og-webjet.jpg" />
+
+    <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <link rel="stylesheet" href="_media/docsify.css">
+    <script src="https://kit.fontawesome.com/7be2385184.js" crossorigin="anonymous"></script>
+    <link rel="icon" href="_media/favicon-cms.ico" type="image/x-icon">
+    <style>
+        :root {
+            --sidebar-width: 22rem;
+            --docsify-example-panels-document-width: 100%;
+            --code-font-size: 12px;
+            --heading-h6-font-size: 14px;
+        }
+
+        .sidebar > h1 img {
+            height: auto;
+        }
+
+        .sidebar div.sidebar-section {
+            margin: -14px 0 0;
+            font-size: 16px;
+        }
+
+        @media (min-width: 770px) {
+            .sidebar-toggle {
+                display: none;
+            }
+        }
+
+        .docsify-tabs__tab i {
+            display: none;
+        }
+
+        .sidebar-nav > ul > li {
+            margin-bottom: 15px;
+        }
+
+        .sidebar-nav li {
+            color: #b1b1b1
+        }
+
+        main .markdown-section {
+            max-width: 10000px;
+            padding: 0 25px 80vh;
+        }
+
+        main .markdown-section table {
+            display: table;
+        }
+
+        main .markdown-section table,
+        main .markdown-section table thead,
+        main .markdown-section table tfoot {
+            width: 100%;
+        }
+
+        main .markdown-section pre {
+            padding: 0 0.5rem;
+        }
+
+        main .markdown-section hr {
+            margin: 5em 0;
+        }
+
+        .app-nav.no-badge {
+            margin-right: 0;
+        }
+
+        .make-me-hide {
+            display: none;
+        }
+
+        main .make-toggler:hover {
+            cursor: pointer;
+            color: #42b983;
+        }
+
+        main .make-toggler::after {
+            content: "\f107";
+            font-family: "Font Awesome 6 Pro", sans-serif;
+            -webkit-font-smoothing: antialiased;
+            display: inline-block;
+            font-style: normal;
+            font-variant: normal;
+            text-rendering: auto;
+            line-height: 1;
+            font-weight: 900;
+            margin-left: 8px;
+        }
+
+        main .make-toggler.active::after {
+            content: "\f106";
+        }
+
+        main .markdown-section th {
+            font-weight: 700;
+            text-align: left;
+            padding-top: 15px !important;
+            padding-bottom: 15px !important;
+            font-size: 16px;
+        }
+
+        .tag {
+            padding: 0;
+        }
+
+        .markdown-section blockquote {
+            white-space: normal;
+            padding-bottom: 0;
+        }
+
+        main .markdown-section pre[data-lang]::after {
+            font-size: 10px;
+        }
+
+        main .markdown-section {
+            padding-top: 11px !important;
+        }
+
+        .docsify-example-panels.title-panel h1 a, h1 a {
+            text-transform: none;
+        }
+
+        nav.app-nav {
+            top: 4px;
+        }
+
+        .app-nav.no-badge {
+            right: 10px;
+        }
+
+        .sidebar-nav > ul > li > a {
+            color: white;
+        }
+
+        .markdown-section img {
+            display: block;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .markdown-section li img {
+            padding-top: 6px;
+            padding-bottom: 6px;
+        }
+
+        .markdown-section img[data-no-zoom] {
+            display: inline-block;
+            text-align: left;
+        }
+
+        .markdown-section li img[data-no-zoom] {
+            padding-top: 0;
+            padding-bottom: 2px;
+            padding-right: 6px;
+        }
+
+        .markdown-section ol li > ol,
+        .markdown-section ol li > ul {
+            margin-left: 1.5rem
+        }
+
+        .markdown-section ol {
+            counter-reset: step-counter
+        }
+
+        .markdown-section img.meme {
+            max-width: 320px;
+            border: 10px solid #191928;
+        }
+
+        .medium-zoom-image--opened {
+            z-index: 101;
+        }
+
+        .fa, .fas, .far, .fal {
+            font-size: 15px;
+        }
+
+        .fa-btn {
+            display: inline-block;
+            width: 32px;
+            height: 32px;
+            background-color: white;
+            color: #13151B;
+            border-radius: 6px;
+            padding-left: 6px;
+            line-height: 30px;
+            border: 1px solid #b3b8c7;
+            margin-top: 2px;
+            margin-bottom: 2px;
+        }
+
+        div.sidebar-nav {
+            margin-bottom: 4rem;
+        }
+
+        .markdown-section ul.task-list li.task-list-item:before {
+            content: '';
+        }
+
+        .markdown-section ul.task-list li.task-list-item label {
+            margin-left: 25px;
+        }
+
+        .markdown-section ul.task-list li.task-list-item input[type=checkbox] {
+            position: absolute;
+            left: -999px;
+        }
+
+        .markdown-section ul.task-list li.task-list-item input[type=checkbox]:after {
+            display: inline-block;
+            content: '\f0c8';
+            font-family: "Font Awesome 6 Pro", sans-serif;
+            color: grey;
+            position: absolute;
+            left: 1024px;
+            cursor: default;
+            font-size: 14px;
+        }
+
+        .markdown-section ul.task-list li.task-list-item input[type=checkbox]:checked:after {
+            content: '\f058';
+            color: #42b983;
+        }
+
+        .markdown-section iframe {
+            margin-left: auto;
+            margin-right: auto;
+            display: block;
+        }
+
+        .video-container {
+            overflow: hidden;
+            position: relative;
+            width:100%;
+        }
+
+        .video-container::after {
+            padding-top: 56.25%;
+            display: block;
+            content: '';
+        }
+
+        .video-container iframe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        div.mermaid {
+            text-align: center;
+        }
+
+        .markdown-section h2 code {
+            font-size: var(--heading-h2-font-size);
+            font-family: var(--heading-h2-font-family, var(--heading-font-family));
+            background-color: transparent !important;
+            color: var(--heading-h2-color, var(--heading-color)) !important;
+            padding: 0px !important;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="app">Načítavam...</div>
+
+    <script>
+        var basePath = "/v2023/";
+        if (
+            window.location.href.indexOf("127.0.0.1") > -1
+            || window.location.href.indexOf("iwcm.interway.sk") > -1
+            || window.location.href.indexOf("docs.interway.sk") > -1
+        ) {
+            basePath = "/";
+        }
+
+        window.$docsify = {
+            name: ' ',
+            logo: '/_media/logo.png',
+            basePath: basePath,
+            auto2top: true,
+            coverpage: false,
+            executeScript: true,
+            loadSidebar: true,
+            alias: {
+              //'/.*/_sidebar.md': '/_sidebar.md',
+              '/.*/_navbar.md': '/_navbar.md'
+            },
+            loadNavbar: true,
+            mergeNavbar: true,
+            maxLevel: 6,
+            subMaxLevel: 6,
+
+            themeable: {
+                readyTransition: true,
+            },
+            search: {
+                paths: 'auto',
+                placeholder: 'Vyhľadávanie',
+                noData: 'Žiadne výsledky!',
+            },
+
+            copyCode: {
+                buttonText: 'Skopírovať do schránky',
+                errorText: 'Chyba',
+                successText: 'Skopírované'
+            },
+
+            pagination: {
+                previousText: 'Predchádzajúce',
+                nextText: 'Ďalšie',
+                crossChapter: true,
+                crossChapterText: true,
+            },
+
+            relativePath: true,
+
+            notFoundPage: {
+              '/': '/_404.md'
+            },
+
+            tabs: {
+                sync: true,
+                theme: 'material'
+            }
+        };
+    </script>
+
+    <script src="assets/js/jquery.min.js"></script>
+    <script>
+        $(() => {
+            const body = $("body");
+
+            function hideCode() {
+                setTimeout(() => {
+                    $("ul.app-sub-sidebar").parent("li").addClass("has-sub");
+                    $(".make-toggler").parents("p").next("pre").addClass("make-me-hide");
+                }, 300);
+            }
+
+            hideCode();
+
+            body.on("click", ".sidebar a:not(.section-link)", hideCode);
+
+            body.on("click", ".make-toggler", evt => {
+                const self = $(evt.currentTarget);
+                const code = self.parents("p").next("pre");
+                if (code.hasClass("make-me-hide")) {
+                    code.removeClass("make-me-hide");
+                    self.addClass("active");
+                } else {
+                    code.addClass("make-me-hide");
+                    self.removeClass("active");
+                }
+            });
+
+            //uprav link rendered pre WJ potreby
+            const originalRender = window.$docsify.markdown.renderer.link;
+            window.$docsify.markdown.renderer.link = function(href, title, text) {
+                let link = originalRender(href, title, text);
+                //ak sa jedna o javadoc otvor do noveho okna a zafrejmuj zobrazenie
+                if (href.indexOf("/javadoc/")!=-1) {
+                    //console.log("originalLink=", link);
+                    link = link.replace('href="#/', 'target="_blank" href="'+basePath);
+                    link = link.replace('/developer/javadoc/', '/developer/javadoc/index.html?');
+                    link = link.replace("/developer/javadoc/index.html?index.html", "/developer/javadoc/index.html");
+                }
+                if (href.indexOf(".zip")!=-1 || href.indexOf(".xls")!=-1 || href.indexOf(".pdf")!=-1 || href.indexOf(".doc")!=-1) {
+                    //console.log("originalLink=", link);
+                    link = link.replace('href="#/', 'target="_blank" href="'+basePath);
+                }
+                //console.log("link: href=", href, "title=", title, "text=", text, "link=", link);
+                return link;
+            }
+
+            mermaid.initialize({
+                startOnLoad: true
+            });
+        });
+    </script>
+
+    <script src="assets/js/docsify@4.js"></script>
+    <script src="assets/js/docsify-themeable@0.js"></script>
+    <script src="assets/js/docsify-copy-code@2.js"></script>
+    <script src="assets/js/docsify-tabs@1.js"></script>
+
+    <!-- docsify plugins -->
+    <script src="assets/js/external-script.min.js"></script>
+    <script src="assets/js/search.js"></script>
+    <script src="assets/js/class-change@1.js"></script>
+    <script src="assets/js/docsify-example-panels@1.js"></script>
+
+    <script src="assets/js/prism-bash.min.js"></script>
+    <script src="assets/js/prism-markdown.min.js"></script>
+    <script src="assets/js/prism-nginx.min.js"></script>
+    <script src="assets/js/prism-java.js"></script>
+    <script src="assets/js/prism-sql.js"></script>
+    <script src="assets/js/zoom-image.min.js"></script>
+    <script src="assets/js/docsify-pagination.min.js"></script>
+
+    <script src="assets/js/mermaid.js"></script>
+    <script src="assets/js/docsify-mermaid.js"></script>
+
+</body>
+
+</html>

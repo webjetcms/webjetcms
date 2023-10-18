@@ -1,0 +1,64 @@
+.hideComponentIframe
+{
+   display:none
+}
+
+body
+{
+   background-color: white; 
+   padding: 5px;
+}
+
+body, textarea
+{   
+   scrollbar-base-color: ButtonHighlight;
+   scrollbar-face-color: ButtonFace;
+   scrollbar-track-color: ButtonHighlight;
+   scrollbar-arrow-color: ButtonText;
+   scrollbar-3dlight-color: ButtonFace;
+   scrollbar-darkshadow-color: default;
+   scrollbar-highlight-color: ButtonHighlight;
+   scrollbar-shadow-color: ButtonShadow;   
+}
+
+body, textarea, input, td, select
+{
+   font-family: Verdana, "Arial CE", "helvetica CE", Arial, Helvetica;
+   font-size: 11px;
+}
+
+select, textarea
+{
+   background-color: HighlightText;
+}
+
+a {  
+   font-family: Verdana, "Arial CE", "helvetica CE", Arial, Helvetica; 
+   font-size: 8pt; 
+   font-weight1: bolder; 
+   color: #3366CC; 
+   text-decoration: none
+}
+
+a:hover {  
+   font-family: Verdana, "Arial CE", "helvetica CE", Arial, Helvetica; 
+   font-size: 8pt; 
+   color: #FF3333;  
+   text-decoration: underline
+}
+
+.button, .button50, .button55
+{
+   font-family: Verdana, "Arial CE", "helvetica CE", Arial, Helvetica;
+   font-size: 11px;
+}
+
+.button50
+{
+   width: 50px;
+}
+
+.button55
+{
+   width: 55px;
+}

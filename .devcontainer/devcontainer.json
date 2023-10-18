@@ -1,0 +1,62 @@
+// For format details, see https://aka.ms/devcontainer.json. For config options, see the
+// README at: https://github.com/devcontainers/templates/tree/main/src/alpine
+{
+	"name": "webjetcms-devcontainer",
+	// Or use a Dockerfile or Docker Compose file. More info: https://containers.dev/guide/dockerfile
+	"image": "mcr.microsoft.com/devcontainers/base:ubuntu",
+	"features": {
+		//https://github.com/devcontainers/features/tree/main/src/java
+		"ghcr.io/devcontainers/features/java:1": {
+			"version": "17",
+			"jdkDistro": "tem",
+			"installAnt": true,
+			"antVersion": "1.10.12"
+		},
+		//https://github.com/devcontainers/features/tree/main/src/node
+		"ghcr.io/devcontainers/features/node:1": {
+			"nodeGypDependencies": true,
+			"version": "16"
+		}
+	},
+    "runArgs": [
+		//publish ports
+		"--publish=80:80",
+		"--publish=443:443",
+		"--publish=8080:8080"
+    ],
+
+	"initializeCommand" : ".devcontainer/localInit.sh || true",
+	"postCreateCommand": ".devcontainer/postCreateCommand.sh",
+	"postStartCommand": ".devcontainer/postStartCommand.sh",
+
+	//https://www.oddbird.net/2022/11/30/headed-playwright-in-docker/
+	"containerEnv": {
+        "DISPLAY": "host.docker.internal:0"
+    },
+
+	// Use 'forwardPorts' to make a list of ports inside the container available locally.
+	//"forwardPorts": []
+
+	// Configure tool-specific properties.
+	"customizations": {
+		"extensions": [
+			"SonarSource.sonarlint-vscode",
+			"vscjava.vscode-gradle",
+			"naco-siren.gradle-language",
+			"mutantdino.resourcemonitor",
+			"srmeyers.git-prefix"
+		],
+		"settings": {
+			"window.title": "${activeEditorMedium}${separator}${rootName}",
+			"editor.stickyScroll.enabled": true,
+			"java.debug.settings.showStaticVariables": true
+		}
+	},
+
+	// Uncomment to connect as root instead. More info: https://aka.ms/dev-containers-non-root.
+	// "remoteUser": "root"
+
+	"mounts": [
+		"source=/Volumes,target=/Volumes,type=bind,consistency=cached"
+	]
+}

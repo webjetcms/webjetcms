@@ -1,0 +1,43 @@
+extends ../../partials/layout
+
+block content
+
+    +breadcrumb(
+        'forms-group',
+        [
+            [ '#forms-groups-detail', '[[\#{admin.temp_group_list.title}]]', true ],
+            [ '#translation-keys-language', '{LANGUAGE-SELECT}', false ]
+        ]
+    )
+
+    script.
+        window.helpLink = "/frontend/setup/README";
+        var tempsGroupsListTable;
+        window.domReady.add(function () {
+            var tabs = [
+                { id: 'basic', title: '[[\#{editor.tab.basic_info}]]', selected: true },
+                { id: 'metadata', title: '[[\#{editor.tab.metadata}]]' },
+                { id: 'fields', title: '[[\#{editor.tab.fields}]]' }
+            ];
+            var columns = [(${layout.getDataTableColumns('sk.iway.iwcm.doc.TemplatesGroupBean')})];
+
+            tempsGroupsListTable = WJ.DataTable({
+                url: "/admin/rest/templates/temps-groups-list",
+                columns: columns,
+                tabs: tabs,
+                editorId: "templatesGroupId"
+            });
+
+            $("#breadcrumbLanguageSelect").change(function() {
+                //console.log("Select changed, language=", breadcrumbLanguage);
+                let lng = $(this).val();
+                //console.log("Select changed, language=", lng);
+                url = "/admin/rest/templates/temps-groups-list?breadcrumbLanguage="+lng;
+                tempsGroupsListTable.ajax.url(url);
+                tempsGroupsListTable.EDITOR.s.ajax.url = WJ.urlAddPath(url, '/editor');
+                tempsGroupsListTable.ajax.reload();
+            });
+
+        });
+
+    <table class="datatableInit table"></table>

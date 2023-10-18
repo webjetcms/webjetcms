@@ -1,0 +1,1 @@
+﻿CKEDITOR.plugins.setLang("about","tr",{copy:"Copyright \x26copy; $1. Tüm hakları saklıdır.",dlgTitle:"CKEditor Hakkında",moreInfo:"Lisanslama hakkında daha fazla bilgi almak için lütfen sitemizi ziyaret edin:"});

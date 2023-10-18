@@ -1,0 +1,192 @@
+<script type="text/javascript" data-th-inline="javascript">
+    var campaingsDataTable;
+
+    window.domReady.add(function () {
+
+        window.helpLink = "/redactor/apps/dmail/campaings/README";
+
+        $("div#serverMonitoringRecordsTable_extfilter").appendTo("#pills-dateRange-tab");
+
+        WJ.breadcrumb({
+            id: "campaings",
+            tabs: [
+                {
+                    url: '/apps/dmail/admin/',
+                    title: /*[[#{components.dmail.dialog_title}]]*/ '',
+                    active: false
+                },
+                {
+                    url: '/apps/dmail/admin/',
+                    title: /*[[#{components.dmail.campaings}]]*/ '',
+                    active: true
+                }
+            ]
+        });
+
+        let url = "/admin/rest/dmail/campaings";
+        let columns = /*[(${layout.getDataTableColumns("sk.iway.iwcm.dmail.jpa.CampaingsEntity")})]*/ [];
+
+        var tabs = [
+                { id: 'main', title: /*[[#{datatable.tab.basic}]]*/ '', selected: true},
+                { id: 'preview', title: /*[[#{editor.preview}]]*/ '', content: '<div class="previewContainer"><iframe id="emailPreviewIframe" src="about:blank" width="100%" height="500"></iframe><div>' },
+                { id: 'advanced', title: /*[[#{datatable.tab.advanced}]]*/ '' },
+                { id: 'groupsTab', title: /*[[#{user.admin.userGroups}]]*/ '' },
+                { id: 'receivers', title: /*[[#{components.dmail.campaings.tab.receivers}]]*/ '' },
+                { id: 'opens', title: /*[[#{components.dmail.campaings.tab.opens}]]*/ '' },
+                { id: 'clicks', title: /*[[#{components.dmail.campaings.tab.clicks}]]*/ '' }
+            ];
+
+        var order = [];
+        order.push([0, 'desc']);
+
+        campaingsDataTable = WJ.DataTable({
+            url: url,
+            serverSide: true,
+            columns: columns,
+            tabs: tabs,
+            id: "campaingsDataTable",
+            fetchOnEdit: true,
+            fetchOnCreate: true,
+            order: order
+        });
+
+        campaingsDataTable.EDITOR.on('open', function (e, mode, action) {
+            if(action == 'create') {
+                //$("#pills-dt-campaingsDataTable-users-tab").parent().hide();
+                //$("#pills-dt-campaingsDataTable-receivers-tab").parent().hide();
+                $("#pills-dt-campaingsDataTable-opens-tab").parent().hide();
+                $("#pills-dt-campaingsDataTable-clicks-tab").parent().hide();
+            }
+        });
+
+        let buttonCounter = 4;
+        campaingsDataTable.button().add(buttonCounter++, {
+            text: '<i class="far fa-eye"></i>',
+            action: function (e, dt, node) {
+                let selectedRows = dt.rows({ selected: true }).data();
+                for (let i=0; i<selectedRows.length; i++) {
+                    let row = selectedRows[i];
+                    window.open(row.url);
+                }
+            },
+            init: function ( dt, node, config ) {
+                $.fn.dataTable.Buttons.showIfRowSelected(this, dt);
+            },
+            className: 'btn btn-outline-secondary',
+            attr: {
+                'title': '[[#{history.showPage}]]',
+                'data-toggle': 'tooltip'
+            }
+        });
+
+        campaingsDataTable.button().add(buttonCounter++, {
+            text: '<i class="fas fa-toggle-on"></i>',
+            action: function (e, dt, node) {
+                campaingsDataTable.executeAction("start", true, /*[[#{components.dmail.campaings.start.button}]]*/ '', /*[[#{components.dmail.campaings.start.areYousure}]]*/ '');
+            },
+            className: 'btn btn-success',
+            attr: {
+                'title': '[[#{components.dmail.campaings.start.button}]]',
+                'data-toggle': 'tooltip'
+            },
+            init: function ( dt, node, config ) {
+                $.fn.dataTable.Buttons.showIfRowSelected(this, dt);
+            }
+        });
+
+        campaingsDataTable.button().add(buttonCounter++, {
+            text: '<i class="fas fa-toggle-off"></i>',
+            action: function (e, dt, node) {
+                campaingsDataTable.executeAction("stop", true, /*[[#{components.dmail.campaings.stop.button}]]*/ '', /*[[#{components.dmail.campaings.stop.areYousure}]]*/ '');
+            },
+            className: 'btn btn-danger',
+            attr: {
+                'title': '[[#{components.dmail.campaings.stop.button}]]',
+                'data-toggle': 'tooltip'
+            },
+            init: function ( dt, node, config ) {
+                $.fn.dataTable.Buttons.showIfRowSelected(this, dt);
+            }
+        });
+
+        campaingsDataTable.button().add(buttonCounter++, {
+            text: '<i class="fas fa-repeat"></i>',
+            action: function (e, dt, node) {
+                campaingsDataTable.executeAction("resend", true, /*[[#{components.dmail.campaings.resend.button}]]*/ '', /*[[#{components.dmail.campaings.resend.areYousure}]]*/ '');
+            },
+            className : "btn btn-primary buttons-divider",
+            attr: {
+                'title': '[[#{components.dmail.campaings.resend.button}]]',
+                'data-toggle': 'tooltip'
+            },
+            init: function ( dt, node, config ) {
+                $.fn.dataTable.Buttons.showIfRowSelected(this, dt);
+            }
+        });
+
+        window.addEventListener('WJ.DTE.tabclick', function (e) {
+            //console.log("tabclick, id=", e.detail.id, " e=", e);
+            let id = e.detail.id;
+            //console.log("tab clicked, e=", e, "id=", id);
+            if ("campaingsDataTable-preview"===id) {
+                let url = null;
+                try {
+                    let docId = campaingsDataTable.EDITOR.field("editorFields.pageToSend").get().docId;
+                    if (typeof docId != "undefined" && docId != "-1") {
+                        url = "/showdoc.do?docid="+docId+"&NO_WJTOOLBAR=true&isDmail=true";
+                    }
+                } catch (e) {
+                    console.log(e);
+                }
+                if (url == null) {
+                    url = "about:blank";
+                }
+                //console.log("url=", url);
+
+                $("#emailPreviewIframe").attr("src", url);
+            }
+        });
+
+        window.addEventListener("WJ.DTE.innerTableInitialized", function(event) {
+            if(event.detail.conf.id == "DTE_Field_recipientsTab") {
+                recipientTable = event.detail.conf.datatable;
+
+                let buttonCounter = 4;
+                recipientTable.button().add(buttonCounter++, {
+                    text: '<i class="fas fa-repeat"></i>',
+                    action: function (e, dt, node) {
+                        recipientTable.executeAction("resend", true, /*[[#{components.dmail.resend}]]*/ '', /*[[#{components.dmail.campaings.resendOne.areYousure}]]*/ '');
+                    },
+                    className : "btn btn-primary buttons-divider",
+                    attr: {
+                        'title': '[[#{components.dmail.resend}]]',
+                        'data-toggle': 'tooltip'
+                    },
+                    init: function ( dt, node, config ) {
+                        $.fn.dataTable.Buttons.showIfRowSelected(this, dt);
+                    }
+                });
+
+                //add insert button
+                /*recipientTable.button().add(1, {
+                    text: '<i class="far fa-download"></i>',
+                    action: function (e, dt, node) {
+                        WJ.openIframeModal({
+                            url: "/components/dmail/admin_email_iframe_v9.jsp",
+                            width: 570,
+                            height: 565,
+                            buttonTitleKey: "button.close"
+                        });
+                    },
+                    className: 'btn btn-success',
+                    attr: {
+                        'title': '[[#{components.dmail.admin_email.pridat_podla_xls}]]'
+                    }
+                });*/
+            }
+        });
+    });
+
+</script>
+
+<table id="campaingsDataTable" class="datatableInit table"></table>

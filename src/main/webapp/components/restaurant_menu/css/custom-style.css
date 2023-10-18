@@ -1,0 +1,207 @@
+.menu__wrapper {
+    border-bottom: 1px solid #d8d8d8;
+    padding-bottom: 15px;
+    padding-top: 15px;
+}
+
+.menu__wrapper .main--title {
+    padding: 20px 15px 5px;
+    font-weight: bold;
+    font-size: 24px;
+    font-family: 'Open Sans', sans-serif;
+    display: inline-block;
+}
+
+.menu__wrapper .green {
+    margin-left: 15px;
+}
+
+div.tree-multiselect {
+    border: none;
+}
+
+div.tree-multiselect .auxiliary input.search {
+    padding: 10px 15px;
+    margin: 0;
+    border: 1px solid #D8D8D8;
+    width: 70%;
+    float: left;
+    border-radius: 5px;
+    margin-bottom: 15px;
+}
+
+div.tree-multiselect .auxiliary input.button50 {
+    width: 30%;
+    line-height: 26px;
+}
+
+div.tree-multiselect .auxiliary input.button50:hover,
+div.tree-multiselect .auxiliary input.button50:focus {
+    background-color: #2b8b3a;
+}
+
+div.tree-multiselect>div.selections {
+    border-right: none;
+}
+
+div.tree-multiselect .auxiliary .select-all-container {
+    display: none;
+}
+
+div.tree-multiselect div.title {
+    padding: 8px 15px;
+    font-weight: bold;
+    font-family: 'Open Sans', sans-serif;
+    font-size: 13px;
+    background: #e5eef9;
+    color: #114068;
+}
+
+div.tree-multiselect div.title span {
+    color: #000;
+}
+
+div.tree-multiselect div.title input {
+    display: none;
+}
+
+div.tree-multiselect div.title>span.collapse-section {
+    display: none;
+}
+
+div.tree-multiselect div.section>div.item {
+    padding-left: 0;
+    margin-left: 15px;
+    padding: 2px 0;
+}
+
+.section {
+    margin-bottom: 10px;
+    max-height: 170px;
+    overflow: auto;
+    background: #f5f5f5;
+    padding-bottom: 8px;
+}
+
+div.tree-multiselect>div.selections div.item label {
+    font-family: 'Open Sans', sans-serif;
+    font-size: 14px;
+    font-weight: normal;
+    max-width: 470px;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    position: relative;
+    top: 8px;
+    margin-left: 5px;
+    cursor: pointer;
+}
+
+div.tree-multiselect>div.selected>div.item {
+    padding: 10px 100px 10px 15px;
+    position: relative;
+    border-radius: 2px;
+    color: #3c763d;
+    background-color: #dff0d8;
+    border-color: #d6e9c6;
+    font-family: 'Open sans', sans-serif;
+    font-size: 14px;
+    margin-bottom: 2px;
+    cursor: move;
+}
+
+div.tree-multiselect span.remove-selected,
+div.tree-multiselect span.description {
+    background: #3c763d;
+}
+
+div.tree-multiselect span.remove-selected,
+div.tree-multiselect span.description {
+    margin-right: 12px;
+    padding: 0 5px;
+    color: #FFF;
+    cursor: pointer;
+}
+
+.ui-sortable-handle {
+    margin-bottom: 15px;
+    display: block;
+    font-family: 'Open sans', sans-serif;
+    border-bottom: 1px solid #d2d2d2;
+    padding-bottom: 10px;
+    color: #303030;
+    padding-right: 5px;
+}
+
+div.tree-multiselect span.section-name {
+    font-style: italic;
+    text-align: right;
+    position: absolute;
+    right: 15px;
+    top: 10px;
+}
+
+@media only screen and ( max-width: 1199.98px) {
+    div.tree-multiselect>div.selections div.item label {
+        max-width: 290px;
+    }
+}
+
+@media only screen and  (max-width: 991px) {
+    div.tree-multiselect>div.selected, div.tree-multiselect>div.selections {
+        width: 100%;
+        display: block;
+    }
+    div.tree-multiselect>div.selections {
+        border: none;
+    }
+    span.ui-sortable-handle {
+        margin-top: 25px;
+        display: block;
+    }
+}
+
+.tooltip-custom {
+    position: relative;
+    display: inline-block;
+    margin-left: 0;
+    margin-bottom: 20px;
+    bottom: 3px;
+}
+
+.tooltip-custom .tooltiptext-custom {
+    visibility: hidden;
+    width: 300px;
+    background-color: #555;
+    color: #fff;
+    text-align: center;
+    border-radius: 6px;
+    padding: 5px 15px;
+    position: absolute;
+    z-index: 1;
+    bottom: 125%;
+    left: 50%;
+    margin-left: -60px;
+    opacity: 0;
+    transition: opacity 0.3s;
+}
+
+.tooltip-custom .tooltiptext-custom::after {
+    content: "";
+    position: absolute;
+    top: 100%;
+    left: 60px;
+    margin-left: -5px;
+    border-width: 5px;
+    border-style: solid;
+    border-color: #555 transparent transparent transparent;
+}
+
+.tooltip-custom:hover .tooltiptext-custom {
+    visibility: visible;
+    opacity: 1;
+}
+
+.ui-datepicker-calendar tbody tr:hover {
+    background: #35aa47;
+}

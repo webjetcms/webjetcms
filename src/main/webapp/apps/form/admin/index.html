@@ -1,0 +1,81 @@
+<script data-th-inline="javascript">
+    window.formRestUrl = "/admin/rest/forms-list";
+</script>
+
+<div id="forms-list-app">
+    <router-view></router-view>
+</div>
+
+<script type="text/javascript">
+
+    function openFormHtml(id) {
+        WJ.openIframeModal({
+            url: window.formRestUrl+"/html/?id="+id,
+            width: 800,
+            height: 600,
+            closeButtonPosition: 'close-button-over',
+            buttonTitleKey: 'button.confirm',
+            okclick: function() {
+                WJ.closeIframeModal();
+            }
+        });
+    }
+
+    window.domReady.add(function () {
+        //const name = window.location.hash.split('/').pop() || null;
+        //if (name) document.getElementById('pills-form-detail-tab').innerHTML = name;
+
+        let vueFormsApp = window.VueTools.createApp({
+            components: {
+
+            }
+        });
+
+        /* preklady pre vue */
+        vueFormsApp.config.globalProperties.$id = '[[#{components.forms.label.id}]]';
+        vueFormsApp.config.globalProperties.$formName = '[[#{formslist.nazov_formularu}]]';
+        vueFormsApp.config.globalProperties.$count = '[[#{formslist.pocet_zaznamov}]]';
+        vueFormsApp.config.globalProperties.$lastSendDate = '[[#{formslist.datum_posledneho}]]';
+        vueFormsApp.config.globalProperties.$lastExportDate = '[[#{formlist.export.lastExportDate}]]';
+        vueFormsApp.config.globalProperties.$btnListOfForms = '[[#{components.forms.label.list_of_forms}]]';
+        vueFormsApp.config.globalProperties.$createDate = '[[#{formslist.createDate}]]';
+        vueFormsApp.config.globalProperties.$note  = '[[#{formslist.note}]]';
+        vueFormsApp.config.globalProperties.$files = '[[#{formslist.attachments}]]';
+        vueFormsApp.config.globalProperties.$tools = '[[#{formslist.tools}]]';
+        vueFormsApp.config.globalProperties.$preview = '[[#{editor.preview}]]';
+
+        //taby
+        vueFormsApp.config.globalProperties.$tabMetadata = '[[#{components.forms.detail.tab.metadata}]]';
+        vueFormsApp.config.globalProperties.$tabFields = '[[#{components.forms.detail.tab.fields}]]';
+        vueFormsApp.config.globalProperties.$tabUser = '[[#{components.forms.detail.tab.user}]]';
+
+        //user
+        vueFormsApp.config.globalProperties.$userId = '[[#{userId}]]';
+        vueFormsApp.config.globalProperties.$userFirstName = '[[#{user.firstName}]]';
+        vueFormsApp.config.globalProperties.$userLastName = '[[#{user.lastName}]]';
+        vueFormsApp.config.globalProperties.$userLogin = '[[#{user.login}]]';
+        vueFormsApp.config.globalProperties.$userAdress = '[[#{user.address}]]';
+        vueFormsApp.config.globalProperties.$userCity = '[[#{user.city}]]';
+        vueFormsApp.config.globalProperties.$userZip = '[[#{user.ZIP}]]';
+        vueFormsApp.config.globalProperties.$userCountry = '[[#{user.country}]]';
+        vueFormsApp.config.globalProperties.$userEmail = '[[#{user.email}]]';
+        vueFormsApp.config.globalProperties.$userAddress = '[[#{user.phone}]]';
+        vueFormsApp.config.globalProperties.$userFieldA = '[[#{user.fieldA}]]';
+        vueFormsApp.config.globalProperties.$userFieldB = '[[#{user.fieldB}]]';
+        vueFormsApp.config.globalProperties.$userFieldC = '[[#{user.fieldC}]]';
+        vueFormsApp.config.globalProperties.$userFieldD = '[[#{user.fieldD}]]';
+        vueFormsApp.config.globalProperties.$userFieldE = '[[#{user.fieldE}]]';
+
+        //prava
+        vueFormsApp.config.globalProperties.$permsDeniedTitle = '[[#{admin.operationPermissionDenied}]]';
+        vueFormsApp.config.globalProperties.$permsDeniedText = '[[#{components.forms.permsDeniedNote}]]';
+
+        //archivuj
+        vueFormsApp.config.globalProperties.$archiveForm = '[[#{components.form.admin_forms.archivuj_formular}]]';
+
+        vueFormsApp.use(window.VueTools.getRouter());
+        vueFormsApp.mount("#forms-list-app");
+
+    });
+
+</script>

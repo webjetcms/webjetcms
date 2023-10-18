@@ -1,0 +1,119 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "java",
+            "name": "Debug",
+            "request": "attach",
+            "hostName": "localhost",
+            "port": 5005,
+            "preLaunchTask": "appStart",
+            "postDebugTask": "appStop",
+            "timeout": 240000,
+            "projectName": "webjetcms",
+            "internalConsoleOptions": "neverOpen"
+        },
+        {
+            "type": "java",
+            "name": "Debug Local DB",
+            "request": "attach",
+            "hostName": "localhost",
+            "port": 5005,
+            "preLaunchTask": "appStartLocalDB",
+            "postDebugTask": "appStop",
+            "timeout": 240000,
+            "projectName": "webjetcms",
+            "internalConsoleOptions": "neverOpen"
+        },
+        {
+            "type": "java",
+            "name": "Debug Demo DB",
+            "request": "attach",
+            "hostName": "localhost",
+            "port": 5005,
+            "preLaunchTask": "appStartDemoDB",
+            "postDebugTask": "appStop",
+            "timeout": 240000,
+            "projectName": "webjetcms",
+            "internalConsoleOptions": "neverOpen"
+        },
+        {
+            "type": "java",
+            "name": "Debug DemoCMS DB",
+            "request": "attach",
+            "hostName": "localhost",
+            "port": 5005,
+            "preLaunchTask": "appStartTemplatesDB",
+            "postDebugTask": "appStop",
+            "timeout": 240000,
+            "projectName": "webjetcms",
+            "internalConsoleOptions": "neverOpen"
+        },
+        {
+            "type": "java",
+            "name": "Debug NN DB",
+            "request": "attach",
+            "hostName": "localhost",
+            "port": 5005,
+            "preLaunchTask": "appStartNNDB",
+            "postDebugTask": "appStop",
+            "timeout": 240000,
+            "projectName": "webjetcms",
+            "internalConsoleOptions": "neverOpen"
+        },
+        {
+            "type": "java",
+            "name": "Debug Oracle DB",
+            "request": "attach",
+            "hostName": "localhost",
+            "port": 5005,
+            "preLaunchTask": "appStartOracleDB",
+            "postDebugTask": "appStop",
+            "timeout": 240000,
+            "projectName": "webjetcms",
+            "internalConsoleOptions": "neverOpen"
+        },
+        {
+            "type": "java",
+            "name": "Debug PSS DB",
+            "request": "attach",
+            "hostName": "localhost",
+            "port": 5005,
+            "preLaunchTask": "appStartPssDB",
+            "postDebugTask": "appStop",
+            "timeout": 240000,
+            "projectName": "webjetcms",
+            "internalConsoleOptions": "neverOpen"
+        },
+        {
+            "type": "java",
+            "name": "Debug (Attach)",
+            "request": "attach",
+            "hostName": "localhost",
+            "port": 5005,
+            "timeout": 240000,
+            "internalConsoleOptions": "neverOpen"
+        },
+        {
+            "trace": true,
+            "name": "Launch Chrome",
+            "request": "launch",
+            "type": "chrome",
+            "url": "http://iwcm.interway.sk/admin/",
+            "webRoot": "${workspaceRoot}/src/main/webapp/admin/v9/",
+            "sourceMaps": true,
+            "disableNetworkCache": true,
+
+            // we have multiple js source folders, so some source maps are still generated with webpack protocol links. Don't know why?
+            "sourceMapPathOverrides": {  // if you override this, you MUST provide all defaults again
+                "webpack:///./~/*": "${webRoot}/node_modules/*",  // a default
+                "webpack:///./*":   "${webRoot}/src/js/*",        // unsure how/why webpack generates ./links.js
+                "webpack:///../*": "${webRoot}/src/js/*",         // unsure how/why webpack generates ../links.js
+                "webpack:///*":     "*"                           // a default, catch everything else
+            }
+        }
+    ]
+}

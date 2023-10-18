@@ -1,0 +1,84 @@
+{
+    "news": [
+        {
+            "title": "Verzia 2023.18",
+            "perex": "Verzia 2023.18 je zameraná na integráciu kódu pôvodnej verzie 8. Zrušená je možnosť prepnutia do starej verzie 8, odstránené sú časti kódu, ktoré sú už prerobené do nového dizajnu, alebo nie sú naďalej podporované.",
+            "link": "http://docs.webjetcms.sk/v2023/#/CHANGELOG-2023?id=_202318"
+        },
+        {
+            "title": "Verzia 2023.0",
+            "perex": "Verzia 2023.0 je zhodná s verziou 2022.52",
+            "link": "http://docs.webjetcms.sk/v2023/#/CHANGELOG-2023?id=_20230"
+        },
+        {
+            "title": "Verzia 2022.52",
+            "perex": "Verzia 2022.52 je zameraná na zlepšenie použiteľnosti, obsahuje vylepšenia na základe pripomienok používateľov. Prerobené do nového dizajnu sú aplikácie Anketa, definovanie atribútov, Kontrola odkazov a prázdnych stránok, Štatistika, Rezervácie. Aplikácia Banner pridáva možnosť použitia voliteľných polí, v galérii je množstvo drobných zlepšení.",
+            "link": "http://docs.webjetcms.sk/v2022/#/CHANGELOG-2022?id=_202252"
+        },
+        {
+            "title": "Verzia 2022.40",
+            "perex": "2022.40 sa zamieriava na zlepšenie bezpečnosti. Obsahuje aktualizované Java aj JavaScript knižnice a skontrolované zraniteľnosti. Prináša ale aj množstvo iných zmien pre zlepšenie práce na základe spätnej väzby - zapamätanie posledného priečinka vo web stránkach, pamätanie poradia stĺpcov a usporiadania v data tabuľkách, možnosť posúvať okno atď. Jemne upravuje dizajn používateľského rozhrania (novšia sada ikon, jemnejšia farebnosť menu).",
+            "link": "http://docs.webjetcms.sk/v2022/#/CHANGELOG-2022?id=_202240"
+        },
+        {
+            "title": "Verzia 2022.18",
+            "perex": "2022.18 pridáva integráciu nástroja PageBuilder do web stránok, možnosť používať dizajnové šablóny písané vo frameworku Thymeleaf, zobrazenie posledných správ v logoch, mnohé zlepšenia použiteľnosti na základe pripomienok používateľov, prerobené aplikácie Formuláre - regulárne výrazy, Hromadný email - odhlásené emaily. Na úvodnú stránku pridané mini aplikácie Záložky a spätná väzba.",
+            "link": "http://docs.webjetcms.sk/v2022/#/CHANGELOG-2022?id=_202218"
+        },
+        {
+            "title": "Verzia 2022.0",
+            "perex": "2022.0 prináša bezpečnostnú aktualizáciu závislostí Java a JavaScript knižníc.",
+            "link": "http://docs.webjetcms.sk/v2022/#/CHANGELOG-2022?id=_20220"
+        },
+        {
+            "title": "Verzia 2021.52",
+            "perex": "2021.52 má nový dizajn aj pre staré verzie aplikácií, zlepšuje responzívnu verziu, pridáva nové polia web stránkam a zlepšuje správanie URL adries stránok pri ich presune do iného adresára.",
+            "link": "http://docs.webjetcms.sk/v2021/#/CHANGELOG?id=_202152"
+        },
+        {
+            "title": "Verzia 2021.47",
+            "perex": "2021.47 pridáva upravené aplikácie Tooltip, Export dát, Hromadný-email/Doménové limity a Bannerový systém do nového dizajnu. Pridali sme notifikácie o schvaľovaní pri uložení stránky a zlepšili mobilnú verziu.",
+            "link": "http://docs.webjetcms.sk/v2021/#/CHANGELOG?id=_202147"
+        },
+        {
+            "title": "Verzia 2021.45",
+            "perex": "2021.45 prináša zobrazenie zoznamu web stránok aj z podadresárov, zlepšuje zobrazenie administrácie na mobilných zariadeniach a pridáva aplikáciu Otázky a odpovede. Okrem toho obsahuje mnoho zmien pod kapotou pri práci so zoznamom web stránok (prechod na serverové stránkovanie a vyhľadávanie, použitie Spring DATA pre prístup k databáze).",
+            "link": "http://docs.webjetcms.sk/v2021/#/CHANGELOG?id=_202145"
+        },
+        {
+            "title": "Verzia 2021.40",
+            "perex": "2021.40 prináša prerobenú správu používateľov, skupín a skupín práv a prerobenú aplikáciu GDPR do vizuálu WebJET 2021. Okrem toho pridáva množstvo drobných vylepšení a opráv.",
+            "link": "http://docs.webjetcms.sk/v2021/#/CHANGELOG?id=_202140"
+        },
+        {
+            "title": "Verzia 2021.24",
+            "perex": "2021.24 pridáva možnosť duplikovať záznamy v data tabuľkách, automatické otvorenie koreňových adresárov ak doméne obsahuje napr. len adresár Slovensky a Anglicky (max. 2 adresáre), umožňuje vykonávať hromadnú úpravu vo web stránkach a zlepšuje vo viacerých miestach komfort práce.",
+            "link": "http://docs.webjetcms.sk/v2021/#/CHANGELOG?id=_202124"
+        },
+        {
+            "title": "Verzia 2021.20",
+            "perex": "2021.20 pridáva zobrazenie a konfiguráciu voliteľných polí pre web stránku a adresár stránok a pridáva (konečne) tlačidlo pre zobrazenie web stránky do nástrojovej lišty datatabuľky.",
+            "link": "http://docs.webjetcms.sk/v2021/#/CHANGELOG?id=_202120"
+        },
+        {
+            "title": "Verzia 2021.18",
+            "perex": "2021.18 automaticky vytvorí doménový System priečinok, pridáva editáciu značiek (perex skupín), vylepšuje správanie editácie bunky a opravuje chybu zobrazenia číselníkových hodnôt v datatabuľke. Administrácia používa nové písmo Asap.",
+            "link": "http://docs.webjetcms.sk/v2021/#/CHANGELOG?id=_202118"
+        },
+        {
+            "title": "Verzia 2021.13",
+            "perex": "2021.13 zlepšuje používateľský zážitok zvýšením rýchlosti zobrazenia zoznamu web stránok, možnosť zadať ID stránky alebo adresára pre jej zobrazenie (vrátane zapamätania v URL adrese prehliadača), možnosť nastavenia zobrazených stĺpcov v datatabuľke, preklady v JavaScript súboroch a množstvo ďalších vylepšení v celom WebJETe.",
+            "link": "http://docs.webjetcms.sk/v2021/#/CHANGELOG?id=_202113"
+        },
+        {
+            "title": "Verzia 2021.11",
+            "perex": "2021.11 pridáva zobrazenie histórie web stránky s možnosťou editácie, zobrazenia a porovnania.",
+            "link": "http://docs.webjetcms.sk/v2021/#/CHANGELOG?id=_202111"
+        },
+        {
+            "title": "Verzia 2021.10",
+            "perex": "2021.10 opravuje chybu veľkosti dialógového okna v editore stránok a opravuje viaceré gramatické chyby v opisoch aplikácií.",
+            "link": "http://docs.webjetcms.sk/v2021/#/CHANGELOG?id=_202110"
+        }
+    ]
+}

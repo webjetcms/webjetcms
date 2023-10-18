@@ -1,0 +1,146 @@
+<script data-th-inline="javascript">
+        let url = "/admin/rest/banner-stat";
+        let columns = /*[(${layout.getDataTableColumns("sk.iway.iwcm.components.banner.model.BannerBean")})]*/ '';
+</script>
+
+
+<script>
+    var bannerStatDataTable;
+
+    WJ.breadcrumb({
+        id: "banner-stat",
+        tabs: [
+            {
+                url: '/apps/banner/admin/banner-stat/',
+                title: '[[#{components.banner.banners_stat}]]',
+                active: true
+            },
+            {
+                url: '#dateRange',
+                title: '{filter}',
+                active: false
+            }
+        ]
+    });
+
+    window.redirect = function (id) {
+        let dateRange = "";
+        if(bannerStatDataTable.DATA.columns[1].searchVal != undefined && bannerStatDataTable.DATA.columns[1].searchVal != null)
+            dateRange = bannerStatDataTable.DATA.columns[1].searchVal;
+
+           // console.log(ChartTools.getDateRange());
+
+        window.location.href="/apps/banner/admin/banner-stat-detail/?bannerId=" + id + "&dateRange=" + dateRange;
+    }
+
+    window.domReady.add(function () {
+        WJ.showLoader();
+        //presun filter do hlavicky
+        $("#pills-dateRange-tab").html("");
+        $("div#bannerStatDataTable_extfilter").appendTo("#pills-dateRange-tab");
+
+        let lineChartViews;
+        let lineChartClicks;
+
+        bannerStatDataTable = WJ.DataTable({
+            url: url,
+            serverSide: false, //false lebo sa nevyužíva repositár ale BannerDB
+            columns: columns,
+            id: "bannerStatDataTable",
+            forceVisibleColumns: "id,nameLink,bannerType,bannerGroup,statViews,statClicks",
+            autoHeight: false,
+            defaultSearch: ChartTools.getSearchCriteria(),
+        });
+        bannerStatDataTable.hideButton("create");
+        bannerStatDataTable.hideButton("edit");
+        bannerStatDataTable.hideButton("remove");
+        bannerStatDataTable.hideButton("celledit");
+        bannerStatDataTable.hideButton("import");
+        bannerStatDataTable.hideButton("duplicate");
+
+        //Create and set amcharts
+        createAmcharts();
+
+        //Onchange events - update amcharts
+        $("#bannerStatDataTable_extfilter").on("click", "button.filtrujem", function() {
+            getDataAndUpdateAmcharts();
+        });
+
+        async function createAmcharts() {
+            window.initAmcharts().then(module => {
+
+                $.ajax({url: getGraphUrl("views"), success: function(result) {
+                    lineChartViews = new ChartTools.LineChartForm(ChartTools.getLineChartYAxeNameObjs(["statViews"], [undefined]), "dayDate", '[[#{stat.graph.banner_top_views}]]', "bannerStat-lineViews", ChartTools.convertDataForLineChart(result), ChartTools.DateType.Auto);
+                    ChartTools.createAmchart(lineChartViews);
+                }});
+
+                $.ajax({url: getGraphUrl("clicks"), success: function(result) {
+                    lineChartClicks = new ChartTools.LineChartForm(ChartTools.getLineChartYAxeNameObjs(["statClicks"], [undefined]), "dayDate", '[[#{stat.graph.banner_top_clicks}]]', "bannerStat-lineClicks", ChartTools.convertDataForLineChart(result), ChartTools.DateType.Auto);
+                    ChartTools.createAmchart(lineChartClicks);
+
+                    //After last load data
+                    WJ.hideLoader();
+                }});
+
+            });
+        }
+
+        async function getDataAndUpdateAmcharts() {
+            WJ.showLoader();
+
+            await $.ajax({url: getGraphUrl("views"), success: function(result) {
+                lineChartViews.chartData = ChartTools.convertDataForLineChart(result);
+                ChartTools.updateChart(lineChartViews);
+            }});
+
+            await $.ajax({url: getGraphUrl("clicks"), success: function(result) {
+                lineChartClicks = ChartTools.convertDataForLineChart(result);
+                ChartTools.updateChart(lineChartClicks);
+            }});
+
+            WJ.hideLoader();
+
+            bannerStatDataTable.ajax.reload();
+        }
+
+        function getGraphUrl(dataType) {
+            let tmpDefURL = "";
+
+            //Load values
+            let searchDateValue = bannerStatDataTable.DATA.columns[1].searchVal;
+
+            if(typeof searchDateValue=="undefined" || searchDateValue=='') {
+                //Use default values
+                let defaultEndDate = new Date().getTime();
+                let defaultStartDate = defaultEndDate - (60*60*24*30*1000); //-30 dni
+                searchDateValue = "daterange:"+defaultStartDate + "-" + defaultEndDate
+            }
+
+            //Prepare url
+            tmpDefURL = url + "/lineChartData?dayDate=" + searchDateValue;
+            tmpDefURL += "&dataType=" + dataType;
+
+            ChartTools.saveSearchCriteria(bannerStatDataTable.DATA);
+
+            return tmpDefURL;
+        }
+    });
+
+</script>
+
+
+<div id="bannerStatDataTable_extfilter">
+    <div class="row datatableInit">
+        <div class="col-auto dt-extfilter-title-dayDate" style="display: none;"></div>
+        <div class="col-auto dt-extfilter dt-extfilter-dayDate"></div>
+    </div>
+</div>
+
+<div id="tableDiv">
+    <table id="bannerStatDataTable" class="datatableInit table"></table>
+</div>
+
+<div id="graphsDiv" class="hide-while-loading">
+    <div id="bannerStat-lineViews" class="amcharts"></div>
+    <div id="bannerStat-lineClicks" class="amcharts"></div>
+</div>

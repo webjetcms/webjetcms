@@ -1,0 +1,1168 @@
+import {Tools} from "./libs/tools/tools";
+
+const WJ = (() => {
+
+    /**
+     * @param {string} key
+     * @returns {string}
+     */
+    function translate(key, params) {
+        //console.log("translate, key=", key, "params=", params);
+        var translated = window.webjetTranslationService.translate(key);
+        if (typeof params != "undefined" && params != null && params.length>0) {
+            //console.log("translate, key=", key, "params=", params);
+            for (var i=1; i<= params.length; i++) {
+                //console.log("Adding param=", params[i-1], "i=", i);
+                translated = replaceTranslateParameter(translated, params[i-1], i);
+            }
+        }
+        return translated;
+    }
+
+    function replaceTranslateParameter(translated, parameter, index) {
+        if (typeof parameter != "undefined" && parameter != null) {
+            translated = translated.replaceAll("{"+index+"}", parameter);
+        }
+        return translated;
+    }
+
+    function showHelpWindow() {
+        var url = "http://docs.webjetcms.sk/v2023/#";
+        if (typeof window.helpLink != "undefined") url += window.helpLink;
+        else url += "/";
+        window.open(url, '_blank');
+    }
+
+    function changeDomainImpl(domainName) {
+        $.ajax({
+            method: 'POST',
+            url: '/admin/skins/webjet8/change_domain_ajax.jsp',
+            data: {
+                domain: domainName
+            }
+        })
+        .done(() => {
+            //odstranime URL parametre, aby sa nezapamatalo docid z inej domeny
+            if (window.location.pathname=="/admin/v9/" && hasPermission("menuWebpages")) {
+                window.location="/admin/v9/webpages/web-pages-list/"
+            } else {
+                window.location=window.location.pathname;
+            }
+        });
+    }
+
+    /**
+     * @param {HTMLSelectElement} select
+     */
+    function changeDomain(select) {
+        /** @type {string} */
+        const domainName = select.value;
+        /** @type {string} */
+        const title = WJ.translate('groupedit.domain.js');
+        /** @type {string} */
+        const message = WJ.translate('admin.top.domena.confirm.js');
+
+        //console.log('title=', title);
+
+        if (window.location.pathname=="/admin/v9/") {
+            //z uvodnej stranky je mozne domenu zmenit bez potvrdenia
+            changeDomainImpl(domainName);
+        }
+        else {
+            WJ.confirm({
+                title: title,
+                message: message,
+                success: () => {
+                    changeDomainImpl(domainName);
+                },
+                cancel: () => {
+                    select.value = $(select).data('previous');
+                    $(select).selectpicker('val', select.value);
+                }
+            });
+        }
+    }
+
+    /**
+     * @param {string} url
+     * @param {string} [width]
+     * @param {string} [height]
+     */
+    function openPopupDialog(url, width = '650', height = '550') {
+        const options = `status=no,menubar=no,toolbar=no,scrollbars=yes,resizable=yes,width=${width},height=${height}`;
+        const popUpWindow = window.open(url, '', options);
+        if (window.focus && !!popUpWindow) {
+            popUpWindow.focus();
+        }
+    }
+
+    let modalIframe = null;
+    let modalIframeOptions = null;
+
+    /**
+     * Zobrazi modalne okno s vlozenym iframe
+     * @param options:
+     * - url = URL adresa vlozeneho iframe
+     * - width = sirka okna
+     * - height = vyska vlozeneho iframe (modal bude o hlavicku a paticku vyssi)
+     * - title = titulok okna
+     * - buttonTitleKey = textovy kluc na primary tlacidle (predvolene kluc button.submit)
+     * - closeButtonPosition = pozicia tlacidla na zatvorenie, prazdne - male X v hlavicke, close-button-over - male X v hlavicke ponad content (nevytvara samostatny riadok), pridanim nopadding sa zrusi horny padding hlavicky
+     * - okclick = callback po kliknuti na tlacidlo potvrdit
+     * - onload = callback po nacitani okna, ako parameter dostane event.detail obsahujuci property window s odkazom na okno v iframe
+     */
+    function openIframeModal(options) {
+
+        const iframe = $('#modalIframeIframeElement');
+        iframe.attr('src', options.url);
+        iframe.attr('width', options.width);
+        iframe.attr('height', options.height);
+
+        //nastav height aj na modal-body, inak ho renderovalo o par px vyssie ako iframe
+        $('#modalIframe div.modal-body').css('height', options.height + 'px');
+
+        //nastav velkost
+        const borderWidth = 2;
+        $('#modalIframe div.modal-dialog').css('max-width', (options.width + borderWidth) + 'px');
+        //nastav title
+        const title = options.title || '';
+        $('#modalIframe .modal-header h5').html(title);
+
+        //nastav button title
+        const buttonTitle = options.buttonTitleKey ? WJ.translate(options.buttonTitleKey) : WJ.translate("button.submit");
+        $('#modalIframe div.modal-footer button.btn-primary span').text(buttonTitle);
+
+        //console.log('modalIframe=', modalIframe);
+        modalIframeOptions = options;
+        if (modalIframe === null) {
+            modalIframe = new bootstrap.Modal(document.getElementById('modalIframe'), {keyboard: false, backdrop: "static"});
+
+            _showIframeModal();
+
+            //console.log("modalIframeShow, modalIframe=", modalIframe);
+            $('#modalIframe button.btn-primary').on('click', (e) => {
+                //console.log("Klik na btn-prinary, e=", e);
+                let success = _modalOkClick();
+                if (false === success) return;
+                closeIframeModal();
+            });
+            $('#modalIframe button.btn-close').on('click', () => {
+                closeIframeModal();
+            });
+
+            window.addEventListener("WJ.iframeLoaded", function(event) {
+                //console.log("HAHA yes, WJ.iframeLoaded, event=", event);
+                if (typeof modalIframeOptions.onload === 'function') {
+                    modalIframeOptions.onload(event.detail);
+                }
+            });
+        } else {
+            _showIframeModal();
+        }
+
+        let $modalIframe = $("#modalIframe");
+        $modalIframe.removeClass("close-button-over");
+        $modalIframe.removeClass("nopadding");
+        if (typeof options.closeButtonPosition != "undefined") {
+            if (options.closeButtonPosition.indexOf("close-button-over")!=-1) $modalIframe.addClass("close-button-over");
+            if (options.closeButtonPosition.indexOf("nopadding")!=-1) $modalIframe.addClass("nopadding");
+        }
+
+        //nastav CSS triedu backdropu (potrebujeme ho posunut vyssie)
+        $('.modal-backdrop').addClass('modalIframeShown');
+    }
+
+    function closeIframeModal() {
+        //console.log("closeIframeModal, moda=", modalIframe);
+        //$('#modalIframe').modal('hide');
+        const iframe = $('#modalIframeIframeElement');
+        iframe.attr('src', "about:blank");
+        modalIframe.hide();
+        $('.modal-backdrop').removeClass('modalIframeShown');
+
+        if (window.parent!=window.self) $(window.parent.document).find("#modalIframe").removeClass("child-iframe-open");
+    }
+
+    function _showIframeModal() {
+        modalIframe.show();
+        if (window.parent!=window.self) $(window.parent.document).find("#modalIframe").addClass("child-iframe-open");
+    }
+
+    function _modalOkClick() {
+        //musi to byt takto, aby sa pouzila posledna hodnota options, inak to klikalo v druhom dialogu aj prvy
+        if (typeof modalIframeOptions.okclick === 'function') {
+            return modalIframeOptions.okclick();
+        }
+    }
+
+    function toastNotify(type, title, text, timeOut = 0, buttons = null) {
+        if (title === '' && text === '') {
+            return false
+        }
+
+        const options = {
+            closeButton: true,
+            timeOut: timeOut,
+            tapToDismiss: false,
+            extendedTimeOut: timeOut,
+            progressBar: true,
+            positionClass: 'toast-container toast-top-right',
+            containerId: 'toast-container-webjet'
+        };
+
+        let buttonsHtml = null;
+        if (typeof buttons != "undefined" && buttons != null) {
+            //vygeneruj HTML kod pre tlacidla
+            buttonsHtml = `<div class="toast-links toast-links-standard">`;
+            buttons.forEach(function(button, index) {
+                buttonsHtml += `<a class="${button.cssClass}" title="${button.title}" onclick="${button.click}"><i class="${button.icon}"></i> ${button.title}</a>`;
+            });
+            buttonsHtml += `</div>`;
+
+            text += buttonsHtml;
+        }
+
+        //console.log("toastNotify, type=", type, "options=", options);
+        let toastrInstance = null;
+
+        switch (type) {
+            case 'success':
+                toastrInstance = toastr.success(text, title, options);
+                break;
+            case 'info':
+                toastrInstance = toastr.info(text, title, options);
+                break;
+            case 'warning':
+                toastrInstance = toastr.warning(text, title, options);
+                break;
+            case 'error':
+                toastrInstance = toastr.error(text, title, options);
+                break;
+            default:
+                console.error('wrong type, allowed types: success, info, warning, error');
+        }
+
+        if (toastrInstance != null && buttonsHtml != null) {
+            //console.log("TOASTR INSTANCE=", toastrInstance);
+            toastrInstance.on("click", "a.btn", () => {
+                //console.log("btn click");
+                toastr.clear(toastrInstance);
+            })
+        }
+
+        return true;
+    }
+
+    /**
+     * @param {{title: string: string, message: string, btnCancelText: string, btnOkText: string, success: function, cancel: function}} options
+     */
+    function confirm(options) {
+        const title = options.title ? options.title : '';
+        const message = options.message ? `<div class="toastr-message">${options.message}</div>` : '';
+        const btnId = (new Date()).getTime();
+        //TODO: preklady
+        const btnCancelText = options.btnCancelText ? options.btnCancelText : WJ.translate('button.cancel');
+        const btnOkText = options.btnOkText ? options.btnOkText : WJ.translate('button.submit');
+        let promptHtml = '';
+        const typePrompt = "prompt"===options.type;
+        if (typePrompt === true) {
+            promptHtml =
+            `<div class="toastr-input">
+                <input type="text" id="toastrPromptInput${btnId}" class="form-control"/>
+             </div>
+            `;
+        }
+        //console.log("WJ.confirm, options=", options, "promptHtml=", promptHtml);
+        let toastrInstance = null;
+        toastrInstance = toastr.info(
+            `${message}
+             ${promptHtml}
+            <div class="toastr-buttons">
+                <button type="button" id="confirmationNo${btnId}" class="btn btn-outline-secondary">
+                    ${btnCancelText}
+                </button>
+                <button type="button" id="confirmationYes${btnId}" class="btn btn-primary">
+                    ${btnOkText}
+                </button>
+            </div>`,
+            title,
+            {
+                timeOut: 0,
+                extendedTimeOut: 0,
+                closeButton: true,
+                tapToDismiss: false,
+                allowHtml: true,
+                onShown: () => {
+                    //console.log("onshow, toastrInstance=", toastrInstance);
+                    $('#confirmationYes' + btnId).on('click', () => {
+                        //console.log('Yes'+btnId+' clicked');
+                        if (typeof options.success === 'function') {
+                            if (typePrompt === true) {
+                                options.success($("#toastrPromptInput"+btnId).val());
+                            } else {
+                                options.success();
+                            }
+                        }
+                        //volanie toastr.clear(toastrInstance) z nejakeho dovodu nefunguje
+                        toastrInstance.find('button.toast-close-button').click();
+                    });
+                    $('#confirmationNo' + btnId).on('click', () => {
+                        //console.log('No'+btnId+' clicked');
+                        if (typeof options.cancel === 'function') {
+                            options.cancel();
+                        }
+                        toastrInstance.find('button.toast-close-button').click();
+                    });
+                },
+                positionClass: 'toast-container toast-top-right',
+                containerId: 'toast-container-webjet'
+            }
+        );
+    }
+
+    /**
+     * Prida do (rest) URL cestu, kontroluje, ci v URL nie je ?param
+     * url=/admin/rest/tree?click=groups, pathAppend=/list -> /admin/rest/tree/list?click=groups
+     * @param {*} url
+     * @param {*} pathAppend
+     */
+    function urlAddPath(url, pathAppend) {
+        if (pathAppend === null || '' === pathAppend) return url;
+        const split = url.split('?');
+        let newUrl = split[0] + pathAppend;
+        if (split.length > 1) {
+            newUrl += '?' + split[1];
+        }
+        return newUrl;
+    }
+
+    /**
+     * Prida do URL parameter, kontroluje, ci v URL uz nejaky parameter je, a podla toho prida ? alebo &
+     * @param {*} url
+     * @param {*} paramName
+     * @param {*} paramValue
+     */
+    function urlAddParam(url, paramName, paramValue) {
+        url += url.indexOf('?') === -1 ? '?' : '&';
+        url += paramName + '=' + paramValue;
+        return (url);
+    }
+
+    /**
+     * Zmení URL parameter, kontroluje, ci v URL daný parameter je, ak áno, zmení jeho hodnotu na novú zadanú
+     * ak nie, prida novy param
+     * @param {*} url
+     * @param {*} paramName
+     * @param {*} paramValue
+     */
+    function urlUpdateParam(url, paramName, paramValue) {
+        //Check if url includes this param
+        if(url.includes((paramName + '='))) {
+            //Url ends with param but without value
+            if(url.endsWith((paramName + '='))) return url + paramValue;
+
+            //Update parm value inside of url
+            let urlParams = (url.split("?")[1]).split("&")
+            for (var i = 0; i < urlParams.length; i++)
+                if(urlParams[i].startsWith((paramName + '=')))
+                    urlParams[i] = paramName + "=" + paramValue
+
+            let newUrl = url.split("?")[0] + "?";
+            for (var i = 0; i < urlParams.length; i++) {
+                newUrl += urlParams[i];
+                if(i + 1 < urlParams.length) newUrl += "&"
+            }
+
+            return newUrl;
+        } else {
+            //Add params
+            return urlAddParam(url, paramName, paramValue);
+        }
+    }
+
+    /**
+     * returns URL parameter value
+     * @param {*} name - parameter name
+     * @param {*} queryString - URL query string OR null to ger from current window.location.search
+     * @returns
+     */
+    function urlGetParam(name, queryString=null) {
+        if (queryString == null) queryString = window.location.search;
+        const urlParams = new URLSearchParams(queryString);
+        return urlParams.get(name);
+    }
+
+    /**
+     * Nastavi JSON property v objekte podla zadaneho mena, akcetupje aj nested property typu editorFields.groupCopyDetails
+     * @param {*} obj
+     * @param {*} path
+     * @param {*} value
+     */
+    function setJsonProperty(obj, path, value) {
+        let schema = obj;  // a moving reference to internal objects within obj
+        const pList = path.split('.');
+        const len = pList.length;
+        for (let i = 0; i < len - 1; i++) {
+            const elem = pList[i];
+            if (!schema[elem]) {
+                schema[elem] = {}
+            }
+            schema = schema[elem];
+        }
+        schema[pList[len - 1]] = value;
+    }
+
+    /**
+     * Ziska JSON property v objekte podla zadaneho mena, akcetupje aj nested property typu editorFields.groupCopyDetails
+     * @param {*} obj
+     * @param {*} path
+     * @param {*} value
+     */
+     function getJsonProperty(obj, path) {
+        let schema = obj;  // a moving reference to internal objects within obj
+        const pList = path.split('.');
+        const len = pList.length;
+        for (let i = 0; i < len - 1; i++) {
+            const elem = pList[i];
+            if (!schema[elem]) {
+                schema[elem] = {}
+            }
+            schema = schema[elem];
+        }
+        return schema[pList[len - 1]];
+    }
+
+    /**
+     * @description Otvori dialogove okno elfindera
+     * @param {{link:string, width: number, height: number, url: string, okclick: function}} options
+     * @info options.link - URL adresa zobrazena v elfinderi (=aktualna hodnota)
+     * @info options.title - nazov dialogoveho okna
+     * @returns {void}
+     */
+    function openElFinder(options) {
+        /** @type {string} */
+        let url = '/admin/elFinder/dialog.jsp';
+        //if (options.link !== undefined && options.link !== null && options.link !== '')
+        if (!!options.link) {
+            url = urlAddParam(url, 'link', options.link);
+        }
+
+        options.width = 800;
+        options.height = 540;
+        options.url = url;
+
+        //musis osefovat callback
+        /** @type {function} */
+        const originalCallback = options.okclick;
+        //console.log('originalCallback=', originalCallback);
+        options.okclick = () => {
+            /** @type {string} */
+            const link = $('#modalIframeIframeElement').contents().find('div.inputs').find('.row:not(.template)').find('input').val();
+            //console.log('elfinder ok click link=', link, 'callback=', originalCallback);
+            if (typeof originalCallback === 'function') {
+                originalCallback(link);
+            }
+        }
+
+        openIframeModal(options);
+    }
+
+    //WebJET - odstranenie diakritiky
+    /**
+     * @param {string} text
+     * @param {boolean} [whitespaceToDash]
+     * @returns {string}
+     */
+    function internationalToEnglish(text, whitespaceToDash = true) {
+        /** @type {string} */
+        const dash = whitespaceToDash ? '-' : ' ';
+        return Tools.removeDiacritics(text, dash);
+    }
+
+    //WebJET - ponecha len safe znaky
+    /**
+     * @param {string} text
+     * @returns {string}
+     */
+    function removeChars(text) {
+        /** @type {string} */
+        let ptext = text.replace(/[^a-z0-9-_.]+/gi, '-');
+        ptext = ptext.replaceAll(/(_-_)+|(-_-)+|(-_)+|(_-)+/gi, '-');
+        ptext = ptext.replaceAll(/[-]+/gi, '-');
+        ptext = ptext.replaceAll(/[_]+/gi, '_');
+        return ptext;
+    }
+
+    function encodeValue(value) {
+        value = escape(value);
+        //value = value.replace(/aaa/g, '%20');
+        return (value);
+    }
+
+    function unencodeValue(value) {
+        value = unescape(value);
+        //value = value.replace(/aaa/g, '%20');
+        return (value);
+    }
+
+    /**
+     * Nahradi nebezpecne znaky v HTML kode za entity pre ich bezpecne vypisanie
+     * @param {*} string
+     * @returns
+     */
+    function escapeHtml(string) {
+
+        string = string.toString();
+
+        var entityMap = {
+            '&': '&amp;',
+            '<': '&lt;',
+            '>': '&gt;',
+            '"': '&quot;',
+            "'": '&#39;',
+            '/': '&#x2F;',
+            '`': '&#x60;',
+            '=': '&#x3D;'
+        };
+
+        return String(string).replace(/[&<>"'`=\/]/g, function (s) {
+            return entityMap[s];
+        });
+    }
+
+    function _formatTime(timestamp, format) {
+        if (typeof timestamp === 'undefined' || timestamp === null || timestamp === '') return "";
+        return moment(timestamp).format(format);
+    }
+
+    function formatDate(timestamp) {
+        return _formatTime(timestamp, 'L');
+    }
+
+    function formatDateTime(timestamp) {
+        return _formatTime(timestamp, 'L HH:mm');
+    }
+
+    function formatDateTimeSeconds(timestamp) {
+        return _formatTime(timestamp, 'L HH:mm:ss');
+    }
+
+    function formatTime(timestamp) {
+        return _formatTime(timestamp, 'HH:mm');
+    }
+
+    function formatTimeSeconds(timestamp) {
+        return _formatTime(timestamp, 'HH:mm:ss');
+    }
+
+    /**
+     * Udrzuje session zo serverom, ked server neodpovie, zobrazi hlasenie
+     */
+    window.toastrLogoffMessageShown = false;
+    window.toastrTokenMessageShown = false;
+
+    function _callRefresher() {
+        let now = new Date();
+        $.ajax({
+            url: '/admin/rest/refresher',
+            data: {t: now.getTime()},
+            method: 'post',
+            timeout: 15000,
+            success: data => {
+                //console.log('data=', data);
+                if (typeof data === 'string' && data.indexOf('logonForm') !== -1) {
+                    keepSessionShowLogoffMessage();
+                } else {
+                    //spracuj messages a zobraz ich
+                    try {
+                        if (data.messages !== null) {
+                            let options = 'toolbar=no,scrollbars=no,resizable=yes,width=500,height=400;'
+                            for (const id of data.messages) {
+                                window.open('/components/messages/message_popup.jsp?messageId=' + id, 'msgpop' + id, options);
+                            }
+                            // for (let i = 0; i < data.messages.length; i++) {
+                            //     const id = data.messages[i];
+                            //     window.open('/components/messages/message_popup.jsp?messageId=' + id, 'msgpop' + id, options);
+                            // }
+                        }
+                    } catch (e) {
+                        console.log(e);
+                    }
+                }
+            },
+            error: () => {
+                //console.log('error, data=', data);
+                keepSessionShowLogoffMessage();
+            }
+        });
+    }
+
+    function keepSessionShowTokenMessage(errorMessage) {
+        try {
+            if (window.toastrTokenMessageShown === false) {
+                toastr.error("", errorMessage, {
+                    positionClass: 'toast-container toast-top-full-width',
+                    closeButton: true,
+                    timeOut: 0,
+                    tapToDismiss: false,
+                    extendedTimeOut: 0, //prevent hide after mouse over
+                    progressBar: false,
+                    containerId: 'toast-container-logoff'
+                });
+
+                window.toastrTokenMessageShown = true;
+            }
+        } catch (e) {
+        }
+    }
+
+    function keepSessionShowLogoffMessage() {
+        const logonTimeout = 5 * 60 * 1000;
+        try {
+            if (window.toastrLogoffMessageShown === false) {
+                toastr.error(WJ.translate('session.logoff.warn.js'), WJ.translate('session.logoff.info.js'), {
+                        positionClass: 'toast-container toast-top-full-width',
+                        timeOut: logonTimeout,
+                        progressBar: true,
+                        closeButton: true,
+                        tapToDismiss: false,
+                        closeOnHover: false,
+                        containerId: 'toast-container-logoff'
+                    });
+
+                window.toastrLogoffMessageShown = true;
+            }
+        } catch (e) {
+        }
+
+        setTimeout(() => {
+            window.location.href = '/admin/';
+        }, logonTimeout);
+    }
+
+    function keepSession() {
+        window.setInterval(() => {
+            _callRefresher();
+        }, 60000);
+        window.setTimeout(() => {
+            //prvy zavolaj po 10 sekundach, nech sa nezatazuje spojenie so serverom
+            _callRefresher();
+        }, 10000);
+    }
+
+    //firne globalny event nad window objektom
+    function dispatchEvent(name, detail) {
+        //firni event
+        const event = new CustomEvent(name, {
+            detail: detail
+        });
+        //console.log('Dispatching event, name=', name, 'detail=', detail);
+        window.dispatchEvent(event);
+    }
+
+    /**
+     * Vygeneruje hlavnu navigacnu listu vo web stranke, pouziva sa primarne v /apps/ adresari
+     * @param {*} config - JSON objekt konfiguracie typu:
+     *      {
+     *          id: "regexp",
+     *           tabs: [
+     *               {
+     *                   url: '/apps/gdpr/admin/',
+     *                   title: '[[#{components.gdpr.menu}]]',
+     *                   active: false
+     *               },
+     *               {
+     *                   url: '/apps/gdpr/admin/regexps/',
+     *                   title: '[[#{components.gdpr.regexp.title}]]'
+     *               }
+     *           ],
+     *           backlink: {
+     *              url: '/apps/forms/',
+     *              title: 'Formulare'
+     *           }
+     *       }
+     */
+    function breadcrumb(config) {
+        //console.log("navbar, config=", config);
+        let breadcrumb = $("div.ly-container.container div.md-breadcrumb");
+
+        let ul = $(`<ul class="nav" id="pills-${config.id}" role="tablist"></ul>`);
+
+        if (typeof config.backlink != "undefined" && config.backlink != null) {
+            let backlink = $(`<li class="nav-item"><a class="nav-link back-link" href="${config.backlink.url}"><i class="fal fa-chevron-left"></i>${config.backlink.title}</a></li>`);
+            ul.append(backlink);
+        }
+
+        let counter = 0;
+        config.tabs.forEach(function(data, index) {
+            let li = $(`<li class="nav-item"></li>`);
+
+            if ("{filter}"===data.title && typeof config.showInIframe == "undefined") {
+                config.showInIframe = true;
+            }
+
+            if ("{LANGUAGE-SELECT}"===data.title) {
+                let select = $("div.breadcrumb-language-select");
+                select.appendTo(li);
+                select.show();
+            } else if (data.title.indexOf("{")==0) {
+                let div = $(`<div class="navbar-container" id="pills-${data.url.substring(1)}-tab">${data.title}</div>`);
+                li.append(div);
+            } else {
+                let anchor = $(`<a class="nav-link" href="${data.url}">${data.title}</a>`);
+
+                if (typeof data.active == "undefined" || data.active===true) {
+                    anchor.addClass("active");
+
+                    let pipeIndex = document.title.indexOf("|");
+                    if (pipeIndex==-1) document.title = data.title + " | " + document.title;
+                    else document.title = data.title + " " + document.title.substring(pipeIndex);
+                } else {
+                    if (counter == 0) {
+
+                        if (data.backlink === "true") {
+                            anchor.addClass("back-link");
+                            anchor.prepend('<i class="fal fa-chevron-left"></i>');
+                        } else {
+                            anchor.addClass("front-link");
+                            anchor.append('<i class="fal fa-chevron-right"></i>');
+                        }
+                    }
+                }
+
+                li.append(anchor);
+            }
+
+            ul.append(li);
+            counter++;
+        });
+
+        breadcrumb.html("");
+        breadcrumb.append(ul);
+
+        if (config.showInIframe===true) breadcrumb.addClass("show-in-iframe");
+    }
+
+    const htmlToTextRegex = /(<([^>]+)>)/ig;
+    /**
+     * Skonvertuje zadany HTML kod na jednoduchy text
+     * @param {*} html
+     * @returns
+     */
+    function htmlToText(html) {
+        if (typeof html != "string") return html;
+
+        if (html.indexOf("<")==-1 && html.indexOf(">")==-1) return html;
+
+        //POZOR: nejde pouzit moznost cez document.createElement("div") a innerHTML/innerText lebo to vykona mozny XSS v danom DIV elemente
+        return html.replace(htmlToTextRegex, "");
+    }
+
+
+    /**
+     * Overi, ci aktualne prihlaseny pouzivatel ma uvedene pravo
+     * @param {String} permission
+     * @returns
+     */
+    function hasPermission(permission) {
+        if (window.nopermsJavascript[permission] === true) return false;
+        return true;
+    }
+
+    /**
+     * Skonvertuje zakladny markdown format do HTML kodu
+     * @param {*} markdownText - nepovoluje HTML kod, striktne iba zakladne markdown znacky
+     * @param {*} options
+     *  - link {boolean} - ak je true, povolene su aj HTML linky
+     * @returns
+     */
+    function parseMarkdown(markdownText, options) {
+        let htmlText = markdownText;
+
+        //nepovolujeme ine ako markdown znacky
+        htmlText = htmlText.replace(/</gi, "&amp;lt;")
+            .replace(/>/gi, "&amp;gt;");
+
+        htmlText = htmlText.replace(/^### (.*$)/gim, '<h3>$1</h3>')
+            .replace(/^## (.*$)/gim, '<h2>$1</h2>')
+            .replace(/^# (.*$)/gim, '<h1>$1</h1>')
+            .replace(/^\> (.*$)/gim, '<blockquote>$1</blockquote>')
+            .replace(/\*\*(.*?)\*\*/gim, '<b>$1</b>')
+            .replace(/\*(.*?)\*/gim, '<i>$1</i>')
+            .replace(/!\[(.*?)\]\((.*?)\)/gim, "<img alt='$1' src='$2' />")
+            .replace(/\n/gim, '<br />')
+
+        if (typeof options != "undefined") {
+            if (true === options.link) {
+                htmlText = htmlText.replace(/\[(.*?)\]\((.*?)\)/gim, "<a href='$2'>$1</a>")
+            }
+        }
+
+        return htmlText.trim()
+    }
+
+    /**
+     * Inicializuje tooltip na zadanom element
+     * @param {jQuery element} $element
+     */
+    function initTooltip($element) {
+        $element.each(function (key, el) {
+            var $el = $(el);
+            var tooltipText = $el.attr("title");
+            if (typeof tooltipText != "undefined" && tooltipText.length > 0) {
+                //console.log("Tooltiptext=", tooltipText);
+                tooltipText = WJ.parseMarkdown(tooltipText);
+                //console.log("Tooltiptext parsed=", tooltipText);
+                $el.attr("title", tooltipText);
+                $el.tooltip({
+                    placement: 'top',
+                    trigger: 'hover',
+                    html: true
+                });
+            } else {
+                $el.tooltip({
+                    placement: 'top',
+                    trigger: 'hover'
+                });
+            }
+        });
+    }
+
+    /**
+     * Vrati objekt admin nastaveni podla zadaneho kluca.
+     * Je to perzistentna obdoba localStorage
+     * @param {*} key
+     * @returns
+     */
+    function getAdminSetting(key) {
+        return window.currentUser.adminSettings[key];
+    }
+
+    /**
+     * Ulozi admin nastavenia so zadanym klucom a hodnotou.
+     * Hodnota je ulozena do databazy a nasledne dostupna aj v inom prehliadaci pouzivatela.
+     * Je to perzistentna obdoba localStorage
+     * @param {*} key
+     * @param {*} value
+     */
+    function setAdminSetting(key, value) {
+        //ihned nastav, aby boli aktualne nastavene pre JS kod a nemusel cakat na odpoved z REST sluzby
+        window.currentUser.adminSettings[key] = value;
+
+        //uloz to na server
+        let data = {
+            label: key,
+            value: value
+        }
+        $.post({
+            url: "/admin/rest/admin-settings/",
+            contentType: 'application/json',
+            data: JSON.stringify(data),
+            success: function (response) {
+                //console.log("response=", response);
+            }
+        });
+    }
+
+    /**
+     * Show #loader div
+     * @param {*} loaderText - optional text to show inside #loaderText element
+     */
+    function showLoader(loaderText=null) {
+        $(".hide-while-loading").hide();
+        let loaderEl = $("#webjetAnimatedLoader");
+        if (loaderEl.length<1) {
+            let loaderText = WJ.translate("webjetjs.webjetAnimatedLoader.text.js");
+            loaderEl = $(`
+            <div id="webjetAnimatedLoader">
+                <div class="lds-dual-ring"></div>
+                <p class="loaderText">${loaderText}</p>
+            </div>`);
+            loaderEl.insertAfter(".ly-content >.scroll-content > .ly-container > .md-breadcrumb");
+        }
+        if (loaderText != null) loaderEl.find(".loaderText").text(loaderText);
+        loaderEl.show();
+    }
+
+    /**
+     * Hides #loader div
+     */
+    function hideLoader() {
+        $(".hide-while-loading").show();
+        $("#webjetAnimatedLoader").hide();
+    }
+
+    /**
+     * Select/activate menu item with provided href attribute
+     * Used in slave/details page to open menu for master/parent page URL
+     * @param {*} href
+     */
+    function selectMenuItem (href) {
+        //oznaci menu polozku podla zadaneho href atributu
+        $(".md-large-menu__wrapper .md-large-menu__item").removeClass("md-large-menu__item--open md-large-menu__item--active");
+        $("div.menu-wrapper div.md-main-menu--open").removeClass("md-main-menu--open");
+        $("div.menu-wrapper div.md-main-menu__item--open").removeClass("md-main-menu__item--open md-main-menu__item--active");
+        $("div.menu-wrapper div.md-main-menu__item__sub-menu__item--active").removeClass("md-main-menu__item__sub-menu__item--active");
+
+        var $this = $("a[href='"+href+"']");
+
+        $this.parents(".md-main-menu__item__sub-menu__item").addClass("md-main-menu__item__sub-menu__item--active");
+
+        $this.parents(".md-main-menu__item").addClass("md-main-menu__item--active");
+        $this.parents(".md-main-menu__item").addClass("md-main-menu__item--open");
+
+        $this.parents(".md-main-menu").addClass("md-main-menu--open");
+        var menuId = $this.parents(".md-main-menu").data("menu-id");
+        $('.md-large-menu__item__link[data-menu-id="' + menuId + '"]').parents(".md-large-menu__item").addClass("md-large-menu__item--open md-large-menu__item--active");
+    }
+
+    return {
+        showHelpWindow: () => {
+            return showHelpWindow();
+        },
+        changeDomain: select => {
+            return changeDomain(select);
+        },
+        /**
+         * @description Vyhľadá a vráti text v aktuálne používanom jazyku na základe translate kľúča.
+         * @param {string} key
+         * @returns {string}
+         */
+        translate: (key, ...params) => {
+            //console.log("translate, params=", params);
+            if (typeof params != "undefined" && params != null && params.length>0) {
+                return translate(key, params);
+            }
+            return translate(key);
+        },
+        openPopupDialog: (url, width, height) => {
+            return openPopupDialog(url, width, height);
+        },
+        notify: (type, title, text, timeOut, buttons) => {
+            return toastNotify(type, title, text, timeOut, buttons)
+        },
+        notifySuccess: (title, text, timeOut, buttons) => {
+            return toastNotify('success', title, text, timeOut, buttons)
+        },
+        notifyInfo: (title, text, timeOut, buttons) => {
+            return toastNotify('info', title, text, timeOut, buttons)
+        },
+        notifyWarning: (title, text, timeOut, buttons) => {
+            return toastNotify('warning', title, text, timeOut, buttons)
+        },
+        notifyError: (title, text, timeOut, buttons) => {
+            return toastNotify('error', title, text, timeOut, buttons)
+        },
+        confirm: options => {
+            return confirm(options);
+        },
+        prompt: options => {
+            options.type = "prompt";
+            return confirm(options);
+        },
+        urlAddPath: (url, pathAppend) => {
+            return urlAddPath(url, pathAppend);
+        },
+        urlAddParam: (url, paramName, paramValue) => {
+            return urlAddParam(url, paramName, paramValue);
+        },
+        urlUpdateParam: (url, paramName, paramValue) => {
+            return urlUpdateParam(url, paramName, paramValue);
+        },
+        urlGetParam: (url, queryString) => {
+            return urlGetParam(url, queryString);
+        },
+        setJsonProperty: (obj, path, value) => {
+            return setJsonProperty(obj, path, value);
+        },
+        getJsonProperty: (obj, path) => {
+            return getJsonProperty(obj, path);
+        },
+        openIframeModal: options => {
+            return openIframeModal(options);
+        },
+        closeIframeModal: () => {
+            return closeIframeModal();
+        },
+        openElFinder: (options) => {
+            return openElFinder(options);
+        },
+        openElFinderButton: (button) => {
+            console.log("openElfinderButton, button=", button);
+            //kliklo sa na button, dohladaj pridruzeny input
+            let $button = $(button);
+            let input = $button.parents("div.input-group").find("input.form-control");
+            let title = $button.parents("div.row").find("label.col-form-label").text();
+            let prepend = $button.parents("div.row").find(".input-group-text");
+
+            let options = {
+                link: input.val(),
+                title: title,
+                okclick: function(link) {
+                    //console.log("OK click, link=", link, "input=", input);
+                    input.val(link);
+                    if (prepend.length>0) {
+                        if (link.indexOf(".jpg")!=-1 || link.indexOf(".png")!=-1) {
+                            prepend.addClass("has-image");
+                            prepend.css("background-image", "url("+link+")");
+                        } else {
+                            prepend.removeClass("has-image");
+                            prepend.css("background-image", "none");
+                        }
+                    }
+                }
+            }
+            //console.log("Opening elfinder, options: ", options);
+            return openElFinder(options);
+        },
+        internationalToEnglish: (text, whitespaceToDash) => {
+            return internationalToEnglish(text, whitespaceToDash);
+        },
+        removeChars: text => {
+            return removeChars(text);
+        },
+        encodeValue: value => {
+            return encodeValue(value);
+        },
+        unencodeValue: value => {
+            return unencodeValue(value);
+        },
+        escapeHtml: value => {
+            return escapeHtml(value);
+        },
+        formatDate: timestamp => {
+            return formatDate(timestamp);
+        },
+        formatDateTime: timestamp => {
+            return formatDateTime(timestamp);
+        },
+        formatDateTimeSeconds: timestamp => {
+            return formatDateTimeSeconds(timestamp);
+        },
+        formatTime: timestamp => {
+            return formatTime(timestamp);
+        },
+        formatTimeSeconds: timestamp => {
+            return formatTimeSeconds(timestamp);
+        },
+        keepSession: () => {
+            return keepSession();
+        },
+        keepSessionShowLogoffMessage: () => {
+            return keepSessionShowLogoffMessage();
+        },
+        keepSessionShowTokenMessage: errorMessage => {
+            return keepSessionShowTokenMessage(errorMessage);
+        },
+        dispatchEvent: (name, detail) => {
+            return dispatchEvent(name, detail);
+        },
+        log: (...data) => {
+            return Tools.log('info', data);
+        },
+        breadcrumb: (config) => {
+            return breadcrumb(config);
+        },
+        htmlToText: (html) => {
+            return htmlToText(html);
+        },
+        hasPermission: (permission) => {
+            return hasPermission(permission);
+        },
+        parseMarkdown: (markdownText, options) => {
+            return parseMarkdown(markdownText, options);
+        },
+        initTooltip: ($el) => {
+            return initTooltip($el);
+        },
+        getAdminSetting: (key) => {
+            return getAdminSetting(key);
+        },
+        setAdminSetting: (key, value) => {
+            return setAdminSetting(key, value);
+        },
+        showLoader: (loaderText=null) => {
+            return showLoader(loaderText);
+        },
+        hideLoader: () => {
+            return hideLoader();
+        },
+        selectMenuItem: (href) => {
+            return selectMenuItem(href);
+        },
+        //DEPRECATED
+        toastWarning: (type, title, text, timeOut) => {
+            return toastNotify(type, title, text, timeOut)
+        },
+        popupFromDialog: (url, width, height) => {
+            //toto je len kvoli WJ8 kompatibilite
+            return openPopupDialog(url, width, height);
+        },
+        confirmRestart: () => {
+            if (window.confirm(WJ.translate("admin.conf_editor.do_you_really_want_to_restart")))
+            {
+                $.ajax({
+                    type: "POST",
+                    url: "/admin/conf_editor.jsp",
+                    data: "act=restart&name=",
+                    success: function(msg)
+                    {
+                        alert(WJ.translate("admin.conf_editor.restarted"));
+                    }
+                });
+            }
+        }
+    };
+
+})();
+
+export default WJ;
+
+//spatna kompatibilita s WJ8
+window.popupFromDialog = WJ.openPopupDialog;
+window.openPopupDialogFromLeftMenu = url => {
+    WJ.openPopupDialog(url, 650, 550);
+}
+window.openLinkDialogWindow = function(formName, fieldName, requestedImageDir, requestedFileDir) {
+   openElFinderDialogWindow(formName, fieldName);
+}
+window.openImageDialogWindow = function(formName, fieldName, requestedImageDir) {
+    openElFinderDialogWindow(formName, fieldName, requestedImageDir);
+}
+window.openElFinderDialogWindow = function(form, elementName, requestedImageDir) {
+	var url = '/admin/elFinder/dialog.jsp';
+    //console.log("openElFinderDialogWindow, form=", form, "elementName=", elementName);
+
+	if (form != null && elementName != null) {
+		url = url + "?form=" + form;
+		url = url + "&elementName=" + encodeURIComponent(elementName);
+
+        try {
+            var link = null;
+            if ("ckEditorDialog"==form)
+			{
+                var dialog = CKEDITOR.dialog.getCurrent();
+                var tabNamePair = elementName.split(":");
+                var element = dialog.getContentElement(tabNamePair[0], tabNamePair[1]);
+                link = element.getValue();
+			}
+			else {
+                link = document.forms[form].elements[elementName].value;
+            }
+            if (link != null && link!=""){
+                url = url + "&link=" + encodeURIComponent(link);
+            }else  if (requestedImageDir!=undefined && requestedImageDir!=null && requestedImageDir!="") url += '&link=' + requestedImageDir;
+        } catch (e) { console.log(e); }
+	}
+	//window.alert(navigator.userAgent);
+    WJ.openIframeModal({
+        url: url,
+        width: 800,
+        height: 540,
+        closeButtonPosition: "close-button-over",
+        okclick: function() {
+            //console.log("OK clicked");
+            return document.getElementById("modalIframeIframeElement").contentWindow.Ok();
+        }
+    });
+}

@@ -1,0 +1,15 @@
+.btnFacebook	{background:url("/components/sharing_icons/icons/icon-facebook.png") no-repeat scroll transparent;}
+.btnTwitter		{background:url("/components/sharing_icons/icons/icon-twitter.png") no-repeat scroll transparent;}
+.btnGoogle 		{background:url("/components/sharing_icons/icons/icon-google.png") no-repeat scroll transparent;}
+.btnVybraliSme	{background:url("/components/sharing_icons/icons/icon-vybrali.png") no-repeat scroll transparent;}
+.btnPrint		{background:url("/components/sharing_icons/icons/icon-print.png") no-repeat scroll transparent;}
+.btnEmail		{background:url("/components/sharing_icons/icons/icon-email.png") no-repeat scroll transparent;}
+.btnBookmarks	{background:url("/components/sharing_icons/icons/icon-bookmarks.png") no-repeat scroll transparent;}
+
+.btnTwitter, .btnGoogle, .btnVybraliSme, .btnFacebook, .btnPrint, .btnEmail, .btnBookmarks	{padding: 0 0 0 18px;float: left;}
+.btnPrint				{margin-left: 15px;}
+
+#sharingIconsList		{padding: 0;margin: 0;}
+#sharingIconsList li	{list-style-type: none;}
+#sharingIconsList li a	{text-decoration: none;cursor: pointer;}
+#sharingIcons			{margin: 10px 0 0 0;}

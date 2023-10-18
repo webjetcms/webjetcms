@@ -1,0 +1,67 @@
+extends ../../partials/layout
+
+block content
+
+    +breadcrumb(
+        'cache-objects',
+        [
+            ['#cache-objects', '[[\#{components.memory_cleanup.cache_objects.list}]]', true]
+        ]
+    )
+
+    script.
+        var cacheObjectsTable;
+        window.domReady.add(function () {
+            var tabs = [
+                {id: 'descriptionTab', title: '[[\#{components.memory_cleanup.cache_objects.description_tab}]]', selected: true, content:'<div></div>'},
+                {id: 'basicTab', title: '[[\#{components.memory_cleanup.cache_objects.basic_tab}]]'}
+            ]
+            var columns = [(${layout.getDataTableColumns('sk.iway.iwcm.components.memory_cleanup.cache_objects.CacheDto')})];
+
+            cacheObjectsTable = WJ.DataTable({
+                url: "/admin/rest/settings/cache-objects",
+                columns: columns,
+                serverSide: true,
+                tabs: tabs
+            });
+
+            cacheObjectsTable.hideButton("create");
+            cacheObjectsTable.hideButton("edit");
+            cacheObjectsTable.hideButton("duplicate");
+            cacheObjectsTable.hideButton("celledit");
+            cacheObjectsTable.hideButton("import");
+
+            cacheObjectsTable.button().add(2, {
+                extends: 'remove',
+                editor: cacheObjectsTable.EDITOR,
+                text: '<i class="fal fa-dumpster"></i>',
+                action: function (e, dt, node) {
+                    cacheObjectsTable.executeAction("deleteAllCacheObjects", true, "[[\#{components.data_deleting.deleteConfirm}]]");
+                },
+                className: 'btn btn-danger btn-delete-all',
+                attr: {
+                    'title': '[[\#{components.memory_cleanup.deleteAll}]]',
+                    'data-toggle': 'tooltip'
+                }
+            });
+
+            cacheObjectsTable.button().add(3, {
+                extends: 'remove',
+                editor: cacheObjectsTable.EDITOR,
+                text: '<i class="far fa-camera"></i>',
+                action: function (e, dt, node) {
+                    cacheObjectsTable.executeAction("deletePictureCache", true, "[[\#{components.data.deleting.imgcache.areYouSure}]]", "[[\#{components.data.deleting.imgcache.areYouSureNote}]]");
+                },
+                className: 'btn btn-danger',
+                attr: {
+                    'title': '[[\#{components.memory_cleanup.deleteImageCache}]]',
+                    'data-toggle': 'tooltip'
+                }
+            });
+        });
+
+    style.
+        div.DTE_Field_Name_toStringObjectValue label { display: none; }
+        div.DTE_Action_Edit div.DTE_Footer button.btn-primary { display: none; }
+
+    <table class="datatableInit table"></table>

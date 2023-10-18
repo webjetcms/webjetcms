@@ -1,0 +1,215 @@
+.#{$prefix}-highlighter {
+    display: none;
+    position: absolute;
+
+    &::after {
+        content: "";
+        position: absolute;
+        visibility: hidden;
+        opacity: 0;
+        border-radius: 4px;
+        transition: all 0.6s ease-in-out;
+    }
+
+    &__top,
+    &__bottom {
+        height: $highlighter-size;
+        left: 0;
+        right: 0;
+
+        &::after {
+            left: 50%;
+            right: 50%;
+        }
+    }
+    
+    &__top {
+        top: 0;
+        &::after {
+            bottom: -3px;
+            top: 0;
+        }
+    }
+    
+    &__bottom {
+        bottom: 0;
+        &::after {
+            bottom: 0;
+            top: -3px;
+        }
+    }
+    
+    &__left,
+    &__right {
+        width: $highlighter-size;
+        top: 0;
+        bottom: 0;
+
+        &::after {
+            bottom: 50%;
+            top: 50%;
+        }
+    }
+    
+    &__left {
+        left: 0;
+        &::after {
+            left: 0;
+            right: -3px;
+        }
+    }
+    
+    &__right {
+        right: 0;
+        &::after {
+            left: -3px;
+            right: 0;
+        }
+    }
+
+    .#{$prefix}-column > & {
+        z-index: $highlighter-index + 2;
+        background-color: $color-column;
+        &::after {
+            background-color: darken($color-column,15%);
+            //background-color: orange;
+        }
+    }
+    
+    .#{$prefix}-container > & {
+        z-index: $highlighter-index + 1;
+        background-color: $color-container;
+        &::after {
+            background-color: darken($color-container,15%);
+            //background-color: orange;
+        }
+    }
+    
+    .#{$prefix}-section > & {
+        z-index: $highlighter-index;
+        background-color: $color-section;
+        &::after {
+            background-color: darken($color-section,15%);
+            //background-color: orange;
+        }
+    }
+}
+
+
+.#{$prefix}-column.som-hover-append:hover > .#{$prefix}-highlighter__right,
+.#{$prefix}-column.som-hover-prepend:hover > .#{$prefix}-highlighter__left {
+    z-index: $highlighter-index + 50;
+    &::after {
+        visibility: visible;
+        opacity: 1;
+        top:10%;
+        bottom:10%;
+        //left:0;
+        //right:0;
+        animation: eye_catcher_vertical 1s ease-in-out infinite;
+    }
+}
+
+.#{$prefix}-container.som-hover-append:hover > .#{$prefix}-highlighter__bottom,
+.#{$prefix}-container.som-hover-prepend:hover > .#{$prefix}-highlighter__top,
+.#{$prefix}-section.som-hover-append:hover > .#{$prefix}-highlighter__bottom,
+.#{$prefix}-section.som-hover-prepend:hover > .#{$prefix}-highlighter__top {
+    z-index: $highlighter-index + 50;
+    &::after {
+        visibility: visible;
+        opacity: 1;
+        //top:0;
+        //bottom:0;
+        left:10%;
+        right:10%;
+        animation: eye_catcher_horizontal 1s ease-in-out infinite;
+    }
+}
+
+/*==================================================================
+/*====================|> HOVER ON GRID ELEMENT
+/*=================================================================*/
+
+.#{$prefix}-wrapper {
+    &:not(.#{$prefix}-has-child-toolbar-active) .#{$prefix}-grid-element {
+        &.#{$prefix}-has-toolbar-active > .#{$prefix}-highlighter,
+        &.#{$prefix}-has-child-toolbar-active > .#{$prefix}-highlighter,
+        &:hover > .#{$prefix}-highlighter {
+            display: block;
+        }
+    }
+
+    &.#{$prefix}-has-child-toolbar-active .#{$prefix}-grid-element {
+        &.#{$prefix}-has-toolbar-active > .#{$prefix}-highlighter,
+        &.#{$prefix}-has-child-toolbar-active > .#{$prefix}-highlighter,
+        &.#{$prefix}-container.#{$prefix}-is-resize-columns .#{$prefix}-column > .#{$prefix}-highlighter {
+            display: block;
+        }
+    }
+
+    &.#{$prefix}-is-moving-child {
+        .#{$prefix}-grid-element {
+            &:hover > .#{$prefix}-highlighter {
+                display: none;
+            }
+            &.#{$prefix}-is-moving::after {
+                display: block;
+                content: "";
+                position: absolute;
+                top: 0;
+                bottom: 0;
+                left: 0;
+                right: 0;
+                background-color: black;
+                opacity: 0.5;
+            }
+        }
+        &.#{$prefix}-is-moving-column .#{$prefix}-container > .#{$prefix}-highlighter,
+        &.#{$prefix}-is-moving-column .#{$prefix}-column > .#{$prefix}-highlighter,
+        &.#{$prefix}-is-moving-container .#{$prefix}-section > .#{$prefix}-highlighter__bottom,
+        &.#{$prefix}-is-moving-container .#{$prefix}-container > .#{$prefix}-highlighter,
+        &.#{$prefix}-is-moving-section .#{$prefix}-section > .#{$prefix}-highlighter {
+            display: block;
+        }
+
+        &.#{$prefix}-is-moving-column .#{$prefix}-column > .#{$prefix}-highlighter {
+            background-color: transparent;
+        }
+
+        &.#{$prefix}-is-moving-section .#{$prefix}-section > .#{$prefix}-highlighter {
+            background-color: transparent;
+        }
+    }
+
+    &.#{$prefix}-is-modal-open .#{$prefix}-highlighter {
+        display: none !important;
+    }
+
+    &.#{$prefix}-is-library-active .#{$prefix}-highlighter {
+        display: none !important;
+    }
+}
+
+@keyframes eye_catcher_horizontal {
+    0% {
+        transform: scale(1,1);
+    }
+    50% {
+        transform: scale(1.2,1);
+    }
+    100% {
+        transform: scale(1,1);
+    }
+}
+
+@keyframes eye_catcher_vertical {
+    0% {
+        transform: scale(1, 1);
+    }
+    50% {
+        transform: scale(1,1.2);
+    }
+    100% {
+        transform: scale(1,1);
+    }
+}

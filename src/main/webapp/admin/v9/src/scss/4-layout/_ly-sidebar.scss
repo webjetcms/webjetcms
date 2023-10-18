@@ -1,0 +1,57 @@
+@charset "UTF-8";
+
+.ly-sidebar {
+    border: 0;
+    padding: 60px 0 0 0;
+    margin: 0;
+    background-color: #2b303b;
+
+    height: 100%;
+    width: 100%;
+    max-width: 220px;
+
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: auto;
+    bottom: auto;
+
+    z-index: 900;
+
+    .scrollbar-thumb {
+        background: rgba(255, 255, 255, 0.5);
+    }
+
+    .navbar-brand {
+        background-color: #272b35;
+        border-bottom: 1px solid #232730;
+        width: 100%;
+        height: 60px;
+        position: absolute;
+        top: 0px;
+
+        > a > img {
+            display: inline-block;
+            position: absolute;
+            top: 15px;
+            left: 50%;
+            height: 30px;
+            width: auto;
+            transform: translateX(-50%);
+
+        }
+    }
+
+}
+
+@media (max-width: $bp-laptop - 1) {
+    .ly-sidebar {
+        left: -220px;
+        transition: all ease-in-out 300ms;
+        top: 0px;
+    }
+    .ly-sidebar.active {
+        left: 0px;
+        top: 40px;
+    }
+}

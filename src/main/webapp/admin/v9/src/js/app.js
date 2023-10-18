@@ -1,0 +1,174 @@
+import $ from 'jquery';
+//console.log("Setting jQuery object to window in app.js");
+//setnute v DT index.js window.jQuery = $;
+//setnute v DT index.js window.$ = $;
+
+$.ajaxSetup({
+    headers: {
+        'X-CSRF-Token': window.csrfToken,
+    },
+    statusCode: {
+        401: function () {
+            WJ.keepSessionShowLogoffMessage();
+        },
+        403: function () {
+            var errorMessage = window.csrfError;
+            try {
+                WJ.keepSessionShowTokenMessage(errorMessage);
+            } catch (e) {
+                window.alert(errorMessage);
+            }
+        },
+    },
+});
+
+import { Tools } from './libs/tools/tools';
+Tools.isDevMode();
+
+import ReadyExtender from './libs/ready-extender/ready-extender';
+window.domReady = new ReadyExtender();
+
+import WJ from '../js/webjet.js';
+
+import '../js/plugins/jquery.cookie.js';
+import '../js/plugins/modernizr-custom.js';
+import 'jstree';
+//import * as dtConfig from '../js/datatables-config.js';
+import Ninja from '../js/global-functions.js';
+import AutoCompleter from '../js/autocompleter.js';
+
+import numeral from 'numeral';
+import numeralsk from 'numeral/locales/sk';
+import numeralcz from 'numeral/locales/cs';
+import numeralde from 'numeral/locales/de';
+import moment from 'moment';
+import momentsk from 'moment/locale/sk';
+import momentcz from 'moment/locale/cs';
+import momentde from 'moment/locale/de';
+import Scrollbar from 'smooth-scrollbar';
+import Quill from 'quill';
+import toastr from 'toastr';
+
+/* webjetTranslationService */
+import { Translator } from './libs/translator/translator';
+
+window.moment = moment;
+window.numeral = numeral;
+window.WJ = WJ;
+window.Quill = Quill;
+window.toastr = toastr;
+window.AutoCompleter = AutoCompleter;
+window.webjetTranslationService = new Translator();
+
+//import WjPasswordStrength from '../js/passwdstrength.js';
+//console.log("WjPasswordStrength=", WjPasswordStrength);
+
+import { WjPasswordStrength } from './libs/wj-password-strength';
+global.WjPasswordStrength = WjPasswordStrength;
+
+//console.log("WJ=", WJ);
+//console.log("AutoCompleter=", AutoCompleter);
+
+import '../js/datatables-upload.js';
+
+import 'jquery-ui/ui/widgets/draggable';
+import 'jquery-ui/ui/widgets/autocomplete';
+
+import 'jquery-ui/themes/base/theme.css';
+import 'jquery-ui/themes/base/draggable.css';
+
+import '@babel/polyfill';
+import 'bootstrap';
+import '../scss/ninja.scss';
+
+const bootstrap = (window.bootstrap = require('bootstrap'));
+
+//na zaklade https://github.com/snapappointments/bootstrap-select/issues/2505 importovane priamo js a nie dist/js mozno po prechode do stable to bude OK
+//tiez musi ist cez require, inak to padalo ze nepozna bootstrap objekt
+require('bootstrap-select/js/bootstrap-select');
+import 'bootstrap-select/dist/css/bootstrap-select.css';
+
+require('ajax-bootstrap-select');
+
+import { WebjetJsTree } from './webjet-jstree';
+import { JsTreeDocumentOpener, JsTreeFolderOpener } from './libs/js-tree-extends';
+
+window.WebjetJsTree = WebjetJsTree;
+window.jsTreeDocumentOpener = new JsTreeDocumentOpener();
+window.jsTreeFolderOpener = new JsTreeFolderOpener();
+
+const createPdfMake = () => {
+    return import(/* webpackChunkName: "pdfMake" */ 'pdfmake/build/pdfmake');
+};
+window.createPdfMake = createPdfMake;
+const createPdfFonts = () => {
+    return import(/* webpackChunkName: "pdfFonts" */ 'pdfmake/build/vfs_fonts');
+};
+window.createPdfFonts = createPdfFonts;
+
+import * as JSZip from 'jszip';
+
+window.JSZip = JSZip;
+
+import { dataTableInit } from '../../npm_packages/webjetdatatables/index';
+window.WJ.DataTable = dataTableInit;
+import { CellVisibilityService } from './libs/data-tables-extends/';
+window.dataTableCellVisibilityService = new CellVisibilityService();
+
+/* VUE */
+import { VueTools } from './libs/tools/vuetools'
+VueTools.setup();
+window.VueTools = VueTools;
+
+/* DYNAMIC IMPORTS */
+const createImageEditor = () => {
+    // dynamicky importujem image editor
+    return import(/* webpackChunkName: "imageEditor" */ './image-editor');
+};
+window.imageEditor = createImageEditor;
+
+const createDatatablesCkEditor = () => {
+    return import(/* webpackChunkName: "ckeditor" */ './datatables-ckeditor');
+};
+window.createDatatablesCkEditor = createDatatablesCkEditor;
+
+const importWebPagesDatatable = () => {
+    return import(/* webpackChunkName: "web-pages-datatable" */ './pages/web-pages-list/web-pages-datatable');
+};
+window.importWebPagesDatatable = importWebPagesDatatable;
+
+const createXLSX = () => {
+    return import(/* webpackChunkName: "XLSX" */ 'xlsx');
+};
+window.XLSX = createXLSX;
+
+import * as ChartTools from "./libs/chart/chart-tools.js";
+window.ChartTools=ChartTools;
+
+const initAmcharts = () => {
+    // dynamicky importujem amchart 5
+    return import(/* webpackChunkName: "wjamcharts" */ './libs/chart/amcharts').then((module)=>{
+        window.WebjetTheme = module.WebjetTheme
+
+        //Add licence
+        window.am5.addLicense('CH112792597');
+
+        setTimeout(()=>{
+            //Add event dispache
+            var event = new CustomEvent('WJ.initAmcharts.success', {
+                detail: {},
+            });
+            window.dispatchEvent(event);
+        }, 50);
+    });
+}
+window.initAmcharts = initAmcharts;
+
+/**
+@deprecated
+*/
+window.confirmRestart = function()
+{
+    console.log('Deprecated, use WJ.confirmRestart()');
+    return WJ.confirmRestart();
+}

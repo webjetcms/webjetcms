@@ -1,0 +1,1 @@
+﻿CKEDITOR.plugins.setLang("about","tt",{copy:"Copyright \x26copy; $1. Бар хокуклар сакланган",dlgTitle:"CKEditor турында",moreInfo:"For licensing information please visit our web site:"});

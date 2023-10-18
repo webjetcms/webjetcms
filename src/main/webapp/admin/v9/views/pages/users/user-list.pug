@@ -1,0 +1,245 @@
+extends ../../partials/layout
+
+block content
+
+    +breadcrumb(
+        'users',
+        [
+            [ '#users', '[[\#{users.list}]]', true ]
+        ]
+    )
+
+    style.
+        div.DTE_Field span.taggroup {
+            position: absolute;
+            right: 115px;
+        }
+        div.DTE_Field span.tag {
+            display: block;
+            width: 16px;
+            height: 16px;
+            border-radius: 8px;
+            border: 2px solid black;
+            background-color: white;
+            float: right;
+            margin-left: 2px;
+
+            color: black;
+            font-size: 11px;
+            line-height: 11px;
+            text-align: center;
+            vertical-align: middle;
+            overflow: hidden;
+            padding-left: 1px;
+            padding-top: 1px;
+        }
+        #panel-body-dt-datatableInit-rightsTab div.row {
+            display: none;
+            opacity: 0;
+            transition: all 2s ease 2s;
+        }
+        #panel-body-dt-datatableInit-rightsTab.adminaccess div.row {
+            display: flex;
+            opacity: 1;
+            animation: fadeInFromNone 0.5s linear;
+        }
+        #panel-body-dt-datatableInit-rightsTab div.DTE_Field_Name_admin { display: flex; opacity: 1; animation: none !important; }
+        #panel-body-dt-datatableInit-rightsTab div.row-headline:first-child { display: flex; opacity: 1; animation: none !important; }
+        @keyframes fadeInFromNone {
+            0% {
+                display: none;
+                opacity: 0;
+            }
+
+            1% {
+                display: flex;
+                opacity: 0;
+            }
+
+            100% {
+                display: flex;
+                opacity: 1;
+            }
+        }
+
+    script.
+        window.helpLink = "/admin/users/README";
+
+        var tabs = [
+            {id: "personalInfo", title: "[[\#{useredit.personal_info}]]", selected: true},
+            {id: "contactTab", title: "[[\#{components.users.contact}]]", selected: false},
+            {id: "freeItems", title: "[[\#{components.users.free_items}]]", selected: false},
+            {id: "groupsTab", title: "[[\#{user.admin.userGroups}]]", selected: false},
+            {id: "rightsTab", title: "[[\#{useredit.permissions}]]", selected: false, perms: "users_edit_admins"},
+            {id: "approvingTab", title: "[[\#{components.users.approving}]]", selected: false, className: "hide-on-create", perms: "users_edit_admins"}
+        ];
+
+        window.jstreePerms = [(${jstreePerms})];
+        var usersDatatable = null;
+        let permGroups = [];
+
+        //vykresli ikony skupiny prav pre kazdy uzol jstree stromu
+        function addPermGroupsIcons() {
+            //console.log("addPermGroupsIcons");
+            //preiteruj LI elementy jstree a dogeneruj SPAN elementy k permgroups
+            $("#DTE_Field_editorFields-enabledItems li.permgroup").each(function(index) {
+                //console.log("Iterating li.permgroup, this=", this);
+                $this = $(this);
+                if (typeof $this.attr('class') == "undefined") return;
+
+                let htmlCode = "<span class='taggroup'>";
+                let classList = $this.attr('class').split(/\s+/);
+                for (let i = 0; i < classList.length; i++) {
+                    if (classList[i].indexOf("permgroup-")==0) {
+                        let firstChar = permGroups[classList[i]];
+                        if (typeof firstChar == "undefined" || firstChar == null) firstChar="";
+                        if (firstChar.length>1) firstChar = firstChar.substring(0, 1);
+                        htmlCode += "   <span class='tag "+classList[i]+"'>"+firstChar+"</span>";
+                    }
+                }
+                htmlCode += "</span>";
+                $this.append(htmlCode);
+            });
+        }
+
+        window.domReady.add(function () {
+
+            var columns = [(${layout.getDataTableColumns('sk.iway.iwcm.components.users.userdetail.UserDetailsEntity')})];
+
+            usersDatatable = WJ.DataTable({
+                url: "/admin/rest/users",
+                columns: columns,
+                tabs: tabs,
+                fetchOnEdit: true,
+                fetchOnCreate: true,
+                serverSide: true
+            });
+
+            let buttonCounter = 4;
+            usersDatatable.button().add(buttonCounter++, {
+                text: '<i class="fa-regular fa-person-circle-check"></i>',
+                action: function (e, dt, node) {
+                    usersDatatable.executeAction("authUserNoGen");
+                },
+                init: function ( dt, node, config ) {
+                    $.fn.dataTable.Buttons.showIfRowSelected(this, dt);
+                },
+                className: 'btn btn-success btn-auth-user-no-gen',
+                attr: {
+                    'title': '[[\#{components.users.auth_button_tooltip}]]',
+                    'data-toggle': 'tooltip'
+                }
+            });
+
+            usersDatatable.button().add(buttonCounter++, {
+                text: '<i class="fa-regular fa-person-circle-check"></i>',
+                action: function (e, dt, node) {
+                    usersDatatable.executeAction("authUserWithGen");
+                },
+                init: function ( dt, node, config ) {
+                    $.fn.dataTable.Buttons.showIfRowSelected(this, dt);
+                },
+                className: 'btn btn-warning btn-auth-user-with-gen',
+                attr: {
+                    'title': '[[\#{components.users.auth_button_passw_tooltip}]]',
+                    'data-toggle': 'tooltip'
+                }
+            });
+
+            let permGroupsColorBinded = false;
+            usersDatatable.EDITOR.on('open', function (e, type) {
+                $("div.modal.DTED > div.modal-dialog").addClass("modal-xl");
+            });
+
+            usersDatatable.EDITOR.on('opened', function (e, type, action) {
+                //console.log("Editor on opened");
+
+                if (permGroupsColorBinded == false) {
+                    permGroupsColorBinded = true;
+
+                    let niceColors = ["#FF736A", "#64FF78", "#44A5FF", "#FFBB45", "#D784FF", "#FFE744", "#B5B5B9"];
+                    const randomColor = (() => {
+                        const randomInt = (min, max) => {
+                            return Math.floor(Math.random() * (max - min + 1)) + min;
+                        };
+
+                        return () => {
+                            var h = randomInt(0, 360);
+                            var s = randomInt(42, 98);
+                            var l = randomInt(40, 90);
+                            return `hsl(${h},${s}%,${l}%)`;
+                        };
+                    })();
+
+                    //vygeneruj CSS triedy a pole nazvov jednotlivych skupin
+                    let styleDef = "<style type='text/css'>";
+                    let niceColor = "#000000";
+                    $(".DTE_Field_Name_editorFields\\.permGroups input").each(function(index) {
+                        //console.log("permGroup, this=", this);
+
+                        $this = $(this);
+                        let permGroupId = $this.val();
+                        let $label = $("label[for="+$this.attr("id")+"]");
+                        let permName = $label.text();
+                        let firstChar = permName.toUpperCase();
+                        if (firstChar.length>1) firstChar = firstChar.substring(0, 1);
+
+                        permGroups["permgroup-"+permGroupId] = firstChar;
+
+                        let htmlCode = "<span class='taggroup'>";
+                        htmlCode += "   <span class='tag permgroup-"+permGroupId+"'>"+firstChar+"</span>";
+                        htmlCode += "</span>";
+
+                        $this.parent().append(htmlCode);
+
+                        //vygeneruj CSS triedu
+                        if (index < niceColors.length) niceColor = niceColors[index];
+                        else niceColor = randomColor();
+
+                        styleDef += "   div.DTE_Field span.tag.permgroup-"+permGroupId+" { border-color: "+niceColor+"; }";
+                        styleDef += "   .permgroup-"+permGroupId+"-checked div.DTE_Field span.tag.permgroup-"+permGroupId+" { background-color: "+niceColor+"; }";
+                    });
+                    styleDef += "\n</style>\n";
+
+                    $(styleDef).appendTo("head");
+
+                    addPermGroupsIcons();
+
+                    //aktivuj eventy pre znova vykreslenie
+                    $("#DTE_Field_editorFields-enabledItems").on('redraw.jstree select_all.jstree deselect_all.jstree', function (e, data) {
+                        //console.log("redraw");
+                        addPermGroupsIcons();
+                    });
+
+                    //bindni click event
+                    $(".DTE_Field_Name_editorFields\\.permGroups").on("click", "input", function() {
+                        //console.log("click, this=", this);
+                        $this = $(this);
+                        let value = $this.val();
+                        let className = "permgroup-"+value+"-checked";
+                        if ($this.is(":checked")) $("body").addClass(className);
+                        else $("body").removeClass(className);
+                    });
+
+                    //aktivuj kontrolu kvality hesla
+                    (new WjPasswordStrength({element: "#DTE_Field_password"})).load();
+
+                    //schovaj celu sekciu Pristup ak nie je povoleny vstup do amin casti
+                    $("#DTE_Field_admin_0").on("change", function() {
+                        let checked = $(this).is(":checked");
+                        //console.log("changed, "+checked);
+
+                        if (checked) $("#panel-body-dt-datatableInit-rightsTab").addClass("adminaccess");
+                        else $("#panel-body-dt-datatableInit-rightsTab").removeClass("adminaccess");
+                    } );
+
+                    if ($("#DTE_Field_admin_0").is(":checked")) $("#panel-body-dt-datatableInit-rightsTab").addClass("adminaccess");
+                }
+            });
+
+            //usersDatatable.hideButton("export");
+            //usersDatatable.hideButton("import");
+
+        });
+
+    <table class="datatableInit table"></table>

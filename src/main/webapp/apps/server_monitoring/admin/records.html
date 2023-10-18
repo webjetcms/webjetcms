@@ -1,0 +1,201 @@
+<script data-th-inline="javascript">
+    var columns = /*[(${layout.getDataTableColumns('sk.iway.iwcm.components.monitoring.jpa.MonitoringEntity')})]*/ '';
+    var serverMonitoringEnable = /*[(${layout.getConstantBoolean('serverMonitoringEnable')})]*/ true;
+</script>
+<script>
+    let serverMonitoringRecordsTable;
+    let selectedOption;
+
+    let lineMemFree;
+    let lineMemTotal;
+    let lineSessions;
+    let lineCache;
+    let lineDbActive;
+    let lineDbIdle;
+
+    WJ.breadcrumb({
+        id: "records",
+        tabs: [
+            {
+                url: '/apps/server_monitoring/admin/',
+                title: '[[#{components.monitor.monitoring}]]',
+                active: false
+            },
+            {
+                url: '/apps/server_monitoring/admin/records',
+                title: '[[#{components.monitoring.page_name}]]',
+                active: true
+            },
+            {
+                url: '#dateRange',
+                title: '{filter}',
+                active: false
+            }
+        ]
+    });
+
+    window.domReady.add(function () {
+        WJ.showLoader();
+        //presun filter do hlavicky
+        $("#pills-dateRange-tab").html("");
+        $("div#serverMonitoringRecordsTable_extfilter").appendTo("#pills-dateRange-tab");
+
+        let order = [];
+        order.push([0, 'desc']);
+        let url = "/admin/rest/monitoring";
+
+        //Create and set amcharts
+        createAmcharts();
+
+        serverMonitoringRecordsTable = WJ.DataTable({
+            url: url,
+            serverSide: true,
+            columns: columns,
+            id: "serverMonitoringRecordsTable",
+            order: order,
+        });
+
+        //vypni zobrazenie tlacidiel import, create, edit ...
+        serverMonitoringRecordsTable.hideButton("import");
+        //serverMonitoringRecordsTable.hideButton("export");
+        serverMonitoringRecordsTable.hideButton("create");
+        serverMonitoringRecordsTable.hideButton("edit");
+        serverMonitoringRecordsTable.hideButton("duplicate");
+        serverMonitoringRecordsTable.hideButton("celledit");
+        serverMonitoringRecordsTable.hideButton("remove");
+
+        //Onclick event for header date filter
+        $("#serverMonitoringRecordsTable_extfilter").on("click", "button.filtrujem", function() {
+            getDataAndUpdateAmcharts();
+        });
+
+        if (serverMonitoringEnable == false) {
+            WJ.notifyWarning("[[#{components.monitoring.notEnabled.title}]]", "[[#{components.monitor.disabled.constant.warn}]]");
+        }
+    });
+
+    /* Convert data to  HashMap where key is nodeName and value is array of objects.
+    Return map where every node have separated data array */
+    function convertData(dataToConvert) {
+        let tmpObject = {};
+        let nodeName;
+        let convertedDataMap = new Map();
+        let tmpMapArray = [];
+        let emptyArray = [];
+        let convertedData;
+        //Return empty array if there are no any data to convert
+        if(dataToConvert == undefined || dataToConvert === null) {
+            return [];
+        }
+        //Loop dataToConvertn and transform them to array of objects (needed data format for charts !!)
+        for(i = 0; i < dataToConvert.length; i++) {
+            tmpMapArray = [];
+            emptyArray = [];
+            nodeName = dataToConvert[i]['nodeName'];
+            tmpObject = {'cache' : dataToConvert[i]['cache'],
+                        'cpuUsage' : dataToConvert[i]['cpuUsage'],
+                        'dbActive' : dataToConvert[i]['dbActive'],
+                        'dbIdle' : dataToConvert[i]['dbIdle'],
+                        'id' : dataToConvert[i]['id'],
+                        'memFree' : dataToConvert[i]['memFree'],
+                        'memTotal' : dataToConvert[i]['memTotal'],
+                        'processUsage' : dataToConvert[i]['processUsage'],
+                        'sessions' : dataToConvert[i]['sessions'],
+                        'dayDate' : dataToConvert[i]['dayDate'],
+                        'nodeName' : dataToConvert[i]['nodeName']
+                        };
+
+            /*Set (fill) HashMap where key is nodeName and value is array of objects.
+            Every nodeName key represent one resource. Every resource has it own data in object array.*/
+            tmpMapArray = convertedDataMap.get(nodeName);
+            if(tmpMapArray == null) {
+                convertedDataMap.set(nodeName, emptyArray);
+                tmpMapArray = convertedDataMap.get(nodeName);
+                tmpMapArray[0] = tmpObject;
+            } else {
+                tmpMapArray[tmpMapArray.length] = tmpObject;
+            }
+        }
+        ChartTools.sortData(convertedDataMap);
+        //console.log(convertedDataMap);
+        return convertedDataMap;
+    }
+
+    async function createAmcharts() {
+        window.initAmcharts().then(module => {
+            $.ajax({url: getGraphUrl(), success: function(result) {
+                convertedData = convertData(result['content']);
+
+                lineMemFree = new ChartTools.LineChartForm(ChartTools.getLineChartYAxeNameObjs(["memFree"], [""]), "dayDate", '[[#{components.monitoring.chart.memFree}]]', "serverMonitoring-lineMemFree", convertedData, ChartTools.DateType.Auto);
+                lineMemTotal = new ChartTools.LineChartForm(ChartTools.getLineChartYAxeNameObjs(["memTotal"], [""]), "dayDate", '[[#{components.monitoring.chart.memTotal}]]', "serverMonitoring-lineMemTotal", convertedData, ChartTools.DateType.Auto);
+                lineSessions = new ChartTools.LineChartForm(ChartTools.getLineChartYAxeNameObjs(["sessions"], [""]), "dayDate", '[[#{components.monitoring.chart.sessions}]]', "serverMonitoring-lineSessions", convertedData, ChartTools.DateType.Auto);
+                lineCache = new ChartTools.LineChartForm(ChartTools.getLineChartYAxeNameObjs(["cache"], [""]), "dayDate", '[[#{components.monitoring.chart.cache}]]', "serverMonitoring-lineCache", convertedData, ChartTools.DateType.Auto);
+                lineDbActive = new ChartTools.LineChartForm(ChartTools.getLineChartYAxeNameObjs(["dbActive"], [""]), "dayDate", '[[#{components.monitoring.chart.dbActive}]]', "serverMonitoring-lineDbActive", convertedData, ChartTools.DateType.Auto);
+                lineDbIdle = new ChartTools.LineChartForm(ChartTools.getLineChartYAxeNameObjs(["dbIdle"], [""]), "dayDate", '[[#{components.monitoring.chart.dbIdle}]]', "serverMonitoring-lineDbIdle", convertedData, ChartTools.DateType.Auto);
+
+                ChartTools.createAmchart(lineMemFree);
+                ChartTools.createAmchart(lineMemTotal);
+                ChartTools.createAmchart(lineSessions);
+                ChartTools.createAmchart(lineCache);
+                ChartTools.createAmchart(lineDbActive);
+                ChartTools.createAmchart(lineDbIdle);
+
+                //After last load data
+                WJ.hideLoader();
+            }});
+        });
+    }
+
+    function getGraphUrl() {
+        let searchDateValue = ChartTools.getDateRange(14);
+
+        return "/admin/rest/monitoring/search/findByColumns?searchDayDate=" + searchDateValue + "&size=999999&page=0&sort=dayDate%2Cdesc&pagination=true";
+    }
+
+    async function getDataAndUpdateAmcharts() {
+        WJ.showLoader();
+
+        var lineData = null;
+        await $.ajax({url: getGraphUrl(), success: function(result) {
+            lineData = convertData(result['content']);
+        }});
+
+        //Change charts dataset
+        lineMemFree.chartData = lineData;
+        lineMemTotal.chartData = lineData;
+        lineSessions.chartData = lineData;
+        lineCache.chartData = lineData;
+        lineDbActive.chartData = lineData;
+        lineDbIdle.chartData = lineData;
+
+        ChartTools.updateChart(lineMemFree);
+        ChartTools.updateChart(lineMemTotal);
+        ChartTools.updateChart(lineSessions);
+        ChartTools.updateChart(lineCache);
+        ChartTools.updateChart(lineDbActive);
+        ChartTools.updateChart(lineDbIdle);
+
+        WJ.hideLoader();
+    }
+</script>
+
+<div id="serverMonitoringRecordsTable_extfilter">
+    <div class="row">
+        <div class="col-auto dt-extfilter-title-dayDate"></div>
+        <div class="col-auto dt-extfilter dt-extfilter-dayDate"></div>
+        <div class="col-auto" style="margin-top:-3px"></div>
+    </div>
+</div>
+
+<div id="graphsDiv" class="hide-while-loading">
+    <div id="serverMonitoring-lineMemFree" class="amcharts"></div>
+    <div id="serverMonitoring-lineMemTotal" class="amcharts"></div>
+    <div id="serverMonitoring-lineSessions" class="amcharts"></div>
+    <div id="serverMonitoring-lineCache" class="amcharts"></div>
+    <div id="serverMonitoring-lineDbActive" class="amcharts"></div>
+    <div id="serverMonitoring-lineDbIdle" class="amcharts"></div>
+</div>
+
+<div id="tableDiv">
+    <table id="serverMonitoringRecordsTable" class="datatableInit table"></table>
+</div>

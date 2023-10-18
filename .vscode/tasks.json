@@ -1,0 +1,251 @@
+{
+    // See https://go.microsoft.com/fwlink/?LinkId=733558
+    // for the documentation about the tasks.json format
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "appStart",
+            "type": "shell",
+            "command": "./gradlew appStartDebug",
+            "windows": {
+                "command": ".\\gradlew.bat appStartDebug"
+            },
+            "group": "build",
+            "problemMatcher": {
+                "owner": "shell",
+                "fileLocation": "relative",
+                "pattern": {
+                "regexp": "^([^\\s].*)\\((\\d+|\\,\\d+|\\d+,\\d+,\\d+,\\d+)\\):\\s+(error|warning|info)\\s+(TS\\d+)\\s*:\\s*(.*)$",
+                "file": 1,
+                "location": 2,
+                "severity": 3,
+                "code": 4,
+                "message": 5
+                },
+                "background": {
+                    "activeOnStart": true,
+                    "beginsPattern": "Listening for transport dt_socket at address: 5005",
+                    "endsPattern": "Listening for transport dt_socket at address: 5005",
+                }
+            },
+            "isBackground": true,
+            "presentation": {
+                "clear": true
+            }
+        },
+        {
+            "label": "appStartLocalDB",
+            "type": "shell",
+            "command": "webjetDbname=/poolman-local.xml ./gradlew appStartDebug",
+            "windows": {
+                "command": "SET webjetDbname=/poolman-local.xml && .\\gradlew.bat appStartDebug"
+            },
+            "group": "build",
+            "problemMatcher": {
+                "owner": "shell",
+                "fileLocation": "relative",
+                "pattern": {
+                "regexp": "^([^\\s].*)\\((\\d+|\\,\\d+|\\d+,\\d+,\\d+,\\d+)\\):\\s+(error|warning|info)\\s+(TS\\d+)\\s*:\\s*(.*)$",
+                "file": 1,
+                "location": 2,
+                "severity": 3,
+                "code": 4,
+                "message": 5
+                },
+                "background": {
+                    "activeOnStart": true,
+                    "beginsPattern": "Listening for transport dt_socket at address: 5005",
+                    "endsPattern": "Listening for transport dt_socket at address: 5005",
+                }
+            },
+            "isBackground": true,
+            "presentation": {
+                "clear": true
+            }
+        },
+        {
+            "label": "appStartDemoDB",
+            "type": "shell",
+            "command": "webjetDbname=/poolman-webjet9demo.xml ./gradlew appStartDebug",
+            "group": "build",
+            "problemMatcher": {
+                "owner": "shell",
+                "fileLocation": "relative",
+                "pattern": {
+                "regexp": "^([^\\s].*)\\((\\d+|\\,\\d+|\\d+,\\d+,\\d+,\\d+)\\):\\s+(error|warning|info)\\s+(TS\\d+)\\s*:\\s*(.*)$",
+                "file": 1,
+                "location": 2,
+                "severity": 3,
+                "code": 4,
+                "message": 5
+                },
+                "background": {
+                    "activeOnStart": true,
+                    "beginsPattern": "Listening for transport dt_socket at address: 5005",
+                    "endsPattern": "Listening for transport dt_socket at address: 5005",
+                }
+            },
+            "isBackground": true,
+            "presentation": {
+                "clear": true
+            }
+        },
+        {
+            "label": "appStartTemplatesDB",
+            "type": "shell",
+            "command": "webjetDbname=/poolman-democms.xml ./gradlew appStartDebug",
+            "group": "build",
+            "problemMatcher": {
+                "owner": "shell",
+                "fileLocation": "relative",
+                "pattern": {
+                "regexp": "^([^\\s].*)\\((\\d+|\\,\\d+|\\d+,\\d+,\\d+,\\d+)\\):\\s+(error|warning|info)\\s+(TS\\d+)\\s*:\\s*(.*)$",
+                "file": 1,
+                "location": 2,
+                "severity": 3,
+                "code": 4,
+                "message": 5
+                },
+                "background": {
+                    "activeOnStart": true,
+                    "beginsPattern": "Listening for transport dt_socket at address: 5005",
+                    "endsPattern": "Listening for transport dt_socket at address: 5005",
+                }
+            },
+            "isBackground": true,
+            "presentation": {
+                "clear": true
+            }
+        },
+        {
+            "label": "appStartNNDB",
+            "type": "shell",
+            "command": "webjetDbname=/poolman-local-nnsk.xml ./gradlew appStartDebug",
+            "group": "build",
+            "problemMatcher": {
+                "owner": "shell",
+                "fileLocation": "relative",
+                "pattern": {
+                "regexp": "^([^\\s].*)\\((\\d+|\\,\\d+|\\d+,\\d+,\\d+,\\d+)\\):\\s+(error|warning|info)\\s+(TS\\d+)\\s*:\\s*(.*)$",
+                "file": 1,
+                "location": 2,
+                "severity": 3,
+                "code": 4,
+                "message": 5
+                },
+                "background": {
+                    "activeOnStart": true,
+                    "beginsPattern": "Listening for transport dt_socket at address: 5005",
+                    "endsPattern": "Listening for transport dt_socket at address: 5005",
+                }
+            },
+            "isBackground": true,
+            "presentation": {
+                "clear": true
+            }
+        },
+        {
+            "label": "appStartOracleDB",
+            "type": "shell",
+            "command": "webjetDbname=/poolman-oracle.xml ./gradlew appStartDebug",
+            "group": "build",
+            "problemMatcher": {
+                "owner": "shell",
+                "fileLocation": "relative",
+                "pattern": {
+                "regexp": "^([^\\s].*)\\((\\d+|\\,\\d+|\\d+,\\d+,\\d+,\\d+)\\):\\s+(error|warning|info)\\s+(TS\\d+)\\s*:\\s*(.*)$",
+                "file": 1,
+                "location": 2,
+                "severity": 3,
+                "code": 4,
+                "message": 5
+                },
+                "background": {
+                    "activeOnStart": true,
+                    "beginsPattern": "Listening for transport dt_socket at address: 5005",
+                    "endsPattern": "Listening for transport dt_socket at address: 5005",
+                }
+            },
+            "isBackground": true,
+            "presentation": {
+                "clear": true
+            }
+        },
+        {
+            "label": "appStartPssDB",
+            "type": "shell",
+            "command": "webjetDbname=/poolman-local-pss.xml ./gradlew appStartDebug",
+            "windows": {
+                "command": "SET webjetDbname=/poolman-local-pss.xml && .\\gradlew.bat appStartDebug"
+            },
+            "group": "build",
+            "problemMatcher": {
+                "owner": "shell",
+                "fileLocation": "relative",
+                "pattern": {
+                "regexp": "^([^\\s].*)\\((\\d+|\\,\\d+|\\d+,\\d+,\\d+,\\d+)\\):\\s+(error|warning|info)\\s+(TS\\d+)\\s*:\\s*(.*)$",
+                "file": 1,
+                "location": 2,
+                "severity": 3,
+                "code": 4,
+                "message": 5
+                },
+                "background": {
+                    "activeOnStart": true,
+                    "beginsPattern": "Listening for transport dt_socket at address: 5005",
+                    "endsPattern": "Listening for transport dt_socket at address: 5005",
+                }
+            },
+            "isBackground": true,
+            "presentation": {
+                "clear": true
+            }
+        },
+        {
+            "label": "appStop",
+            "type": "shell",
+            "command": "./gradlew appStop; pkill -9 -f appStart",
+            "windows": {
+                "command": ".\\gradlew.bat appStop"
+            },
+            "group": "build",
+            "problemMatcher": [],
+            "isBackground": false,
+            "presentation": {
+                "reveal": "silent",
+                "clear": true,
+                "showReuseMessage": false,
+                "close": true
+            }
+        },
+        {
+            "label": "appKill",
+            "type": "shell",
+            "command": "pkill -9 -f appStart",
+            "group": "build",
+            "problemMatcher": [],
+            "isBackground": false,
+            "presentation": {
+                "reveal": "silent",
+                "clear": true,
+                "showReuseMessage": false,
+                "close": true
+            }
+        },
+        {
+            "label": "Sass Compile JET",
+            "type": "shell",
+            "options": {
+                "cwd": "src/main/webapp/templates/aceintegration/jet/assets/scss"
+            },
+            "command": "sass ninja.scss ../css/ninja.css --no-source-map; sass ninja.scss ../css/ninja.min.css --style compressed",
+            "group": "build",
+            "presentation": {
+                "reveal": "silent",
+                "clear": true,
+                "showReuseMessage": false,
+                "close": true
+            }
+        }
+    ]
+}

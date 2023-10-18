@@ -1,0 +1,43 @@
+.bootstrap-select {
+    button.dropdown-toggle::after {
+        //bs5 vznikala duplicita sipky pre otvorenie selectu
+        display: none;
+    }
+    .dropdown-menu {
+        li.active a {
+            color: $white;
+            small {
+                color: $white !important;
+            }
+        }
+        a.dropdown-item:hover {
+            background-color: $nice-gray;
+        }
+        a.dropdown-item.active:hover {
+            background-color: $primary;
+        }
+    }
+    .btn-outline-secondary:hover, .btn-outline-secondary.dropdown-toggle.show {
+        background-color: $nice-gray;
+        color: $secondary;
+    }
+    .btn-outline-secondary:hover {
+        background-image: escape-svg($form-select-indicator);
+        background-repeat: no-repeat;
+        background-position: right 11px center !important;
+        background-size: 16px 12px;
+        .filter-option-inner-inner {
+            i.fa,i.far,i.fas {
+                display: none;
+            }
+        }
+    }
+}
+
+.dropdown-item:hover, .dropdown-item:focus {
+    background-color: $nice-gray;
+}
+div.dropdown ul.dropdown-menu li a {
+    //ked som klikol a drzal mys v hlavicke na dropdowne mena, alebo zmeny domeny zrazu bolo pismo biele
+    color: $secondary;
+}

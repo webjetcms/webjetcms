@@ -1,0 +1,62 @@
+<div data-th-include="/admin/setup/layout_top.html" data-th-remove="tag"/>
+
+    <script data-th-inline="javascript">
+    /*<![CDATA[*/
+
+        //Little bit of hack. We using Ok button but we need to click submit button
+        function submitAction() {
+            //Perform submit
+            document.getElementById("submitBtn").click();
+        }
+
+        function isLngSelectDisabled() {
+            var disableSelect = /*[[${disableLng}]]*/ false;
+            return disableSelect;
+        }
+
+        function getSetLanguage() {
+            var setLanguage = /*[[${licenseForm.pageLngIndicator}]]*/ 'sk';
+            return setLanguage;
+        }
+    /*]]>*/
+    </script>
+
+    <form data-th-action="@{/wjerrorpages/setup/save-license}" data-th-object="${licenseForm}" method="post">
+
+        <div data-th-if="${licenseErr} == true">
+            <div class="error"><b>[[#{setup.license.info_7}]] </b>
+                <div data-th-text="${licenseErrMsg}"></div>
+            </div>
+        </div>
+
+        <br>
+
+        [[#{setup.license.info_1}]] <a href="http://www.interway.sk/en/">[[#{setup.license.info_4}]]</a> [[#{setup.license.info_2}]]<br><br>
+
+        [[#{setup.license.address_1}]] <br>
+        [[#{setup.license.address_2}]] <br>
+        [[#{setup.license.address_3}]] <br>
+        [[#{setup.license.address_4}]] <br>
+        [[#{setup.license.address_5}]] <br>
+        [[#{setup.license.info_3}]] <a href="mailto:sales@interway.sk">[[#{setup.license.info_6}]]</a><br>
+
+        <br>
+
+        <table>
+            <tr>
+                <td>[[#{user.login}]]</td>
+                <td> <input type="text" data-th-field="*{username}" size="30" required/> </td>
+            </tr>
+            <tr>
+                <td>[[#{user.password}]]</td>
+                <td> <input type="password" data-th-field="*{password}"  size="30" required/> </td>
+            </tr>
+            <tr>
+                <td>[[#{components.map.licenseKey}]]</td>
+                <td> <input type="text" data-th-field="*{license}"  size="60" required/> </td>
+            </tr>
+        </table>
+        <input type="submit" id="submitBtn" style="display:none"/>
+    </form>
+
+<div data-th-include="/admin/setup/layout_bottom.html" data-th-remove="tag"/>

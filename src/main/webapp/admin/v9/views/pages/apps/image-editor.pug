@@ -1,0 +1,165 @@
+extends ../../partials/layout
+
+block content
+
+    +breadcrumb(
+        'insert-script',
+        [
+            [ '#insert-script', '[[\#{components.insert_script.list}]]', true ]
+        ]
+    )
+
+    include ../../partials/datatables-upload
+
+    script.
+        let imageEditorInstance = null;
+        let adminUpload = null;
+        let dir = "[(${dir})]";
+        let name = "[(${name})]";
+
+        document.getElementsByTagName("html")[0].classList.add("in-iframe");
+
+        window.domReady.add(function () {
+            if (dir != '' && name!='') {
+                $("#imageEditorContainer").appendTo("body");
+                $("#modalIframeLoader").hide();
+                $("#DTE_Field_imageName").val(name);
+                adminUpload = window.AdminUpload({
+                    element: "#dt-upload",
+                    uploadType: "image",
+                    acceptedFiles: ".jpg,.jpeg,.mp4,.gif,.png",
+                    destinationFolder: dir,
+                    writeDirectlyToDestination: true
+                });
+                initializeImageEditor(null);
+                $("#imageEditorButtons button.btn-primary").on("click", function() {
+                    if (imageEditorInstance != null) {
+                        imageEditorInstance.onPostEditedImage('/admin/upload/chunk');
+                        $("#imageEditorButtons button.btn-primary i").attr("class", "fas fa-sync fa-spin");
+                    }
+                });
+                $("#imageEditorButtons button.btn-close-editor").on("click", function() {
+                    window.close();
+                });
+
+                window.addEventListener("WJ.imageEditor.upload.success", function(e) {
+                    try {
+                        var els = window.opener.ckEditorInstance.document.$.getElementsByClassName("cke_floatingtools_selected");
+                        Array.from(els).forEach((el) => {
+                            if (el.tagName.toLowerCase()=="img") {
+                                var src = el.getAttribute("src");
+                                if (src.indexOf("?v=")!=-1 || src.indexOf("&v=")!=-1) src = WJ.urlUpdateParam(src, "v", (new Date()).getTime());
+                                else src = WJ.urlAddParam(src, "v", (new Date()).getTime());
+
+                                el.setAttribute("src", src);
+                                el.setAttribute("data-cke-saved-src", src);
+                            }
+                        });
+                    } catch (e) {
+                        console.log(e);
+                    }
+                    window.close();
+                });
+
+                window.addEventListener('resize', function (e) {
+                    var height = $(window).height()+"px";
+                    if (imageEditorInstance != null) {
+                        imageEditorInstance.resizeCanvasDimension({
+                            width: "100%",
+                            height: height
+                        });
+                        $("#photoEditorContainer").css("height", height);
+                    }
+                }, true);
+            }
+        });
+
+        const initializeImageEditor = event => {
+            //dynamicky vytvaram image editor
+            //TODO: upravit aby sa neinicializoval zakazdym, ale len prepouzil
+            imageEditor().then(module => {
+                let now = (new Date()).getTime();
+                const options = {
+                    includeUI: {
+                        loadImage: {
+                            path: `${dir}/${name}?v=${now}`,
+                            name: name,
+                        },
+                        menu: ['crop', 'flip', 'rotate', 'draw', 'shape', 'icon', 'text', 'mask', 'filter'],
+                        locale: {
+                            'Crop': '[[\#{components.gallery.tui-image-editor.Crop}]]',
+                            'Invert': '[[\#{components.gallery.tui-image-editor.Invert}]]',
+                            'Remove White': '[[\#{components.gallery.tui-image-editor.Remove_White}]]',
+                            'Color Filter': '[[\#{components.gallery.tui-image-editor.Color_Filter}]]',
+                            'DeleteAll': '[[\#{components.gallery.tui-image-editor.DeleteAll}]]',
+                            'Rotate': '[[\#{components.gallery.tui-image-editor.Rotate}]]',
+                            'Undo': '[[\#{components.gallery.tui-image-editor.Undo}]]',
+                            'Redo': '[[\#{components.gallery.tui-image-editor.Redo}]]',
+                            'Reset': '[[\#{components.gallery.tui-image-editor.Reset}]]',
+                            'Delete': '[[\#{components.gallery.tui-image-editor.Delete}]]',
+                            'Flip': '[[\#{components.gallery.tui-image-editor.Flip}]]',
+                            'Flip X': '[[\#{components.gallery.tui-image-editor.Flip_X}]]',
+                            'Flip Y': '[[\#{components.gallery.tui-image-editor.Flip_Y}]]',
+                            'Range': '[[\#{components.gallery.tui-image-editor.Range}]]',
+                            'Free': '[[\#{components.gallery.tui-image-editor.Free}]]',
+                            'Load Mask Image': '[[\#{components.gallery.tui-image-editor.Load_Mask_Image}]]',
+                            'Left': '[[\#{components.gallery.tui-image-editor.Left}]]',
+                            'Text size': '[[\#{components.gallery.tui-image-editor.Text_size}]]',
+                            'Custom icon': '[[\#{components.gallery.tui-image-editor.Custom_icon}]]',
+                            'Rectangle': '[[\#{components.gallery.tui-image-editor.Rectangle}]]',
+                            'Circle': '[[\#{components.gallery.tui-image-editor.Circle}]]',
+                            'Triangle': '[[\#{components.gallery.tui-image-editor.Triangle}]]',
+                            'Fill': '[[\#{components.gallery.tui-image-editor.Fill}]]',
+                            'Stroke': '[[\#{components.gallery.tui-image-editor.Stroke}]]',
+                            'Center': '[[\#{components.gallery.tui-image-editor.Center}]]',
+                            'Right': '[[\#{components.gallery.tui-image-editor.Right}]]',
+                            'Underline': '[[\#{components.gallery.tui-image-editor.Underline}]]',
+                            'Bold': '[[\#{components.gallery.tui-image-editor.Bold}]]',
+                            'Italic': '[[\#{components.gallery.tui-image-editor.Italic}]]',
+                            'Straight': '[[\#{components.gallery.tui-image-editor.Straight}]]',
+                            'Color': '[[\#{components.gallery.tui-image-editor.Color}]]',
+                            'Draw': '[[\#{components.gallery.tui-image-editor.Draw}]]',
+                            'Shape': '[[\#{components.gallery.tui-image-editor.Shape}]]',
+                            'Icon': '[[\#{components.gallery.tui-image-editor.Icon}]]',
+                            'Mask': '[[\#{components.gallery.tui-image-editor.Mask}]]',
+                            'Apply': '[[\#{components.gallery.tui-image-editor.Apply}]]',
+                            'Cancel': '[[\#{components.gallery.tui-image-editor.Cancel}]]',
+                            'Custom': '[[\#{components.gallery.tui-image-editor.Custom}]]',
+                            'Square': '[[\#{components.gallery.tui-image-editor.Square}]]',
+                        },
+                        theme: {
+                            'common.bisize.width': '251px',
+                            'common.bisize.height': '40px',
+                            'common.backgroundColor': '#fff',
+                        },
+                        uiSize: {
+                            width: '100%',
+                            height: $(window).height()+"px"
+                        }
+                    }
+
+                }
+                imageEditorInstance = new module.ImageEditor(document.querySelector("#photoEditorContainer"), options);
+                //console.log("ImageEditor initialized");
+            });
+        };
+
+    <div id="imageEditorContainer">
+        <div id="photoEditorContainer" class="dte-tab-autoheight"></div>
+        <div id="imageEditorButtons">
+            <button type="button" class="btn btn-outline-secondary btn-close-editor"><i class="fal fa-times"></i> [[\#{button.cancel}]]</button>
+            <button class="btn btn-primary" tabindex="0"><i class="fal fa-check"></i> [[\#{button.save}]]</button>
+        </div>
+        input(id="DTE_Field_imageName" style="display: none")
+    </div>
+
+    style(type="text/css").
+        #imageEditorButtons {
+            position: absolute;
+            bottom: 12px;
+            right: 12px;
+            z-index: 999;
+        }
+        button.btn-close-editor {
+            background-color: white;
+        }

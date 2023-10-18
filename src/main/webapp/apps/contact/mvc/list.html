@@ -1,0 +1,23 @@
+<h3 data-th-text="#{components.contact.page.list}">Zoznam kontaktov</h3>
+
+<p><a class="btn btn-primary" data-th-href="${'?add=true'}" data-th-text="#{components.contact.value.name}">Create</a></p>
+
+<div class="table-responsive"></div>
+    <table class="table table-striped table-hover">
+        <tr>
+            <th data-th-text="#{components.contact.property.name}">Firma</th>
+            <th data-th-text="#{components.contact.property.vatid}">IČ DPH</th>
+            <th data-th-text="#{components.contact.property.city}">Mesto</th>
+            <th></th>
+        </tr>
+        <!--/* https://www.thymeleaf.org/doc/tutorials/3.0/usingthymeleaf.html#using-theach */-->
+        <tr data-th-each="contact : ${contants}">
+            <td data-th-text="${contact.name}">InterWay</td>
+            <td data-th-text="${contact.vatid}">SK123456789</td>
+            <td data-th-text="${contact.city}">Blava</td>
+            <td>
+                <a class="btn btn-secondary" data-th-href="${'?edit=true&id='+contact.id}" data-th-text="#{components.checkform.confirm_table.button.edit}">Edit</a>
+            </td>
+        </tr>
+    </table>
+</div>

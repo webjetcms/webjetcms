@@ -1,0 +1,420 @@
+<script data-th-inline="javascript">
+    let docNewUrl = "/admin/rest/stat/doc-new/";
+    let docNewColumns = /*[(${layout.getDataTableColumns("sk.iway.iwcm.stat.jpa.DocNewDTO")})]*/ '';
+
+    let incomingUrl = "/admin/rest/stat/doc-new/incoming/";
+    let incomingColumns = /*[(${layout.getDataTableColumns("sk.iway.iwcm.stat.jpa.InOutDTO")})]*/ '';
+
+    let outgoingUrl = "/admin/rest/stat/doc-new/outgoing/";
+    let outgoingColumns = /*[(${layout.getDataTableColumns("sk.iway.iwcm.stat.jpa.InOutDTO")})]*/ '';
+</script>
+<script>
+    var docNewDataTable;
+    var incomingDataTable;
+    var outgoingDataTable;
+
+    WJ.breadcrumb({
+        id: "docNew",
+        tabs: [
+            {
+                url: '/apps/stat/admin/top',
+                title: '[[#{inlineToolbar.option.page.stats}]]',
+                active: true
+            },
+            {
+                url: '/apps/stat/admin/top',
+                title: '<span class="statPageTitle"></span>',
+                active: false
+            },
+            {
+                url: '#dateRange',
+                title: '{filter}',
+                active: false
+            }
+        ]
+    });
+
+    window.domReady.add(function () {
+        //presun filter do hlavicky
+        $("#pills-dateRange-tab").html("");
+        $("div#docNewDataTable_extfilter").appendTo("#pills-dateRange-tab");
+
+        let lineChartVariantA;
+        let lineChartVariantB;
+        let lineChartVariantPercentual;
+
+        let docId;
+        let dateRange;
+        //If variant B data length < 1 (or null) then false (we dont show empty B variant graphs and columns)
+        let isBvariantVisible = false;
+        let isBvariantPerVisible = false;
+
+        WJ.showLoader();
+
+        //set docId from url
+        parseUrlParams();
+
+        $.get({
+            url: docNewUrl+"doc-title/?docId="+docId,
+            success: function(response) {
+                //console.log("response=", response);
+                $("span.statPageTitle").text(response);
+            }
+        });
+
+        docNewDataTable = WJ.DataTable({
+            url: docNewUrl,
+            serverSide: false, //false lebo sa nevyužíva repositár
+            columns: docNewColumns,
+            id: "docNewDataTable",
+            idAutoOpener: false,
+            defaultSearch: ChartTools.getSearchCriteria(),
+            onPreXhr: function(TABLE, e, settings, data) {
+                //console.log('onPreXhr, docId=', docId);
+                data.fixed_dayDate = dateRange;
+                data.fixed_docId = docId;
+                data.fixed_chartType = ChartTools.ChartType.Not_Chart;
+            }
+        });
+
+        docNewDataTable.hideButton("import");
+        docNewDataTable.hideButton("create");
+        docNewDataTable.hideButton("edit");
+        docNewDataTable.hideButton("duplicate");
+        docNewDataTable.hideButton("celledit");
+        docNewDataTable.hideButton("remove");
+
+        incomingDataTable = WJ.DataTable({
+            url: incomingUrl,
+            serverSide: false, //false lebo sa nevyužíva repositár
+            columns: incomingColumns,
+            id: "incomingDataTable",
+            idAutoOpener: false,
+            noAll: true,
+            defaultSearch: ChartTools.getSearchCriteria(),
+            onPreXhr: function(TABLE, e, settings, data) {
+                //console.log('onPreXhr incomming, docId=', docId);
+                data.fixed_dayDate = dateRange;
+                data.fixed_docId = docId;
+                data.fixed_chartType = ChartTools.ChartType.Not_Chart;
+            }
+        });
+
+        incomingDataTable.hideButton("import");
+        incomingDataTable.hideButton("create");
+        incomingDataTable.hideButton("edit");
+        incomingDataTable.hideButton("duplicate");
+        incomingDataTable.hideButton("celledit");
+        incomingDataTable.hideButton("remove");
+
+        outgoingDataTable = WJ.DataTable({
+            url: outgoingUrl,
+            serverSide: false, //false lebo sa nevyužíva repositár
+            columns: outgoingColumns,
+            id: "outgoingDataTable",
+            noAll: true,
+            defaultSearch: ChartTools.getSearchCriteria(),
+            onPreXhr: function(TABLE, e, settings, data) {
+                //console.log('onPreXhr outgoing, docId=', docId);
+                data.fixed_dayDate = dateRange;
+                data.fixed_docId = docId;
+                data.fixed_chartType = ChartTools.ChartType.Not_Chart;
+            }
+        });
+
+        outgoingDataTable.hideButton("import");
+        outgoingDataTable.hideButton("create");
+        outgoingDataTable.hideButton("edit");
+        outgoingDataTable.hideButton("duplicate");
+        outgoingDataTable.hideButton("celledit");
+        outgoingDataTable.hideButton("remove");
+
+        //Create and set amcharts
+        createAmcharts();
+
+        //Onchange events - update amcharts + tables
+        $("#docNewDataTable_extfilter").on("click", "button.filtrujem", function() {
+            updateTablesAndCharts(true);
+            ChartTools.saveSearchCriteria(docNewDataTable.DATA);
+        });
+
+        async function createAmcharts() {
+            WJ.showLoader();
+
+            window.initAmcharts().then(module => {
+                $.ajax({url: getGraphUrl(false, false), success: function(aVariantResult) {
+                    let yAxeNames =
+                        ChartTools.getLineChartYAxeNameObjs(
+                            ["visits", "sessions", "uniqueUsers"],
+                            ["stat.visits.js", "stat.sessions.js", "stat.unique_users.js"]
+                        );
+
+                    lineChartVariantA = new ChartTools.LineChartForm(yAxeNames, "dayDate", '', "topDetails-lineVariantA", convertData(aVariantResult['content'], ""), ChartTools.DateType.Auto);
+                    ChartTools.createAmchart(lineChartVariantA);
+
+                    //B Variant chart data
+                    $.ajax({url: getGraphUrl(true, false), success: function(bVariantResult) {
+
+                        lineChartVariantB = new ChartTools.LineChartForm(yAxeNames, "dayDate", 'B', "topDetails-lineVariantB", convertData(bVariantResult, ""), ChartTools.DateType.Auto);
+                        ChartTools.createAmchart(lineChartVariantB);
+
+                        //If B variant has no data , hide this graphs
+                        if(bVariantResult == null || bVariantResult.length < 1) {
+                            $("#graphsDiv_2").toggle(false);
+                            //No B varinat data, hide B variant columns
+                            setBVariantColumns(null);
+                        } else {
+                            isBvariantVisible = true;
+                            let bVarinatData = convertData(bVariantResult, "newData").get('newData');
+                            setBVariantColumns(bVarinatData);
+                        }
+
+                        //B Variant chart data - percentual
+                        $.ajax({url: getGraphUrl(true, true), success: function(bVariantPerResult) {
+                            //All 3 graphs share same data (just diff values are showed)
+                            let convertedData = convertDataToBvariant(aVariantResult['content'], bVariantPerResult);
+                            lineChartVariantPercentual = new ChartTools.LineChartForm(yAxeNames, "dayDate", '', "topDetails-linePercentual", convertedData, ChartTools.DateType.Auto);
+                            ChartTools.createAmchart(lineChartVariantPercentual);
+
+                            //If B variant percentula has no data , hide this graphs
+                            if(bVariantPerResult == null || bVariantPerResult.length < 1)
+                                $("#graphsDiv_3").toggle(false);
+                            else
+                                isBvariantPerVisible = true;
+
+                            //After load data
+                            WJ.hideLoader();
+                        }});
+                    }});
+                }});
+            });
+        }
+
+        function itemToObject(itemToConvert) {
+            let tmpObject = {};
+
+            tmpObject = {
+                'visits' : itemToConvert['visits'],
+                'sessions' : itemToConvert['sessions'],
+                'uniqueUsers' : itemToConvert['uniqueUsers'],
+                'dayDate' : itemToConvert['dayDate']
+            };
+            return tmpObject;
+        }
+
+        function convertData(dataToConvert, datasetName) {
+            let tmpMapArray = [];
+            let convertedDataMap = new Map();
+
+            //Return empty array if there are no any data to convert
+            if(dataToConvert == undefined || dataToConvert === null) {
+                return [];
+            }
+            //Loop dataToConvert and transform them to array of objects (needed data format for charts !!)
+            for(i = 0; i < dataToConvert.length; i++) {
+                tmpMapArray[tmpMapArray.length] = itemToObject(dataToConvert[i]);
+            }
+
+            //Need too be converted to map (line chart logic requires)
+            convertedDataMap.set(datasetName, tmpMapArray);
+            return convertedDataMap;
+        }
+
+        function convertDataToBvariant(aVariantData, bVariantData) {
+            let tmpMapArrayAvariant = [];
+            let tmpMapArrayBvariant = [];
+            let convertedDataMap = new Map();
+
+            //Loop dataToConvert and transform them to array of objects (needed data format for charts !!)
+            for(i = 0; i < aVariantData.length; i++)
+                tmpMapArrayAvariant[tmpMapArrayAvariant.length] = itemToObject(aVariantData[i]);
+
+            for(i = 0; i < bVariantData.length; i++)
+                tmpMapArrayBvariant[tmpMapArrayBvariant.length] = itemToObject(bVariantData[i]);
+
+            //Need too be converted to map (line chart logic requires)
+            convertedDataMap.set("A variant", tmpMapArrayAvariant);
+            convertedDataMap.set("B variant", tmpMapArrayBvariant);
+            return convertedDataMap;
+        }
+
+        function getGraphUrl(bVariant, percentual) {
+            let tmpDefURL = "/admin/rest/stat/doc-new";
+            let searchDateValue = ChartTools.getDateRange(30);
+
+            if(!bVariant) {
+                tmpDefURL += "/search/findByColumns?";
+                tmpDefURL += "searchDayDate=" + searchDateValue;
+                tmpDefURL += "&docId=" + docId;
+                tmpDefURL += "&chartType=" + ChartTools.ChartType.Line;
+            } else {
+                tmpDefURL += "/b-variant/";
+                tmpDefURL += "?docId=" + docId;
+                tmpDefURL += "&dayDate=" + searchDateValue;
+                tmpDefURL += "&percentual=" + percentual;
+            }
+            return tmpDefURL;
+        }
+
+        async function updateTablesAndCharts(isDateChanged) {
+            WJ.showLoader();
+
+            let searchDateValue = ChartTools.getDateRange(30);
+
+            /*  If date is changed, datatable will change url by adding /find/searchByColumns but our url allready contain /all, so its not gonna work together.
+                For this reason we need change whole url. Isnt looking good but its necessary. The reason is becuase this pagse is open from another and
+                we need set params to table url from the start (normaly table url contain url without /all and params).
+            */
+            if(searchDateValue == undefined || searchDateValue == null) {
+                searchDateValue = dateRange;
+                //Update dateRange value docNewUrl
+                docNewDataTable.ajax.url(WJ.urlUpdateParam(docNewUrl, "searchDayDate", searchDateValue));
+                //Add new param
+
+                //Reload table values
+                docNewDataTable.ajax.reload();
+            } else {
+                dateRange = searchDateValue;
+                //Set url from the ground
+                //Reload table values
+                docNewDataTable.ajax.reload();
+            }
+
+            setTimeout(function() {
+                $.ajax({url: getGraphUrl(false, false), success: function(aVariantResult) {
+                    lineChartVariantA.chartData = convertData(aVariantResult['content'], undefined);
+                    ChartTools.updateChart(lineChartVariantA);
+
+                    $.ajax({url: getGraphUrl(true, false), success: function(bVariantResult) {
+                        lineChartVariantB.chartData = convertData(bVariantResult, undefined);
+                        ChartTools.updateChart(lineChartVariantB);
+
+                            //If B variant has no data , hide this graphs
+                            if(bVariantResult == null || bVariantResult.length < 1) {
+                                $("#graphsDiv_2").toggle(false);
+                                //No B varinat data, hide B variant columns
+                                setBVariantColumns(null);
+                            } else {
+                                isBvariantVisible = true;
+                                let bVarinatData = convertData(bVariantResult, "newData").get('newData');
+                                setBVariantColumns(bVarinatData);
+                            }
+
+                        //B Variant chart data - percentual
+                        $.ajax({url: getGraphUrl(true, true), success: function(bVariantPerResult) {
+                            //All 3 graphs share same data (just diff values are showed)
+                            let convertedData = convertDataToBvariant(aVariantResult['content'], bVariantPerResult);
+                            lineChartVariantPercentual.chartData = convertedData;
+                            ChartTools.updateChart(lineChartVariantPercentual);
+
+                            //If B variant percentula has no data , hide this graphs
+                            if(bVariantPerResult == null || bVariantPerResult.length < 1) {
+                                $("#graphsDiv_3").toggle(false);
+                                isBvariantPerVisible = false; }
+                            else {
+                                $("#graphsDiv_3").toggle(true);
+                                isBvariantPerVisible = true; }
+
+                            WJ.hideLoader();
+                        }});
+                    }});
+                }});
+            }, 500);
+
+            //If changed value isnt dateRange do not update this tables (this tables arent affected by stat type change)
+            if(isDateChanged) {
+                setTimeout(function() {
+                    //Reload table values
+                    incomingDataTable.ajax.reload();
+                }, 500);
+
+                setTimeout(function() {
+                    //Reload table values
+                    outgoingDataTable.ajax.reload();
+                }, 500);
+            }
+        }
+
+        //Set B varinat columns values and visibility
+        function setBVariantColumns(bVArinatData) {
+            if(isBvariantVisible) {
+                docNewDataTable.rows().every( function ( rowIdx, tableLoop, rowLoop ) {
+                    var data = this.data();
+                    if(rowIdx < bVArinatData.length) {
+                        data['visitsVarinatB'] = bVArinatData[rowIdx]['visits'];
+                        data['sessionsVarinatB'] = bVArinatData[rowIdx]['sessions'];
+                        data['uniqueUsersVarinatB'] = bVArinatData[rowIdx]['uniqueUsers'];
+                    } else {
+                        data['visitsVarinatB'] = 0;
+                        data['sessionsVarinatB'] = 0;
+                        data['uniqueUsersVarinatB'] = 0;
+                    }
+                    this.data(data);
+                } );
+            }
+            docNewDataTable.column(9).visible(isBvariantVisible);
+            docNewDataTable.column(10).visible(isBvariantVisible);
+            docNewDataTable.column(11).visible(isBvariantVisible);
+        }
+
+        function parseUrlParams() {
+            const queryString = window.location.search;
+            const urlParams = new URLSearchParams(queryString);
+            docId = urlParams.get('docId');
+            dateRange = urlParams.get('dateRange');
+        }
+    });
+</script>
+
+<div id="docNewDataTable_extfilter">
+    <div class="row">
+        <div class="col-auto dt-extfilter-title-dayDate" style="display: none;"></div>
+        <div class="col-auto dt-extfilter dt-extfilter-dayDate" id="datepicker"></div>
+    </div>
+</div>
+
+<div id="graphsDiv">
+    <div id="topDetails-lineVariantA" class="amcharts"></div>
+</div>
+
+<div id="graphsDiv_2">
+    <div class="md-breadcrumb border-top">
+        <ul class="nav" role="tablist">
+            <li class="nav-item"><a class="nav-link active" href="/apps/stat/admin/top">[[#{stat.doc_new.b_variant}]]</a></li>
+            <li class="nav-item"><a class="nav-link" href="/apps/stat/admin/top"><span class="statPageTitle"></span></a></li>
+        </ul>
+    </div>
+    <div id="topDetails-lineVariantB" class="amcharts"></div>
+</div>
+
+<div id="tableDiv">
+    <div class="md-breadcrumb border-top">
+        <ul class="nav" role="tablist">
+            <li class="nav-item"><a class="nav-link active" href="/apps/stat/admin/top">[[#{inlineToolbar.option.page.stats}]]</a></li>
+            <li class="nav-item"><a class="nav-link" href="/apps/stat/admin/top"><span class="statPageTitle"></span></a></li>
+        </ul>
+    </div>
+    <table id="docNewDataTable" class="datatableInit table"></table>
+</div>
+
+<div id="graphsDiv_3">
+    <h2 style="text-align: center;">  [[#{stat.doc_new.b_variant.percentage_recalculation}]] </h2>
+    <div id="topDetails-linePercentual" class="amcharts"></div>
+</div>
+
+<div id="tableDiv_2">
+    <div class="md-breadcrumb border-top">
+        <ul class="nav" role="tablist">
+            <li class="nav-item"><a class="nav-link active" href="/apps/stat/admin/top">[[#{stat_doc.ins}]]</a></li>
+            <li class="nav-item"><a class="nav-link" href="/apps/stat/admin/top"><span class="statPageTitle"></span></a></li>
+        </ul>
+    </div>
+    <table id="incomingDataTable" class="datatableInit table"></table>
+    <div class="md-breadcrumb border-top">
+        <ul class="nav" role="tablist">
+            <li class="nav-item"><a class="nav-link active" href="/apps/stat/admin/top">[[#{stat_doc.outs}]]</a></li>
+            <li class="nav-item"><a class="nav-link" href="/apps/stat/admin/top"><span class="statPageTitle"></span></a></li>
+        </ul>
+    </div>
+    <table id="outgoingDataTable" class="datatableInit table"></table>
+</div>

@@ -1,0 +1,92 @@
+include ../pug/mixins
+
+<div class="modal DTED fade" id="datatableImportModal" tabindex="-1" role="dialog" aria-labelledby="datatableImportModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+        <div class="DTE_Action_Edit modal-content">
+            <div class="modal-header">
+                <div class="row">
+                    <div class="col-sm-4">
+                        <h5 class="modal-title ui-draggable-handle">[[\#{components.datatables.data.importFile}]]</h5>
+                    </div>
+                    <div class="col-sm-8 text-end" id="import-status">
+
+                    </div>
+                </div>
+            </div>
+            <div class="DTE_Body modal-body modal-body-notabs">
+                <div class="modal-body-bg">
+                    <div class="DTE_Action_Edit tab-content" id="pills-importData">
+                        <div class="tab-pane fade show active" id="pills-import-basic" role="tabpanel" aria-labelledby="pills-import-basic-tab">
+
+                            <div class="form-group row export-options">
+                                <label for="" class="col-sm-4 col-form-label">[[\#{components.datatables-data-export.Typ_exportu}]]</label>
+                                <div class="col-sm-7" id="datatableImportModalOptions">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="dt-settings-extend" id="dt-settings-import-extend1" value="excelHtml5" checked>
+                                        <label class="form-check-label" for="dt-settings-import-extend1">[[\#{components.datatables-data-export.Excel}]]</label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="form-group row file-name">
+                                <label class="col-sm-4 col-form-label">Excel</label>
+                                <div class="col-sm-7">
+                                    <div class="custom-file">
+                                        input(id="insert-file" type="file" accept=".xlsx" class="form-control custom-file-input")
+                                    </div>
+                                </div>
+                                <div class="col-sm-1 form-group-tooltip">
+                                    <button type="button" class="btn btn-link" data-toggle="tooltip" data-th-title="\#{datatables.export.supportedFormatXlsx}"><i class="far fa-info-circle"></i></button>
+                                </div>
+                            </div>
+                            <div class="form-group row" id="import-settings">
+                                <label class="col-sm-4 col-form-label">[[\#{components.datatables.data.importSettings}]]</label>
+                                <div class="col-sm-7">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" checked="true" name="dt-settings-import" id="dt-settings-import1" value="append">
+                                        <label class="form-check-label" for="dt-settings-import1">[[\#{components.datatables.data.importAsNewData}]]</label>
+                                    </div>
+                                    <div class="form-check notImplementedYet" style="display: none">
+                                        <input class="form-check-input" type="radio" name="dt-settings-import" id="dt-settings-import2" value="deleteimport">
+                                        <label class="form-check-label" for="dt-settings-import2">[[\#{components.datatables.data.deleteExistingDataAndImportAsNewone}]]</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="dt-settings-import" id="dt-settings-import3" value="update">
+                                        <label class="form-check-label" for="dt-settings-import3">[[\#{components.datatables.data.importAndUpdate}]]</label>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-group row" id="dt-import-update-by-column" style="display: none;">
+                                <label class="col-sm-4 col-form-label">[[\#{components.datatables.data.updateByColumn}]]</label>
+                                <div class="col-sm-7">
+                                    <select id="dt-settings-update-by-column" class="form-control form-select" style="width: 100%"></select>
+                                </div>
+                            </div>
+                            <div class="form-group row">
+                                <label class="col-sm-4 col-form-label"></label>
+                                <div class="col-sm-7">
+                                    <div class="alert alert-info alert-small" role="alert">[[\#{datatables.export.betainfo}]]</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <div class="DTE_Form_Error"></div>
+
+                <button type="button" class="btn btn-link" onclick="WJ.showHelpWindow()"><i class="far fa-question-circle"></i> [[\#{button.help}]]</button>
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal"><i class="fal fa-times"></i> [[\#{button.cancel}]]</button>
+                <button disabled type="button" id="submit-import" class="btn btn-primary"><i class="fal fa-check"></i> [[\#{components.import_web_pages.import}]]</button>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+style(type="text/css").
+    .custom-file-input, .custom-file-label {cursor: pointer;}
+
+script.
+    window.chunksQuantity = [(${layout.getConstant('chunksQuantity')})];

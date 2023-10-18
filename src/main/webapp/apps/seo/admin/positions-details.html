@@ -1,0 +1,127 @@
+<script data-th-inline="javascript">
+    let url = "/admin/rest/seo/google-position";
+    let columns = /*[(${layout.getDataTableColumns("sk.iway.iwcm.components.seo.jpa.GooglePositionEntity")})]*/ '';
+</script>
+<script type="text/javascript">
+    var googlePoitionDataTable;
+    let lineChartPosition;
+    var keywordId;
+    var order = [];
+    order.push([2, 'desc']);
+
+    WJ.breadcrumb({
+        id: "positions-details",
+        tabs: [
+            {
+                url: '/apps/seo/admin/google-position/',
+                title: '[[#{components.stat.seo.google.position.searching.title}]]',
+                active: true
+            },
+            {
+                url: '/apps/seo/admin/positions/',
+                title: '<span class="seoPageTitle"></span>',
+                active: false
+            },
+            {
+                url: '#dateRange',
+                title: '{filter}',
+                active: false
+            }
+        ]
+    });
+
+    window.domReady.add(function () {
+        WJ.showLoader();
+
+        //presun filter do hlavicky
+        $("#pills-dateRange-tab").html("");
+        $("div#googlePoitionDataTable_extfilter").appendTo("#pills-dateRange-tab");
+
+        //Get keywordId from url and set it into variable (need to filter data)
+        setKeywordId();
+
+        $.get({
+            url: url + "/keywordTitle?keywordId=" + keywordId,
+            success: function(response) {
+                console.log("response=", response);
+                $("span.seoPageTitle").text(response);
+            }
+        });
+
+        googlePoitionDataTable = WJ.DataTable({
+            url: url,
+            serverSide: true,
+            columns: columns,
+            id: "googlePoitionDataTable",
+            idAutoOpener: false,
+            order: order,
+            defaultSearch: ChartTools.getSearchCriteria(),
+            autoHeight: false,
+            onPreXhr: function(TABLE, e, settings, data) {
+                data.fixed_keywordId = keywordId;
+            }
+        });
+        googlePoitionDataTable.hideButtons(["create", "edit", "remove", "celledit", "import", "duplicate"]);
+
+        createAmcharts();
+
+        //Onchange events - update amcharts
+        $("#googlePoitionDataTable_extfilter").on("click", "button.filtrujem", function() {
+            getDataAndUpdateAmcharts();
+        });
+
+        ChartTools.bindFilter(getDataAndUpdateAmcharts);
+
+        async function createAmcharts() {
+            window.initAmcharts().then(module => {
+
+                $.ajax({url: getGraphUrl(), success: function(result) {
+                    lineChartPosition = new ChartTools.LineChartForm(ChartTools.getLineChartYAxeNameObjs(["position"], [undefined]), "dayDate", '[[#{components.stat.seo.google.position.graph.title}]]', "googlePosition-lineChartPosition", ChartTools.convertDataForLineChart(result), ChartTools.DateType.Auto);
+                    ChartTools.createAmchart(lineChartPosition);
+
+                    //After last load data
+                    WJ.hideLoader();
+                }});
+            });
+        }
+
+        async function getDataAndUpdateAmcharts() {
+            WJ.showLoader();
+            await $.ajax({url: getGraphUrl(), success: function(result) {
+                lineChartPosition.chartData = ChartTools.convertDataForLineChart(result);
+                ChartTools.updateChart(lineChartPosition);
+            }});
+            WJ.hideLoader();
+
+            //reload table values
+            googlePoitionDataTable.ajax.reload()
+        }
+
+        function getGraphUrl() {
+            let graphUrl = url + "/lineChartData?keywordId=" + keywordId;
+            graphUrl += "&dayDate=" + ChartTools.getDateRange(30);
+            ChartTools.saveSearchCriteria(googlePoitionDataTable.DATA);
+            return graphUrl;
+        }
+
+        function setKeywordId() {
+            const queryString = window.location.search;
+            const urlParams = new URLSearchParams(queryString);
+            const keywordIdUrl = urlParams.get('keywordId');
+            keywordId = keywordIdUrl;
+        }
+    });
+</script>
+
+<div id="googlePoitionDataTable_extfilter">
+    <div class="row datatableInit">
+        <div class="col-auto dt-extfilter-title-dayDate" style="display: none;"></div>
+        <div class="col-auto dt-extfilter dt-extfilter-dayDate"></div>
+    </div>
+</div>
+
+<div id="graphsDiv" class="hide-while-loading">
+    <div id="googlePosition-lineChartPosition" class="amcharts"></div>
+</div>
+
+<table id="googlePoitionDataTable" class="datatableInit table"></table>

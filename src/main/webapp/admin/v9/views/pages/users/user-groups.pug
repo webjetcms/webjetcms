@@ -1,0 +1,124 @@
+extends ../../partials/layout
+
+block content
+
+    +breadcrumb(
+        'user-groups',
+        [
+            [ '/admin/v9/users/user-groups/', '[[\#{user.admin.editUserGroups}]]', true]
+        ]
+    )
+
+    script.
+        window.helpLink = "/admin/users/user-groups";
+        var userGroupsDataTable;
+
+        var tabs = [
+            { id: 'basic', title: '[[\#{editor.tab.basic_info}]]', selected: true },
+            { id: 'folders', title: '[[\#{user.groups.folders}]]', className: "hide-on-create" },
+            { id: 'sites', title: '[[\#{webpages.tab.pages}]]', className: "hide-on-create" },
+            { id: 'users', title: '[[\#{webpages.tab.users}]]', className: "hide-on-create" },
+        ];
+
+        window.domReady.add(function () {
+
+            let url = "/admin/rest/user-groups";
+            let columns = [(${layout.getDataTableColumns("sk.iway.iwcm.components.users.usergroups.UserGroupsEntity")})];;
+
+            userGroupsDataTable = WJ.DataTable({
+                url: url,
+                serverSide: true,
+                columns: columns,
+                tabs: tabs,
+                id: "userGroupsDataTable",
+                fetchOnEdit: true,
+                fetchOnCreate: true
+            });
+
+            userGroupsDataTable.button().add(4, {
+                extends: 'remove',
+                editor: userGroupsDataTable.EDITOR,
+                text: '<i class="far fa-user-plus"></i>',
+                action: function (e, dt, node) {
+                    userGroupsDataTable.executeAction("addGroupToAllUsers", true, "[[\#{user.admin.addGroupToAll_prompt}]]", "");
+                },
+                className: 'btn-success',
+                init: function ( dt, node, config ) {
+                    $.fn.dataTable.Buttons.showIfRowSelected(this, dt);
+                },
+                attr: {
+                    "data-toggle": "tooltip",
+                    title: "[[\#{user.admin.addGroupToAll.new}]]"
+                }
+            });
+
+            userGroupsDataTable.button().add(5, {
+                extends: 'remove',
+                editor: userGroupsDataTable.EDITOR,
+                text: '<i class="far fa-user-minus"></i>',
+                action: function (e, dt, node) {
+                    userGroupsDataTable.executeAction("removeGroupFromAllUsers", true, "[[\#{user.admin.removeGroupFromAll_prompt}]]", "");
+                },
+                className: 'btn btn-danger',
+                init: function ( dt, node, config ) {
+                    $.fn.dataTable.Buttons.showIfRowSelected(this, dt);
+                },
+                attr: {
+                    "data-toggle": "tooltip",
+                    title: "[[\#{user.admin.removeGroupFromAll.new}]]"
+                }
+            });
+
+            userGroupsDataTable.button().add(6, {
+                extends: 'remove',
+                editor: userGroupsDataTable.EDITOR,
+                text: '<i class="far fa-user-times"></i>',
+                action: function (e, dt, node) {
+                    userGroupsDataTable.executeAction("deleteAllUsersOfThisGroup", true, "[[\#{user.admin.removeUsersFromGroup_prompt}]]", "");
+                },
+                className: 'btn btn-danger buttons-divider',
+                init: function ( dt, node, config ) {
+                    $.fn.dataTable.Buttons.showIfRowSelected(this, dt);
+                },
+                attr: {
+                    "data-toggle": "tooltip",
+                    title: "[[\#{user.admin.removeUsersFromGroup.new}]]"
+                }
+            });
+        });
+
+        //funkcie pre vnorene DT pre zobrazenie zoznamu adresarov,stranok a uživateľov ktore tuto user skupinu pouzivaju
+        function updateColumnsGroupDetails(columns) {
+            WJ.DataTable.mergeColumns(columns, {
+                name: "groupName",
+                renderFormatLinkTemplate: "javascript:openGroupDetails({{groupId}})",
+                className: "required"
+            });
+        }
+        function openGroupDetails(groupId) {
+            window.open("/admin/v9/webpages/web-pages-list/?groupid="+groupId);
+        }
+        function updateColumnsDocDetails(columns) {
+            //console.log("updateColumnsDocDetails, columns=", columns);
+            WJ.DataTable.mergeColumns(columns, {
+                name: "title",
+                renderFormatLinkTemplate: "javascript:openDocDetails({{docId}})",
+                className: "required"
+            });
+            //console.log("updateColumnsDocDetails, merged columns=", columns);
+        }
+        function openDocDetails(docId) {
+            window.open("/admin/v9/webpages/web-pages-list/?docid="+docId);
+        }
+
+        function updateColumnsUserDetails(columns) {
+            WJ.DataTable.mergeColumns(columns, {
+                name: "editorFields.login",
+                renderFormatLinkTemplate: "javascript:openUserDetails({{id}})"
+            });
+        }
+        function openUserDetails(userId) {
+            window.open("/admin/v9/users/user-list/?id="+userId);
+        }
+
+    <table id="userGroupsDataTable" class="datatableInit table"></table>

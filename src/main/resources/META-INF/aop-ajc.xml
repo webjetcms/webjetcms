@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE aspectj PUBLIC "-//AspectJ//DTD//EN" "http://www.eclipse.org/aspectj/dtd/aspectj.dtd">
+<aspectj>
+<weaver options="-showWeaveInfo -verbose -Xset:weaveJavaPackages=true">
+    <!-- Weave types that are within the javax.* or org.aspectj.*
+    packages. Also weave all types in the foo package that do
+    not have the @NoWeave annotation. -->
+    <include within="org.apache.jsp..*"/>
+    <include within="sk.*"/>
+</weaver>
+<aspects>
+    <!-- declare two existing aspects to the weaver -->
+    <aspect name="sk.CloudFilter"/>
+    <include within="sk.*"/>
+    <include within="org.apache.jsp..*"/>
+    <!-- Of the set of aspects declared to the weaver
+    do not use any aspects with the @CoolAspect annotation for weaving -->
+</aspects>
+</aspectj>

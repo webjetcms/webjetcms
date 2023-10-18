@@ -1,0 +1,34 @@
+[
+    {
+        "name": "Element Not Visible",
+        "traceRegex": ".*still not visible after.*"
+    },
+    {
+        "name": "Element Not Visible",
+        "traceRegex": ".*expected visible elements '\\[\\]' not to be empty.*"
+    },
+    {
+        "name": "Element Not Visible",
+        "traceRegex": ".*still not present on page after.*"
+    },
+    {
+        "name": "Element Not Found",
+        "traceRegex": ".*was not found on page after.*"
+    },
+    {
+        "name": "Element Not Found",
+        "traceRegex": ".*was not found by text\\|CSS\\|XPath.*"
+    },
+    {
+        "name": "Element Not Found",
+        "traceRegex": ".*was not found inside element.*"
+    },
+    {
+        "name": "Element Should Not Be Visible",
+        "traceRegex": ".*expected visible elements '\\[ELEMENT\\]' to be empty.*"
+    },
+    {
+        "name": "Element To Include",
+        "traceRegex": ".*expected element .* to include.*"
+    }
+]

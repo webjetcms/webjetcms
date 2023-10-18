@@ -1,0 +1,75 @@
+<script data-th-inline="javascript">
+    let logonUrl = "/admin/rest/stat/logon-user";
+    let logonColumns = /*[(${layout.getDataTableColumns("sk.iway.iwcm.stat.jpa.LogonUserDTO")})]*/ '';
+</script>
+<script>
+    var logonUserDataTable;
+    var actualLogonUserDataTable;
+
+    WJ.breadcrumb({
+        id: "logonUser",
+        tabs: [
+            {
+                url: '/apps/stat/admin/logon-user',
+                title: '[[#{stat_menu.userLogon}]]',
+                active: true
+            },
+            {
+                url: '#dateRange',
+                title: '{filter}',
+                active: false
+            }
+        ]
+    });
+
+    window.getUserDetails =  function (userId) {
+        window.location.href="/apps/stat/admin/logon-user-details/?userId=" + userId;
+    }
+
+    window.domReady.add(function () {
+        //presun filter do hlavicky
+        $("#pills-dateRange-tab").html("");
+        $("div#logonUserDataTable_extfilter").appendTo("#pills-dateRange-tab");
+
+        logonUserDataTable = WJ.DataTable({
+            url: logonUrl,
+            serverSide: false, //false lebo sa nevyužíva repositár
+            columns: logonColumns,
+            id: "logonUserDataTable",
+            idAutoOpener: false,
+            defaultSearch: ChartTools.getSearchCriteria(),
+        });
+
+        logonUserDataTable.hideButton("import");
+        logonUserDataTable.hideButton("create");
+        logonUserDataTable.hideButton("edit");
+        logonUserDataTable.hideButton("duplicate");
+        logonUserDataTable.hideButton("celledit");
+        logonUserDataTable.hideButton("remove");
+
+        //Onchange events - update table
+        $("#logonUserDataTable_extfilter").on("click", "button.filtrujem", function() {
+            //reload table values
+            ChartTools.saveSearchCriteria(logonUserDataTable.DATA);
+            logonUserDataTable.ajax.reload();
+        });
+
+        dtWJ.fixTableSize(logonUserDataTable);
+    });
+</script>
+
+<style>
+    label[for=botFilterOut]::after {
+        content: "\f544" !important;
+    }
+</style>
+<div id="logonUserDataTable_extfilter">
+    <div class="row datatableInit">
+        <div class="col-auto dt-extfilter-title-dayDate" style="display: none;"></div>
+        <div class="col-auto dt-extfilter dt-extfilter-dayDate"></div>
+    </div>
+</div>
+
+<div id="tableDiv">
+    <table id="logonUserDataTable" class="datatableInit table"></table>
+</div>

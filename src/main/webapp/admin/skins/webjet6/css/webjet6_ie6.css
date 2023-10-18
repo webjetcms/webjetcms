@@ -1,0 +1,25 @@
+/* CSS Document */
+
+ul.tab_menu li a, ul.tab_menu li a:hover, ul.tab_menu_white li a, ul.tab_menu_white li a:hover{
+margin: 0px 10px 0px 0px;
+}
+
+ul.tab_menu{
+margin: 0px 0px 0px 10px;
+}
+
+form.zobrazenie,input.btnImgSearch, a.btnImgImport, a.btnImgBrowser, a.btnImgFolder, a.btnImgLink{
+margin: 0px 10px 0px 10px;
+}
+input.btnImgSearch{margin: 0px 0px 0px 0px;}
+ul.tab_menu li a, ul.tab_menu li a:hover{
+margin: 0px 10px 0px 0px;
+}
+
+/*div.box_toggle{
+padding: 10px 0px 0px 0px;
+}*/
+
+div.toggle_content{
+margin: 10px 20px 10px 10px;
+}

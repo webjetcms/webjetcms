@@ -1,0 +1,295 @@
+body { background: #f5f5f5; overflow: auto; border: 0px; padding: 0px; margin: 0px; font-size: 12px; -webkit-text-size-adjust: 100%;}
+
+body, textarea { scrollbar-base-color: ButtonHighlight; scrollbar-face-color: ButtonFace; scrollbar-track-color: ButtonHighlight; scrollbar-arrow-color: ButtonText; scrollbar-3dlight-color: ButtonFace; scrollbar-darkshadow-color: default; scrollbar-highlight-color: ButtonHighlight; scrollbar-shadow-color: ButtonShadow; }
+body, textarea, input, th, td, select { font-family: Arial, Helvetica, sans-serif; font-size: 11px; }
+
+select, textarea, .main input.input{ background-color: #ffffff; border: 1px solid #caccce;}
+
+a { font-family: Arial, Helvetica, sans-serif; font-weight1: bold; color: #3366CC; text-decoration: none;}
+a:hover { font-family: Arial, Helvetica, sans-serif; color: #FF3333;  text-decoration: underline; }
+
+img{ border: 0px; }
+
+.main, .footer, .header, .headerImage { background-color: transparent; }
+
+.header { background-color: transparent; padding: 0px 10px 5px; height: 65px; vertical-align: middle; font-size:13px; line-height:16px; color: #fff;}
+.header a { color: white; text-decoration: underline; }
+
+.header h1, .main h1, .main h2, .main h3 { font-family: Open Sans, arial,helvetica; font-size: 18px; font-weight:normal; line-height:26px; font-weight: normal; border: 0px; padding: 5px 0; margin: 0px; color: #00ffff;}
+
+.main h1, .main h2, .main h3 { color: buttontext;}
+.main h2 { font-size: 14px; padding: 0px 0px 10px 0px;}
+.main h3 { font-size: 12px;}
+
+.headerImage { ve2rtical-align: middle; t2ext-align: right; f2loat: right; background-color: transparent; padding-left: 1px; padding-right: 20px; }
+.headerImage div { background-repeat: no-repeat; background-position:right center; width: 75px !important; height: 65px; }
+
+.main { padding: 5px 10px 0px 10px;}
+.mainTab { padding: 0px; background:transparent;}
+.mainNoTabs { background-color: #f6f6f6; }
+.mainTab ul.tab_menu { padding: 2px 0px 0px 10px;}
+.footer { height: 45px; padding-right: 10px; text-align: right; border-top: 1px solid #d7d7d7; background-color: white; }
+.footer input { aawidth: 75px; }
+.footer span { font-weight: bold; }
+.footer input {
+	 border-width: 0px;
+    padding: 7px 14px;
+    font-size: 14px;
+    outline: medium none !important;
+    background-image: none !important;
+    filter: none;
+    box-shadow: none;
+    text-shadow: none;
+    color: #333333;
+    background-color: #e5e5e5;
+    cursor: pointer;	
+}
+.footer #btnOK {
+	
+	color: #fff;
+	background-color: #35AA47;
+}
+
+.popupSizeFinder { 
+	position:absolute;
+	display:block;
+	top:0; bottom:0; left:0; right:0;
+	z-index:-99999999;
+	background:transparent;
+	width:100%;
+	height:100%;
+}
+
+/* #JJJdialogCentralRow-robilo-problem-pri-editacii-obrazkov-v-galerii { height:auto !important; max-height:500px; } */
+#dialogCentralRow form { margin-bottom: 0px; }
+
+.divider
+{
+width: 100%;
+height: 2px;
+border-top: 1px solid ButtonShadow
+}
+
+.hidden { display: none;}
+
+.bottomButtons
+{
+background-color: #edeff1;
+padding: 7px 10px 7px 10px;
+}
+
+span.error { color: #CC3333; font-size: 11px; }
+ul.error li, span.error ul { font-weight: bold; }
+
+.button50 { width: auto; }
+a.button50, a.button50:link, a.button50:visited, a.button100, a.button100:link, a.button100:visited, a.button150, a.button150:link, a.button150:visited { background-color: ButtonFace; color: ButtonText; border-style: outset; border-width: thin; padding: 3px; }
+a.button50:hover, a.button100:hover, a.button150:hover { text-decoration: none; }
+
+table th { text-align: left; }
+.main table td { /*vertical-align: middle;*/ margin: 0px; padding: 2px 5px 2px 0px;}
+table img { vertical-align: middle; }
+
+/* DisplayTag */
+.displaytagTable
+{
+border-top: 1px solid buttonshadow;
+border-left: 1px solid buttonshadow;
+border-right: 1px solid buttonhighlight;
+border-bottom: 1px solid buttonhighlight;
+margin: 0px;
+padding: 0px;
+font: menu;
+}
+
+.displaytagTable a
+{
+font-weight: normal;
+color: buttonText;
+}
+
+.displaytagTable tr
+{
+background: window;
+margin: 0px;
+padding: 0px;
+}
+
+.displaytagTable th, .displaytagTable td {
+padding: 2px 4px 2px 4px;
+text-align: left;
+vertical-align: top;
+}
+
+.displaytagTable th
+{
+background: buttonface;
+font-weight: bold;
+border: 1px outset white;
+border-top: 1px solid buttonhighlight;
+border-left: 1px solid buttonhighlight;
+border-right: 1px solid buttonshadow;
+border-bottom: 1px solid buttonshadow;
+}
+
+.displaytagTable th a
+{
+font-weight: bold;
+}
+
+.displaytagTable th.sorted a, .displaytagTable th.sortable a 
+{
+background-position: right;
+background-repeat: no-repeat;
+display: block;
+width: 100%;
+padding-right: 10px;
+}
+
+.displaytagTable th.sortable a {
+background-image: url(/admin/images/systemtable/arrow_off.png);
+}
+.displaytagTable th.order1 a {
+background-image: url(/admin/images/systemtable/arrow_down.png);
+}
+.displaytagTable th.order2 a {
+background-image: url(/admin/images/systemtable/arrow_up.png);
+}
+
+.displaytagTable td
+{
+margin: 0px;
+color: windowtext; 
+font: menu; 
+padding: 1px; 
+padding-left: 5px; 
+padding-right: 5px;  
+border-right: 1px solid buttonshadow;
+border-bottom: 1px solid buttonshadow;
+}
+
+.displaytagTable .even
+{
+background-color: #eeeeee;
+}
+
+
+div.exportlinks a, div.exportlinks a:link, div.exportlinks a:visited, div.exportlinks a:hover{ font-weight: normal; float: left; }
+
+div.exportlinks{ padding: 0px 0px 5px 10px; height: 20px; margin: 0px 0px 10px 0px;}
+div.exportlinksText, div.exportlinks span { float: left; padding: 0px 0px 0px 0px; line-height: 20px;}
+
+span.export { padding: 0px 0px; margin: 0px 5px 0px 0px; display:inline; float: left; cursor: pointer; text-indent: -10000px; width: 45px; height: 20px;}
+
+span.excel{ background: url(/admin/images/displaytag/ico_file_excel.png) 0px 0px no-repeat;}
+span.csv{ background: url(/admin/images/displaytag/ico_file_csv.png) 0px 0px no-repeat;}
+span.xml { background: url(/admin/images/displaytag/ico_file_xml.png) 0px 0px no-repeat;}
+span.pdf { background: url(/admin/images/displaytag/ico_file_pdf.png) 0px 0px no-repeat;}
+
+div.exportlinks a:hover span.excel{ background: url(/admin/images/displaytag/ico_file_excel-hover.png) 0px 0px no-repeat;}
+div.exportlinks a:hover span.csv{ background: url(/admin/images/displaytag/ico_file_csv-hover.png) 0px 0px no-repeat;}
+div.exportlinks a:hover span.xml { background: url(/admin/images/displaytag/ico_file_xml-hover.png) 0px 0px no-repeat;}
+div.exportlinks a:hover span.pdf { background: url(/admin/images/displaytag/ico_file_pdf-hover.png) 0px 0px no-repeat;}
+
+span.pagelinks { padding-left: 10px;}
+
+table.sort_table{ border: 0px; border-collapse: collapse; clear: both; width: auto; margin: 0px; }
+table.sort_table th.thCheckbox { padding: 4px 0px 12px 5px;}
+th.thCheckbox input{ float: left;}
+
+table.sort_table { background-color: white; }
+table.sort_table tr th, table.sort_table thead tr td { color: #666666; background-color: #fff; border-right: 1px solid #fff; cursor: default; background: url(/admin/skins/webjet6/images/th-bottom.gif) repeat-x 0px bottom; vertical-align: top; /*border-top: 1px solid #CCCCCC;*/ vertical-align: middle; padding: 4px 8px 12px 7px; font-family: Arial !important; font-size: 12px !important; font-weight: bold; text-align: left;}
+
+table.sort_table tr th a, table.sort_table thead tr td a{ display: block; color: #666666; /*width: 100%;*/ font-size: 12px; padding: 0px; /*margin: 0px 28px 0px 0px;*/}
+table.sort_table tr th a:hover, table.sort_table thead tr td a:hover { color: #000000; text-decoration: none; font-family: Arial; font-size: 12px;}
+table.sort_table td{ border-bottom: 1px solid #CCCCCC; border-right: 0px; color: #555; border-right: 1px solid white; padding: 4px 8px 4px 7px; }
+table.sort_table tr.even td{ background: url(/admin/skins/webjet6/images/td-hover.gif) #F2F3F4 repeat-x 0px bottom; border-bottom: #cbdabd 1px solid; }
+table.sort_table tr th#activecell, table.sort_table thead tr td#activecell{ background: url(/admin/skins/webjet6/images/th-bottom-hover.gif) repeat-x 0px bottom; } 
+table.sort_table tbody tr#activerow td{ background: url(/admin/skins/webjet6/images/td-selected.gif) #f3faed repeat-x 0px bottom !important; }
+table.sort_table tbody td a{ color: #226600 !important; font-weight: normal; }
+table.sort_table tbody td a.groupsfalse { color: red !important; }
+table.sort_table tbody td a:hover{ color: black !important;	text-decoration: none; background-color: transparent;}
+table.sort_table tr th.sorted a, table.sort_table tr th.sortable a,
+table.sort_table thead tr td.sorted a, table.sort_table thead tr td.sortable a { background-position: center right; background-repeat: no-repeat; }
+table.sort_table tr th.sortable a , table.sort_table thead tr td.sortable a { background-image: url(/admin/images/systemtable/arrow_off.png); padding: 0px 15px 0px 0px; }
+table.sort_table tr th.order1 a, table.sort_table thead tr td.order1 a { background-image: url(/admin/images/systemtable/arrow_up.png); }
+table.sort_table tr th.order2 a, table.sort_table thead tr td.order2 a { background-image: url(/admin/images/systemtable/arrow_down.png);}
+
+/* DisplayTag koniec */
+
+/** 
+*	triedy potrebne pre pole na vyber casu - timePicker
+* http://labs.perifer.se/timedatepicker/
+* <script type="text/javascript" src="/components/_common/javascript/jquery.timePicker.js" ></script>
+*
+*/
+
+div.time-picker 
+{
+position: absolute;
+height: 200px;
+width:6em; /* needed for IE */
+overflow: auto;
+background: #fff;
+border: 1px solid #000;
+z-index: 99;
+margin-top: 2em;
+}
+
+div.time-picker ul 
+{
+list-style-type: none;
+margin: 0;
+padding: 0;
+}
+
+div.time-picker li 
+{
+padding: 1px;
+cursor: pointer;
+}
+
+div.time-picker li.selected  { background: #316AC5; color: #fff;}
+
+.iconEditTemplate { padding: 0px 8px; line-height: 17px; text-decoration: none; background: url(/admin/skins/webjet6/images/icon/icon-edit.png) center center no-repeat; padding: 0px 10px 1px 8px;}
+
+/* toto je definovane aj v webjet6.css, ak upravujete zmente aj tam */
+.btnRight, .btnLeft, .btnPlus, .btnMinus, .btnEdit { width: 19px; height: 20px; display: block; text-indent: -10000px; border: 0px; line-height:0px;}
+
+.btnRight { background: url(/admin/skins/webjet6/images/icon/arrow-right.png) center center no-repeat;}
+.btnLeft { background: url(/admin/skins/webjet6/images/icon/arrow-left.png) center center no-repeat;}
+.btnPlus { background: url(/admin/skins/webjet6/images/icon/icon-plus.png) center center no-repeat;}
+.btnMinus { background: url(/admin/skins/webjet6/images/icon/icon-minus.png) center center no-repeat;}
+.btnEdit { background: url(/admin/skins/webjet6/images/icon/icon-editing.png) center center no-repeat;}
+
+fieldset.noborder, div.box_toggle fieldset{ margin: 0px; padding: 0px; border: 0px;}
+
+.poleMini{ width: 70px !important;}
+.poleKratke{ width: 160px;}
+.poleDlhe, .selectDlhy{ width: 200px;}
+.poleMax{ width: 250px !important;}
+.pole625{ width: 625px;}
+.pole650{ width: 650px;}
+.poleText350x100 {width: 350px !important; height: 100px !important; overflow: auto; background: url(/admin/skins/webjet6/images/bg-input_350x100.gif) left bottom no-repeat;}
+
+/* AUTOPCOMPLETE */
+
+.ui-autocomplete { position: absolute; cursor: default; }
+.ui-menu { list-style:none; background: #f8f8f8; border-bottom: 1px solid #dddddd; border-top: 1px solid #dddddd; padding: 0px;}
+.ui-menu .ui-menu-item { display: block; width: auto; font-weight: normal; border-left: 1px solid #dddddd; border-right: 1px solid #dddddd;}
+.ui-menu .ui-menu-item a { text-decoration: none; font-weight: normal !important; display: block; clear: left; color: #555555; white-space: nowrap; margin: 0px; padding: 3px 3px 3px 3px;}
+.ui-menu .ui-menu-item a:hover, .ui-menu .ui-menu-item a.ui-state-hover, .ui-menu .ui-menu-item a.ui-state-active { font-weight: normal; color: #000000; border: 0px solid #67a9bf; background: #a4dbed;}
+.ui-menu .ui-menu-item a span{ width: 20px; float: left; display: block; padding: 0px; background-position: center top; }
+
+#componentIframeWindowTab { border: 0px; }
+
+table.menuStyle {margin: 0 0 10px 11px;}
+table.menuStyle input {margin: 0px;}
+
+table.wjDialogHeaderTable, #componentsWindowTable { background: #f5f5f5 url(/admin/skins/webjet8/assets/global/img/wj/popup_bg_header.png) no-repeat top left; }
+
+ul.tab_menu { margin-left: 10px; }
+ul.tab_menu { padding: 2px 0 0 10px !important; }
+
+td.coolButton { cursor: pointer; }
+td.coolButton img { filter: grayscale(100%); transition: all 0.2s;border-radius: 4px; padding: 2px;}
+td.coolButton:hover img { filter: none; background-color: #0159b1; color: white; }

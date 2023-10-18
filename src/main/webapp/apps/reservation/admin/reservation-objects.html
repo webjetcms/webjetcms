@@ -1,0 +1,167 @@
+<script data-th-inline="javascript">
+    let columns = /*[(${layout.getDataTableColumns("sk.iway.iwcm.components.reservation.jpa.ReservationObjectEntity")})]*/ '';
+</script>
+<script type="text/javascript">
+    var reservationObjectDataTable;
+
+    window.domReady.add(function () {
+
+        WJ.breadcrumb({
+            id: "reservationObject",
+            tabs: [
+                {
+                    url: '/apps/reservation/admin/',
+                    title: '[[#{components.reservation.reservation_list}]]',
+                    active: false
+                },
+                {
+                    url: '/apps/reservation/admin/reservation-objects/',
+                    title: '[[#{components.reservation.reservationObjectList}]]',
+                    active: true
+                }
+            ]
+        });
+
+        let url = "/admin/rest/reservation/reservation_object";
+
+        var tabs = [
+            { id: 'basic', title: '[[#{datatable.tab.basic}]]', selected: true },
+            { id: 'advanced', title: '[[#{datatable.tab.advanced}]]', selected: false },
+            { id: 'chooseDays', title: '[[#{components.reservation.admin_addObject.chooseDays}]]', selected: false },
+            { id: 'specialPrice', title: '[[#{components.reservation.reservation_object_reservation_price.extra_price}]]', selected: false }
+        ];
+
+        reservationObjectDataTable = WJ.DataTable({
+            url: url,
+            serverSide: true,
+            columns: columns,
+            id: "reservationObjectDataTable",
+            tabs: tabs,
+            fetchOnEdit: true,
+            fetchOnCreate: true
+        });
+
+        var eventsBinded = false;
+        reservationObjectDataTable.EDITOR.on('open', function (e, type, action) {
+
+            //On create hide price tab
+            if(action == "create") $("#pills-dt-reservationObjectDataTable-specialPrice-tab").hide();
+
+            if (eventsBinded===false) {
+                eventsBinded = true;
+                $("#DTE_Field_reservationForAllDay_0").on("change", function(e) {
+                    //Set price disability depending on if we need set price for whole day
+                    if(reservationObjectDataTable.EDITOR.field("reservationForAllDay").val()[0] == true) {
+                        reservationObjectDataTable.EDITOR.field("priceForDay").enable();
+                        reservationObjectDataTable.EDITOR.field("timeUnit").disable();
+                        reservationObjectDataTable.EDITOR.field("priceForHour").disable();
+                    } else {
+                        reservationObjectDataTable.EDITOR.field("priceForDay").disable();
+                        reservationObjectDataTable.EDITOR.field("timeUnit").enable();
+                        reservationObjectDataTable.EDITOR.field("priceForHour").enable();
+                    }
+                });
+
+                $("#DTE_Field_mustAccepted_0").on("change", function(e) {
+                    //Set emailAccepter visibility
+                    if(reservationObjectDataTable.EDITOR.field("mustAccepted").val()[0] == true) {
+                        reservationObjectDataTable.EDITOR.field("emailAccepter").enable();
+                    } else {
+                        reservationObjectDataTable.EDITOR.field("emailAccepter").disable();
+                    }
+                });
+
+                $("#DTE_Field_editorFields-addPassword_0").on("change", function(e) {
+                    //Set emailAccepter visibility
+                    if(reservationObjectDataTable.EDITOR.field("editorFields.addPassword").val()[0] == true) {
+                        reservationObjectDataTable.EDITOR.field("editorFields.newPassword").enable();
+                        reservationObjectDataTable.EDITOR.field("editorFields.passwordCheck").enable();
+                    } else {
+                        reservationObjectDataTable.EDITOR.field("editorFields.newPassword").disable();
+                        reservationObjectDataTable.EDITOR.field("editorFields.passwordCheck").disable();
+                    }
+                });
+
+                //Set columns visibility and disability
+                $("#DTE_Field_editorFields-chooseDayA_0").on("change", function(e) {
+                    //MONDAY
+                    if(reservationObjectDataTable.EDITOR.field("editorFields.chooseDayA").val()[0] == true) {
+                        reservationObjectDataTable.EDITOR.field("editorFields.reservationTimeFromA").show();
+                        reservationObjectDataTable.EDITOR.field("editorFields.reservationTimeToA").show();
+                    } else {
+                        reservationObjectDataTable.EDITOR.field("editorFields.reservationTimeFromA").hide();
+                        reservationObjectDataTable.EDITOR.field("editorFields.reservationTimeToA").hide();
+                    }
+                });
+
+                $("#DTE_Field_editorFields-chooseDayB_0").on("change", function(e) {
+                    //TUESDAY
+                    if(reservationObjectDataTable.EDITOR.field("editorFields.chooseDayB").val()[0] == true) {
+                        reservationObjectDataTable.EDITOR.field("editorFields.reservationTimeFromB").show();
+                        reservationObjectDataTable.EDITOR.field("editorFields.reservationTimeToB").show();
+                    } else {
+                        reservationObjectDataTable.EDITOR.field("editorFields.reservationTimeFromB").hide();
+                        reservationObjectDataTable.EDITOR.field("editorFields.reservationTimeToB").hide();
+                    }
+                });
+
+                $("#DTE_Field_editorFields-chooseDayC_0").on("change", function(e) {
+                    //WEDNESDAY
+                    if(reservationObjectDataTable.EDITOR.field("editorFields.chooseDayC").val()[0] == true) {
+                        reservationObjectDataTable.EDITOR.field("editorFields.reservationTimeFromC").show();
+                        reservationObjectDataTable.EDITOR.field("editorFields.reservationTimeToC").show();
+                    } else {
+                        reservationObjectDataTable.EDITOR.field("editorFields.reservationTimeFromC").hide();
+                        reservationObjectDataTable.EDITOR.field("editorFields.reservationTimeToC").hide();
+                    }
+                });
+
+                $("#DTE_Field_editorFields-chooseDayD_0").on("change", function(e) {
+                    //THURSDAY
+                    if(reservationObjectDataTable.EDITOR.field("editorFields.chooseDayD").val()[0] == true) {
+                        reservationObjectDataTable.EDITOR.field("editorFields.reservationTimeFromD").show();
+                        reservationObjectDataTable.EDITOR.field("editorFields.reservationTimeToD").show();
+                    } else {
+                        reservationObjectDataTable.EDITOR.field("editorFields.reservationTimeFromD").hide();
+                        reservationObjectDataTable.EDITOR.field("editorFields.reservationTimeToD").hide();
+                    }
+                });
+
+                $("#DTE_Field_editorFields-chooseDayE_0").on("change", function(e) {
+                    //FRIDAY
+                    if(reservationObjectDataTable.EDITOR.field("editorFields.chooseDayE").val()[0] == true) {
+                        reservationObjectDataTable.EDITOR.field("editorFields.reservationTimeFromE").show();
+                        reservationObjectDataTable.EDITOR.field("editorFields.reservationTimeToE").show();
+                    } else {
+                        reservationObjectDataTable.EDITOR.field("editorFields.reservationTimeFromE").hide();
+                        reservationObjectDataTable.EDITOR.field("editorFields.reservationTimeToE").hide();
+                    }
+                });
+
+                $("#DTE_Field_editorFields-chooseDayF_0").on("change", function(e) {
+                    //SATURDAY
+                    if(reservationObjectDataTable.EDITOR.field("editorFields.chooseDayF").val()[0] == true) {
+                        reservationObjectDataTable.EDITOR.field("editorFields.reservationTimeFromF").show();
+                        reservationObjectDataTable.EDITOR.field("editorFields.reservationTimeToF").show();
+                    } else {
+                        reservationObjectDataTable.EDITOR.field("editorFields.reservationTimeFromF").hide();
+                        reservationObjectDataTable.EDITOR.field("editorFields.reservationTimeToF").hide();
+                    }
+                });
+
+                $("#DTE_Field_editorFields-chooseDayG_0").on("change", function(e) {
+                    //SUNDAY
+                    if(reservationObjectDataTable.EDITOR.field("editorFields.chooseDayG").val()[0] == true) {
+                        reservationObjectDataTable.EDITOR.field("editorFields.reservationTimeFromG").show();
+                        reservationObjectDataTable.EDITOR.field("editorFields.reservationTimeToG").show();
+                    } else {
+                        reservationObjectDataTable.EDITOR.field("editorFields.reservationTimeFromG").hide();
+                        reservationObjectDataTable.EDITOR.field("editorFields.reservationTimeToG").hide();
+                    }
+                });
+            }
+        })
+    });
+    </script>
+
+    <table id="reservationObjectDataTable" class="datatableInit table"></table>

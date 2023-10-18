@@ -1,0 +1,42 @@
+<script data-th-inline="javascript">
+    let columns = /*[(${layout.getDataTableColumns("sk.iway.iwcm.components.proxy.jpa.ProxyBean")})]*/ '';
+</script>
+
+<script type="text/javascript">
+var proxyDataTable;
+
+window.domReady.add(function () {
+
+    window.helpLink = "/redactor/apps/proxy/README";
+
+    WJ.breadcrumb({
+        id: "proxy",
+        tabs: [
+            {
+                url: '/apps/proxy/admin/',
+                title: '[[#{components.proxy.dialog_title}]]',
+                active: true
+            }
+        ]
+    });
+
+    let url = "/admin/rest/proxy";
+
+    var tabs = [
+        { id: 'basic', title: '[[#{datatable.tab.basic}]]', selected: true },
+        { id: 'security', title: '[[#{proxy.tab.security}]]', selected: false },
+    ];
+
+    proxyDataTable = WJ.DataTable({
+        url: url,
+        serverSide: true,
+        columns: columns,
+        id: "proxyDataTable",
+        tabs: tabs,
+        fetchOnEdit: true,
+        fetchOnCreate: true
+    });
+});
+</script>
+
+<table id="proxyDataTable" class="datatableInit table"></table>

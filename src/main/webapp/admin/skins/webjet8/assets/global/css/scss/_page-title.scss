@@ -1,0 +1,33 @@
+/*=====================================================================
+Panel s nadpisom na kazdej stranke
+=====================================================================*/
+
+.row.title {
+    height:50px;
+    width:100%;
+    margin: 0;
+    padding: 0 15px;
+    border-bottom: 1px solid #ddd;
+    background-color: white;
+    overflow: hidden;
+
+    h1.page-title {
+        margin: 0;
+        padding: 15px 0;
+        font-family: "Open Sans",sans-serif;
+        font-size: 16px;
+        line-height: 20px;
+        color: #333;
+        text-transform: uppercase;
+
+        i {
+            margin-right: 12px;
+            margin-left: 12px;
+
+            &:first-of-type {
+                margin-left: 0;
+                font-size: 16px;
+            }
+        }
+    }
+}

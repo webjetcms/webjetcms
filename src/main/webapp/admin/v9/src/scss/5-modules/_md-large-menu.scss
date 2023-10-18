@@ -1,0 +1,117 @@
+.md-large-menu {
+    position: relative;
+    padding: 56px 15px 0 15px;
+    overflow: hidden;
+
+    &__item {
+        float: left;
+        width: 25%;
+        overflow: hidden;
+
+        &__headline {
+            color: $nice-gray-400;
+            font-size: 15px;
+            line-height: 16px;
+            font-family: $secondary-font-family;
+            font-weight: 700;
+            text-align: center;
+
+            padding-left: 0;
+            padding-right: 0;
+            padding-top: 15px;
+            padding-bottom: 15px;
+
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+
+            opacity: 0;
+            z-index: 2;
+
+            pointer-events: none;
+
+            transition: opacity 0.3s 0.6s ease;
+        }
+
+        &__link {
+            display: block;
+            position: relative;
+            padding-bottom: 100%;
+            border: 1px solid transparent;
+            border-radius: $border-radius;
+            overflow: hidden;
+
+            color: $nice-gray-400;
+
+            transition: all 0.3s ease;
+
+            i {
+                position: absolute;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%,-50%);
+
+                font-size: 19px;
+                color: $nice-gray-400;
+
+                transition: all 0.3s ease;
+            }
+
+            &:hover {
+                color: $nice-primary;
+                text-decoration: none;
+                i {
+                    color: $nice-primary;
+                }
+            }
+        }
+    }
+}
+
+.md-large-menu__item--active {
+    .md-large-menu__item__link {
+        border-color: $nice-primary;
+        background-color: $nice-primary;
+        color:$secondary !important;
+        i {
+            color: $secondary !important;
+        }
+    }
+}
+
+.md-large-menu__item--open {
+    .md-large-menu__item__link {
+        color: $nice-primary;
+        i {
+            color: $nice-primary;
+        }
+    }
+}
+
+.md-large-menu__item--active {
+    .md-large-menu__item__headline {
+        opacity: 1;
+        z-index: 2;
+        transition: opacity 0.3s 0.3s ease;
+    }
+}
+
+.md-large-menu__wrapper:hover {
+    .md-large-menu__item--active {
+        .md-large-menu__item__headline {
+            opacity: 0;
+            z-index: 2;
+            transition: opacity 0.3s 0.3s ease;
+        }
+    }
+}
+
+.md-large-menu__item:hover {
+    .md-large-menu__item__headline {
+        opacity: 1 !important;
+        z-index: 3;
+
+        transition: opacity 0.3s 0.3s ease;
+    }
+}

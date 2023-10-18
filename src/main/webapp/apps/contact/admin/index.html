@@ -1,0 +1,39 @@
+<script>
+    /**
+     * Ukazkova aplikacia ako polozka v administracii
+     * http://docs.webjetcms.sk/v2022/#/custom-apps/admin-menu-item
+     */
+    var dataTable;
+
+    window.domReady.add(function () {
+
+        WJ.breadcrumb({
+            id: "contact",
+            tabs: [
+                {
+                    url: '/apps/contact/admin/',
+                    title: '[[#{components.contact.title}]]',
+                    active: true
+                }
+            ]
+        })
+
+        //URL adresa REST rozhrania
+        let url = "/admin/rest/apps/contact";
+        //package a meno triedy s JPA entitou
+        let columns = [(${layout.getDataTableColumns("sk.iway.basecms.contact.ContactEntity")})];
+
+        dataTable = WJ.DataTable({
+            url: url,
+            serverSide: true,
+            columns: columns,
+            //id musi byt zhodne s tagom table nizsie
+            id: "dataTable",
+            fetchOnEdit: true,
+            fetchOnCreate: true
+        });
+    });
+
+</script>
+
+<table id="dataTable" class="datatableInit table"></table>

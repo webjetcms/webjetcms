@@ -1,0 +1,272 @@
+<%
+sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
+session.setMaxInactiveInterval(60*60*2);
+%><%@ page pageEncoding="utf-8"  import="java.util.*,sk.iway.iwcm.*,sk.iway.iwcm.forum.*,java.net.URLDecoder" %>
+<%@ page import="sk.iway.iwcm.i18n.Prop" %>
+<%@ taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm" %>
+<%@ taglib uri="/WEB-INF/iway.tld" prefix="iway" %>
+<%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
+<%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
+<%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %>
+<%!
+	public boolean isAdmin(Identity user,int forumId) {
+		String ids = ForumDB.getForum(forumId).getAdminGroups();
+		if(ids != null ) {
+			StringTokenizer st = new StringTokenizer(ids,"+,;");
+			while(st.hasMoreTokens())
+			{
+				if(user.isInUserGroup(Tools.getIntValue(st.nextToken(), -1))) return true;
+			}
+		}
+		return false;
+	}
+%>
+<%
+if (session.getAttribute("forum-shown")==null) {
+	response.setStatus(HttpServletResponse.SC_NOT_FOUND);
+	pageContext.include("/404.jsp");
+	return;
+}
+
+
+if (Constants.getBoolean("editorEnableXHTML")) pageContext.setAttribute(org.apache.struts.Globals.XHTML_KEY, "true", PageContext.PAGE_SCOPE);
+
+String lng = PageLng.getUserLng(request);
+pageContext.setAttribute("lng", lng);
+
+/* nastavenie zapisovania FLAGu do DB, ak sa allowFlagSetting nastavi na TRUE,
+ * bude sa pri pridavani prispevku kontrolovat, ci user patri do pozadovanej skupiny;
+ * ak patri, do premennej FLAG v DB sa zapise text v retazci flagStr
+ */
+boolean allowFlagSetting = false;
+int userGroup = -1;
+String flagStr = "sticky";
+
+Identity user = (Identity) session.getAttribute(Constants.USER_KEY);
+int forumId = Tools.getIntValue(request.getParameter("forumid"), -1);
+int docId = Tools.getIntValue(request.getParameter("docid"), -1);
+int parentId = Tools.getIntValue(request.getParameter("parent"), 0);
+
+String onfocus = "";
+
+try
+{
+	if (user != null && allowFlagSetting)
+	{
+		String[] groups = Tools.getTokens(user.getUserGroupsIds(), ",");
+		if(groups!= null)
+		{
+			for(int i=0; i<groups.length; i++)
+			{
+				if(userGroup == Tools.getIntValue(groups[i], -1))
+					request.setAttribute("setFlag", "true");
+			}
+		}
+	}
+
+	ForumForm forumForm = new ForumForm();
+	forumForm.setParentId(parentId);
+	forumForm.setDocId(docId);
+
+	if (forumId>0)
+	{
+		if (user!=null && user.isAdmin())
+		{
+			ForumBean forumBean = ForumDB.getForumBean(request, forumId);
+			forumForm.setAuthorFullName(forumBean.getAutorFullName());
+			forumForm.setAuthorEmail(forumBean.getAutorEmail());
+			forumForm.setSubject(forumBean.getSubject());
+			forumForm.setQuestion(forumBean.getQuestion());
+			forumForm.setForumId(forumId);
+			forumForm.setSendNotif(forumBean.isSendNotif());
+		}
+	}
+	else
+	{
+		if (parentId > 0)
+		{
+			ForumBean forumBean = ForumDB.getForumBean(request, parentId);
+			Prop prop = Prop.getInstance(Constants.getServletContext(), request);
+			if (forumBean != null && forumBean.getSubject().startsWith("Re:") == false && forumBean.getParentId() != -1)
+			{
+				forumForm.setSubject("Re: " + forumBean.getSubject());
+			}
+			else if (forumBean != null)
+			{
+				forumForm.setSubject(forumBean.getSubject());
+
+			}
+			if (forumBean != null && "true".equals(request.getParameter("isCite")))
+			{
+				if (Constants.getBoolean("disableWysiwyg"))
+				{
+					forumForm.setQuestion("\n\n---\n"+forumBean.getAutorFullName()+" "+prop.getText("components.forum.bb.write")+":\n"+ SearchAction.htmlToPlain(forumBean.getQuestion()));
+				}
+				else
+				{
+			   	forumForm.setQuestion("<p>&nbsp;</p><blockquote><p class='forumQuoteUser'>"+forumBean.getAutorFullName()+" "+prop.getText("components.forum.bb.write")+":</p><div class='forumQuote'>"+forumBean.getQuestion()+"</div></blockquote><p>&nbsp;</p>");
+				}
+			}
+		}
+
+		//nastav autora a email
+		Cookie cookies[] = request.getCookies();
+		if(cookies != null)
+		{
+			int len = cookies.length;
+			int i;
+			for (i=0; i<len; i++)
+			{
+				if ("forumname".equals(cookies[i].getName()))
+				{
+					forumForm.setAuthorFullName(Tools.URLDecode(cookies[i].getValue()));
+				}
+				if ("forumemail".equals(cookies[i].getName()))
+				{
+					forumForm.setAuthorEmail(Tools.URLDecode(cookies[i].getValue()));
+				}
+			}
+		}
+		if (user != null)
+		{
+			forumForm.setAuthorFullName(user.getFullName());
+			forumForm.setAuthorEmail(user.getEmail());
+			//aby sa nedal menit login
+			onfocus="blur();";
+		}
+	}
+	request.setAttribute("forumForm", forumForm);
+}
+catch(Exception ex)
+{
+	sk.iway.iwcm.Logger.error(ex);
+}
+request.setAttribute("cmpName", "forum");
+request.setAttribute("titleKey", "forum.new.title");
+request.setAttribute("descKey", "components.forum.new.insert_new_post");
+
+ForumGroupBean fgb = ForumDB.getForum(docId, true);
+if (fgb == null && Tools.isNotEmpty(Constants.getString("forumDefaultAddmessageGroups")))
+{
+	fgb = new ForumGroupBean();
+	fgb.setAddmessageGroups(Constants.getString("forumDefaultAddmessageGroups"));
+}
+if (fgb != null && fgb.canPostMessage(user)==false)
+{
+	//nema dostatocne prava (kontrola user groups)
+	%>
+	<iwcm:text key="components.forum.wrong_user_groups_for_post"/>
+	<%
+	return;
+}
+%>
+
+<%@page import="sk.iway.iwcm.doc.SearchAction"%>
+
+	<%@include file="/components/_common/cleditor/jquery.cleditor.js.jsp" %>
+
+	<script type="text/javascript" src="/components/form/check_form.js"></script>
+
+	<div class="forum">
+		<html:form name="forumForm" scope="request" method="post" action="/saveforum.do" type="sk.iway.iwcm.forum.ForumForm">
+
+			<div class="form-group">
+				<label><iwcm:text key="forum.new.name"/>:</label>
+				<html:text property="authorFullName" styleClass="required form-control" size="40" maxlength="255" onfocus="<%=onfocus %>"/>
+			</div>
+
+			<div class="form-group">
+				<label><iwcm:text key="forum.new.email"/>:</label>
+				<html:text property="authorEmail" styleClass="email form-control" size="40" maxlength="255" onfocus="<%=onfocus %>"/>
+			</div>
+
+			<%if(user!=null && isAdmin(user,docId) && parentId <= 0) {%>
+			<div class="form-group">
+				<label><iwcm:text key="components.forum.flag"/>:</label>
+				<select name="flag" class="form-control">
+					<option value=""></option>
+					<option value="O"><iwcm:text key="components.forum.announcement"/></option>
+					<option value="D"><iwcm:text key="components.forum.sticky"/></option>
+				</select>
+			</div>
+			<%}%>
+
+			<div class="form-group">
+				<label><iwcm:text key="forum.new.subject"/>:</label>
+				<html:text property="subject" styleClass="required form-control" size="40" maxlength="255"/>
+			</div>
+
+                <div class="checkbox">
+				<label>
+				    <html:checkbox property="sendNotif"/> <iwcm:text key="components.forum.send_answer_notif"/>
+                </label>
+			</div>
+			<div class="form-group">
+				<html:textarea property="question" styleClass="input required wysiwyg form-control" styleId="wysiwygForum" rows="15" cols="35"/></td>
+			</div>
+
+            <div class="form-group">
+
+                <html:hidden property="parentId"/>
+                <input type="hidden" name="docid" value="<%=org.apache.struts.util.ResponseUtils.filter(request.getParameter("docid"))%>" />
+                <input type="hidden" name="docId" value="<%=org.apache.struts.util.ResponseUtils.filter(request.getParameter("docid"))%>" />
+                <input type="hidden" name="parent2" value="<%=org.apache.struts.util.ResponseUtils.filter(request.getParameter("parent2"))%>" />
+                <input type="hidden" name="pageNum" value="<%=Tools.getIntValue(request.getParameter("pageNum"), 1)%>" />
+                <input type="hidden" name="pageParams" value="<%=org.apache.struts.util.ResponseUtils.filter(Tools.getRequestParameterUnsafe(request, "pageParams"))%>" />
+            <%
+            if(Tools.isNotEmpty(request.getParameter("type")))
+            {
+            %>
+                <input type="hidden" name="type" value="<%=org.apache.struts.util.ResponseUtils.filter(request.getParameter("type")) %>" />
+            <%
+            }
+            %>
+         </div>
+		<%
+		if(Tools.isNotEmpty(request.getParameter("rootForumId")))
+		{
+		%>
+			<input type="hidden" name="rootForumId" value="<%=org.apache.struts.util.ResponseUtils.filter(request.getParameter("rootForumId")) %>" />
+		<%
+		}
+		%>
+		<html:hidden property="forumId"/>
+
+		<logic:present name="setFlag">
+			<input type="hidden" name="flag" value="<%=flagStr%>" />
+		</logic:present>
+		<div style="display: none;">
+			<input type="submit" id="bSubmit" name="submit" value="<iwcm:text key="forum.new.send"/>"/>
+			<input type="button" onclick="javascript:window.close();" name="cancel" value="<iwcm:text key="forum.new.cancel"/>" />
+		</div>
+	</html:form>
+	</div>
+
+	<script type="text/javascript">
+
+		var textareaId = 'wysiwygForum';
+
+		function loadClEditorIfReady()
+		{
+			$("#" + textareaId).cleditor({
+				width      : 505,
+				controls   : "bold italic underline bullets numbering outdent indent image link icon size color highlight pastetext",
+				bodyStyle  : "font: 11px  Arial, Helvetica, sans-serif;"
+			});
+		}
+		$(document).ready(function() {
+			window.setTimeout(loadClEditorIfReady, 800);
+		});
+		<% if (request.getAttribute("isAdmin")==null) { %>
+		function reInitCheckForm()
+		{
+			try
+			{
+				checkForm.allreadyInitialized = false;
+				checkForm.init();
+			}
+			catch (e) {}
+		}
+		window.setTimeout(reInitCheckForm, 5000);
+		<% } %>
+	</script>

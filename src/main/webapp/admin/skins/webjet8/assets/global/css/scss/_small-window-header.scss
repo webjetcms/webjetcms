@@ -1,0 +1,336 @@
+/*=====================================================================
+Zmena stylov pre uzke obrazovky
+=====================================================================*/
+
+/*
+
+#SmallWindow-MiniHeader {
+	visibility: hidden;
+}
+
+@media (max-height: 680px) {
+
+	.SmallWindow-ShowHeader {
+		z-index:10000;
+	}
+	.SmallWindow-ShowHeader #SmallWindow-HeaderHelper{
+	 	width: 39px;
+		height: 25px;
+		background: #FFD600;
+		background-size:50%;
+		position: relative;
+		padding: 5px 0px 0px 4px;
+		color: #14243E;
+	}
+	#SmallWindow-HeaderHelper:after {
+	  content: "";
+	  position: absolute;
+	  bottom: -10px;
+	  left: 0;
+	  width: 0;
+	  height: 0;
+	  border-left: 20px solid transparent;
+	  border-right: 19px solid transparent;
+	  border-top: 10px solid #FFD600;
+	  z-index:10001;
+	}
+	.SmallWindow-ShowHeader #SmallWindow-HeaderHelper2{
+	 	width: 31px;
+		height: 22px;
+		background: #111C2E;
+		position: relative;
+		padding-left:5px;
+		margin-top:-5px;
+	}
+	#SmallWindow-HeaderHelper2:after {
+	  content: "";
+	  position: absolute;
+	  bottom: -8px;
+	  left: 0;
+	  width: 0;
+	  height: 0;
+	  border-left: 16px solid transparent;
+	  border-right: 15px solid transparent;
+	  border-top: 8px solid #111C2E;
+	  z-index:10002;
+	}
+	#SmallWindow-MiniHeader {
+		visibility:visible;
+		height:5px;
+		margin-top:55px;
+		width:100%;
+	    background: #FFD600;
+	    margin-left: 6px;
+	    opacity:1;
+	    transition: opacity .5s, visibility .5s;
+	    -moz-transition: opacity .5s, visibility .5s;
+	    -webkit-transition: opacity .5s, visibility .5s;
+	}
+	#SmallWindow-BigHeader {
+		margin-top:-60px;
+		z-index:10010;
+		visibility: hidden;
+		opacity: 0;
+    	transition: opacity .5s, visibility .5s;
+	    -moz-transition: opacity .5s, visibility .5s;
+	    -webkit-transition: opacity .5s, visibility .5s;
+	}
+	.SmallWindow-ShowHeader .page-header:hover #SmallWindow-BigHeader{
+	    visibility: visible;
+	    opacity: 1;
+	}
+	.SmallWindow-ShowHeader .page-header:hover #SmallWindow-MiniHeader{
+	    visibility:hidden;
+	    opacity:0;
+	}
+	.SmallWindow-ShowHeader .page-header.navbar {
+		margin-top:-55px;
+		transition: margin-top .4s;
+	    -moz-transition: margin-top .4s;
+	    -webkit-transition: margin-top .4s;
+	}
+	.SmallWindow-ShowHeader .page-header.navbar:hover {
+		margin-top: 0px;
+	}
+	.SmallWindow-ShowHeader.page-header-fixed .page-container {
+	    margin-top: 10px;
+	}
+
+
+    .tabbable-custom > .nav-tabs { padding: 3px 10px 0 10px; }
+    .tabbable-custom.tabbable-full-width > .nav-tabs > li > a { padding: 5px 15px;}
+	.tabbable-custom > .nav-tabs > li > a { padding:5px 20px; }
+	.btn.imageButton { margin-bottom: 5px; }
+	.btn.imageButton i {
+		background-size: 100%;
+	}
+	.btn.imageButton {
+	    margin-bottom:0px;
+	   padding: 2px 10px 1px 5px;
+	}
+	.btn {
+		font-size: 13px;
+		padding: 4px 10px;
+	}
+	i.wjIconBig {
+	    height: 34px !important;
+	    width: 30px !important;
+	}
+
+	.wjIconBig-uploadDoc {	    background-position: 0px -167px !important;	}
+
+	.wjIconBig-dirEdit {	    background-position: 0px -235px !important;	}
+	.wjIconBig-dirAdd {	    background-position: 0px -203px !important;	}
+	.wjIconBig-importExport {	    background-position: 0px -270px !important;	}
+	.wjIconBig-checkLinks {	    background-position: 0px -302px !important;	}
+	.wjIconBig-dirRemove {    background-position: 0px -369px !important;}
+	.wjIconBig-upload {    background-position: 0px -35px !important;}
+    .wjIconBig-back {    background-position: 0px -67px !important;}
+    div.elfinder .wjIconBig-back {    background-position: 0px -100px !important;}
+	span.wjIconBig-upload {    background-position: 0px -50px !important;}
+	.td_size_checkbox {
+    	padding-left: 0 !important;
+	}
+	.form-control {
+		height:26px;
+		font-size: 13px;
+	    padding: 4px 12px;
+	}
+	.input-icon > .form-control {
+		height: 33px;
+    	font-size: 15px;
+	}
+	.lang.select2.form-control {
+		height: 33px;
+    	font-size: 15px;
+	}
+
+	.chat-form .btn-cont {
+	    margin-top: -34px;
+	}
+	.chat-form .btn-cont .arrow {
+	    top: 13px;
+	}
+
+	#operaciaOznac {
+		font-size:13px;
+        padding:5px 0px 0px 0px;
+	}
+	#tabMenu1 > .imageButton > .wjIconBig-uploadDoc {
+	    background-position: 0px -169px !important;
+	}
+    div.elfinder .wjIconBig-uploadDoc {    background-position: 0px -250px !important;}
+	table#groupslistTableAjax th {
+	    padding: 4px 8px 4px 20px !important;
+	}
+	.table.table-wj tr.heading > th, table.sort_table th {
+	    padding: 8px 8px 8px 8px !important;
+	}
+	.tab-content .tab-pane.active, .tabbable-custom.tabbable-full-width > .tab-content {
+	    padding: 0px 0px 3px 0px;
+	}
+	div.tab-content div.form-group {
+	    margin-bottom: 0px;
+	}
+	div.tab-content div.form-group label {
+	    margin-bottom: 0px;
+	}
+	table#groupslistTableAjax td {
+	    font-size: 12px !important;
+	    line-height: 23px !important;
+	    padding: 2px;
+	}
+	.input-sm {
+	    height: 24px;
+	    font-size: 12px;
+	}
+	.page-content-wrapper .page-content {
+	    margin-top: 37px;
+	}
+	#editorMainDiv {
+	    top: -37px !important;
+	}
+    body.page-wjiframed #editorMainDiv {
+        top: -33px !important;
+    }
+	#editorFormId .form-inline .form-group .btn {
+	    margin-right: 5px;
+	}
+	#wjTopButtons {
+	    margin-top: 3px !important;
+	    padding-bottom: 3px !important;
+	}
+	.bootstrap-switch {
+		margin-left:5px;
+	}
+
+	#editorFormId .nav-tabs {
+	    padding: 3px 10px 0px 10px;
+	}
+	.nav>li>a {
+	    padding: 2px 12px 3px;
+	}
+	.nav-tabs > li.active {
+	    border-top: 2px solid #29c01a;
+	}
+	.nav-tabs > li {
+	    margin-bottom: -1px;
+	}
+	.cke_top {
+	    padding: 6px 8px 3px !important;
+	}
+
+	div.tab-content div.form-group label {
+	    line-height: 30px;
+	    font-size: 13px;
+	}
+	.table.table-wj tr td, table.sort_table tr td {
+	    padding: 5px 5px 2px 5px;
+	}
+	table .glyphicon {
+	    ;
+	    padding: 7px;
+	}
+}
+*/
+
+
+@media (max-height: 680px) {
+    .row.title {
+        padding: 0 10px;
+        height: 30px;
+        h1.page-title {
+            padding: 5px 0;
+            font-size: 13px;
+        }
+    }
+
+    .tabbable-custom.tabbable-full-width>.tab-content {
+        padding: 10px;
+    }
+
+    .page-header-fixed .page-container { margin-top: 40px; }
+    .page-sidebar-fixed .page-sidebar { top: 40px; }
+
+    .page-header.navbar {
+        height: 40px;
+        min-height: 40px;
+
+        .navbar-brand {
+            height: 40px;
+            padding: 10px 18px;
+            img {
+                height: 20px;
+                width: auto;
+            }
+        }
+
+        .navbar-version {
+            top: 24px;
+            left: 17px;
+        }
+
+		  .page-header.navbar .actual-domain {
+			  top:2px
+		  }
+    }
+
+    .page-header.navbar .top-menu .navbar-nav > li.dropdown {
+        margin: 0;
+    }
+
+    .navbar-nav>li>a {
+        padding-top: 8px;
+        padding-bottom: 8px;
+    }
+
+    .page-header .top-menu .dropdown-quick-sidebar-toggler > .dropdown-toggle {
+        padding: 11px 10px 9px 10px !important;
+    }
+
+    .page-header.navbar .top-menu .navbar-nav > li.dropdown > .dropdown-toggle {
+        padding: 10px 12px 8px;
+    }
+
+    table.table-ninja-style>tbody>tr>td,
+    table.table-ninja-style>tbody>tr>th,
+    table.table-ninja-style>tfoot>tr>td,
+    table.table-ninja-style>tfoot>tr>th,
+    table.table-ninja-style>thead>tr>td,
+    table.table-ninja-style>thead>tr>th {
+        padding: 8px 14px;
+    }
+
+    #editorMainDiv {
+        top: -30px !important;
+    }
+    #editorMainDiv #wjTopButtons {
+        height: 30px;
+        padding: 0 0 0 15px !important;
+    }
+    #editorFormId #wjTopButtons .form-group {
+        float: left;
+    }
+    #editorFormId #wjTopButtons .form-group .btn {
+        padding-top: 0;
+        padding-bottom: 0;
+        height: 30px;
+        line-height: 30px;
+    }
+    #editorFormId #wjTopButtons .form-control {
+        height: 30px;
+        padding-top: 2px;
+        padding-bottom: 2px;
+    }
+    #editorFormId #wjTopButtons .bootstrap-switch,
+    #editorFormId #wjTopButtons .bootstrap-switch .bootstrap-switch-container {
+        height: 30px;
+    }
+
+    #editorFormId #wjTopButtons .bootstrap-switch-handle-on,
+    #editorFormId #wjTopButtons .bootstrap-switch-handle-off {
+        height: 22px;
+        line-height: 22px;
+    }
+
+}

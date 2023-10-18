@@ -1,0 +1,46 @@
+<script type="text/javascript" data-th-inline="javascript">
+    var calendarEventsDataTable;
+
+    window.domReady.add(function () {
+
+        window.helpLink = "/redactor/apps/calendar/README";
+
+        WJ.breadcrumb({
+            id: "calendarEvents",
+            tabs: [
+                {
+                    url: '/apps/calendar/admin/',
+                    title: /*[[#{menu.calendar}]]*/ 'title',
+                    active: false
+                },
+                {
+                    url: '/apps/calendar/admin/',
+                    title: /*[[#{components.calendar.list_of_events}]]*/ 'title',
+                    active: true
+                }
+            ]
+        });
+
+        var tabs = [
+            { id: 'basic', title: /*[[#{calendar_events.tab.basic}]]*/ 'basic', selected: true},
+            { id: 'description', title: /*[[#{calendar_events.tab.description}]]*/ 'desc', content: '' },
+            { id: 'advanced', title: /*[[#{calendar_events.tab.advanced}]]*/ 'adv' },
+            { id: 'notification', title: /*[[#{calendar_events.tab.notification}]]*/ 'notify' }
+        ];
+
+        let url = "/admin/rest/calendar_events";
+        let columns = /*[(${layout.getDataTableColumns("sk.iway.iwcm.components.calendar.jpa.CalendarEventsEntity")})]*/ [];
+
+        calendarEventsDataTable = WJ.DataTable({
+            url: url,
+            serverSide: true,
+            columns: columns,
+            tabs: tabs,
+            id: "calendarEventsDataTable",
+            fetchOnEdit: true,
+            fetchOnCreate: true
+        });
+    });
+</script>
+
+<table id="calendarEventsDataTable" class="datatableInit table"></table>

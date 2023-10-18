@@ -1,0 +1,36 @@
+iframe.md-pageBuilder {
+    width: 100%;
+    //min-height: 500px;
+    //border: 1px solid red;
+}
+
+div.exit-inline-editor {
+    position: absolute;
+    right: 25px;
+    top: 16px;
+    z-index: 101005;
+    font-size: 14px;
+    display: none;
+    background-color: #f5f5f5;
+
+    .bootstrap-select > .dropdown-toggle {
+        font-size: 14px;
+        padding: 3px;
+        padding-right: 24px;
+        padding-left: 6px;
+        div.filter-option-inner-inner {
+            color: #13151B;
+        }
+        &:hover {
+            background-position: right 5px center;
+        }
+    }
+    .bootstrap-select > .dropdown-toggle:hover, .bootstrap-select > .dropdown-toggle.show {
+        div.filter-option-inner-inner {
+            color: $secondary;
+        }
+    }
+    .form-select {
+        background-position: right 6px center;
+    }
+}

@@ -1,0 +1,67 @@
+	/* toto je dolezite, inak script nefunguje */
+	ul.ulPrettyGallery { border: 0px !important; margin: 0px !important; padding: 0px !important; margin-left: auto !important; margin-right: auto !important; }
+	ul.ulPrettyGallery li { margin: 0px; padding: 0; border: 0; background-image: none !important; }
+	
+	ul.ulPrettyGallery li p a:hover { background-color: #ddd; } 
+
+	div.prettyGallery { display: block; border: 0px !important; margin: auto; padding: 0px !important; margin-left: auto; margin-right: auto; }
+
+	div.prettyGallery ul.prettyGallery {
+		list-style: none;
+		float: left;
+		margin: 0px !important;
+		padding: 0px !important;		
+	}
+	
+	div.prettyGallery ul.prettyGallery li { display: block; float: left; margin: 0px !important; padding: 0px !important; }
+
+	ul.prettyNavigation {
+		float: left; clear: left;
+		list-style: none;
+		
+		border: 1px #bdc2c4 solid;		
+		margin: 0px !important; padding: 0px !important;
+	}
+	
+	
+		ul.prettyNavigation li {
+			 margin: 0px; padding: 0px;
+			display: block !important;
+			float: left;
+			width: 215px; height: 15px;
+			line-heigh2t: 15px;
+			font-size: 0.8em;
+			text-align: center;			
+			color: #696969;
+			margin: 0 !important; padding: 0 !important;
+			background-image: none !important;
+		}
+		
+			ul.prettyNavigation li.prev { width: 35px; background-image: none; }
+			ul.prettyNavigation li.prev a {				 
+				display: block;
+				width: 100%; height: 15px;
+				text-indent: -10000px;
+				background: url(previous.gif) top left no-repeat;
+				font-size: 0px;
+			}
+			
+			ul.prettyNavigation li.next { width: 35px; background-image: none; }
+			ul.prettyNavigation li.next a {
+				display: block;
+				width: 100%; height: 15px;
+				text-indent: -10000px;
+				background: url(next.gif) top right no-repeat;
+  			font-size: 0px;
+			}
+			
+			ul.prettyNavigation li.next a:hover { background-position: 100% -18px; }
+			ul.prettyNavigation li.prev a:hover { background-position: 0 -18px; }
+			
+			ul.prettyNavigation li.next a.disabled,
+			ul.prettyNavigation li.next a.disabled:hover { background-position: 100% -36px; cursor: default; }
+			ul.prettyNavigation li.prev a.disabled,
+			ul.prettyNavigation li.prev a.disabled:hover { background-position: 0 -36px; cursor: default; }
+				
+
+	

@@ -1,0 +1,1024 @@
+@charset "UTF-8";
+
+.modal {
+    &-title {
+        text-align: right;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    &-footer {
+        .buttons-footer-left {
+            margin-right: auto;
+            button:first-child {
+                margin-left: 0px !important;
+            }
+            button {
+                margin-right: 0px !important;
+            }
+            button.btn-link {
+                padding-left: 0px;
+                padding-right: 0px;
+                &:hover {
+                    text-decoration: none;
+                }
+            }
+        }
+        div.DTE_Form_Error {
+            color: $danger !important;
+            font-size: 80%;
+            width: 100%;
+            padding-top: 0px !important;
+            margin-top: -8px !important;
+            margin-bottom: 8px;
+        }
+    }
+    &-body {
+        padding-top: 0px;
+        padding-bottom: 15px;
+        .modal-body-bg {
+            position: relative;
+            &::before {
+                content: " ";
+                position: absolute;
+                top: -15px;
+                bottom: 0px;
+                left: -15px;
+                background-color: $nice-gray;
+                width: calc(33.3333% + 10px);
+                z-index: 0;
+            }
+        }
+        // padding:0;
+        hr {
+            margin-top: 15px;
+            margin-bottom: 15px;
+            color: $nice-gray-100;
+            opacity: 1;
+        }
+        h5 {
+            margin-top: 0;
+            margin-bottom: 0;
+        }
+
+        hr+h5 {
+            margin-top: 30px;
+        }
+
+        .form-group.row {
+            margin-top: 15px;
+            margin-bottom: 0px;
+        }
+
+        .form-group.row.row-full-headline {
+            background-color: $nice-gray;
+            margin: 0px;
+            padding: 15px;
+            width: 100%;
+            border-bottom: 1px solid $nice-gray-100;
+            div.col-sm-12 {
+                padding: 0px;
+                h5 {
+                    font-size: 15px;
+                    color: #646979;
+                    font-weight: 700;
+                }
+            }
+        }
+
+        .col-form-label {
+            font-size: 14px;
+            line-height: 1.7;
+            position: relative;
+        }
+
+        .form-text {
+            margin-top: 0px;
+        }
+        .DTE_Field_Type_checkbox {
+            .DTE_Field_InputControl {
+                padding-top: 6px;
+            }
+        }
+        .form-group.row.DTE_Field_Type_wysiwyg {
+            margin-top: 0px;
+            margin-bottom: 0px;
+            //5h debugovania, ak to tu nie je pri pisani riadkov zrazu poskoci editor o 6px hore
+            flex-wrap: unset;
+            div.wysiwyg div.wysiwyg {
+                //aby za iframe nevznikala medzera
+                line-height: 0px;
+            }
+            label.col-form-label {
+                display: none;
+            }
+            div.col-sm-7 {
+                max-width: 100%;
+                flex: 0 0 100%;
+            }
+            div.card.multi-value {
+                min-height: 300px;
+                margin: 30px;
+            }
+            div.card.multi-restore {
+                position: absolute;
+                top: 0px;
+                z-index: 9999;
+                right: 30px;
+            }
+        }
+        .DTE_Field {
+            textarea {
+                min-height: 86px;
+                white-space: nowrap;
+                @include show-scrollbar;
+            }
+            &.wrap textarea {
+                white-space: normal;
+            }
+            &.required {
+                label {
+                    &::after {
+                        color: $danger;
+                        content: '*';
+                        position: absolute;
+                        top: 1px;
+                        right: 6px;
+                        font-size: 21px;
+                    }
+                }
+            }
+        }
+        .dt-tree-container {
+            .form-group {
+                margin-bottom: 15px;
+            }
+            .form-group:last-child {
+                margin-bottom: 0px;
+            }
+        }
+        .form-group.row.dt-tree-container-no-margin-top {
+            margin-top: 0px !important;
+        }
+        .form-group.row.DTE_Field_Has_Checkbox {
+            margin-bottom: -14px;
+        }
+        .form-group.row.DTE_Field_No_Margin_Top {
+            margin-top: 1px;
+        }
+
+        .DTE_Field_Type_datatable {
+            background-color: white;
+            .col-form-label {
+                display: none;
+            }
+            .col-sm-6, .col-sm-7 {
+                max-width: 100%;
+                flex: 0 0 100%;
+            }
+            div.dt-buttons {
+                padding-bottom: 0px;
+            }
+        }
+
+        div.input-group {
+            .input-group-text {
+                position: initial;
+                background-color: $nice-gray;
+                &.has-image {
+                    background-size: cover;
+                    background-position: center;
+                    width: 41px;
+                    i {
+                        display: none;
+                    }
+                }
+            }
+        }
+
+        .DTE_Field_Type_elfinder {
+            input[type=text] {
+                background-color: $nice-gray;
+            }
+        }
+
+        .DTE_Field_Type_jsTree {
+            .jstree {
+                height: auto;
+                padding-bottom: 15px;
+            }
+            .jstree-default .jstree-wholerow-clicked, .jstree-default .jstree-clicked {
+                background: none;
+            }
+            .jstree-wholerow-hovered, .jstree-hovered {
+                background: none;
+            }
+            .jstree-default .jstree-clicked, a.jstree-anchor.jstree-hovered {
+                border-color: transparent;
+            }
+            i.jstree-icon.jstree-checkbox {
+                font-family: $fa-font-name;
+                font-weight: 400;
+                font-style: normal;
+                font-variant: normal;
+                text-rendering: auto;
+                background-image: none;
+            }
+            a.jstree-anchor i.jstree-icon.jstree-checkbox:before {
+                content: "\f0c8"
+            }
+            a.jstree-anchor.jstree-clicked i.jstree-icon.jstree-checkbox:before {
+                content: "\f14a"
+            }
+            a.jstree-anchor i.jstree-icon.jstree-checkbox.jstree-undetermined:before {
+                font-family: 'Font Awesome 6 Duotone';
+                font-weight: 900;
+                content: "\f0c8";
+                position: absolute;
+            }
+            a.jstree-anchor i.jstree-icon.jstree-checkbox.jstree-undetermined:after {
+                font-family: 'Font Awesome 6 Duotone';
+                font-weight: 900;
+                content: "\10f0c8";
+                color: var(--fa-secondary-color, inherit);
+                opacity: var(--fa-secondary-opacity, 0.4);
+            }
+            .jstree-default .jstree-search {
+                color: $primary;
+                font-style: normal;
+                font-weight: bold;
+            }
+            div.input-group-append .btn-primary {
+                background-color: $nice-gray;
+                border-color: $nice-gray-300;
+                color: $nice-black;
+            }
+        }
+    }
+    &-header {
+        display: block;
+        padding-top: 30px;
+        padding-bottom: 30px;
+        .md-breadcrumb {
+            border: 0;
+            background-color: transparent;
+            margin:0;
+            padding:0;
+        }
+
+        button.close {
+            border: 0px;
+            background-color: transparent;
+            padding: 0px;
+        }
+
+        button.close, div.maximize {
+            position: absolute;
+            right: 5px;
+            top: 0px;
+            cursor: pointer;
+            color: $nice-gray-300;
+            font-size: 13px;
+
+            &:hover {
+                color: $nice-black;
+            }
+        }
+        div.maximize {
+            right: 22px;
+        }
+    }
+
+    &.DTED {
+        .modal-dialog {
+            max-width: $modal-lg;
+            &.modal-xl {
+                max-width: $modal-xl;
+            }
+
+            div.maximize i.fa-window-minimize {
+                display: none;
+            }
+
+            &.modal-fullscreen {
+                margin: 0px;
+                width: 100%;
+                max-width: 100%;
+                height: 100%;
+                max-height: 100%;
+
+                .modal-content {
+                    height: 100%;
+                    max-height: 100%;
+
+                    div.modal-body-bg {
+                        min-height: 100%;
+                    }
+                    .modal-body.has-content {
+                        //ak ma content, napr. ckeditor tak musi mat auto height
+                        div.modal-body-bg {
+                            min-height: auto;
+                        }
+                    }
+                }
+
+                div.maximize {
+                    i.fa-window-maximize {
+                        display: none;
+                    }
+                    i.fa-window-minimize {
+                        display: inline-block;
+                    }
+                }
+            }
+
+            div.modal-content.processing {
+                div.DTE_Footer {
+                    div.DTE_Form_Buttons {
+                        button.btn-primary {
+                            pointer-events: none;
+                            opacity: 0.6;
+                            i.fal:before {
+                                position: relative;
+                                top: 2px;
+                                left: 6px;
+                                width: 16px;
+                                height: 16px;
+                                margin: -8px 0 0 -8px;
+                                box-sizing: border-box;
+                                display: block;
+                                content: " ";
+                                border: 2px solid $white;
+                                border-radius: 50%;
+                                border-left-color: transparent;
+                                border-right-color: transparent;
+                                animation: dtb-spinner 1500ms infinite linear;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        .card.multi-value {
+            border-color: $warning;
+            background-color: $warning;
+            color:$secondary;
+            &:hover {
+                background-color: #d4a000;
+                border-color: #c79600;
+            }
+
+            .small {
+                margin-top: 10px;
+                color:$secondary;
+            }
+        }
+
+        .DTE_Action_Create {
+            .DTE_Field {
+                &.hide-on-create {
+                    display: none;
+                    visibility: hidden;
+                }
+            }
+            div.md-breadcrumb {
+                li.nav-item.hide-on-create {
+                    display: none;
+                }
+            }
+        }
+
+        .DTE_Action_Edit {
+            .DTE_Field {
+                &.hide-on-edit {
+                    display: none;
+                    visibility: hidden;
+                }
+            }
+            div.md-breadcrumb {
+                li.nav-item.hide-on-edit {
+                    display: none;
+                }
+            }
+        }
+
+        .lang-shortcut {
+            display: none;
+        }
+
+        .DTE_Form_Buttons, .DTE_Form_Buttons_Import {
+            width: 100%;
+            display: flex;
+            flex-direction: row;
+
+            .btn {
+                margin-left: 16px;
+            }
+            div.form-check {
+                margin-left: 16px;
+                padding-top: 7px;
+                label.form-check-label {
+                    span i {
+                        color: $btn-link-color;
+                    }
+                }
+            }
+        }
+
+        .DTE_Action_Remove {
+            div.tab-content {
+                display: none;
+            }
+            .modal-body-bg {
+                &::before {
+                    display: none;
+                }
+            }
+            div.form-group.row {
+                //vo FF to pretekalo
+                margin-left: 0px;
+                margin-right: 0px;
+            }
+        }
+
+        .DTE_Action_Edit, .DTE_Action_Create {
+
+            .DTE_Body.modal-body {
+                padding: 0px;
+            }
+
+            .DTE_Body.modal-body.has-content {
+
+                padding: 0px !important;
+
+                .modal-body-bg {
+                    &::before {
+                        display: none;
+                    }
+                }
+            }
+
+            .DTE_Body.modal-body.modal-body-notabs {
+                padding-bottom: 15px;
+                .modal-body-bg {
+                    &::before {
+                        bottom: -15px;
+                        left: -10px;
+                    }
+                    div.DTE_Field {
+                        margin-left: 0px;
+                        margin-right: 0px;
+                        label.col-form-label {
+                            padding-left: 0px;
+                        }
+                    }
+                }
+            }
+        }
+        .tab-content {
+            .tab-pane {
+                overflow: hidden;
+                padding-bottom: 15px;
+
+                &.tab-pane-nopadding {
+                    padding-bottom: 0px;
+                }
+            }
+        }
+    }
+}
+
+.DTE_nested_modal.show {
+    background: rgba(0,0,0,0.7);
+
+    .modal-dialog {
+        max-width: 1000px;
+        display: block;
+        margin: 119px auto 0;
+        position: relative;
+    }
+
+    .close {
+        display: block;
+        visibility: visible;
+        opacity: 1;
+        position: absolute;
+        right: 5px;
+        top: 0px;
+        border: 0px;
+        background-color: transparent;
+        font-size: 19px;
+        padding: 0px;
+        color: $nice-gray-300;
+
+        &:hover {
+            color: $nice-black;
+        }
+
+        &:focus {
+            outline: none;
+        }
+    }
+
+    .modal-header div.maximize {
+        right: 28px;
+        top: 5px;
+    }
+
+    .DTE_Footer {
+        .btn-close-editor {
+            display: none;
+        }
+    }
+}
+
+//DTE_Bubble
+div.DTE_Bubble {
+    z-index: 1056;
+    div.tab-pane {
+        display: block;
+        opacity: 1;
+    }
+    div.row {
+        display: none !important;
+        &.DTE_Field_Type_quill {
+            height: 350px;
+            .ql-editor {
+                height: 300px;
+                overflow: auto;
+                @include show-scrollbar;
+            }
+        }
+    }
+    div.row.show {
+        display: block !important;
+        input.form-check-input {
+            margin-top: 6px !important;
+        }
+        div.row {
+            display: block;
+            div.form-group-tooltip {
+                display: none;
+            }
+        }
+    }
+    div.DTE_Field_Type_checkbox.show div.DTE_Field_InputControl label {
+        display: inline;
+    }
+    textarea {
+        width: auto;
+        max-height: 200px;
+    }
+    div.DTE_Bubble_Liner {
+        margin-left: -200px;
+        z-index: 1;
+    }
+    div.DTE_Bubble_Liner.type_quill {
+        width: 800px;
+        margin-left: -450px;
+    }
+}
+div.DTE_Bubble_Background {
+    z-index: 1055;
+}
+
+//quill tooltip v DT editore
+.ql-snow .ql-tooltip {
+    z-index: 1;
+}
+
+#datatableExportModal {
+    z-index: 1057;
+}
+#datatableImportModal {
+    z-index: 1057;
+
+    .dropdown.bootstrap-select {
+        width: 100%
+    }
+}
+#modalIframe {
+    //musi byt viac ako ckdialog, problem v dialogu btn po kliknuti na odkaz
+    z-index: 10056;
+
+    div.modal-dialog {
+        margin-top: 8px;
+        margin-bottom: auto;
+    }
+
+    .modal-content {
+        width: auto;
+        max-width: unset;
+        .modal-header {
+            padding-top: 13px;
+            padding-bottom: 13px;
+            h5 {
+                float: left;
+                text-align: left;
+            }
+            button {
+                position: absolute;
+                top: 0px;
+                right: 12px;
+                display: block;
+                visibility: visible;
+                opacity: 1;
+                padding-top: 7px;
+                padding-right: 0px;
+                font-size: 19px;
+                background-image: none;
+                color: $nice-gray-300;
+
+                &:hover {
+                    color: $nice-black;
+                }
+            }
+        }
+        .modal-body {
+            padding: 0px;
+            iframe {
+                border: 0px;
+            }
+        }
+    }
+
+    &.child-iframe-open {
+        div.modal-footer, div.modal-header {
+            pointer-events: none;
+            background-color: #444;
+            border-top-color: #444;
+            button {
+                opacity: 0.3;
+            }
+        }
+        div.modal-header {
+            button.btn-close {
+                display: none;
+            }
+        }
+    }
+}
+.modal-dialog-scrollable {
+    .modal-body {
+        overflow-x: auto;
+    }
+}
+.modal-backdrop.modalIframeShown {
+    z-index: 1055;
+}
+
+@media (max-width: ($bp-tablet - 1)) {
+    .modal.DTED {
+        .modal-dialog {
+            max-width: 100%;
+            margin: 0px;
+        }
+        .modal-header {
+            padding-top: 5px;
+            padding-bottom: 5px;
+
+            h5 {
+                font-size: 1.05em;
+            }
+
+            .DTE_Header_Content .row {
+                .col-sm-4 {
+                    width: auto;
+                }
+                .col-sm-8 {
+                    width: 100%;
+                }
+            }
+        }
+
+        .modal-footer {
+            padding-top: 0;
+            padding-bottom: 5px;
+        }
+
+        .modal-dialog-scrollable {
+            margin: 0px;
+            width: 100%;
+            max-width: 100%;
+            height: 100%;
+            max-height: 100%;
+
+            .modal-content {
+                height: 100%;
+                max-height: 100%;
+
+                div.modal-body-bg {
+                    min-height: 100%;
+                }
+                .modal-body.has-content {
+                    //ak ma content, napr. ckeditor tak musi mat auto height
+                    div.modal-body-bg {
+                        min-height: auto;
+                    }
+                }
+                div.DTE_Header_Content {
+                    div.maximize {
+                        display: none;
+                    }
+                }
+            }
+        }
+        div.DTE_Action_Edit h5.modal-title, div.DTE_Action_Create h5.modal-title {
+            display: none;
+        }
+        .cke_top span.cke_toolbox {
+            max-height: 55px;
+            min-height: auto;
+            overflow: scroll;
+        }
+
+        .modal-footer {
+            .DTE_Footer_Content {
+                margin-top: 5px;
+                margin-bottom: 0px
+            }
+            .DTE_Form_Error {
+                margin-top: 0px !important;
+            }
+            .DTE_Form_Buttons {
+                margin-top: 1px;
+                margin-bottom: 1px;
+
+                .btn {
+                    line-height: 18px;
+                }
+            }
+        }
+    }
+}
+
+@media (max-width: ($bp-dinosaur - 1)) {
+    .modal {
+        .modal-dialog {
+            margin: 0;
+        }
+
+        .modal-dialog-scrollable {
+            max-height: 100%;
+            height: 100%;
+
+            .modal-body {
+                padding-left: 15px !important;
+                padding-right: 15px !important;
+
+                .modal-body-bg {
+                    &::before {
+                        display: none;
+                    }
+                }
+
+                #pills-dt-datatableInit-approvingTab,
+                #pills-dt-datatableInit-content {
+                    margin-left: -15px;
+                    margin-right: -15px;
+                }
+
+                .form-group.row {
+                    margin-top: 0px;
+                }
+
+                hr {
+                    margin-bottom: 0px;
+                }
+
+                h5 {
+                    margin-top: 4px
+                }
+
+                div.DTE_Field.empty-title label.col-form-label {
+                    display: none;
+                }
+
+                div.DTE_Field div.form-group-tooltip {
+                    position: absolute;
+                    top: 0px;
+                    right: 0px;
+                    text-align: right;
+                    display: inline-block;
+                }
+            }
+
+            .modal-content {
+                max-height: 100%;
+            }
+        }
+
+        .col-form-label {
+            text-align: left;
+            padding-bottom: 0px;
+
+            .DTE_Label_Info {
+                display: inline-block;
+            }
+
+            &::after {
+                display: inline-block;
+                position: relative !important;
+                top: 0 !important;
+                right: 0 !important;
+                height: 20px;
+                line-height: 20px;
+                vertical-align: top;
+            }
+        }
+    }
+}
+
+#modalIframeLoader {
+    display: none;
+}
+html.in-iframe, html.in-iframe-show-table {
+
+    .DTE_nested_modal.show .modal-dialog {
+        margin-top: 8px;
+    }
+
+    .modal:not(.DTE_nested_modal) .modal-dialog-scrollable {
+        width: 100%;
+        max-width: 100%;
+        height: 100%;
+        max-height: 100%;
+        margin: 0px;
+
+        div.modal-content {
+            height: 100%;
+            top: 0px !important;
+            border-radius: 0px;
+            border-width: 0px;
+            div.modal-header {
+                padding-top: 0px;
+                padding-bottom: 4px;
+                margin-top: -6px;
+            }
+            div.modal-body-bg {
+                min-height: 100%;
+            }
+            div.modal-footer {
+                padding-top: 0px;
+                padding-bottom: 0px;
+                //schovaj spodnu ciaru
+                margin-bottom: -1px;
+
+            }
+
+            div.DTE_Field_Type_datatable {
+                div.dt-footer-row {
+                    margin-bottom: 0px;
+                }
+            }
+        }
+        //do title injectujeme titulok stranky
+        div.DTE_Header_Content h5.modal-title {
+            display: block;
+            padding-top: 2px;
+        }
+        div.DTE_Header_Content .row .col-sm-8 {
+            width: auto;
+        }
+        button.close, div.maximize {
+            display: none;
+        }
+    }
+
+    div.ly-header, div.ly-sidebar, div.container > div.md-breadcrumb,
+    //fotogaleria/web nadpisy nad tree/datatable
+    div.container > .row > .col-md-4 > div.md-breadcrumb, div.container > .row > .col-md-8 > div.md-breadcrumb {
+        display: none;
+    }
+
+    //breadcrumb chcem vidiet
+    div.show-in-iframe {
+        display: block !important;
+    }
+
+    div.modal-xl {
+        margin: 0px;
+        div.modal-content {
+            div.has-content div.modal-body-bg {
+                min-height: auto !important;
+            }
+        }
+    }
+
+    #modalIframeLoader {
+        display: block;
+        position: fixed;
+        top: 10px;
+        left: 10px;
+        z-index: 999;
+    }
+}
+html.in-iframe {
+    .modal:not(.DTE_nested_modal) .modal-dialog-scrollable {
+        div.modal-content {
+            div.modal-footer {
+                div.DTE_Footer_Content {
+                    display: none;
+                }
+                //tlacidla schovaj, obsluhovane su z vonkajsieho dialogu
+                div.DTE_Form_Buttons {
+                    display: none;
+                }
+            }
+        }
+    }
+    //nezobrazime ani ziadnu DT, iba editor
+    div.ly-page-wrapper {
+        display: none;
+    }
+    div.modal.DTED.show div.DTE_Form_Error {
+        margin-top: 8px !important;
+    }
+}
+html.in-iframe-show-table {
+    div.DTE_Header {
+        border-top: 1px solid #dee2e6;
+        margin-top: 2px !important;
+        border-radius: 0px;
+    }
+    #modalIframeLoader {
+        display: none;
+    }
+}
+#modalIframe.close-button-over {
+    div.modal-content {
+        div.modal-header {
+            padding-top: 6px !important;
+            padding-bottom: 6px !important;
+            border: 0px;
+            button.btn-close {
+                position: absolute;
+                right: 16px;
+                top: 5px;
+                z-index: 999;
+            }
+        }
+    }
+}
+#modalIframe.nopadding {
+    div.modal-content {
+        div.modal-header {
+            padding-top: 0px !important;
+            padding-bottom: 0px !important;
+        }
+    }
+}
+
+.DTE_Action_Create div.DTE_Field.hideOnCreate {
+    display: none !important;
+}
+.DTE_Action_Edit div.DTE_Field.hideOnEdit {
+    display: none !important;
+}
+.DTE_Field.disabled .form-control {
+    background-color: #F3F3F6;
+    border-color: #868EA5;
+    opacity: 1;
+}
+
+#jstreeSettingsModal {
+    button.bootstrap-select {
+        width: 100%;
+    }
+}
+
+//customfields - label - translation-keys
+.input-group-text.noborders {
+    background-color: transparent !important;
+    border-color: transparent;
+    color: $secondary;
+    padding-left: 0px;
+}
+
+//Set grey background to disabled SELECT options
+.bootstrap-select .dropdown-menu li .disabled{
+    background-color: #ceced2;
+}
+.input-group-text.field-type-label {
+    text-align: left;
+    white-space: normal;
+}
+
+//disable inner datatables during duplicate
+div.DTED.show[data-action=duplicate] {
+    div.DTE_Field_Type_datatable {
+        pointer-events: none;
+        &::before {
+            content: ".";
+            display: block;
+            width: 100%;
+            height: 100%;
+            background-color: black;
+            opacity: 0.5;
+            position: absolute;
+            top: 0px;
+            left: 0px;
+            z-index: 10;
+        }
+    }
+}

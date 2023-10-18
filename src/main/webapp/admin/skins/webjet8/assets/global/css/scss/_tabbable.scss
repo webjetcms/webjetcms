@@ -1,0 +1,88 @@
+/*=====================================================================
+Taby pod nadpisom
+=====================================================================*/
+
+.tabbable-custom.tabbable-full-width {
+
+    > .tab-content {
+        padding: 15px;
+        border-bottom: 1px solid #ddd !important;
+
+        .default.imageButton {
+            margin-right: 10px;
+            margin-bottom: 0;
+            transition: color 0.3s ease-in-out;
+            padding: 0;
+
+            &:hover { color: #29c01a; }
+            &:last-of-type { margin-right: 100px; }
+
+            &::before {
+                left: 44px;
+                right: 100%;
+                bottom: 8px;
+                height: 2px;
+                background-color: #29c01a;
+            }
+
+            &:hover::before,
+            &:focus::before,
+            &:active::before {
+                left: 44px;
+                max-width: 500px;
+                right: 0px;
+            }
+
+            i.wjIconBig {
+                background-color:transparent;
+                background-size:35px auto !important;
+                width:40px !important;
+                height:40px !important;
+
+                &.wjIconBig-uploadDoc { background-position:0px -195px !important; }
+                &.wjIconBig-dirAdd { background-position: 0px -236px !important; }
+                &.wjIconBig-upload { background-position: 0px -40px !important; }
+                &.wjIconBig-dirRemove { background-position: 0px -429px !important; }
+            }
+        }
+
+        .form-inline {
+
+            .form-group {
+                margin-bottom: 0;
+                padding-right: 10px;
+
+                label {
+                    margin-bottom: 0;
+                    margin-right: 4px;
+                    line-height: 32px;
+                }
+            }
+
+            .btn:not(.imageButton) {
+                margin: 0 !important;
+            }
+        }
+    }
+
+    .alert {
+        position: relative;
+        top: -1px;
+        display: block;
+        margin: 0;
+        padding:  0 8px;
+        line-height: 32px;
+        border-left-width: 0;
+        border-right-width: 0;
+        .fa {
+            margin-right: 10px;
+        }
+        &.alert-warning {
+            border-color: #dac496;
+            color: #8a6d3b;
+        }
+        &.alert-info {
+            border-color: #8ed2e0;
+        }
+    }
+}

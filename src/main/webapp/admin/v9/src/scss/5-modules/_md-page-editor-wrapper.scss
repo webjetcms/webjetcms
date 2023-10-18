@@ -1,0 +1,16 @@
+.md-page-editor-wrapper {
+    position: static;
+    &__bg {
+        position: absolute;
+        background-color: white;
+        top:-30px;
+        left: -15px;
+        bottom: -30px;
+        right: -15px;
+        z-index: 2;
+    }
+    &__content {
+        position: relative;
+        z-index: 3;
+    }
+}

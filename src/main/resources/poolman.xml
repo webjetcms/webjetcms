@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<poolman><management-mode>local</management-mode>
+    <datasource>
+        <dbname>iwcm</dbname>
+        <driver>org.mariadb.jdbc.Driver</driver>
+
+        <url>jdbc:mysql://mysql.local/webjetcms_web</url>
+
+        <username>webjetcms</username>
+        <password>*********</password>
+
+        <initialConnections>0</initialConnections>
+        <maximumSize>60</maximumSize>
+    </datasource>
+</poolman>

@@ -1,0 +1,72 @@
+	.gvIIContainer{
+		width:460px;
+		position:relative;
+		padding:0px;		
+	}
+	.gvIIContainer .gvIIImgContainer img{
+		margin-left:0;
+		margin-top:0;
+	}
+	.gvIIAltText{
+		position:absolute;
+		left:0;
+		top:0;
+		background:#ccc;
+		color:#000;
+		padding:3px;
+	}
+	.gvIIContainer .gvIIImgContainer{
+		width:450px;
+		height:385px;
+		position:relative;
+		overflow:hidden;
+		margin-bottom:5px;
+		border:1px solid #ccc;
+	}
+	.gvIIContainer .gvIIImgContainer .gvIILoader{
+		background: url(/components/gallery/ajax/ajax-loader.gif) no-repeat center center;
+		width:450px;
+		height:385px;
+		display:none;
+	}
+	.gvIIContainer .gvIIHolder{
+		position:relative;
+		height:207px;
+		width:450px;
+		overflow:auto;
+	}
+	.gvIIContainer .gvIIHolder .gvIIArrow{}
+	.gvIIContainer .gvIIHolder .gvIIItem{
+		float:left;
+		height:55px;
+		width:72px;
+		border:1px solid #ccc;
+		margin-right:2px;
+		margin-bottom:2px;
+		position:relative;
+		overflow:hidden;
+	}
+	.gvIIContainer .gvIIHolder .gvIIItem .gvIIFlash{
+		background:#fff;
+		position:absolute;
+		top:0px;
+		left:0px;
+		height:55px;
+		width:72px;
+		cursor:pointer;
+	}
+	.gvIIContainer .gvIIHolder .gvIIItem
+	{
+		
+	}
+	.gvIIContainer .gvIIHolder .gvIIItem img{
+		position:absolute;
+		top:0px;
+		left:0px;
+		padding:0px;
+		margin:0px auto;
+		border:none;
+		cursor:pointer;
+		text-align: center;
+		display: block;
+	}

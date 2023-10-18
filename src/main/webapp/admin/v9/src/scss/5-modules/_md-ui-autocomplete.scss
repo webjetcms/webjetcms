@@ -1,0 +1,36 @@
+ul.ui-autocomplete {
+    z-index: 10011;
+    padding-left: 0px;
+    border: 1px solid rgba(0, 0, 0, 0.15);
+    border-radius: 6px;
+    margin-top: 2px;
+    max-height: 100vh;
+    overflow: auto;
+
+    &.dt-autocomplete-select {
+        max-height: 255px;
+
+        @include show-scrollbar;
+    }
+
+    li {
+        list-style-type: none;
+        cursor: pointer;
+        white-space: nowrap;
+
+        div {
+            padding-left: 6px;
+
+            &.ui-state-active {
+                //farba podla selectboxov v editore
+                background-color: #f8f9fa;
+                border: 0px;
+                color: black;
+            }
+        }
+    }
+}
+
+.DTE_Field_InputControl input.ui-autocomplete-input:focus, .DTE_Field_InputControl input.ui-autocomplete-input:hover {
+    background-color: #F3F3F6;
+}

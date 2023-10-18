@@ -1,0 +1,1 @@
+﻿CKEDITOR.plugins.setLang("about","mk",{copy:"Авторски права \x26copy; $1. Сите права се задржани.",dlgTitle:"За CKEditor 4",moreInfo:"За информации околу лиценцата, ве молиме посетете го нашиот веб-сајт: "});

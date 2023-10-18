@@ -1,0 +1,15 @@
+.alert {
+    &.alert-dismissible {
+        position: fixed;
+        bottom: 100px;
+        left: 50%;
+        margin-left: 110px;
+        transform: translateX(-50%);
+    }
+}
+
+.alert-small {
+    margin-top: 1em;
+    padding: 0.5em;
+    font-size: small;
+}

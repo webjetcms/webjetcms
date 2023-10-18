@@ -1,0 +1,116 @@
+html {height: 100%;}
+* {margin: 0px; padding: 0px;}
+/*
+div.appStore {}
+div.appStore div.menuBox {float: left; width: 216px; background: url(/admin/appstore/images/bg-menu-top.png) left top no-repeat; padding: 9px 0 0 0; margin: 20px 0 20px 20px;}
+div.appStore div.menuBox ul {list-style: none; padding: 6px 0 0 0;}
+div.appStore div.menuBox li {float: none; background: url(/admin/appstore/images/bg-line-horizontal.png) left bottom no-repeat; width: 210px;}
+div.appStore div.menuBox li a {display: block; padding: 7px 10px 7px 34px; background: url(/admin/appstore/images/icon-menu-li.png) 11px 0.6em no-repeat;font-family: Tahoma, Geneva, sans-serif; font-size: 12px; color: #000000; font-weight: normal;}
+div.appStore div.menuBox li.buttonApp {width: 220px; background: none;}
+div.appStore div.menuBox li.buttonApp a {width: 190px; height: 30px; line-height: 32px; position: relative; margin-left: -5px; padding: 5px 0 5px 30px;}
+div.appStore div.menuBox li.new a {background: url(/admin/appstore/images/bg-menu-new.png) left top no-repeat;}
+div.appStore div.menuBox li.popular a {background: url(/admin/appstore/images/bg-menu-popular.png) left top no-repeat;}
+div.appStore div.menuBox li.free a {background: url(/admin/appstore/images/bg-menu-free.png) left top no-repeat; margin-bottom: 5px;}
+div.appStore div.menu {background: url(/admin/appstore/images/bg-menu.png) left bottom no-repeat; padding: 0 0 20px 0;}
+
+div.store {float: left; margin: 20px 0 0 25px; position: relative;}
+div.store div.cycleBox {width: 670px; height: 200px; position: absolute; top: 0px; left: 0px; z-index: 1; width: 610px; margin-left: 30px;}
+div.store a.cycle-prev,
+div.store a.cycle-next,
+div.store p.cycle-pager a {background: url(/admin/appstore/images/sprite-cycle-buttons.png) left top no-repeat; display: block; z-index: 110;}
+
+div.store a.cycle-prev, 
+div.store a.cycle-next {width: 40px; height: 40px; text-indent: -9999px; outline: 0px; cursor: pointer;}
+
+div.store a.cycle-prev {background-position: -50px 0px; left: -17px; position: absolute; top: 80px;} 
+div.store a.cycle-next {background-position: 1px 0; right: -17px; position: absolute; top: 80px;} 
+
+div.store p.cycle-pager {position: absolute; width: 670px; height: 15px; text-align: center; top: 182px; z-index: 1000;}
+div.store p.cycle-pager a {display: inline-block; width: 15px; height: 15px; background-position: -100px -9px; text-indent: -9999px; outline: 0px; cursor: pointer; line-height: 200%; overflow: hidden;}
+*+HTML BODY div.store p.cycle-pager a {text-indent:0; line-height:0; font-size:0;}
+div.store p.cycle-pager a.activeSlide {background-position: -120px -9px;}
+
+div.cycleItem {padding: 30px 0 0 30px; width: 560px; height: 150px;}
+div.cycleItem .item {background: #949494; border: 1px solid #949494; border-radius: 3px; width: 240px; height: 130px; float: left; margin-right: 60px; z-index: 9999; position: relative;}
+div.cycleItem .itemLast {margin-right: 0px;}
+div.cycleItem .item:hover {background-color: #858585;}
+div.cycleItem .item div.app { border: 0px; background-color: transparent; height: 122px; width: 232px;}
+
+div.cycleControlsBox {background: url(/admin/appstore/images/bg-cycle.png) left bottom no-repeat; width: 670px; height: 200px; position: relative; margin: 0 0 40px;}
+
+div.apps {margin: 0px; width: 680px; height: 290px; overflow: auto; clear: both;}
+div.app {float: left; width: 202px; height: 130px; background: #949494; border: 1px solid #949494; border-radius: 3px; margin: 0 7px 7px 0; background-position: center center; background-repeat: no-repeat; color: white; font-size: 14px; overflow: hidden; padding-top: 8px; padding-left: 8px; cursor: pointer;}
+div.app:hover {background-color: #858585;}
+div.app.right {margin-right: 0px;}
+*/
+
+td.headerImage {float: none; width: 100px;}
+
+/* NEW */
+body {height: 100%; weight: 100%;}
+div.appStore {width: 750px; height: 460px; position: relative;}
+
+div.scroller .up,
+div.scroller .down {position: absolute; width: 130px; height: 25px; background: url(/admin/appstore/images/bg-menu-buttons.png) left top no-repeat; text-indent: -9999px; left: 50%; margin-left: -65px;}
+div.scroller .up {top: 0px;}
+div.scroller .down {bottom: 0px; background-position: left bottom;}
+
+div.appStore .menuBox {height: 410px; overflow: hidden; width: 300px;}
+div.appStore .menu {position: absolute; left: 0px; top: 0px; bottom: 0px; width: 271px; background: url(/admin/appstore/images/bg-menu.png) right top repeat-y; padding: 25px 0;}
+div.appStore .menu ul {position: relative;}
+div.appStore .menu li {height: 100px; width: 271px; float: left; list-style: none;}
+div.appStore .menu li a {float: left; height: 70px; padding: 15px 0 15px 30px; width: 271px;}
+
+div.appStore .menu li.selected {background: url(/admin/appstore/images/bg-menu-selected.png) right -10px no-repeat; position: relative; width: 305px; z-index: 1000; height: 120px; margin-bottom: -20px;}
+
+div.info {float: left;} 
+
+span.title {display: block; height: 40px; width: 155px; padding: 10px 0 0 0; font-size: 13px; color: #000000; font-family: Tahoma, Geneva, sans-serif;}
+span.price {display: block; border: 1px solid #e86678; border-radius: 2px; width: 56px; height: 18px; text-align: center; line-height: 18px; font-size: 10px; color: #e86678;}
+span.free {border-color: #4fb91c; color: #4fb91c;}
+
+div.img {width: 70px; height: 70px; float: left; overflow: hidden; margin-right: 10px; border-radius: 5px;}
+div.img img {/*max-width: 70px; max-height: 70px;*/}
+
+div.appStore .store {position: absolute; left: 271px; right: 0; top: 0; bottom: 0px;}
+div.appStore .promo {padding: 0px 0 0 20px; width: 501px;}
+div.appStore .promo img {float: left; margin: 0 30px 16px 0; cursor: hand;}
+div.appStore h1 {padding: 0 0 10px 0px;}
+
+
+div.appStore .contentScroller {overflow: auto; max-height: 337px; margin-bottom: 10px; width: 400px;}
+div.appStore .contentScrollerHidden {overflow: hidden; width: 380px;}
+
+div.appStore .app {display: none; position: absolute; left: 0px; top: 0px; background: url(/admin/appstore/images/bg-app.png) left top no-repeat; width: 421px; height: 441px; margin: 10px 0 0 18px; padding: 20px; font-size: 12px; color: #010101; line-height: 130%; overflow: hidden; z-index: 999;}
+div.appStore .description {margin-bottom: 20px;}
+div.appStore .app .button {display: block; width: 190px; height: 45px; margin: 0 auto; text-align: center; line-height: 31px;}
+div.appStore .app .button:hover {color: #fff; text-decoration: none;}
+div.appStore .app .green { }
+
+div.appStore .gallery { height: 235px; }
+div.appStore .gallery li {list-style: none;}
+div.appStore div.cycle-pager,
+div.appStore div.cycle-promo-pager {text-align: center; padding: 8px 0;}
+div.appStore div.cycle-pager a,
+div.appStore div.cycle-promo-pager a {display: inline-block; background: url(/admin/appstore/images/bg-cycle-dot.png) right top no-repeat; width: 9px; height: 9px; text-indent: -9999px; margin: 0 3px;}
+div.appStore div.cycle-pager a.activeSlide,
+div.appStore div.cycle-promo-pager a.activeSlide {background-position: left top;}
+
+div.appStore div.scrollDown {background: url(/admin/appstore/images/bg-arrow.png) left top no-repeat; display: block; margin: 0 auto; width: 9px; height: 5px; text-indent: -9999px; margin-bottom: 10px; cursor: pointer;}
+
+div.promo h1 {color: #000; margin-top: 6px; padding-bottom: 20px; font-size: 25px; font-family: Tahoma, Geneva, sans-serif; font-weight: normal; background: url('/admin/appstore/images/bg-line-horizontal-dotted.png') left bottom repeat-x; margin-bottom: 20px;}
+div.store h2 {color: #4FB91C; padding-bottom: 8px; } 
+
+div.promoAppWrapper {width: 480px;}
+div.promoApp {background: url('/admin/appstore/images/bg-line-horizontal-dotted.png') left bottom repeat-x; width: 480px; margin-bottom: 25px; padding-bottom: 25px; cursor: pointer;}
+div.promoApp .img {width: 180px; height: 130px; overflow: hidden; margin: 0 20px 0 0;}
+div.promoApp .img img {width: 180px; border-radius: 5px; margin: 0px;}
+div.promoApp div.info {width: 280px; float: left;}
+div.promoApp div.info h2 {color: #000; padding-bottom: 10px; font-size: 14px; font-family: Tahoma, Geneva, sans-serif; font-weight: normal; margin-top: 0px; margin-bottom: 0px;}
+div.promoApp div.info .price {margin-bottom: 10px;}
+div.promoApp div.info .description {color: #696969; font-size: 11px; font-family: Tahoma, Geneva, sans-serif; font-weight: normal;}
+
+div.promoAppRight {margin-bottom: 7px;}
+div.promoAppRight .img {float: right; margin: 0 0 0 20px;}
+
+.clearer {clear: both; height: 0px; line-height: 0px; font-size: 0px;}

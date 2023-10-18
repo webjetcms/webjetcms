@@ -1,0 +1,50 @@
+.#{$prefix}-wrapper {
+    position: relative;
+}
+
+.#{$prefix}-grid-element {
+    position: relative;
+    transition: opacity 0.3s ease-in-out;
+    .#{$prefix}-dimmer {
+        position: absolute;
+        display: block;
+        background-color: rgba(42, 51, 66, 0);
+        top: 0;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        transition: all 0.3s ease-in-out;
+        //animation: fadeIn 0.3s linear;
+        visibility: hidden;
+        opacity: 0;
+    }
+}
+
+.#{$prefix}-wrapper.#{$prefix}-has-child-toolbar-active {
+    .#{$prefix}-section:not(.#{$prefix}-has-child-toolbar-active):not(.#{$prefix}-has-toolbar-active) {
+        opacity: 0.8;
+        .#{$prefix}-dimmer {
+            visibility: visible;
+            opacity: 1;
+            background-color: rgba(42, 51, 66, 0.6);
+        }
+    }
+    .#{$prefix}-section.#{$prefix}-has-child-toolbar-active {
+        .#{$prefix}-container:not(.#{$prefix}-has-child-toolbar-active):not(.#{$prefix}-has-toolbar-active) {
+            opacity: 0.1;
+        }
+    }
+}
+
+@keyframes fadeIn {
+    0% { 
+        visibility: visible;
+        opacity: 0;
+    }
+    1% {
+      opacity: 0;
+    }
+    100%{
+      opacity: 1;
+    }
+}

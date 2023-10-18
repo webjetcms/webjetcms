@@ -1,0 +1,1 @@
+﻿CKEDITOR.plugins.setLang("about","ja",{copy:"Copyright \x26copy; $1. All rights reserved.",dlgTitle:"CKEditorについて",moreInfo:"ライセンス情報の詳細はウェブサイトにて確認してください:"});

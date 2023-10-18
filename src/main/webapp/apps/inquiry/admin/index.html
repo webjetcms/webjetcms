@@ -1,0 +1,50 @@
+<script data-th-inline="javascript">
+    let columns = /*[(${layout.getDataTableColumns("sk.iway.iwcm.components.inquiry.jpa.InquiryEntity")})]*/ '';
+</script>
+<script type="text/javascript">
+    var inquiryDataTable;
+
+    window.domReady.add(function () {
+
+        WJ.breadcrumb({
+            id: "inquiry",
+            tabs: [
+                {
+                    url: '/apps/inquiry/admin/',
+                    title: '[[#{components.inquiry.title}]]',
+                    active: true
+                }
+            ]
+        });
+
+        var tabs = [
+            { id: 'basic', title: '[[#{datatable.tab.basic}]]', selected: true},
+            { id: 'advanced', title: '[[#{components.banner.tab.advanced}]]'},
+            { id: 'answers', title: '[[#{inquiry.answer2}]]'}
+        ];
+
+        let url = "/admin/rest/inquiry";
+
+        inquiryDataTable = WJ.DataTable({
+            url: url,
+            serverSide: true,
+            columns: columns,
+            id: "inquiryDataTable",
+            tabs: tabs,
+            fetchOnEdit: true,
+            fetchOnCreate: true
+        });
+
+        //Hide question id
+        window.addEventListener("WJ.DTE.innerTableInitialized", function(event) {
+            if(event.detail.conf.id == "DTE_Field_editorFields.answers")
+                var innerTable = event.detail.conf.datatable;
+
+                innerTable.EDITOR.on('open', function (e, mode, action) {
+                    innerTable.EDITOR.field('questionId').hide();
+                });
+        });
+    });
+    </script>
+
+    <table id="inquiryDataTable" class="datatableInit table"></table>

@@ -1,0 +1,814 @@
+extends ../../partials/layout
+
+block content
+
+    div.row
+        div.col-md-4.tree-col
+
+                +breadcrumb(
+                    'folders',
+                    [
+                        [ 'folders', '[[\#{webpages.tab.folders}]]', true ],
+                        [ 'system', '[[\#{webpages.tab.system}]]', false ],
+                        [ 'trash', '[[\#{webpages.tab.trash}]]', false ]
+                    ]
+                )
+
+                include ../../partials/folder-tree
+
+        div.col-md-8.datatable-col
+
+            +breadcrumb(
+                'pages',
+                [
+                    [ 'pages', '[[\#{webpages.tab.pages}]]', true ],
+                    [ 'changes', '[[\#{webpages.tab.changes}]]', false ],
+                    [ 'waiting', '[[\#{webpages.tab.waiting}]]', false],
+                    [ 'folders-dt', '[[\#{webpages.tab.folders}]]', false]
+                ]
+            )
+
+            style.
+                .dt-header-row .form-switch.buttons-recursive .form-check-label.is-icon-arrows-v::after {
+                    content: "\f802";
+                }
+                span.baseurl {
+                    max-width: 60%;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                    display: inline-block;
+                    white-space: nowrap;
+                    line-height: 16px;
+                    direction: rtl;
+                    text-align: left;
+                }
+                #DTE_Field_editorVirtualPath {
+                    width: 40%;
+                    display: inline-block;
+                }
+                #pills-folders-dt-tab { display: none; }
+                body.showfolders-dt #pills-folders-dt-tab {
+                    display: block;
+                }
+                #groups-datatable_modal[data-action=duplicate] .DTE_Field_Name_editorFields\.defaultDocDetails {
+                    opacity: 0.3;
+                    pointer-events: none;
+                }
+                @media (max-width: 1350px) {
+                    #datatableInit_wrapper > div.dt-header-row .buttons-divider { margin-right: 4px; }
+                    #datatableInit_wrapper > div.dt-header-row .buttons-divider-left { margin-left: 0px; }
+                }
+                @media (max-width: 1200px) {
+                    #datatableInit_wrapper > div.dt-header-row .buttons-divider { margin-right: 16px; }
+                    #datatableInit_wrapper > div.dt-header-row .buttons-divider-left { margin-left: 12px; }
+                }
+                #datatableInit_wrapper .dt-header-row div.dt-buttons {
+                    padding-right: 175px;
+                }
+
+            script.
+                window.helpLink = "/redactor/webpages/README";
+                var webpagesUrl = "/admin/rest/web-pages";
+                var webpagesDatatable = null;
+                //aktualne nacitane groupIdhistoryTable
+                var webpagesDatatableGroupId = -1;
+                //docid stranky, ktoru potrebujeme editovat po nacitani adresara
+                var docidAfterLoad = -1;
+
+                var groupsUrlClickParam = "dt-tree-group-filter-system-trash";
+                var groupsUrl = "/admin/rest/groups";
+                var groupsDatatable = null;
+                var selectedNode = null;
+
+                var webpagesInitialUrl = webpagesUrl;
+                var groupsInitialUrl = groupsUrl;
+
+                //
+                var recursive = false;
+                var lastGroup = null;
+
+                window.treeInitialJson = [(${treeInitialJson})];
+                let groupsInitialJson = [(${groupsInitialJson})];
+                let webpagesInitialJson = [(${webpagesInitialJson})];
+                let hasPagesToApprove = [(${hasPagesToApprove})];
+                let hasSystemTab = [(${hasSystemTab})];
+                let hasTrashTab = [(${hasTrashTab})];
+                let showTab = "[(${showTab})]";
+
+                window.domReady.add(function () {
+
+                    if (hasPagesToApprove === false) {
+                        $("#pills-waiting-tab").parent().hide();
+                    }
+                    if (hasSystemTab === false) {
+                        $("#pills-system-tab").parent().hide();
+                    } else if ("pills-system-tab"==showTab) {
+                        //server injected system tab
+                        $("#pills-system-tab").parents("ul").find("li a").removeClass("active");
+                        $("#pills-system-tab").addClass("active");
+                    }
+                    if (hasTrashTab === false) {
+                        $("#pills-trash-tab").parent().hide();
+                    } else if ("pills-trash-tab"==showTab) {
+                        //server injected trash tab
+                        $("#pills-trash-tab").parents("ul").find("li a").removeClass("active");
+                        $("#pills-trash-tab").addClass("active");
+                    }
+
+                    var webpageColumns = [(${layout.getDataTableColumns('sk.iway.iwcm.doc.DocDetails')})];
+
+                    //console.log("webpageColumns: ", webpageColumns);
+
+                    try {
+                        if (groupsInitialJson != null) {
+                            webpagesDatatableGroupId = groupsInitialJson.content[0].groupId;
+                            webpagesInitialUrl = webpagesUrl + "?groupId="+webpagesDatatableGroupId;
+                            groupsInitialUrl = groupsUrl + "?groupId="+webpagesDatatableGroupId;
+                        }
+                    } catch (e) {console.log(e);}
+
+                    //console.log("webpagesInitialUrl=", webpagesInitialUrl, "groupsInitialUrl=", groupsInitialUrl);
+
+                    let wpdInstance = new window.WebPagesDatatable({
+                        url: webpagesInitialUrl,
+                        initialData: webpagesInitialJson,
+                        columns: webpageColumns,
+                        idAutoOpener: false,
+                        onEdit: function(TABLE, row, dataAfterFetch, dataBeforeFetch) {
+                            //console.log("onEdit, TABLE=", TABLE, "row=", row, "id=", row[0].id);
+
+                            //over v akej sme zalozke a podla toho sa zachovaj
+                            var currentTab = $("#pills-pages a.active").attr("id");
+                            if ("pills-changes-tab"==currentTab) {
+                                //Naposledy upravene
+                                //zadaj docid do input pola a vyvolaj event na tom pre nacitanie stromu
+                                let input = $("#tree-doc-id");
+                                input.val(row[0].id);
+                                var e = $.Event( "keyup", { keyCode: 13 } );
+                                input.trigger(e);
+                            } else if ("pills-waiting-tab"==currentTab) {
+                                //console.log("pills-waiting, row=", row[0]);
+                                //cakajuce na schvalenie
+                                //otvor popup okno so schvalovanim
+                                //vrat povodne data, kedze fetch sa vykonal bez historyId a mohla nastat zmena titulku
+                                //POZOR: tu je otocene docId a historyId v objekte, kedze docId sa moze opakovat a vznikal problem s jednoznacnym ID
+                                TABLE.row("#"+row[0].id).data(dataBeforeFetch);
+
+                                if(dataBeforeFetch.title != undefined && dataBeforeFetch.title.startsWith("[DELETE]"))
+                                    window.open("/admin/approve_delete.jsp?docid="+dataBeforeFetch.historyId+"&historyid="+dataBeforeFetch.docId);
+                                else
+                                    window.open("/admin/approve.jsp?docid="+dataBeforeFetch.historyId+"&historyid="+dataBeforeFetch.docId);
+                            } else {
+                                TABLE.wjEdit(row);
+                            }
+                        }
+                    });
+                    webpagesDatatable = wpdInstance.createDatatable();
+
+                    var groupColumns = [(${layout.getDataTableColumns('sk.iway.iwcm.doc.GroupDetails')})];
+
+                    var groupsTabs = [
+                        { id: 'basic', title: '[[\#{editor.tab.basic_info}]]', selected: true },
+                        { id: 'template', title: '[[\#{editor.tab.template}]]' },
+                        { id: 'menu', title: '[[\#{editor.tab.navigation}]]' },
+                        { id: 'access', title: '[[\#{editor.tab.permissions}]]' },
+                        { id: 'publishing', title: '[[\#{editor.tab.publishing}]]' },
+                        { id: 'fields', title: '[[\#{editor.tab.fields}]]' },
+                        { id: 'history', title: '[[\#{editor.tab.history}]]', content: '<div class="groupHistoryPlaceholder"><div>' }
+                    ];
+
+                    groupsDatatable = WJ.DataTable({
+                        id: 'groups-datatable',
+                        url: groupsInitialUrl,
+                        initialData: groupsInitialJson,
+                        serverSide: false,
+                        columns: groupColumns,
+                        tabs: groupsTabs,
+                        editorId: "groupId",
+                        hideTable: true,
+                        fetchOnCreate: true,
+                        fetchOnEdit: true,
+                        idAutoOpener: false,
+                        keyboardSave: false,
+                        ajax: {
+                            data: function (d) {
+                                //console.log("groups, data, d=", d);
+
+                                var node = getTreeNodeSelected();
+
+                                if (node == null) {
+                                    console.warn("Node null");
+                                    return;
+                                }
+
+                                var id = getTreeNodeId(node),
+                                    type = getTreeNodeType(node);
+
+                                if (type === 'group') {
+                                    d.groupId = id;
+                                }
+                            }
+                        },
+                        jsonField: {
+                            getKey: function(props, data) {
+                                let key;
+                                //console.log("props.click", props.click);
+                                if (props.click.indexOf("dt-tree-group-array-scheduler")==0) key = data.scheduleId;
+                                else if (props.click.indexOf("dt-tree-page")==0) key = data.docId;
+                                else key = data.groupId;
+                                return key;
+                            }
+                        },
+                        perms: {
+                            create: 'addSubdir',
+                            edit: 'editDir',
+                            duplicate: 'addSubdir',
+                            remove: 'deleteDir'
+                        }
+                    });
+
+                    groupsDatatable.hideButton("import");
+                    groupsDatatable.hideButton("export");
+
+                    window.jsTreeDocumentOpener.dataTable = webpagesDatatable;
+                    window.jsTreeDocumentOpener.init();
+                    var docIdParameter = window.jsTreeDocumentOpener._currentId;
+                    //console.log("docIdParameter=", docIdParameter);
+                    window.jsTreeFolderOpener.dataTable = groupsDatatable;
+                    window.jsTreeFolderOpener.init();
+
+                    var webpageFailsafeOpenTimer = null;
+
+                    function setFailsafeTimer() {
+                        if (webpageFailsafeOpenTimer != null) clearTimeout(webpageFailsafeOpenTimer);
+                        webpageFailsafeOpenTimer = setTimeout(function() {
+                            //over, ci bol zobrazeny editor, ak nie, skus este raz, je tam komplikovane casovanie
+                            if ($("#datatableInit_modal").length<1 && docIdParameter > 0) {
+                                //console.log("Pre istotu overujem zobrazenie editora, docIdParameter=", docIdParameter);
+                                $("#tree-doc-id").val(docIdParameter);
+                                var e = $.Event( "keyup", { which: 13, key: 'Enter', keyCode: 13 } );
+                                $("#tree-doc-id").trigger(e);
+                            }
+                        }, 20000);
+                    }
+
+                    setFailsafeTimer();
+                    $('#datatableInit').on( 'page.dt', function () {
+                        //console.log("page.dt");
+                        setFailsafeTimer();
+                        var loader = $("#modalIframeLoader span");
+                        //console.log("loader=", loader, "html=", loader.html());
+                        loader.text(loader.text()+".")
+                    });
+
+                    $('#SomStromcek').on("changed.jstree", function(node, action, selected, event) {
+                        //console.log("changed.jstree node=", node, "action=", action);
+
+                        if ("model"==action.action || "ready"==action.action || "deselect_all"==action.action) return;
+
+                        node = selectedNode = getTreeNodeSelected();
+                        if (node == null) {
+                            console.warn("Node null");
+                            return;
+                        }
+
+                        var id = getTreeNodeId(node),
+                            type = getTreeNodeType(node);
+
+                        //console.log("type=", type);
+
+                        if (type == null) return;
+
+                        if (type === 'group') {
+                            //console.log("KLIK na nejaku grupu, original=", node.original);
+                            var isEditable = true;
+                            if (typeof node.original.icon != "undefined" && node.original.icon.indexOf("folder-times")!=-1) isEditable = false;
+                            setCurrentGroup(node.original.groupDetails, isEditable);
+                        }
+                        else {
+                            // document
+                            //console.log("Som dokument, id=", id, "type=", type, "node=", node);
+                            let groupId = node.original.docDetails.groupId;
+                            //console.log("groupId=", groupId, "current=", webpagesDatatableGroupId);
+
+                            editPage(id, groupId);
+                        }
+                    });
+
+                    $('.tree-col .dt-header-row .buttons-create').click(function () {
+                        var type = getTreeNodeType(selectedNode);
+                        if (type === null || type === 'group') {
+                            var button = getGroupsButton('buttons-create');
+                            //console.log("button=", button);
+                            if (button != null) {
+                                $(button).click();
+                            }
+                        }
+                    });
+
+                    $('.tree-col .dt-header-row .buttons-edit').click(function () {
+                        var type = getTreeNodeType(selectedNode);
+                        //console.log("Edit click, type=", type, "selectedNode=", selectedNode);
+                        if (type === 'group') {
+                            $(this).addClass("processing");
+                            //console.log("first: ", $('#groups-datatable tbody tr:first td:first'));
+                            //musime spravit reload a nasledne na onXhr otvorit editaciu prveho riadku aby sa nam korektne fetchli options
+                            var button = getGroupsButton('buttons-edit');
+                            //oznac riadky
+                            groupsDatatable.rows().deselect();
+                            let selected = getTreeNodeSelectedGroups();
+                            selected.forEach(function(node) {
+                                groupsDatatable.row("#"+node.id).select();
+                            });
+                            //console.log("button=", button);
+                            if (button != null) {
+                                groupsDatatable.wjUpdateOptions(WJ.urlAddPath(groupsDatatable.ajax.url(), "/all") , function() {
+                                    $(button).click();
+                                });
+                            }
+                        }
+                        else {
+                            // edit webpage
+                        }
+                    });
+
+                    $('.tree-col .dt-header-row .buttons-remove').click(function () {
+                        var type = getTreeNodeType(selectedNode);
+                        if (type === 'group') {
+                            //$('#groups-datatable tbody tr:first td:first').click();
+                            let selected = getTreeNodeSelectedGroups();
+                            groupsDatatable.rows().deselect();
+                            selected.forEach(function(node) {
+                                groupsDatatable.row("#"+node.id).select();
+                            });
+                            var button = getGroupsButton('buttons-remove');
+                            if (button != null) {
+                                $(button).click();
+                            }
+                        } else {
+                            // edit webpage
+                        }
+                    });
+
+                    function showHideDomainName(parentGroupId) {
+                        window.setTimeout(function() {
+                            try {
+                                if (parentGroupId > 0) {
+                                    groupsDatatable.EDITOR.field("domainName").hide();
+                                    groupsDatatable.EDITOR.field("editorFields.forceDomainNameChange").hide();
+                                } else {
+                                    groupsDatatable.EDITOR.field("domainName").show();
+                                    groupsDatatable.EDITOR.field("editorFields.forceDomainNameChange").show();
+                                }
+                            } catch (e) {}
+                        }, 700);
+                    }
+
+                    let groupsDatatableEventsBinded = false;
+                    groupsDatatable.EDITOR.on('open', function (e, type) {
+                        $("div.modal.DTED > div.modal-dialog").addClass("modal-xl");
+                        //zobrazovat-pole-pre-zadanie-domeny-len-pre-korenove-priecinky
+                        //console.log("open e=", e);
+                        if (typeof e.target.currentJson != "undefined") {
+                            let parentGroupId = e.target.currentJson.parentGroupId;
+                            //console.log("parentGroupId=", parentGroupId);
+                            showHideDomainName(parentGroupId);
+                        }
+                    });
+                    window.addEventListener("WJ.DTE.opened", function(e) {
+                        //console.log("WJ.DTE.opened, e=", e);
+                        if ("groups-datatable"===e.detail.id) {
+                            //zrus loader
+                            $('.tree-col .dt-header-row .buttons-edit').removeClass("processing");
+
+                            //bindni eventy, DETD je aj tak stale otvoreny, takze sa tento event viac krat nevola
+                            if (groupsDatatableEventsBinded == false) {
+                                //console.log("Binding groups DTED events");
+                                groupsDatatableEventsBinded = true;
+                                //navbar nastaveny podla title
+                                $("#DTE_Field_groupName").on("blur", function() {
+                                    if ($("#DTE_Field_navbarName").val()=="") {
+                                        $("#DTE_Field_navbarName").val($("#DTE_Field_groupName").val());
+                                    }
+                                });
+                                $("#DTE_Field_editorFields-parentGroupDetails").on("change", function(e) {
+                                    //console.log("Input changed, e=", e);
+                                    let json = JSON.parse($(e.target).val());
+                                    //console.log("json=", json);
+                                    //tu pouzivame groupId, lebo je to objekt parent adresara
+                                    let groupId = json[0].groupId;
+                                    showHideDomainName(groupId);
+                                });
+                            }
+
+                            //pri duplikovani zmazme niektore hodnoty
+                            setTimeout(()=> {
+                                if ($("#groups-datatable_modal").attr("data-action")=="duplicate") {
+                                    $("#DTE_Field_navbarName").val("");
+                                    $("#DTE_Field_urlDirName").val("");
+                                }
+                            }, 200);
+                        }
+                        if ("datatableInit"===e.detail.id) {
+                            if (webpagesDatatable.EDITOR.currentJson?.docId === -1) {
+                                //je to nova stranka, prepni sa na kartu Zakladne
+                                setTimeout(()=> {
+                                    $("#pills-dt-datatableInit-basic-tab").trigger("click");
+                                }, 700);
+                            }
+                            //pri duplikovani zmazme niektore hodnoty
+                            setTimeout(()=> {
+                                if ($("#datatableInit_modal").attr("data-action")=="duplicate") {
+                                    $("#pills-dt-datatableInit-basic-tab").trigger("click");
+                                    $("#DTE_Field_navbar").val("");
+                                    $("#DTE_Field_virtualPath").val("");
+                                }
+                            }, 700);
+
+                            //bug: edit - celledit - edit = virtualPath bad positioning, fix to flex
+                            var display = $("div.DTE_Field_Name_virtualPath").css("display");
+                            //console.log("display=", display);
+                            if (typeof display != undefined && "block"==display) {
+                                $("div.DTE_Field_Name_virtualPath").css("display", "flex");
+                            }
+                        }
+                    });
+                    groupsDatatable.EDITOR.on('postSubmit', function (e, json, data) {
+                        setTimeout(()=>{
+                            //console.log("postSubmit");
+                            $('#SomStromcek').jstree(true).refresh();
+                        }, 1000);
+                    });
+                    groupsDatatable.EDITOR.on('remove', function (e, json, ids) {
+                        //console.log("AFTER REMOVE");
+                        webpagesDatatable.ajax.url(webpagesUrl);
+                        webpagesDatatable.ajax.reload();
+                    });
+
+                    window.addEventListener('WJ.DTE.forceReload', (e) => {
+                        //console.log("FORCE RELOAD listener, e=", e);
+                        if (e.detail.TABLE.DATA.id=="groups-datatable") {
+                            //toto sa vyvola, ked sa zmeni domena na adresari
+                            //console.log("e.detail.data=", e.detail.data);
+                            if (e.detail.data.editorFields.forceDomainNameChange === true) {
+                                window.location="/admin/v9/webpages/web-pages-list/?groupid="+e.detail.data.groupId;
+                            }
+                            //window.location=window.location.pathname;
+                            setTimeout(()=>{
+                                //console.log("Reloading jstree 1");
+                                $('#SomStromcek').jstree(true).refresh();
+                                webpagesDatatable.ajax.reload();
+                            }, 1000);
+                        } else {
+                            //console.log("Reloading jstree 2");
+                            $('#SomStromcek').jstree(true).refresh();
+                        }
+                    }, false);
+
+                    //po drag&drop jstree je potrebne vyvolat aj reload datatabulky
+                    window.jstree.on("move_node.jstree", function (e, data) {
+                        //console.log("move_node.jstree, reloading DT");
+                        setTimeout(()=> {
+                            webpagesDatatable.ajax.reload();
+                        }, 500);
+                    });
+
+                    groupsDatatable.EDITOR.add({type: "hidden", name: "groupId"});
+
+                    //webpagesDatatable.EDITOR.add({type: "hidden", name: "docId"});
+                    //webpagesDatatable.EDITOR.add({type: "hidden", name: "data"});
+
+                    webpagesDatatable.on("draw", function() {
+                        if (docidAfterLoad>0 && webpagesDatatableGroupId>0) {
+                            editPage(docidAfterLoad, webpagesDatatableGroupId);
+                            docidAfterLoad = -1;
+                        }
+                    });
+
+                    (() => {
+                        //presun input do DT hlavicky
+                        $("#datatableInit_wrapper div.dt-header-row div.row div.col-auto .dt-buttons").append($("#docIdInputWrapper")).parents("div.dt-header-row").addClass("wp-header");
+
+                        window?.jsTreeDocumentOpener?.inputDataFrom($('#tree-doc-id'), value => {
+                            WJ.notifyError(WJ.translate("groupslist.docid_url") + " " + value, WJ.translate("editor.docid.cantload.js"), 5000);
+                        });
+                        window?.jsTreeFolderOpener?.inputDataFrom($('#tree-folder-id'), value => {
+                            WJ.notifyError(WJ.translate("webstranky.folder_id") + " " + value, WJ.translate("editor.folderid.cantload.js"), 5000);
+                        });
+                    })();
+
+                    $("#tree-doc-id").on("focus", function() {
+                        $(this).addClass("focused");
+                    });
+                    $("#tree-doc-id").on("blur", function() {
+                        $(this).removeClass("focused");
+                    })
+
+                }, 5);
+
+                //Check if actual PATH include recusive param and if yes, remove this param from PATH and return new edited PATH
+                function returnActualPathWithoutRecursionParam() {
+                    let actualUrl = webpagesDatatable.ajax.url();
+                    let splitUrl = undefined;
+
+                    if(actualUrl.includes("&recursive=true")) {
+                        splitUrl = actualUrl.split("&recursive=true");
+
+                    } else if(actualUrl.includes("&recursive=false")) {
+                        splitUrl = actualUrl.split("&recursive=false");
+                    }
+
+                    if(splitUrl !== undefined) {
+                        actualUrl = "";
+                        for(let i = 0; i < splitUrl.length; i++) {
+                            actualUrl += splitUrl[i];
+                        }
+                    }
+
+                    return actualUrl;
+                }
+
+                function setCurrentGroup(groupDetails, isEditable) {
+                    //console.log("setCurrentGroup, last=", window.lastGroup, "new=", groupDetails);
+                    if (window?.lastGroup?.groupId == groupDetails?.groupId) {
+                        //console.log("is same, returning");
+                        return;
+                    }
+                    window.lastGroup = groupDetails;
+
+                    if (isEditable===true) {
+                        $('.tree-col .dt-header-row .buttons-create').removeClass("disabled");
+                        $('.tree-col .dt-header-row .buttons-edit').removeClass("disabled");
+                        $('.tree-col .dt-header-row .buttons-remove').removeClass("disabled");
+                        $('#datatableInit_wrapper .dt-header-row .buttons-create').removeClass("disabled");
+                    } else {
+                        $('.tree-col .dt-header-row .buttons-create').addClass("disabled");
+                        $('.tree-col .dt-header-row .buttons-edit').addClass("disabled");
+                        $('.tree-col .dt-header-row .buttons-remove').addClass("disabled");
+                        $('#datatableInit_wrapper .dt-header-row .buttons-create').addClass("disabled");
+                    }
+
+
+                    loadTablesForGroup(groupDetails.groupId);
+                }
+
+                function getTreeNodeSelected() {
+                    var jstree = $('#SomStromcek').jstree();
+
+                    let selectedNodes = [];
+                    let selected = jstree.get_selected();
+                    if (selected.length == 0) return false;
+
+                    //ocisti priecinky na ktore nemam prava
+                    selected.forEach(function(id) {
+                        let node = jstree.get_node(id);
+                        selectedNodes.push(node);
+                    });
+
+                    return jstree.get_node(selectedNodes[selectedNodes.length-1]);
+                }
+
+                function getTreeNodeSelectedGroups() {
+                    let jstree = $('#SomStromcek').jstree();
+                    let selected = jstree.get_selected();
+                    let selectedNodes = [];
+                    selected.forEach(function(id) {
+                        let node = jstree.get_node(id);
+                        if (node?.id.indexOf("docId-")==-1) {
+                            //je to group
+                            selectedNodes.push(node);
+                        }
+                    });
+                    return selectedNodes;
+                }
+
+                function getTreeNodeType(node) {
+                    //console.log("getTreeNodeType, node=", node);
+                    if (node === null || typeof node.id === 'undefined') {
+                        return null;
+                    }
+                    return node.id.indexOf('docId-') !== -1 ? 'document' : 'group';
+                }
+
+                function getTreeNodeId(node) {
+                    if (node === null || typeof node.id === 'undefined') {
+                        return null;
+                    }
+                    return Number(node.id.replace('docId-', ''));
+                }
+
+                function getGroupsButton(cssClass) {
+                    let buttons = groupsDatatable.buttons();
+                    var button = $.grep(buttons, function(n){
+                        //console.log(n);
+                        //console.log($(n.node));
+                        //console.log($(n.node).hasClass(cssClass));
+                        return $(n.node).hasClass(cssClass);
+                    });
+
+                    //console.log('button', button);
+
+                    if (button.length > 0) {
+                        return button[0].node;
+                    }
+
+                    return null;
+                }
+
+                function loadTablesForGroup(id) {
+
+                    if ($("#pills-folders-dt-tab").hasClass("active")==false) $('#pills-pages li:first-child a').tab('show');
+
+                    //Set groupId param
+                    webpagesDatatable.ajax.url(WJ.urlAddParam(webpagesUrl, "groupId", id));
+
+                    //Call method returnActualPathWithoutRecursionParam to erase recursive param from PATH and set this param again
+                    webpagesDatatable.ajax.url(WJ.urlAddParam(returnActualPathWithoutRecursionParam(), "recursive", recursive));
+
+                    webpagesDatatable.ajax.reload();
+
+                    webpagesDatatableGroupId = id;
+
+                    groupsDatatable.ajax.url(groupsUrl+"?groupId="+id);
+                    let selectedNodes = getTreeNodeSelectedGroups();
+
+                    //console.log("Web-page-list URLL : ", groupsUrl+"?groupId="+id);
+                    if ($("#pills-folders-dt-tab").hasClass("active") && selectedNodes.length==1) {
+                        //ak je oznaceny JEDEN uzol a je zobrazena karta Priecinky sprav realny AJAX request
+                        groupsDatatable.ajax.reload();
+                    } else {
+                        //nerobime zbytocne reload, iba fejkneme data, robi sa fetchOnEdit
+                        groupsDatatable.clear();
+                        selectedNodes.forEach(function(node) {
+                            groupsDatatable.row.add(node.original.groupDetails);
+                        });
+                        groupsDatatable.draw();
+                    }
+                }
+
+                function editPage(docId, groupId) {
+                    let input = $("#tree-doc-id");
+                    input.val(docId);
+                    var e = $.Event( "keyup", { keyCode: 13 } );
+                    input.trigger(e);
+                }
+
+                $('#pills-folders a[data-bs-toggle="tab"]').on('click', function (e) {
+                    //console.log("tab clicked, e=", e, "shift=", e.shiftKey);
+                    let id = e.target.id;
+                    let click = groupsUrlClickParam;
+                    let urlGroupDetails = null;
+                    if ("pills-system-tab"==id) {
+                        click = "dt-tree-group-system";
+                        urlGroupDetails = "/admin/rest/groups/tree/system";
+                    } else if ("pills-trash-tab"==id) {
+                        click = "dt-tree-group-trash";
+                        urlGroupDetails = "/admin/rest/groups/tree/trash";
+                    } else if ("pills-folders-tab"==id && e.shiftKey === true) {
+                        //kliknutie na Priecinky zo Shiftom vypne filtrovanie System priecinku
+                        click = "dt-tree-group";
+                    }
+
+                    //ak je zvolene zobrazenie aj stranky zrus group vyraz
+                    if (window.jstreeSettings.isPagesShow()) {
+                        click = click.replace(/dt-tree-group/gi, "dt-tree");
+                    }
+
+                    //zmaz groupid parameter z URL aby sa nam potom znova neoznacil adresar ale zobrazil root
+                    let url = window.location.protocol + '//' + window.location.host + window.location.pathname;
+                    window.history.pushState({path: url}, '', url);
+                    //$("#SomStromcek").jstree(true).deselect_all(true);
+
+                    //nacitaj strom
+                    window.jstree.data("rest-url", "/admin/rest/groups/tree?click="+click);
+                    //zabudni stav, inak sa zle reloadne DT (nekoresponduje so stromom)
+                    window.jstree.jstree(true).refresh(false, true);
+
+                    //ziskaj GroupDetails a setni DT
+                    if (urlGroupDetails != null) {
+                        $.get({
+                            url: urlGroupDetails,
+                            success: function(response) {
+                                //console.log("response=", response);
+                                selectedNode = {
+                                    id: ""+response.groupId,
+                                    original: {
+                                        id: ""+response.groupId,
+                                        groupDetails: response
+                                    }
+                                }
+                                //aby sa vzdy vyvolal reload
+                                window.lastGroup = null;
+                                setCurrentGroup(response, true);
+                                //skus selectnut vrateny nod (ked to je recursiveSystemFolder) - uz sa nepouziva, koliduje s /parents pri zadani ID stranky
+                                setTimeout(function() {
+                                    //console.log("Selecting ", response.groupId);
+                                    //window.jstree.jstree('select_node', ""+response.groupId);
+                                }, 2000);
+                            }
+                        });
+                    } else {
+                        //nacitali sme Priecinky, schovaj edit a trash button
+                        $('.tree-col .dt-header-row .buttons-edit').addClass("disabled");
+                        $('.tree-col .dt-header-row .buttons-remove').addClass("disabled");
+                        //reloadni tabulku na prazdnu
+                        webpagesDatatable.ajax.url(webpagesInitialUrl);
+                        webpagesDatatable.ajax.reload();
+                        groupsDatatable.ajax.url(groupsInitialUrl);
+                        groupsDatatable.ajax.reload();
+                    }
+                });
+
+                $('#pills-pages a[data-bs-toggle="tab"]').on('click', function (e) {
+                    //console.log("PILLS CLICK");
+                    let id = e.target.id;
+                    let changesId =  [(${layout.getConstant('systemPagesRecentPages')})];
+                    let waitingId =  [(${layout.getConstant('systemPagesDocsToApprove')})];
+
+                    if ("pills-folders-dt-tab" == id) {
+                        $("#datatableInit_wrapper").hide();
+                        $("#groups-datatable_wrapper").show();
+                        let selectedNodes = getTreeNodeSelectedGroups();
+                        //console.log("selectedNodes=", selectedNodes);
+                        if (selectedNodes.length<2) groupsDatatable.ajax.reload();
+                    } else {
+                        $("#datatableInit_wrapper").show();
+                        $("#groups-datatable_wrapper").hide();
+                    }
+
+                    if("pills-pages-tab" == id) {
+                        $("button.buttons-linkcheck").show();
+                        $("button.buttons-abtest").show();
+                    } else {
+                        $("button.buttons-linkcheck").hide();
+                        $("button.buttons-abtest").hide();
+                    }
+
+                    if("pills-pages-tab" == id) {
+                        //console.log("pills-pages, webpagesDatatableGroupId=", webpagesDatatableGroupId);
+
+                        webpagesDatatable.ajax.url(WJ.urlAddParam(webpagesUrl, "groupId", webpagesDatatableGroupId));
+                        //Call method returnActualPathWithoutRecursionParam to erase recursive param from PATH and set this param again
+                        webpagesDatatable.ajax.url(WJ.urlAddParam(returnActualPathWithoutRecursionParam(), "recursive", recursive));
+
+                        webpagesDatatable.columns("id:name").order("asc").draw();
+                        //webpagesDatatable.ajax.reload();
+                    } else if("pills-changes-tab" == id) {
+                        webpagesDatatable.ajax.url(WJ.urlAddParam(webpagesUrl, "groupId", changesId));
+
+                        //console.log(changesId);
+                        webpagesDatatable.columns("dateCreated:name").order("desc").draw();
+                        //webpagesDatatable.ajax.reload();
+                    } else if("pills-waiting-tab" == id) {
+                        //console.log(waitingId);
+                        webpagesDatatable.ajax.url("/admin/rest/webpages/toapprove");
+                        webpagesDatatable.columns("dateCreated:name").order("desc").draw();
+                        //webpagesDatatable.ajax.reload();
+                    }
+
+                    //In case of history tab, we dont want to allow delete awaiting requests (they must be approved or rejected)
+                    if ("pills-waiting-tab" == id)
+                        webpagesDatatable.hideButton("remove");
+                    else
+                        webpagesDatatable.showButton("remove");
+                });
+
+
+                $('#pills-pages a[data-bs-toggle="tab"]').on('shown.bs.tab', function (e) {
+                    //console.log("show.bs.tab, e=", e);
+                    //zabezpec schovanie/zobrazenie tlacidiel
+
+                    if ("pills-pages-tab"==e.target.id) {
+                        webpagesDatatable.showButton("create");
+                        webpagesDatatable.showButton("edit");
+                        webpagesDatatable.showButton("duplicate");
+                        webpagesDatatable.showButton("remove");
+                        webpagesDatatable.showButton("celledit");
+                        webpagesDatatable.showButton("wjimportexport");
+                        webpagesDatatable.showButton("showsubfolders");
+                    } else {
+                        webpagesDatatable.hideButton("create");
+                        webpagesDatatable.hideButton("edit");
+                        webpagesDatatable.hideButton("duplicate");
+                        webpagesDatatable.hideButton("remove");
+                        webpagesDatatable.hideButton("celledit");
+                        webpagesDatatable.hideButton("wjimportexport");
+                        webpagesDatatable.hideButton("showsubfolders");
+                    }
+                });
+
+                $("#DTE_Field_generateUrlFromTitle_0").on("change", function() {
+                    let checked = $(this).is(":checked");
+
+                    if (checked) $("#DTE_Field_editorVirtualPath").hide()
+                    else $("#DTE_Field_editorVirtualPath").show()
+                });
+
+            <table class="datatableInit table"></table>
+            <table id="groups-datatable" class="groups-datatable datatableInit table"></table>
+
+            <div id="docIdInputWrapper" class="col-auto col-pk-input">
+                <label for="tree-doc-id">[[\#{groupslist.docid_url}]]: </label>
+                <input type="text" autocomplete="off" class="js-tree-doc-id__input autocomplete" id="tree-doc-id" data-ac-name="docid" data-ac-url="/admin/skins/webjet6/_doc_autocomplete.jsp" data-ac-click="fireEnter" data-ac-max-rows="20"/>
+            </div>
+

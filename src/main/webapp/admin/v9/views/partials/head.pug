@@ -1,0 +1,61 @@
+include ../pug/mixins
+
+meta(http-equiv='X-UA-Compatible' content='IE=edge')
+meta(charset='utf-8')
+meta(name='viewport' content='width=device-width, initial-scale=1, shrink-to-fit=no')
+meta(http-equiv='Content-type' content='text/html;charset=utf-8')
+meta(http-equiv='Content-language' content='sk-SK')
+
+title #{WPD.name}
+
+meta(name='author' content=`www.interway.sk ${WPD.author}`)
+meta(name='generator' content='WebJET CMS')
+
+link(rel='icon' href=require('../../../src/images/favicon-cms.ico') type='image/x-icon')
+
+
+// Outpul all style files
+each css in WPF.css
+    link(href=css, rel='stylesheet')
+
+script.
+    window.userLng = "[[${layout.lng}]]";
+    window.userLngWebjet = "[[${layout.lngWebjet}]]";
+    window.bootstrapVersion = "[(${layout.getConstant('bootstrapVersion')})]";
+    window.csrfToken = '[[${layout.csrfToken}]]';
+    window.csrfError = "[[\#{components.csrfError}]]";
+    window.currentUser = [(${layout.userDto})];
+    window.propertiesLastModified = [[${layout.propertiesLastModified}]];
+    window.pixabayEnabled = [(${layout.getConstant('pixabayEnabled')})];
+    window.editorImageAutoTitle = [(${layout.getConstant('editorImageAutoTitle')})];
+    window.perexGroupsRenderAsSelect = [(${layout.isPerexGroupsRenderAsSelect()})];
+    window.datatablesExportMaxRows = [(${layout.getConstantInt('datatablesExportMaxRows', 50000)})];
+
+// Outpul all script files
+-
+    let filename = htmlWebpackPlugin.options.filename;
+    var slash = filename.lastIndexOf("/");
+    if (slash == -1) slash = filename.lastIndexOf("\\");
+    var dot = filename.indexOf(".", slash);
+    if (slash > 0 && dot > slash) filename = filename.substring(slash+1, dot);
+
+each js in WPF.js
+    - if (js.indexOf("pages_")==-1 || js.indexOf("pages_"+filename+".")!=-1)
+        script(type='text/javascript', src=js)
+
+div(class="head-script" data-th-if="${appIncludePathJs != null}" data-th-remove="tag")
+    script(type="module").
+        import * as appModule from "[[${appIncludePathJs}]]";
+        window.appModule = appModule;
+
+//translations
+style(type="text/css").
+    .ql-snow .ql-tooltip[data-mode="link"]::before {
+        content: "[[\#{editor.page_enter_url}]]:";
+    }
+    .ql-snow .ql-tooltip.ql-editing a.ql-action::after {
+        content: "[[\#{button.save}]]";
+    }
+
+style(data-th-utext="${layout.nopermsCss}" type="text/css")
+script(data-th-utext="${layout.nopermsJavascript}")

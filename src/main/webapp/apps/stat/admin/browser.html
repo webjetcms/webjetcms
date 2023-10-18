@@ -1,0 +1,171 @@
+<script data-th-inline="javascript">
+    let url = "/admin/rest/stat/browser";
+    let columns = /*[(${layout.getDataTableColumns("sk.iway.iwcm.stat.jpa.BrowsersDTO")})]*/ '';
+</script>
+<script>
+    var browserDataTable;
+
+    WJ.breadcrumb({
+        id: "browser",
+        tabs: [
+            {
+                url: '/apps/stat/admin/browser',
+                title: '[[#{stat_menu.browsers}]]',
+                active: true
+            },
+            {
+                url: '#dateRange',
+                title: '{filter}',
+                active: false
+            }
+        ]
+    });
+
+    window.domReady.add(function () {
+        //presun filter do hlavicky
+        $("#pills-dateRange-tab").html("");
+        $("div#browserDataTable_extfilter").appendTo("#pills-dateRange-tab");
+        WJ.showLoader();
+
+        let pieChartBrowsers;
+        let pieChartPlatforms;
+        let lineChartVisits;
+
+        browserDataTable = WJ.DataTable({
+            url: url,
+            serverSide: false, //false lebo sa nevyužíva repositár
+            columns: columns,
+            id: "browserDataTable",
+            idAutoOpener: false,
+            defaultSearch: ChartTools.getSearchCriteria(),
+            autoHeight: false,
+            onPreXhr: function(TABLE, e, settings, data) {
+                data.fixed_searchFilterBotsOut = $('#botFilterOut').is(':checked');
+                data.fixed_searchRootDir = $('#rootDir').val();
+            }
+        });
+
+        ChartTools.initGroupIdSelect();
+
+        browserDataTable.hideButton("import");
+        browserDataTable.hideButton("create");
+        browserDataTable.hideButton("edit");
+        browserDataTable.hideButton("duplicate");
+        browserDataTable.hideButton("celledit");
+        browserDataTable.hideButton("remove");
+
+        //Create and set amcharts
+        createAmcharts();
+
+        //Onchange events - update amcharts
+        $("#browserDataTable_extfilter").on("click", "button.filtrujem", function() {
+            getDataAndUpdateAmcharts();
+        });
+
+        ChartTools.bindFilter(getDataAndUpdateAmcharts);
+
+        async function createAmcharts() {
+            window.initAmcharts().then(module => {
+                $.ajax({url: getUrl("browser-pieVisits"), success: function(result) {
+                    pieChartBrowsers = new ChartTools.PieChartForm("visits", "browser", '[[#{stat.graph.browserPie}]]', "browser-pieVisits", result);
+                    ChartTools.createAmchart(pieChartBrowsers);
+                }});
+
+                $.ajax({url: getUrl("browser-pieVisitsPlatform"), success: function(result) {
+                    pieChartPlatforms = new ChartTools.PieChartForm("visits", "platform", '[[#{stat.graph.platformPie}]]', "browser-pieVisitsPlatform", result);
+                    ChartTools.createAmchart(pieChartPlatforms);
+                }});
+
+                $.ajax({url: getUrl("browser-lineVisits"), success: function(result) {
+                    lineChartVisits = new ChartTools.LineChartForm(ChartTools.getLineChartYAxeNameObjs(["visits"], [undefined]), "dayDate", '[[#{stat.graph.browser}]]', "browser-lineVisits", ChartTools.convertDataForLineChart(result), ChartTools.DateType.Days);
+                    ChartTools.createAmchart(lineChartVisits);
+
+                    //After last load data
+                    WJ.hideLoader();
+                }});
+            });
+        }
+
+        async function getDataAndUpdateAmcharts() {
+            WJ.showLoader();
+
+            await $.ajax({url: getUrl("browser-pieVisits"), success: function(result) {
+                pieChartBrowsers.chartData = result;
+                ChartTools.updateChart(pieChartBrowsers);
+            }});
+
+            await $.ajax({url: getUrl("browser-pieVisitsPlatform"), success: function(result) {
+                pieChartPlatforms.chartData = result;
+                ChartTools.updateChart(pieChartPlatforms);
+            }});
+
+            await $.ajax({url: getUrl("browser-lineVisits"), success: function(result) {
+                lineChartVisits.chartData = ChartTools.convertDataForLineChart(result);
+                ChartTools.updateChart(lineChartVisits);
+            }});
+
+            WJ.hideLoader();
+
+            //reload table values
+            browserDataTable.ajax.reload();
+        }
+
+        function getUrl(chartDivId) {
+            let tmpDefURL = "";
+
+            //Load values
+            let rootDir = $('#rootDir').val();
+            let filterBotsOut = $('#botFilterOut').is(':checked');
+            let searchDateValue = ChartTools.getDateRange(30);
+
+            //Get specific data for specific chart
+            if(chartDivId == "browser-pieVisits") {
+                tmpDefURL = url + "/pieChartData?dayDate=" + searchDateValue;
+                tmpDefURL += "&rootDir=" + rootDir + "&filterBotsOut=" + filterBotsOut;
+                tmpDefURL += "&keyValueName=browser";
+            } else if(chartDivId == "browser-pieVisitsPlatform") {
+                tmpDefURL = url + "/pieChartData?dayDate=" + searchDateValue;
+                tmpDefURL += "&rootDir=" + rootDir + "&filterBotsOut=" + filterBotsOut;
+                tmpDefURL += "&keyValueName=platform";
+            } else if(chartDivId == "browser-lineVisits") {
+                tmpDefURL = url + "/lineChartData?dayDate=" + searchDateValue;
+                tmpDefURL += "&rootDir=" + rootDir + "&filterBotsOut=" + filterBotsOut;
+            }
+
+            ChartTools.saveSearchCriteria(browserDataTable.DATA);
+
+            return tmpDefURL;
+        }
+    });
+</script>
+
+<style>
+    label[for=botFilterOut]::after {
+        content: "\f544" !important;
+    }
+</style>
+<div id="browserDataTable_extfilter">
+    <div class="row datatableInit">
+        <div class="col-auto dt-extfilter-title-dayDate" style="display: none;"></div>
+        <div class="col-auto dt-extfilter dt-extfilter-dayDate"></div>
+        <div class="col-auto" data-th-title="#{components.stat.filter.showOnlyFromGroup}" data-toggle="tooltip">
+            <input type="text" class="webjet-dte-jstree" id="rootDir" value="-1" data-th-data-text="#{components.stat.stats.root_dirs.all}" data-th-data-text-empty="#{components.stat.stats.root_dirs.all}"/>
+        </div>
+        <div class="col-auto">
+            <div class="btn btn-sm custom-control form-switch" data-toggle="tooltip" data-th-title="#{stat.withoutBots}">
+                <input id="botFilterOut" type="checkbox" class="form-check-input" value="true" />
+                <label for="botFilterOut" class="form-check-label is-icon-arrows-v"></label>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="graphsDiv" class="hide-while-loading">
+    <div id="browser-pieVisits" class="amcharts"></div>
+    <div id="browser-pieVisitsPlatform" class="amcharts"></div>
+    <div id="browser-lineVisits" class="amcharts"></div>
+</div>
+
+<div id="tableDiv">
+    <table id="browserDataTable" class="datatableInit table"></table>
+</div>

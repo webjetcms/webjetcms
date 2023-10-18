@@ -1,0 +1,286 @@
+@import url('https://fonts.googleapis.com/css?family=Open+Sans:300,400');
+
+body{margin:0; background-color:#f3f3f3;background-image:none;}
+
+.appStore{font-family: 'Open Sans', sans-serif;}
+.block-header{
+	background-color:#1b62c5;
+	background-image:url(/admin/appstore/images/bg-header.png);
+	height:170px;
+	width:100%;
+	position: fixed;
+    top: 0px;
+	z-index: 999;
+	-webkit-transition: height 0.3s ease-in-out;
+    -ms-transition: height 0.3s ease-in-out;
+    transition: height 0.3s ease-in-out;
+}
+.block-header .container{text-align:center;}
+.block-header h1, .block-header span{
+	color:#fff; font-weight:300;
+-webkit-transition: all 0.8s linear;
+    -ms-transition: all 0.8s linear;
+    transition: all 0.8s linear;}
+.block-header h1{
+    font-size: 33px;
+    position: absolute;
+    left: 50%;
+    transform: translate(-50%);
+    -webkit-transition: all 0.7s linear;
+    -ms-transition: all 0.7s linear;
+    transition: all 0.7s linear;
+	}
+.block-header span{
+	color: #fff;
+    font-size: 14px;
+    position: absolute;
+    left: 50%;
+    top: 59px;
+    transform: translate(-50%);
+	}
+.block-header input.search{
+	position: absolute;
+    left: 50%;
+    top: 115px;
+    display: block;
+    margin: 0px auto;
+    height: 30px;
+    transform: translate(-50%, -50%);
+    width: 230px;
+    background-color: transparent;
+    border: 1px solid #fff;
+    border-radius: 3px;
+    background-image: url(/admin/appstore/images/bg-search.png);
+    background-repeat: no-repeat;
+    background-position: 95%;
+    padding-right: 33px;
+    padding-left: 10px;
+    color: #fff;
+    right:auto;
+
+}
+
+.block-header.small h1{
+    font-size: 20px;
+    text-align: left;
+    margin-top: 18px;
+    left:72px;
+    }
+
+.block-header.small  input.search{
+    position: absolute;
+    top: 28px;
+   /* right: -96px;
+    left: auto;*/
+    padding-top: 0;
+    margin-top: 0px;
+}
+
+
+.promoApp {
+    background-color: #fff;
+    text-align: center;
+    padding: 20px;
+    border-radius:3px;
+	-webkit-box-shadow: -1px 0px 5px 0px rgba(0,0,0,0.1);
+	-moz-box-shadow: -1px 0px 5px 0px rgba(0,0,0,0.1);
+	box-shadow: -1px 0px 5px 0px rgba(0,0,0,0.1);
+	min-height: 220px;
+	cursor:pointer;
+	border: 1px solid #fff;
+	     -webkit-transition: all 0.3s linear;
+    -ms-transition: all 0.3s linear;
+    transition: all 0.3s linear;
+
+}
+
+.promoApp-col{margin-bottom:15px;}
+.promoApp img{width:72px; height:72px;}
+.promoBox{margin:30px 0 0 0;}
+.promoBox .container {
+    margin-left: 9px;
+    margin-right: 9px;
+    max-width: 950px;
+}
+.promoApp h3 {
+    font-size: 13px;
+    margin-top: 10px;
+}
+
+.promoApp:hover{
+    border: 1px solid #d3d3d3;
+    box-shadow: rgba(0, 0, 0, 0.1) -1px 0px 5px 0px;
+}
+.appStore{background-color:#f3f3f3;}
+.appStore .price{
+	display:inline-block;
+	border: 1px red solid;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-size: 10px;
+    color: red;
+}
+.appStore .price.free{
+	border-color:#4fb91c;
+	color:#4fb91c;
+}
+.store{margin-bottom:-10px; margin-top: 194px;}
+.appStore .buy{
+	display:block;
+	border: 1px #4d98f6 solid;
+    padding: 5px 8px;
+    font-size: 12px;
+    color: #4d98f6;
+    left: 23%;
+    position: absolute;
+    bottom: 18px;
+    text-decoration:none;
+     -webkit-transition: all 0.3s linear;
+    -ms-transition: all 0.3s linear;
+    transition: all 0.3s linear;
+
+}.appStore .buy:hover{background-color:#4d98f6;color:#fff; cursor:pointer;}
+
+.appStore .app{
+	display:none;
+}
+.appStore .menuBox {
+    padding-top:0px;
+    margin-left: 9px;
+    margin-right: 9px;
+    max-width: 950px;
+}
+.appStore .menuBox ul{list-style:none;}
+.appStore .menuBox ul li .img{float:left;}
+.appStore .menuBox ul li{float:left; width:25%; display:inline-block; margin-bottom:20px;}
+.menu-app .info{
+	padding:0;
+	padding-left:10px;
+    max-width: none;
+}
+.menu-app .info .title{
+	font-size:12px;
+	color:#000;
+}
+
+.menu-app{
+	cursor:pointer;
+  	-webkit-transition: all 0.2s linear;
+    -ms-transition: all 0.2s linear;
+    transition: all 0.2s linear;
+    border: 1px solid #f3f3f3;
+	padding-top:12px;
+    padding-bottom: 12px;
+	/*border-radius:3px;*/
+}
+.menu-app:hover {
+	background-color:#f9f9f9;
+	-webkit-box-shadow: -1px 0px 5px 0px rgba(0,0,0,0.1);
+	-moz-box-shadow: -1px 0px 5px 0px rgba(0,0,0,0.1);
+	box-shadow: -1px 0px 5px 0px rgba(0,0,0,0.1);
+  	border: 1px solid #fff;
+}
+
+.menu-app .info .price{margin-top:3px;}
+.menu-app{
+    margin-bottom: 16px;
+    /* float: left; */
+}
+.menu-app .img img{
+    max-width: 50px;
+}
+
+
+/*Nahlad*/
+div.app{
+	position:absolute;
+	z-index: 10;
+	top:0px;
+	height:100%;
+	width:100%;
+	background-color:#f3f3f3;
+	color:#000;
+}
+
+div.app .app-header{
+	width:100%;
+	height:60px;
+	background-image:url(/admin/appstore/images/bg-header.png);
+    background-repeat: no-repeat;
+    background-size: cover;
+}
+
+div.app .app-header .button-back{
+	color:#fff;
+	cursor:pointer;
+	padding-top:15px;
+	display:inline-block;
+	text-decoration:none;
+}
+
+div.app .app-header .button-back img{
+	margin-right:10px;
+	position: relative;
+    top: -1px;
+    opacity:0.5;
+    -webkit-transition: all 0.2s linear;
+    -ms-transition: all 0.2s linear;
+    transition: all 0.2s linear;
+}
+
+div.app .app-header .button-back:hover img{opacity:0.8;}
+div.app .app-info{
+    background-color: #fff;
+    border-bottom: 2px solid #dadada;
+    min-height: 130px;
+    height: auto;
+    padding-bottom: 17px;
+}
+
+div.app .app-info > .container{ padding-top: 23px;}
+div.app .app-info .img{text-align:center;}
+div.app .app-info .img img{max-width:100px; height:auto;}
+div.app .app-info h2{font-weight:300; padding:0; margin: 10px 0 0 0;}
+div.app .app-info p {font-size:13px;}
+div.app .app-info .buy{position:relative; display:inline-block;left: auto; bottom: auto; margin-right: 18px;}
+div.app .app-info .price{position:relative; display:inline-block;left: auto; bottom: auto;}
+div.app .app-info .app-name{padding-left:0;    padding-right: 0;}
+div.app .app-info .app-buy{padding-top: 28px;text-align: right;}
+
+div.app .app-desc{ padding-top: 30px; padding-bottom:30px; /*border-bottom:1px solid #dadada;*/ }
+div.app .app-desc .gallery{overflow:hidden;}
+div.app .app-desc .gallery ul{   padding: 0;  margin: 0;     width: 100% !important; overflow:hidden; min-height:190px;}
+div.app .app-desc .gallery ul li{ width: 100% !important;}
+div.app .app-desc .gallery ul li img{ max-width: 100% !important;}
+div.app .app-bottom{padding-top:30px; padding-bottom:30px;}
+div.app .app-bottom .container{text-align:center;}
+div.app .app-bottom .button.blue{
+	display:inline-block;
+	color:#fff;
+	background-color:#4d98f6;
+	border-radius:3px;
+	padding: 10px 30px;
+	text-decoration:none;
+	border:1px solid #4d98f6;
+	-webkit-transition: all 0.3s linear;
+    -ms-transition: all 0.3s linear;
+    transition: all 0.3s linear;
+}
+
+div.app .app-bottom .button.blue:hover{
+	color:#4d98f6;
+	background-color:#f3f3f3;
+}
+div.app .app-bottom .price{
+	border:none;
+	margin-top:15px;
+}
+
+
+div.appStore div.cycle-pager,
+div.appStore div.cycle-promo-pager {text-align: center; padding: 8px 0;}
+div.appStore div.cycle-pager a,
+div.appStore div.cycle-promo-pager a {display: inline-block; background: url(/admin/appstore/images/bg-cycle-dot.png) right top no-repeat; width: 9px; height: 9px; text-indent: -9999px; margin: 0 3px;}
+div.appStore div.cycle-pager a.activeSlide,
+div.appStore div.cycle-promo-pager a.activeSlide {background-position: left top;}
+

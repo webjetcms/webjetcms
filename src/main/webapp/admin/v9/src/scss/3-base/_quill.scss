@@ -1,0 +1,58 @@
+
+.ql-toolbar.ql-snow {
+  border: 1px solid $nice-gray-300;
+  border-top-left-radius: 6px;
+  border-top-right-radius: 6px;
+
+  button {
+    line-height: 11px;
+  }
+  span.ql-formats:last-child button {
+    padding-top: 0px;
+  }
+  span.ql-formats button i.fa {
+    font-size: 15px;
+  }
+}
+
+.ql-formats .form-control {
+  display: none!important;
+}
+
+.ql-snow .ql-color-picker .ql-picker-label,
+.ql-snow .ql-icon-picker .ql-picker-label {
+  padding-top: 0px;
+}
+
+.ql-html-overlayContainer {
+  .ql-html-popupTitle {
+    font-style: normal;
+    font-family: "Asap", sans-serif;
+    font-size: 20px;
+    font-weight: 500;
+    line-height: 30px;
+  }
+  .ql-html-textArea {
+    height: calc(100% - 75px) !important
+  }
+  .ql-html-buttonGroup {
+    transform: none;
+    bottom: -25px;
+    left: auto;
+    right: 30px;
+    button {
+      border-radius: 6px;
+      border: 1px solid $nice-gray-300;
+      padding: 6px 12px;
+
+      &.ql-html-buttonOk {
+        background-color: $primary;
+        color: $white;
+      }
+
+      i {
+        width: 26px;
+      }
+    }
+  }
+}

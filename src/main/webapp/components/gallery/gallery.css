@@ -1,0 +1,6 @@
+.thumbs li { list-style: none; background: none; margin: 0 10px 10px 0; padding: 0px; display: inline-block; font-size: 12px; min-height: 120px; vertical-align: top; }
+.thumbs li a:hover { text-decoration: none; }
+div.simple-pagination { text-align: center; clear: both; }
+div.simple-pagination ul { display: inline-block }
+div.simple-pagination li { background-image: none !important; margin: 0px !important; padding: 0px !important; float: left; }
+div.simple-pagination li a { text-decoration: none !important; }

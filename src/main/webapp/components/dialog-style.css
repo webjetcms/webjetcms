@@ -1,0 +1,15 @@
+body#bodyWysiwyg { background: #F0F0F0 none; }
+.wysiwyg iframe { border: 1px solid #F0F0F0;}
+div.ui-dialog {background-color: #ffffff; padding: 8px; border: 5px solid black; position: absolute !important; overflow: hidden; border-radius: 15px; -moz-border-radius: 15px; z-index: 1001;}
+div.ui-widget-header { background-color: #ffffff; border: 0px;}
+div.ui-dialog-content { background: #ffffff none; border: 0px;}
+div.ui-widget-header a { color: #000000; }
+div.ui-dialog h1 {margin: 0px; font-size: 17px; padding: 0px 0px 5px 0px;}
+div.ui-dialog .btnSubmit {float:right; margin-left: 5px;}
+div.ui-dialog-buttonpane {overflow:hidden; background: #ffffff; border: 0px;}
+div.ui-dialog-buttonpane div.ui-dialog-buttonset { float: right; }
+a.ui-dialog-titlebar-close {float:right;}
+div.ui-dialog-titlebar {cursor:move;}
+.ui-widget-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-color: black; opacity: 0.75; filter: alpha(opacity = 75); z-index: 1000;}
+div.ui-dialog span.ui-icon-closethick {  width: 22px; height: 22px; background: url(/components/gallery/ajax/prettyPhoto/facebook/sprite.png) -1px -1px no-repeat; cursor: pointer; display: block; float: right; line-height:22px;text-indent: -10000px;}
+div.ui-dialog button.ui-dialog-titlebar-close {  width: 22px; height: 22px; background: url(/components/gallery/ajax/prettyPhoto/facebook/sprite.png) -1px -1px no-repeat; cursor: pointer; display: block; float: right; line-height:22px;text-indent: -10000px; border: 0px;}

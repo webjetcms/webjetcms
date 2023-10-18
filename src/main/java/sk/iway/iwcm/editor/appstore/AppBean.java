@@ -1,0 +1,178 @@
+package sk.iway.iwcm.editor.appstore;
+
+import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
+import sk.iway.iwcm.FileTools;
+import sk.iway.iwcm.Tools;
+
+/**
+ *  AppBean.java
+ *
+ *@Title        webjet7
+ *@Company      Interway s.r.o. (www.interway.sk)
+ *@Copyright    Interway s.r.o. (c) 2001-2014
+ *@author       $Author: jeeff jeeff $
+ *@version      $Revision: 1.3 $
+ *@created      Date: 17.3.2014 14:59:52
+ *@modified     $Date: 2004/08/16 06:26:11 $
+ */
+public class AppBean
+{
+	private String nameKey;
+	private String componentClickAction;
+	private String imagePath;
+	private BigDecimal priceEur;
+	private List<String> galleryImages = null;
+	private String domainName = null;
+	private String itemKey = ""; //pouziva sa v AppManager kvoli filtracii prav
+
+    private String descKey;
+
+	public boolean isFree()
+	{
+		if (priceEur == null || priceEur.intValue()==0) return true;
+
+		return false;
+	}
+
+	public String getDescriptionKey()
+	{
+        if (Tools.isNotEmpty(descKey)) return descKey;
+
+		int index = nameKey.lastIndexOf(".title");
+		if (index > 0) return nameKey.substring(0, index)+".desc";
+
+		return nameKey+".desc";
+	}
+
+	/**
+	 * Vrati zoznam obrazkov do galerie, ktore su zhodne z imagePath ale cislovane ako ...-0.jpg, ...-1.jpg atd
+	 * @return
+	 */
+	public List<String> getGalleryImages()
+	{
+		if (galleryImages != null) return galleryImages;
+
+		List<String> images = new ArrayList<String>();
+
+		int lastSlash = imagePath.lastIndexOf('/');
+		if (lastSlash > 0)
+		{
+			String basePath = imagePath.substring(0, lastSlash);
+
+			for (int i=0; i<10; i++)
+			{
+				String imagePathJpg = basePath+"/screenshot-"+i+".jpg";
+				String imagePathGif = basePath+"/screenshot-"+i+".gif";
+				String imagePathPng = basePath+"/screenshot-"+i+".png";
+				if (FileTools.isFile(imagePathJpg))
+				{
+					images.add(imagePathJpg);
+				}
+				else if (FileTools.isFile(imagePathGif))
+				{
+					images.add(imagePathGif);
+				}
+				else if (FileTools.isFile(imagePathPng))
+				{
+					images.add(imagePathPng);
+				}
+			}
+		}
+
+		galleryImages = images;
+
+		return images;
+	}
+
+	public String getNameKey()
+	{
+		return nameKey;
+	}
+	public void setNameKey(String nameKey)
+	{
+		this.nameKey = nameKey;
+	}
+	public String getComponentClickAction()
+	{
+		return componentClickAction;
+	}
+	public void setComponentClickAction(String componentClickAction)
+	{
+		this.componentClickAction = componentClickAction;
+	}
+	public String getImagePath()
+	{
+		return imagePath;
+	}
+	public void setImagePath(String imagePath)
+	{
+		this.imagePath = imagePath;
+	}
+	public BigDecimal getPriceEur()
+	{
+		return priceEur;
+	}
+	public void setPriceEur(BigDecimal priceEur)
+	{
+		this.priceEur = priceEur;
+	}
+
+	@Override
+	public String toString()
+	{
+		StringBuilder builder = new StringBuilder();
+		builder.append("AppBean [nameKey=").append(nameKey)
+				.append(", componentClickAction=").append(componentClickAction)
+				.append(", imagePath=").append(imagePath).append(", priceEur=")
+				.append(priceEur).append(", galleryImages=")
+				.append(galleryImages).append(", domainName=")
+				.append(domainName).append(", itemKey=").append(itemKey)
+				.append("]");
+		return builder.toString();
+	}
+
+	public String getDomainName()
+	{
+		return domainName;
+	}
+
+	public void setDomainName(String domainName)
+	{
+		this.domainName = domainName;
+	}
+
+	public String getItemKey()
+	{
+		return itemKey;
+	}
+
+	public void setItemKey(String itemKey)
+	{
+		this.itemKey = itemKey;
+	}
+
+    public String getDescKey()
+    {
+        return descKey;
+    }
+
+    public void setDescKey(String descKey)
+    {
+        this.descKey = descKey;
+    }
+
+    public void setGalleryImages(String images)
+    {
+        if (Tools.isNotEmpty(images))
+        {
+            String[] galleryImagesArr = Tools.getTokens(images, ",", true);
+            this.galleryImages = Arrays.asList(galleryImagesArr);
+        }
+
+    }
+}
+

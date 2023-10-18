@@ -1,0 +1,1 @@
+Dokumentácia je v [docs adresári](../../../../../docs/README.md).

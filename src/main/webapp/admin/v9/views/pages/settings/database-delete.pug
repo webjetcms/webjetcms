@@ -1,0 +1,52 @@
+extends ../../partials/layout
+
+block content
+
+    +breadcrumb(
+        'date-dependent-entries',
+        [
+            [ '#date-dependent-entries', '[[\#{components.memory_cleanup.database_deleting}]]', true ],
+            [ '#dateRange', '{filter}', false ]
+        ]
+    )
+
+    script.
+        var dateDependentEntriesTable;
+        window.domReady.add(function () {
+
+            //presun filter do hlavicky
+            $("#pills-dateRange-tab").html("");
+            $("div#dateDependentEntriesTable_extfilter").appendTo("#pills-dateRange-tab");
+
+            var columns = [(${layout.getDataTableColumns('sk.iway.iwcm.components.memory_cleanup.database.DatabaseDeleteBean')})];
+
+            dateDependentEntriesTable = WJ.DataTable({
+                url: "/admin/rest/settings/date-dependent-entries",
+                columns: columns,
+                serverSide: false,
+                id: "dateDependentEntriesTable",
+                paging: false
+            });
+
+            dateDependentEntriesTable.hideButton("create");
+            dateDependentEntriesTable.hideButton("edit");
+            dateDependentEntriesTable.hideButton("duplicate");
+            dateDependentEntriesTable.hideButton("celledit");
+            dateDependentEntriesTable.hideButton("import");
+
+            $("#dateDependentEntriesTable_extfilter").on("click", "button.filtrujem", function() {
+                //umele vyvolanie reloadu, kedze je zapnute klientske strankovanie/filtrovanie
+                //console.log("volam reload");
+                dateDependentEntriesTable.ajax.reload();
+                $("#deleteWarning").alert('close');
+            });
+
+            WJ.notifyInfo("[[\#{text.warning}]]", "[[\#{components.memory_cleanup.warningText}]]", 10000);
+        });
+
+    div#dateDependentEntriesTable_extfilter
+        div.row
+            div.col-auto.dt-extfilter-title-from
+            div.col-auto.dt-extfilter.dt-extfilter-from
+
+    <table id="dateDependentEntriesTable" class="datatableInit table"></table>

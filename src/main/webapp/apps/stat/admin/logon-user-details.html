@@ -1,0 +1,96 @@
+<script data-th-inline="javascript">
+    let url = "/admin/rest/stat/logon-user-details";
+    let columns = /*[(${layout.getDataTableColumns("sk.iway.iwcm.stat.jpa.LogonUserDetailsDTO")})]*/ '';
+    let userId = 1;
+</script>
+<script>
+    var logonUserDetailsDataTable;
+
+    WJ.breadcrumb({
+        id: "logonUserDetails",
+        tabs: [
+            {
+                url: '/apps/stat/admin/logon-user/',
+                title: '[[#{stat_menu.userLogon}]]',
+                active: true
+            },
+            {
+                url: '/apps/stat/admin/logon-user/',
+                title: '<span class="statUserName"></span>',
+                active: false
+            },
+            {
+                url: '#dateRange',
+                title: '{filter}',
+                active: false
+            }
+        ]
+    });
+
+    window.domReady.add(function () {
+        //presun filter do hlavicky
+        $("#pills-dateRange-tab").html("");
+        $("div#logonUserDetailsDataTable_extfilter").appendTo("#pills-dateRange-tab");
+
+        //set userId from url
+        setUserId();
+        if (userId == null || userId == "" || userId < 1) window.location.href="/apps/stat/admin/logon-user/";
+
+        $.get({
+            url: url+"/user-name/?userId="+userId,
+            success: function(response) {
+                //console.log("response=", response);
+                $("span.statUserName").text(response);
+            }
+        });
+
+        logonUserDetailsDataTable = WJ.DataTable({
+            url: url,
+            serverSide: false, //false lebo sa nevyužíva repositár
+            columns: columns,
+            id: "logonUserDetailsDataTable",
+            idAutoOpener: false,
+            defaultSearch: ChartTools.getSearchCriteria(),
+            onPreXhr: function(TABLE, e, settings, data) {
+                //console.log('onPreXhr, url=', $('#searchUrl').val());
+                data.fixed_userId = userId;
+            }
+        });
+
+        logonUserDetailsDataTable.hideButton("import");
+        logonUserDetailsDataTable.hideButton("create");
+        logonUserDetailsDataTable.hideButton("edit");
+        logonUserDetailsDataTable.hideButton("duplicate");
+        logonUserDetailsDataTable.hideButton("celledit");
+        logonUserDetailsDataTable.hideButton("remove");
+
+        function setUserId() {
+            const queryString = window.location.search;
+            const urlParams = new URLSearchParams(queryString);
+            const userIdUrl = urlParams.get('userId');
+            userId = userIdUrl;
+        }
+
+        //Onchange events - update table
+        $("#logonUserDetailsDataTable_extfilter").on("click", "button.filtrujem", function() {
+            //reload table values
+            ChartTools.saveSearchCriteria(logonUserDetailsDataTable.DATA);
+            logonUserDetailsDataTable.ajax.reload();
+        });
+
+        dtWJ.fixTableSize(logonUserDetailsDataTable);
+    });
+</script>
+
+<style>.lds-dual-ring{display:inline-block;width:80px;height:80px}.lds-dual-ring:after{content:" ";display:block;width:64px;height:64px;margin:8px;border-radius:50%;border:6px solid #0063fb;border-color:#0063fb transparent #0063fb transparent;animation:lds-dual-ring 1.2s linear infinite}@keyframes lds-dual-ring{0%{transform:rotate(0)}100%{transform:rotate(360deg)}}#loader{text-align:center;margin:25px}</style>
+<div id="logonUserDetailsDataTable_extfilter">
+    <div class="row">
+        <div class="col-auto dt-extfilter-title-dayDate" style="display: none;"></div>
+        <div class="col-auto dt-extfilter dt-extfilter-dayDate"></div>
+    </div>
+
+</div>
+
+<div id="tableDiv">
+    <table id="logonUserDetailsDataTable" class="datatableInit table"></table>
+</div>

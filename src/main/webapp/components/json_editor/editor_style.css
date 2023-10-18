@@ -1,0 +1,107 @@
+.editorWrapper .item {
+	border: 1px solid #000;
+	background: #fff;
+	margin: 10px 0;
+	padding: 20px;
+}
+
+.editorWrapper textarea, .editorWrapper input[type=text] {
+	width: 100%;
+}
+
+.editorWrapper .propertyWrapper .imageDiv {
+	width: 100px;
+	height: 100px;
+	background-image:
+		url(/components/news/admin_imgplaceholder.png?w=100&h=100&ip=5);
+	cursor: pointer;
+}
+
+.editorWrapper .editorLeft {
+	float: left;
+	width: 20%;
+}
+
+.editorWrapper .propertyWrapper {
+	margin: 0 0 10px 0;
+}
+
+.editorWrapper .editorRight {
+	margin-left: 20%;
+}
+
+.editorWrapper .item {
+	position: relative;
+}
+
+.editorWrapper .removeItem {
+	position: absolute;
+	top: 10px;
+	right: 3px;
+	cursor: pointer;
+}
+
+.editorWrapper .moveItem {
+	position: absolute;
+	bottom: 10px;
+	right: 10px;
+	cursor: pointer;
+	width: 20px;
+	height: 56px;
+	background-image: url(/components/json_editor/icon_move.gif);
+}
+.editorWrapper .imageWrapper {
+	height: 0;
+}
+
+.editorWrapper .imageWrapper label {
+	display: none;
+}
+
+.editorWrapper .imageWrapper>div {
+	width: 100%;
+}
+
+.collapse_menu {
+	text-align:right;
+}
+.collapse_menu a.button_collapse{
+	color:#000;
+	cursor:pointer;
+
+}
+.collapse_menu a.button_collapse img{
+	transition: all 0.5s ease;
+}
+.collapse_menu a.button_collapse.collapsed img{
+	 -moz-transform: scaleY(-1);
+        -o-transform: scaleY(-1);
+        -webkit-transform: scaleY(-1);
+        transform: scaleY(-1);
+        filter: FlipW;
+        -ms-filter: "FlipW";
+}
+
+.collapse_menu a.button_collapse:hover{
+	color:#000;
+	text-decoration:none;
+}
+
+.editorWrapper .item.collapsed {
+    height: 155px;
+    overflow: hidden;
+
+}
+
+.editorWrapper .editorItemCheckbox { margin-top: 9px; }
+.editorWrapper form.item label { padding-top: 9px; }
+div.comment { color: #999; font-size: 11px; clear: both; }
+
+/*Colorpicker*/
+
+.minicolors-input{padding-left:32px !important;}
+.editorWrapper input[type="text"].inputWithIcon{width: 90%; margin-right: 5px;}
+.editorWrapper textarea.inputWithIcon{width: 90%; margin-right: 5px;}
+.editorWrapper .rozsireneLink{margin-bottom: 0px;}
+
+.cleditorGroup { width: 100% !important; }

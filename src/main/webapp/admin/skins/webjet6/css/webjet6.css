@@ -1,0 +1,660 @@
+/* ELEMENTS ZACIATOK */
+
+.webjet6hidden, #messagesRefresherDiv { display: none;	}
+
+body { background: url(/admin/skins/webjet6/images/content-background.gif) left top repeat-x white;}
+
+body.frameTop { overflow: hidden !important;}
+body, a, a:hover, h1, h2, h3, h4, h5, .tree, a.tree, a.tree:hover, td, .nadpis { font-family: Arial, Helvetica, sans-serif;}
+
+a:active, a:focus, li:focus, #menu-list1, .jScrollPaneContainer, input, select, textarea, select:focus, option:focus {font-size: 11px; outline:  none; ie-dummy: expression(this.hideFocus=true);}
+
+/* predefinovanie stylov zo style.css */
+h1, h2{ color: #5B5F62;	padding: 5px 0px 0px 0px; margin: 0px 20px 10px 20px; font-weight: bold; clear: both;}
+
+h1{ font-size: 15px;}
+h1, h1.alone { text-shadow: 1px 1px 1px #ccc; font-size: 18px; color: #608811;	padding: 7px 5px 7px 0px; margin: 0px; font-weight: normal; clear: both; /*background: url(/admin/skins/webjet6/images/bg-h1.png) left top repeat-x;*/ font-family: "Trebuchet MS", Arial, Helvetica, sans-serif/*Tahoma, Geneva, sans-serif*/;}
+h2{	padding-top: 2px; height: 24px;}
+h3{	color: #454545; margin: 10px 0px 0px 0px; clear: both;}
+h4{ clear: both; color: #999999; padding: 10px 0px 7px 20px; _padding: 0px 0px 7px 20px; margin: 0px; font-size: 14px; background: url(/admin/skins/webjet6/images/bg-content.gif) left top repeat-x;}
+h5{	color: #454545; margin: 0px 0px 10px 0px; padding: 0px; clear: both; font-size: 13px; font-weight: bold;}
+
+img{ border: 0px;}
+p{ padding: 0px 0px 10px 0px; margin: 0px;}
+div.tab-page h2 {}
+
+h1 span { color: #6E7275;}
+
+a{ color: #226600; border: 0px; text-decoration: none; }
+a:hover{ color: #676768; border: 0px; text-decoration: underline;}
+
+/* Toto je definovane aj v fck_dialog.css a style.css */
+
+.iconDelete, .iconLaunch, .iconReplace, .iconJumpToLine, .iconUndo, .iconRedo, .iconHistory, .iconStat, .iconLeft, .iconRight, .iconPreview, .iconFolderOpen, a.iconSend, a.iconRefresh, .iconEdit, .iconEditTemplate, .iconForum, .iconForumDisabled, .iconBasket, .iconPageSearch, a.iconUserGroupAdd, a.iconUserGroupDelete, a.iconUserGroupRemove, .iconRestriction, .iconArchive, .iconCompare, .iconExcel, .iconConfirm, .iconLink, .iconSearch, .iconSidebar, .iconSidebar, .iconRotateLeft, .iconRotateRight, .iconRotate, .iconImage { padding: 0px 8px 2px 8px; line-height: 17px; text-decoration: none; cursor: pointer;}
+a.iconDelete:hover, a.iconLaunch:hover, a.iconReplace:hover, a.iconJumpToLine:hover, a.iconUndo:hover, a.iconRedo:hover, a.iconHistory:hover, a.iconSend:hover, a.iconRefresh:hover, a.iconLeft:hover, .iconRight:hover, a.iconStat:hover, a.iconPreview:hover,a.iconFolderOpen:hover, a.iconEdit:hover, a.iconEditTemplate:hover, a.iconForum:hover, a.iconForumDisabled:hover, a.iconBasket:hover, a.iconPageSearch:hover, a.iconUserGroupAdd:hover, a.iconUserGroupDelete:hover, a.iconUserGroupRemove:hover, a.iconRestriction:hover, a.iconArchive:hover, .iconCompare:hover, .iconExcel:hover, .iconLink:hover,.iconSearch:hover, .iconSidebar:hover, .iconRotateLeft:hover, .iconRotateRight:hover, .iconRotate:hover, .iconImage:hover { text-decoration: none;}
+
+/* safari v tabulke usekava ikonky */
+
+.sort_table .iconDelete, .sort_table .iconLaunch, .sort_table .iconReplace, .sort_table .iconJumpToLine, .sort_table .iconUndo, .sort_table .iconRedo, .sort_table .iconHistory, .sort_table .iconStat, .sort_table .iconLeft, .sort_table .iconRight, .sort_table .iconPreview, .sort_table .iconFolderOpen, a.iconSend, a.iconRefresh, .sort_table .iconEdit, .sort_table .iconEditTemplate, .sort_table .iconForum, .sort_table .iconForumDisabled, .sort_table .iconBasket, .sort_table .iconPageSearch, a.iconUserGroupAdd, a.iconUserGroupDelete, a.iconUserGroupRemove, .sort_table .iconRestriction, .sort_table .iconArchive, .sort_table .iconCompare, .sort_table .iconExcel, .sort_table .iconConfirm, .sort_table .iconLink, .sort_table .iconSearch, .sort_table .iconSidebar, .sort_table .iconSidebar, .sort_table .iconRotateLeft, .sort_table .iconRotateRight, .sort_table .iconRotate, .sort_table .iconUsers { float: left; }
+
+.iconDelete { background: url(/admin/skins/webjet6/images/icon/icon-delete.png) 0px 1px no-repeat; padding: 0px 7px 2px 7px;}
+.iconSearch{ background: url(/admin/skins/webjet6/images/icon/icon-search.png) 2px 0px no-repeat;}
+.iconReplace{ background: url(/admin/skins/webjet6/images/icon/icon-replace.png) 2px 0px no-repeat;}
+.iconJumpToLine{ background: url(/admin/skins/webjet6/images/icon/icon-jump-to-line.png) 2px 0px no-repeat;}
+.iconUndo{ background: url(/admin/skins/webjet6/images/icon/icon-undo.png) 2px 0px no-repeat;}
+.iconRedo{ background: url(/admin/skins/webjet6/images/icon/icon-redo.png) 2px 0px no-repeat;}
+.iconHistory { background: url(/admin/skins/webjet6/images/icon/icon-history.png) 3px 0px no-repeat;}
+.iconStat { background: url(/admin/skins/webjet6/images/icon/icon-stat.png) 0px 1px no-repeat;}
+.iconPreview { background: url(/admin/skins/webjet6/images/icon/icon-preview.png) 1px 0px no-repeat; padding: 0px 12px 2px 0px;}
+.iconFolder { background: url(/admin/skins/webjet6/images/icon/icon-folder.png) 1px 0px no-repeat; padding: 0px 8px 2px 10px;}
+.iconFolderOpen { background: url(/admin/skins/webjet6/images/icon/icon-folder-open.gif) 1px 0px no-repeat; padding: 0px 8px 2px 10px;}
+.iconRefresh { background: url(/admin/skins/webjet6/images/icon/arrow-refresh.gif) 1px 3px no-repeat; height: 16px;}
+.iconEdit { background: url(/admin/skins/webjet6/images/icon/icon-edit.png) 1px 0px no-repeat;}
+.iconEditTemplate { background: url(/admin/skins/webjet6/images/icon/icon-edit.png) 0px 0px no-repeat; padding: 2px 12px 2px 5px;}
+.iconUsers { background: url(/admin/skins/webjet6/images/icon/icon-users.png) 0px 2px no-repeat; padding: 2px 12px 2px 0px;}
+.iconUserGroupAdd { background: url(/admin/skins/webjet6/images/icon/icon-users-group-add.png) 0px 0px no-repeat; padding: 2px 12px 2px 0px;}
+.iconUserGroupDelete { background: url(/admin/skins/webjet6/images/icon/icon-users-group-delete.png) 0px 0px no-repeat; padding: 2px 12px 2px 0px;}
+.iconUserGroupRemove { background: url(/admin/skins/webjet6/images/icon/icon-users-group-remove.png) 0px 0px no-repeat; padding: 2px 12px 2px 0px;}
+.iconForum { background: url(/admin/skins/webjet6/images/icon/icon-forum.png) 0px -2px no-repeat;}
+.iconForumDisabled { background: url(/admin/skins/webjet6/images/icon/icon-forum.png) 0px 0px no-repeat;}
+.iconBasket { background: url(/admin/skins/webjet6/images/icon/icon-basket.png) 0px 0px no-repeat;}
+.iconPageSearch { background: url(/admin/skins/webjet6/images/icon/icon-page-search.png) center 0px no-repeat;}
+.iconRestriction { background: url(/admin/skins/webjet6/images/icon/icon-restriction.png) 0px 0px no-repeat;padding: 2px 12px 4px 0px;}
+.iconArchive { background: url(/admin/skins/webjet6/images/icon/icon-archive.png) 0px 0px no-repeat;padding: 2px 12px 4px 0px;}
+.iconCompare { background: url(/admin/skins/webjet6/images/icon/icon-compare.png) 1px 1px no-repeat;}
+.iconExcel { background: url(/admin/skins/webjet6/images/icon/icon-excel.png) 0px 0px no-repeat; padding: 2px 12px 4px 0px;}
+.iconConfirm { background: url(/admin/skins/webjet6/images/icon/icon-confirm.png) 0px 2px no-repeat; padding: 2px 12px 4px 0px;}
+.iconLink { background: url(/admin/skins/webjet6/images/icon/icon-link.png) 0px 3px no-repeat; margin: 0px 0px 0px 6px;}
+.iconSidebar{ background: url(/admin/skins/webjet6/images/icon/icon-insidebar.png) no-repeat 0px 0px; float: right; text-indent: -10000px; cursor: pointer; padding: 0px; width: 19px; height: 17px;}
+.iconSend { background: url(/admin/skins/webjet6/images/icon/icon-send.png) 0px 0px no-repeat; height: 16px;}
+.iconLeft { background: url(/admin/skins/webjet6/images/icon/arrow-left.png) 0px 2px no-repeat;}
+.iconRight { background: url(/admin/skins/webjet6/images/icon/arrow-right.png) 0px 2px no-repeat;}
+.iconRotate { background: url(/admin/skins/webjet6/images/icon/arrow-rotate.png) 0px 0px no-repeat;}
+.iconRotateLeft { background: url(/admin/skins/webjet6/images/icon/arrow-rotate-left.png) 0px 3px no-repeat;}
+.iconRotateRight { background: url(/admin/skins/webjet6/images/icon/arrow-rotate-right.png) 0px 3px no-repeat;}
+.iconLaunch { background: url(/admin/skins/webjet6/images/icon/icon_run.gif) 2px 1px no-repeat; padding: 0px 12px 4px 0px;}
+.iconImage { background: url(/admin/skins/webjet6/images/icon/icon-image.png) 3px 0px no-repeat;}
+
+#sidebar .iconSidebar{ background: url(/admin/skins/webjet6/images/icon/icon-outsidebar.png) no-repeat 0px 0px;}
+
+/* toto je definovane aj v /components/cmp.css, ak upravujete zmente aj tam */
+.btnRight, .btnLeft, .btnPlus, .btnMinus, .btnEdit { width: 19px; height: 20px; display: block; text-indent: -10000px; border: 0px; line-height: 0px; margin: 0px auto;}
+
+.btnRight { background: url(/admin/skins/webjet6/images/icon/arrow-right.png) center center no-repeat;}
+.btnLeft { background: url(/admin/skins/webjet6/images/icon/arrow-left.png) center center no-repeat;}
+.btnPlus { background: url(/admin/skins/webjet6/images/icon/icon-plus.png) center center no-repeat;}
+.btnMinus { background: url(/admin/skins/webjet6/images/icon/icon-minus.png) center center no-repeat;}
+.btnEdit { background: url(/admin/skins/webjet6/images/icon/icon-editing.png) center center no-repeat;}
+
+.nowrap { white-space: nowrap; }
+/* ELEMENTS KONIEC */
+
+.right{ float: right;}
+.left{ float: left;}
+.clearer{ clear: both; height: 0px; margin: 0px; padding: 0px; border: 0px; line-height: 0px; font-size: 0px;}
+
+.clearfix:after { content: "."; display: block; clear: both; visibility: hidden; line-height: 0; height: 0; }
+.clearfix { display: inline-block; }
+html[xmlns] .clearfix { display: block; }
+* html .clearfix { height: 1%; }
+
+/* FORM ZACIATOK */
+
+form { margin: 0px;}
+div.box_login fieldset label.popisok{ margin: 0px; padding: 4px 0px 2px 0px; width: 60px; display: block; float: left; cursor: pointer;}
+td.galleryImageDescription label.popisok{ margin: 0px; padding: 2px 0px 2px 0px; width: 50px; display: block; float: left; cursor: pointer;}
+input, select{ color: #999999; font-size: 11px; }
+.input { color: #000000; background-color: #EFF1F3; border: 1px solid #bdbcbc;}
+.checkbox{ border: 0px;}
+.button50, .button100, .button150, a.button50, a.button100, a.button150, a.button100:link, a.button100:visited{ border: 0px; color: #fff; width: 90px; height: 20px; line-height: 20px; background: transparent url(/admin/skins/webjet6/images/button-90x20.png) no-repeat left top; overflow: hidden; white-space: nowrap; text-align: center; padding: 0px; cursor: pointer; }
+.buttonNotImportant { opacity:0.8 }
+.buttonNotImportant:hover { opacity:1 }
+select { padding: 2px 0px;}
+textarea { font-size: 11px; color: #000000; background-color: #ffffff; border: 1px solid #bdbcbc;}
+
+a.button50:hover, a.button100:hover, a.button150:hover{	text-decoration: none !important; color: #fff;}
+
+.button100, a.button100, a.button100:link, a.button100:visited { background-image: url(/admin/skins/webjet6/images/button-150x20.png); width: 150px !important;}
+.button150, a.button150 { background-image: url(/admin/skins/webjet6/images/button-220x20.png); width: 220px !important;}
+
+a.button, a.button50, a.button100, a.button150{ padding: 3px 3px 0px 3px; /* LPA */ font-weight: normal; height: auto; line-height:19px; padding: 0px; color: #ffffff !important; display:block; text-align: center; /* LPA */}
+a.button:hover, a.button50:hover, a.button100:hover, a.button150:hover { color: #000000; font-weight: normal; text-decoration: none;}
+
+a.logoff{ position: relative; width: 66px; height: 50px; float: right; background: url(/admin/skins/webjet6/images/icon-logoff.png) 50% 4px no-repeat; text-indent: -10000px; z-index: 1000; margin: -9px 0px 0px 0px;}
+a.logoff:hover{ background: url(/admin/skins/webjet6/images/icon-logoff-hover.png) 50% 4px no-repeat;}
+
+.button220x20{ background: url(/admin/skins/webjet6/images/button-220x20.png) left top no-repeat; width: 220px; height: 20px; color: #ffffff; border: 0px;}
+.button150x20{ background: url(/admin/skins/webjet6/images/button-150x20.png) left top no-repeat; width: 150px; height: 20px; color: #ffffff; border: 0px;}
+
+.button50grey { background-image: url(/admin/skins/webjet6/images/button-90x20-grey.png); }
+
+fieldset{ margin: 0px; padding: 0px; border: 0px; display: block;}
+fieldset.noborder, div.box_toggle fieldset{ margin: 0px; padding: 0px; border: 0px;}
+fieldset legend{ display: none;}
+fieldset h2{ font-weight: bold; color: #46494d; border-bottom: 1px solid #c7c7c7; margin: 0px 0px 5px 0px; padding: 0px 0px 5px 0px; font-size: 11px; height: auto;}
+fieldset p{ margin: 0px 0px 10px 0px; padding: 0px; clear: both;}
+
+label{ color: #46494d; padding-right: 10px;}
+
+.poleMini, .poleKratke, .poleMax, .poleText350x100, #docIdInput, .poleDlhe{ font-size: 11px; /*float: left;*/ margin: 0px 10px 0px 0px; padding: 0px 0px 0px 5px; border: 0px; height: 19px; line-height: 19px; color: #999999; border: 1px solid #bdbcbc;}
+
+.poleMini{ width: 70px !important; }
+.poleKratke{ width: 150px; }
+.poleDlhe, .selectDlhy{ width: 200px; }
+.poleMax{ width: 250px !important; }
+.pole600{ width: 600px; }
+.pole625{ width: 625px; }
+.pole650{ width: 650px; }
+.poleText350x100 {width: 350px !important; height: 100px !important; overflow: auto; background: url(/admin/skins/webjet6/images/bg-input_350x100.gif) left bottom no-repeat;}
+
+/* FORM KONIEC */
+#leftFrameBody{ background: #ffffff url(/admin/skins/webjet6/images/content-background.gif) left top repeat-x; overflow: auto; border: 0px;}
+#mainframeBody{ padding-left: 0px; border: 0px; background: #ffffff url(/admin/skins/webjet6/images/bg-h1.png) repeat-x scroll left top transparent;}
+.webframeBody{ overflow: hidden;}
+#menuDivBlock{ margin: 10px;}
+
+div.topContainer{ height: 66px; background: url(/admin/skins/webjet6/images/bg-top-menu.png) left top no-repeat; min-width: 935px;  padding: 0px 0px 0px 70px; }
+div.topContainerRight { height: 66px; background: url(/admin/skins/webjet6/images/bg-top-menu-right.png) right top no-repeat; }
+
+div.topHead { color: #7d8589; font-size: 10px; padding: 8px 0px; text-align: right; margin: 0px 15px 0px 0px; clear: both;}
+div.topHead .version {  margin: 0px 15px 0px -55px; float: left;  background: url(/admin/skins/webjet6/images/icon/icon-cube.png) left center no-repeat; padding: 0px 0px 0px 12px; }
+
+div.topCenter{ width: 100%; padding: 0px;  }
+div.topCenter div.left{ float: left; padding: 1px 0px 0px 0px; margin: 0px 0px 0px 0px;}
+div.topCenter div.right{ float: right; color: #ced9df; width: 420px; padding: 0px;}
+div.topCenter div.right span{ float: right; padding: 5px 0px 0px 0px; width: 80px; overflow: hidden; line-height: 10px; font-size: 10px; white-space: nowrap;}
+div.topCenter div.right span a{ color: #ced9df; font-weight: normal; text-decoration: underline; font-size: 10px;}
+div.topCenter div.right span a:hover{ text-decoration: none;}
+div.topCenter div.right .boxSearch { float: right; margin: 4px 20px 0px 0px; width: 154px; height: 24px; background: url(/admin/skins/webjet6/images/bg-box-search.png) 0px 0px  no-repeat;}
+div.topCenter div.right .boxSearch input { width: 120px; margin: 5px 0px 0px 5px; float: left; background: transparent; border: 0px;}
+/**+HTML BODY div.topCenter div.right .boxSearch input { margin: 3px 0px 0px 5px; }
+div.topCenter div.right .boxSearch input { margin: 4px 0px 0px 5px\0/; }*/
+#submitSearch { margin: 3px 0px 0px 0px; width: 25px; height: 19px; float: right; border: 0px none; cursor: pointer;}
+div.topCenter a.tabHelp{ background: url(/admin/skins/webjet6/images/bg-help.png) left top no-repeat; float: right; font-size: 11px; color: #ffffff; padding: 0px 0px 0px 25px; margin: 5px 20px 0px 0px; line-height: 22px;}
+div.topCenter a.tabHelp:hover{ color: #ffffff; }
+
+.menu-block { width: 229px; text-align: left; margin: 10px 0px 8px 0px; text-align: left; position: relative; top: 0px; background: url(/admin/skins/webjet6/images/bg-menu-left-top.png) #cbcfd2 no-repeat;}
+.menu-block img { border: 0px;}
+.menu-block h3 { padding-right: 10px; padding-left: 14px; font-size: 11px; padding-bottom: 10px; margin: 0px; color: #5b5f62; padding-top: 11px;}
+.menu-block .d { clear: both; padding-right: 0px; padding-left: 0px; padding-bottom: 0px; margin: 0px; padding-top: 0px; height: 35px;}
+.menu-block .d { background: url(/admin/skins/webjet6/images/bg-menu-left-bottom.png) no-repeat 0px bottom;}
+.menu-block .d a {float: left; margin: 15px 0px 0px 94px;}
+.menu-block .d img { display: none;}
+
+/*#menu-list1 { width: 100%; }*/
+ul.menu-list { font-size: 11px; padding: 0px 0px 0px 0px; margin: 0px; list-style-type: none;}
+ul.menu-list ul { padding-right: 0px; padding-left: 0px; font-size: 11px; padding-bottom: 0px; margin: 0px; padding-top: 0px; list-style-type: none;}
+ul.menu-list li {  padding-right: 0px; border-top: #b7bbbe 1px solid; padding-left: 0px; padding-bottom: 0px; margin: 0px; padding-top: 0px; position: relative;}
+ul.menu-list ul li { padding-right: 0px; border-top: #b7bbbe 1px solid; padding-left: 0px; padding-bottom: 0px; margin: 0px; padding-top: 0px; /*position: relative;*/ clear: both;}
+ul.menu-list li a { clear: both; display: block; text-decoration: none; _height: 1.2em; min-width: 1px; }
+ul.menu-list ul li a { clear: both; display: block; text-decoration: none; _height: 1.2em;}
+ul.menu-list li a { padding-right: 8px; padding-left: 20px; background: url(/admin/skins/webjet6/images/menu-list1.gif) no-repeat 4px 5px; padding-bottom: 4px; color: #5b5f62; padding-top: 4px; }
+ul.menu-list li.actual {background: url(/admin/skins/webjet6/images/menu-list1.gif) repeat-x 0px -208px;}
+ul.menu-list li a:hover { background: url(/admin/skins/webjet6/images/menu-list1.gif) #dee2e5 no-repeat 4px -140px; color: #5B5F62; text-decoration: none;}
+ul.menu-list li ul li a, ul.menu-list li.actual ul li a { padding-right: 8px; padding-left: 38px; background: url(/admin/skins/webjet6/images/menu-list2.gif) #ccd9c7 no-repeat 20px 5px; padding-bottom: 4px; color: #253627; padding-top: 4px; font-weight: normal; /*overflow: hidden;*/ _height: 1.9em;}
+ul.menu-list li ul li a:hover, ul.menu-list li ul li a.actual { background: url(/admin/skins/webjet6/images/menu-list2.gif) #bbc9b6 no-repeat 20px -108px; color: #253627;}
+ul.menu-list li.actual a{background: url(/admin/skins/webjet6/images/menu-list1.gif) no-repeat 5px -311px; color: #ffffff;}
+
+.menu-selected1 a {
+background: url(/admin/skins/webjet6/images/menu-list1.gif) #a1a5a8 no-repeat 14px -317px; color: #fff !important;
+}
+
+
+.menu-hidden {
+left: 100%; margin-left: -18px; position: absolute; top: 11px;
+}
+
+.menu-hidden img { width: 11px; height: 11px}
+
+.icon{ vertical-align: middle;}
+/*div.separator a, div.separator a:hover, div.user*/{ text-decoration: none; padding: 0px 0px 5px 0px; border-bottom: 1px solid #aaaaaa; clear: both; display: block; overflow: hidden; margin: 0px 0px 5px 0px;}
+div.separator h5 { font-size: 11px; color: #000000; background: url(/admin/skins/webjet6/images/bg-h5-welcome.png) 5px 0px no-repeat; border-bottom: 1px solid #aaaaaa; padding: 0px 0 5px 40px; line-height: 27px;}
+div.separator h5.help { background: url(/admin/skins/webjet6/images/bg-h5-help.png) left top no-repeat; padding: 5px 0 10px 40px;}
+div.separator h5.logoff { background: url(/admin/skins/webjet6/images/bg-h5-logoff.png) left top no-repeat; padding: 5px 0 10px 40px;}
+div.separator p{ padding: 0px 0px 0px 0px;}
+
+div.user{ width: 100%; background: url(/admin/skins/webjet6/images/bg-h5-user.gif) left top no-repeat; padding: 0px 0px 12px 0px; overflow: hidden; border-bottom: 1px solid #aaaaaa;}
+div.user div{ padding: 5px 0px 0px 42px; float: left;}
+div.user div a{ padding: 0px 0px 0px 15px; background: url(/admin/images/icon_key.gif) no-repeat 0px 4px;}
+
+.menuLeft{ padding: 0px 10px 0px 10px;}
+#mainframeBody .menuLeft{ margin: 0px; padding: 5px 0px 0px 5px; /*overflow: hidden;*/ width:96%;}
+* HTML BODY #mainframeBody .menuLeft {width:100%;}
+*+HTML BODY #mainframeBody .menuLeft {width:100%;}
+
+/* TABLE a TABLE SORT ZACIATOK */
+
+table.sort_table{ border: 0px; border-collapse: collapse; clear: both; width: auto; margin: 0px; }
+table.sort_table th.thCheckbox { padding: 4px 0px 12px 5px;}
+th.thCheckbox input{ float: left;}
+
+table.sort_table tr th, table.sort_table thead tr td { color: #666666; background-color: #fff; border-right: 1px solid #fff; cursor: default; background: url(/admin/skins/webjet6/images/th-bottom.gif) repeat-x 0px bottom; vertical-align: top; /*border-top: 1px solid #CCCCCC;*/ vertical-align: middle; padding: 4px 8px 12px 7px; font-family: Arial !important; font-size: 12px !important; font-weight: bold; text-align: left;}
+
+table.sort_table tr th a, table.sort_table thead tr td a{ display: block; color: #666666; /*width: 100%;*/ font-size: 12px; padding: 0px; /*margin: 0px 28px 0px 0px;*/}
+table.sort_table tr th a:hover, table.sort_table thead tr td a:hover { color: #000000; text-decoration: none; font-family: Arial; font-size: 12px;}
+table.sort_table td{ border-bottom: 1px solid #CCCCCC; border-right: 0px; color: #555; border-right: 1px solid white; padding: 4px 8px 4px 7px; }
+table.sort_table tr.even td{ background: url(/admin/skins/webjet6/images/td-hover.gif) #F2F3F4 repeat-x 0px bottom; border-bottom: #cbdabd 1px solid; }
+table.sort_table tr th#activecell, table.sort_table thead tr td#activecell{ background: url(/admin/skins/webjet6/images/th-bottom-hover.gif) repeat-x 0px bottom; } 
+table.sort_table tbody tr#activerow td{ background: url(/admin/skins/webjet6/images/td-selected.gif) #f3faed repeat-x 0px bottom !important; }
+table.sort_table tbody td a{ color: #226600 !important; font-weight: normal; }
+table.sort_table tbody td a.groupsfalse { color: red !important; }
+table.sort_table tbody td a:hover{ color: black !important;	text-decoration: none; background-color: transparent;}
+table.sort_table tr th.sorted a, table.sort_table tr th.sortable a,
+table.sort_table thead tr td.sorted a, table.sort_table thead tr td.sortable a { background-position: center right; background-repeat: no-repeat; }
+table.sort_table tr th.sortable a , table.sort_table thead tr td.sortable a { background-image: url(/admin/images/systemtable/arrow_off.png); padding: 0px 15px 0px 0px; }
+table.sort_table tr th.order1 a, table.sort_table thead tr td.order1 a { background-image: url(/admin/images/systemtable/arrow_up.png); }
+table.sort_table tr th.order2 a, table.sort_table thead tr td.order2 a { background-image: url(/admin/images/systemtable/arrow_down.png);}
+
+span.pagebanner{ color: #999999; /*background-color: #EFF1F3;*/ font-weight: normal; padding: 5px 10px; clear: both; display: block; border-bottom: 0px solid #C0C4C5;}
+span.pagelinks, span.pagelinks a{ color: #999999; font-weight: normal !important; }
+span.pagelinks strong{ color: black;}
+
+/* toto je tu kvoli JS sortovaniu */
+table.sort_table .sort-arrow {
+	width:					11px;
+	height:					11px;
+	background-position:	center center;
+	background-repeat:	no-repeat;
+	margin:					0 2px;
+	background-image:		url("/admin/images/systemtable/arrow_off.png");
+}
+
+table.sort_table .sort-arrow.descending {
+	background-image:		url("/admin/images/systemtable/arrow_down.png");
+	
+}
+
+table.sort_table .sort-arrow.ascending {
+	background-image:		url("/admin/images/systemtable/arrow_up.png");
+}
+
+/* TABLE SORT KONIEC */
+
+/* LOGIN SCREEN ZACIATOK */
+
+body#login{ background: #e5e5e5 url(/admin/skins/webjet6/images/login/bg-body.png) 0px 0px repeat-x; color: #737373; text-align: center; font-size: 11px; }
+body#login a.forgot{ font-weight: normal; color: #336699; text-decoration: underline; }
+body#login a.forgot:hover{ color: #336699; text-decoration: none; }
+div.box_header{ background-color: #454545; width: 100%; height: 17px; padding: 4px 0px 3px 0px;}
+div.box_header div.version{ background: url(/admin/skins/webjet6/images/login/icon.gif) center left no-repeat; color: #999; float: left; padding: 0px 0px 0px 15px; margin: 0px 0px 0px 20px; }
+div.box_header div.time{ color: #FFFFFF; float: right; padding: 0px 20px 0px 0px; }
+div.login_all { height: 100%; margin: -24px auto 0px auto; padding: 0px; text-align: left; width: 610px; }
+div.box_login { float: left; clear: both; height: 174px; margin: -60px 0px 0px; position: relative; top: 260px; width: 100%; background: url(/admin/skins/webjet6/images/login/bg.gif) top center no-repeat;}
+div.box_login select{ float: none;}
+div.box_login_error { float: left; clear: both; margin: 0px 0px 0px 262px; position: relative; top: 80px; _top: 60px; width: 340px; }
+div.box_login_error ul, div.box_login_error li{ margin: 5px 0px 5px 0px; padding: 0px; border: 0px;  list-style-type: none; }
+span.error { color: #CC3333; font-size: 11px; }
+div.box_login div.login_logo { float: left; margin-top: 47px; padding: 0px; width: 240px;}
+
+
+div.box_login div.login_content { float: left; margin: 30px 0px 0px 0px; padding: 0px 0px 0px 20px; width: 340px; border-left: 1px solid #bcbcbc; }
+div.box_login form{ margin: 0px; padding: 0px; float: left; }
+div.box_login fieldset, fieldset.noborder{ float: left; display: inline; border: 0px; color: #737373; }
+div.box_login fieldset p{ margin: 0px; padding: 2px 0px 2px 0px; }
+
+fieldset label.popisok, fieldset label.popisok2{ margin: -2px 0px 0px 0px; padding: 0px 10px 0px 0px; /*width: 60px; display: block; float: left;*/ color: #707274; cursor: pointer; }
+
+div.box_toggle table td
+{
+	color: #707274;
+}
+
+fieldset label.popisok2{
+width: auto;/*110px*/
+}
+
+div.box_login fieldset input{ margin: 0px; padding: 3px 0px 1px 3px; border: 1px solid #BDBCBC; width: 160px; color: #999; background-color: #ffffff;}
+* HTML BODY div.box_login fieldset input{ width: 163px; }
+
+div.box_login fieldset p input.submit{
+margin: 0px 0px 0px 15px;
+padding: 0px;
+border: 0px none;
+width: 44px;
+height: 44px;
+cursor: pointer;
+/*background: url(/admin/skins/webjet6/images/login/login-submit-over.gif) center center no-repeat;*/
+}
+
+div.box_login fieldset p input.submit2{
+background: none;
+font-weight: bold;
+padding: 0px 0px 4px 0px;
+margin: 0px 0px 0px 15px;
+width: auto;
+height: auto;
+cursor: pointer;
+}
+
+div.box_login fieldset .button { background: url(/admin/skins/webjet6/images/button-90x20.png) left top no-repeat; width: 90px; height: 20px; color: #ffffff; border: 0px; padding: 0px;}
+div.box_login select.lang{ padding: 2px 1px; margin: 0px; width: 165px; }
+* HTML BODY div.box_login select.lang{ width: 163px;}
+
+/* LOGIN SCREEN KONIEC */
+
+/* TAB BODYFRAME ZACIATOK */
+
+div.box_tab{ clear: both; width: 100%; /*height: 43px;*/ background: #8b9397 url(/admin/skins/webjet6/images/bg-tab.png) 0px 0px repeat-y; padding: 0px; margin: 0px;}
+div.box_tab_nocorner{ background: #798286 url(/admin/skins/webjet6/images/bg-tab-nocorner.png) repeat-x left bottom;}
+
+div.box_tab2{  float: left; clear: both; width: 100%; padding: 0px; margin: 0px; height: 18px; }
+
+div.box_tab a, div.box_toggle a { color: #707274; }
+div.box_tab_thin { height: 27px !important; overflow: hidden;}
+
+div.box_tab_thin ul{ margin-top: 7px; float: left; }
+* HTML BODY div.box_tab_thin ul{ margin-top: 9px; }
+
+div.four_cube, div.info{ background: url(/admin/skins/webjet6/images/four-cube.gif) center left no-repeat; color: #E4E6E7; clear: both; padding: 4px 0px 4px 15px; margin: 0px 0px 0px 20px;}
+
+div.info{ background: url() center left no-repeat;}
+
+div.four_cube a{ color: #E4E6E7 !important;}
+div.four_cube a:hover{ color: #fff !important; background-color: transparent; text-decoration: none !important;}
+
+
+ul.tab_menu{ overflow: hidden; clear: both; list-style-type: none; line-height: 18px; padding: 2px 0px 0px 10px; margin: 0px;}
+ul.tab_menu_white{ float: left; clear: both; list-style-type: none; line-height: 23px; padding: 0px; margin: 0px; /*position: absolute;*/}
+
+ul.tab_menu li div{ display: none;}
+ul.tab_menu li a, ul.tab_menu li a:hover, ul.tab_menu_white li a, ul.tab_menu_white li a:hover{ position: relative; float: left; display: block; padding: 0px 10px; margin: 0px;  font-weight: normal; color: #676768; text-decoration: none;}
+
+ul.tab_menu li, ul.tab_menu_white li{ float: left; padding: 0px; margin: 0px;}
+ul.tab_menu_white li a, ul.tab_menu_white li a:hover{ padding: 4px 12px 3px 10px; margin: 0px; font-size: 12px; color: #cbd3d9;}
+ul.tab_menu_white li, ul.tab_menu_white li a { background: url(/admin/skins/webjet6/images/bg-top-menu-separator.png) 100% 0px no-repeat;}
+ul.tab_menu_white li.open, ul.tab_menu_white li.openLast { color: #c6fb9d; background: url(/admin/skins/webjet6/images/bg-top-menu-open.png) left top no-repeat !important; }
+ul.tab_menu_white li.open a, ul.tab_menu_white li.openLast a, ul.tab_menu_white li.openFirst a { color: #c6fb9d; }
+ul.tab_menu_white li.hover{ background: url(/admin/skins/webjet6/images/bg-top-menu-hover.png) 0px 0px no-repeat; }
+ul.tab_menu_white li.first { background: url(/admin/skins/webjet6/images/bg-top-menu-separator.png) 0px 0px no-repeat; }
+ul.tab_menu_white li.hover a, ul.tab_menu_white li.hover a:hover { color: #d8dde2;}
+ul.tab_menu_white li.openFirst{ color: #c6fb9d; background: url(/admin/skins/webjet6/images/bg-top-menu-open-first.png) left top no-repeat !important; }
+ul.tab_menu_white li.hoverFirst{ background: url(/admin/skins/webjet6/images/bg-top-menu-hover-first.png) 0px 0px no-repeat;}
+
+ul.tab_menu li a,
+ul.tab_menu li a:hover{ padding: 0px 20px 0px 5px; margin: 0px 0px 0px 0px; background: url(/admin/skins/webjet6/images/tab-anchor.png) 100% 0px no-repeat; font-size: 11px; color: #46494d; cursor: pointer;}
+ul.tab_menu li a:hover{ color: #ffffff;}
+ul.tab_menu li.last a, 
+ul.tab_menu li.last a:hover{ background: url(/admin/skins/webjet6/images/tab-anchor-last.png) 100% 0px no-repeat;}
+ul.tab_menu li.first a,
+ul.tab_menu li.first a:hover{ padding: 0px 20px 0px 0px;}
+ul.tab_menu li.first { background: url(/admin/skins/webjet6/images/tab-center-first.png) left bottom no-repeat; padding: 0px 0px 0px 10px;}
+ul.tab_menu li.open, 
+ul.tab_menu li.openLast{ background: url(/admin/skins/webjet6/images/tab-center-open.png) left bottom no-repeat; margin: 0px 0px 0px -20px; position: relative;}
+ul.tab_menu li.openFirst{ background: url(/admin/skins/webjet6/images/tab-center-open-first.png) left bottom no-repeat; padding: 0px 0px 0px 5px; margin: 0px 0px 0px 0px;}
+ul.tab_menu li.openOnlyFirst{ background: url(/admin/skins/webjet6/images/tab-center-open-first.png) left bottom no-repeat; padding: 0px 0px 0px 5px; margin: 0px 0px 0px 0px;}
+ul.tab_menu li.openLast{ background: url(/admin/skins/webjet6/images/tab-center-open.png) left bottom no-repeat;}
+ul.tab_menu li.open a,
+ul.tab_menu li.open a:hover { color: #000000; background: url(/admin/skins/webjet6/images/tab-anchor-open.png) right bottom no-repeat; margin: 0px 0px 0px 20px;}
+ul.tab_menu li.openFirst a,
+ul.tab_menu li.openFirst a:hover{ color: #000000; background: url(/admin/skins/webjet6/images/tab-anchor-open.png) right bottom no-repeat; padding: 0px 20px 0px 0px; margin: 0px 0px 0px 5px;}
+ul.tab_menu li.openLast a,
+ul.tab_menu li.openLast a:hover{ color: #000000; background: url(/admin/skins/webjet6/images/tab-anchor-open-last.png) right bottom no-repeat; margin: 0px 0px 0px 20px;}
+ul.tab_menu li.openOnlyFirst a,
+ul.tab_menu li.openOnlyFirst a:hover{ color: #000000; background: url(/admin/skins/webjet6/images/tab-anchor-open-only.png) right bottom no-repeat; padding: 0px 20px 0px 0px; margin: 0px 0px 0px 5px;}
+
+div.box_toggle{ float: left; clear: both; width: 100%; min-width: 740px; background: #EFF1F3 url(/admin/skins/webjet6/images/bg-box-toggle.png) left bottom repeat-x; margin: 0px 0px 10px 0px; padding: 0px 0px 5px 0px;}
+div.box_toggle_nocorner{ background: #EFF1F3 url(/admin/skins/webjet6/images/bg-box-toggle-nocorner.png) left bottom repeat-x;}
+
+div.toggle_content{ float: left; padding: 10px 0px 0px 0px; margin: 0px 0px 0px 20px;}
+div.toggle_content div, div.toggle_content div td{ color: #707274;}
+
+/*div.box_toggle p, div.box_toggle table td{ margin: 0px; padding: 0px;}*/
+div.box_toggle table td{ padding: 0px 5px 5px 0px;}
+div.box_toggle table.tabulkaSOdsadenim td{ padding: 0px 5px 5px 0px;}
+
+div.box_toggle form p{ clear: none; padding: 0px 0px 5px 0px; margin: 0px 10px 0px 0px;}
+div.box_toggle form p.last{ margin: 0px;}
+#ListingForm2 select, .zobrazenie select{ margin: 0px;}
+
+div.boxDecription{ width: 100%; min-width: 740px; padding: 0px 0px 15px 0px; background: #EFF1F3 url(/admin/skins/webjet6/images/bg-box-toggle.png) left bottom no-repeat; margin: 0px 0px 10px 0px;}
+div.boxDecription .boxDecriptionCenter{ padding: 15px 10px 0px 15px; background: url(/admin/skins/webjet6/images/bg-box-toggle-top.png) left top no-repeat;}
+
+div.display_none{ display: none;}
+/*
+div.new_page_popup{ position: absolute; top: -1px; left: 633px; padding: 5px 0px 0px 0px; display: none; height: auto;}
+div.new_page_popup ul{ background: url(/admin/skins/webjet6/images/bg-new-page-popup-top.png) 0px 0px no-repeat; clear: both; margin: 0px; padding: 25px 0px 0px 5px;}
+div.new_page_popup ul li{ list-style-type: none; background: url(/admin/skins/webjet6/images/icon/arrow-2.gif) 0px 3px no-repeat; padding: 3px 0px 3px 17px;}
+div.new_page_popup_bottom{ background: url(/admin/skins/webjet6/images/bg-new-page-popup-bottom-left.png) left bottom no-repeat; height: 10px; padding: 0px 0px 0px 5px;}
+*/
+div.new_page_popup{ position: absolute; top: -1px; left: 0px;  padding: 25px 0px 0px 0px; display: none; height: auto;}
+div.new_page_popup ul{ background: #ffffff none 0px 0px no-repeat; clear: both; min-width: 167px; margin: 0px; padding: 0px 10px 0px 5px; border-left: 1px solid #c7c7c7; border-right: 1px solid #c7c7c7;}
+div.new_page_popup ul li{ list-style-type: none; background: url(/admin/skins/webjet6/images/icon/arrow-2.gif) 0px 3px no-repeat; padding: 3px 0px 3px 17px;}
+div.new_page_popup_top{ background: url(/admin/skins/webjet6/images/bg-new-page-popup-top-left.png) no-repeat left bottom; height: 10px; }
+div.new_page_popup_top_right { background: url(/admin/skins/webjet6/images/bg-new-page-popup-top-right.png) no-repeat right bottom; height: 10px; margin: 0px 0px 0px 5px; }
+div.new_page_popup_bottom{ background: url(/admin/skins/webjet6/images/bg-new-page-popup-bottom-left.png) left bottom no-repeat; height: 10px;}
+div.new_page_popup_bottom_right { background: url(/admin/skins/webjet6/images/bg-new-page-popup-bottom-right.png) right bottom no-repeat; height: 10px; margin: 0px 0px 0px 5px;}
+
+div.new_page_popup a, div.new_page_popup a:hover{ display: block; clear: both; padding: 0px; margin: 0px; font-weight: normal; white-space: nowrap;}
+input.btnImgSearch, a.btnImgImport, a.btnImgBrowser, a.btnImgFolder, a.btnImgLink{ display: block; float: left; margin: 2px 0px 0px 0px; padding: 0px 10px 0px 20px; font-weight: bold; line-height: 22px; border: 0px; cursor: pointer; text-align: left;}
+div.btnImgLayout{ loat: left; width: 16px; height: 16px; margin: 2px 4px 0px 0px; padding: 0px; background: url(/admin/skins/webjet6/images/icon/layout.gif) 0px 0px no-repeat;}
+div.box_toggle a.btnImgArrow1{ float: left; width: 15px; height: 15px; margin: 4px 10px 0px 0px; padding: 0px; background: url(/admin/skins/webjet6/images/icon/arrow-1-out.png) 0px 0px no-repeat; position: relative;}
+/*div.box_toggle a.open{ float: left; width: 15px; height: 15px; margin: 7px 10px 0px 0px; padding: 0px; background:  url(/admin/images/blank.png); position: relative;}*/
+div.new_page_popup a.btnImgArrow2, div.new_page_popup a.btnImgArrow2:hover{ }
+
+input.btnImgSearch{ padding: 3px 0px 0px 20px; background: url(/admin/skins/webjet6/images/icon/icon-search.png) 0px 3px no-repeat; margin: 0px; line-height: normal;}
+a.btnImgBrowser{ background: url(/admin/skins/webjet6/images/icon/icon-preview.png) 0px 3px no-repeat;}
+a.btnImgFolder{ background: url(/admin/skins/webjet6/images/icon/folder.png) 0px 2px no-repeat;}
+a.btnImgImport{ background: url(/admin/skins/webjet6/images/icon/icon-import.png) 0px 2px no-repeat;}
+a.btnImgLink{ background: url(/admin/skins/webjet6/images/icon/link.gif) 0px 2px no-repeat;}
+
+/* TAB BODYFRAME KONIEC */
+
+/* pravy box */
+
+#menuDivBlock.rightSide{ float: right; color: black;}
+#menuDivBlock.rightSide div{/* padding: 5px;*/ font-weight: normal; color: #444444;}
+#menuDivBlock.rightSide div a{ color: #222222;}
+#menuDivBlock.rightSide div hr{ font-size: 0px; height: 1px; background-color: #B7BBBE; border: 0px;}
+
+/* pravy box koniec */
+
+/* zoznam modulov */
+
+ul.modulesContainer { width: 100%; padding: 0px; margin: 0px; clear: both;}
+ul.modulesContainer li{ width: 110px; height: 130px; float: left; padding: 5px; margin: 0px 5px 5px 0px; list-style-type: none; background: url(/admin/skins/webjet6/images/bg-modules.gif) no-repeat 0 0;}
+ul.modulesContainer li.hover{ background: url(/admin/skins/webjet6/images/bg-modules-hover.gif) no-repeat 0 0;}
+ul.modulesContainer li a { font-size: 12px; width: 110px; height: 130px; display: block; /*float: left; */overflow: hidden; text-align: center; font-weight: normal; background-repeat: no-repeat; background-position: 50% 75%; text-decoration: none; color: #000000;}
+
+a.iconStatDay { background-image:url(/components/stat/images/day.png); }
+a.iconStatWeek{background-image:url(/components/stat/images/week.png); }
+a.iconStatMonth {background-image:url(/components/stat/images/month.png);}
+a.iconStatHour {background-image:url(/components/stat/images/hour.png);}
+a.iconStatTop {background-image:url(/components/stat/images/top.png);}
+a.iconStatCountry {background-image:url(/components/stat/images/country.png);}
+a.iconStatBrowser {background-image:url(/components/stat/images/browser.png);}
+a.iconStatSearchengine {background-image:url(/components/stat/images/searchengine.png);}
+a.iconStatReferer {background-image:url(/components/stat/images/referer.png);}
+a.iconStatError {background-image:url(/components/stat/images/error.png);}
+a.iconStatUserlogon {background-image:url(/components/stat/images/userlogon.png);}
+a.iconStatComplete {background-image:url(/components/stat/images/complete.png);}
+a.iconStatHeatmap {background-image:url(/components/stat/images/heatmap.png);}
+
+#waitDiv { clear: both; padding-top: 20px !important;}
+.info_box { border: 1px solid; margin: 80px 40px; padding:15px 10px 15px 50px; background-repeat: no-repeat; background-position: 10px center; color: #9F6000; background-color: #FEEFB3; background-image: url('/admin/images/icon-warning.png'); }
+.info_message_box { margin-bottom: 10px; border: 1px solid; padding:15px 10px 15px 50px; background-repeat: no-repeat; background-position: 10px center;  color: #00529B; background-color: #BDE5F8; background-image: url('/admin/images/icon-info.png');}
+div.galleryMainContainer div.galleryItem { border: 1px solid #F0F0F0; /*width:115px;*/ height:175px; float: left; padding: 0px; margin: 5px 5px 5px 0px; vertical-align: bottom; position: relative;}
+div.galleryMainContainer table div.galleryItem { float: none;}
+*+HTML BODY div.galleryMainContainer div.galleryItem { height:175px;}
+div.galleryMainContainer div.galleryItem div { margin: 10px; margin-top: 22px; cursor: pointer; width:96px; height:96px; display:block; background-position: center center; background-repeat: no-repeat; }
+div.galleryMainContainer div.galleryItem span {  margin-left: 10px; white-space: nowrap; position: absolute; display: block; width: 96px;  height: 35px; overflow: hidden; text-align: center; vertical-align: middle; bottom: 0px; color: #aaa;}
+div.galleryMainContainer div.galleryItem span.desc { height: 30px; width: 96px; clear: both; width: 106px; }
+div.galleryMainContainer div.galleryItem span.tools { height: 20px; width: 96px; clear: both; top: 0px; }
+div.galleryMainContainer div.galleryItem span.tools label { padding-right: 0px; }
+div.galleryMainContainer div.galleryItem span.tools a { float: right; margin: 3px 0px 0px 0px; }
+div.galleryMainContainer div.galleryItem span.tools input { float: left; margin-left: 3px; }
+
+
+div.galleryMainContainer div.galleryItemHover { border: 1px solid #caccce !important; }
+div.galleryMainContainer div.galleryItemActive { border: 1px solid #75B76E !important; }
+
+div.galleryImageUploadDate { padding: 3px 0px 10px 0px; float: left;}
+
+div.galleryMainContainer div.galleryItem span strong { color: black; font-weight: normal;}
+div.galleryCount { padding: 10px 0px 0px 0px;}
+.header, .headerImage { background-color: ButtonFace; border-top: 1px solid ButtonHighlight; border-bottom: 1px solid ButtonShadow; } 
+.header { background-color: white; padding-left: 20px; padding-right: 20px; padding-bottom: 5px; height: 65px; }
+.headTitle { font-family: Trebuchet MS, arial,helvetica;  font-size: 16px; border-top: 0px; border-bottom: 0px; padding-bottom: 0px; padding-top: 0px; margin-bottom: 0px; margin-top: 0px; color: #0080C0; }
+.headerImage { background-color: white; padding-left: 1px; float: right; border: none; vertical-align: middle; text-align: right; padding-right: 20px; }
+
+
+/** 
+  *	triedy potrebne pre pole na vyber casu - timePicker
+  * http://labs.perifer.se/timedatepicker/
+  * <script type="text/javascript" src="/components/_common/javascript/jquery.timePicker.js" ></script>
+  *
+  */
+
+div.time-picker { position: absolute; height: 200px; width:6em; /* needed for IE */ overflow: auto; background: #fff; border: 1px solid #000; z-index: 99; margin-top: 2em;}
+div.time-picker ul{ list-style-type: none; margin: 0; padding: 0;}
+div.time-picker li {padding: 1px; cursor: pointer;}
+div.time-picker li.selected{ background: #316AC5; color: #fff;}
+
+div.boxRefresh {padding: 7px 0px 3px 10px;}
+div.boxRefresh .formDocId { display: block; float: right; padding: 0px; width: 150px;}
+.refresh { float: left; width: 15px; height: 15px; background: url(/admin/skins/webjet6/images/icon/arrow-refresh.gif) left top no-repeat; margin: 2px 0px 0px 0px;}
+div.boxRefresh label.popisok2{ padding: 4px 5px 0px 0px; white-space: nowrap;}
+div.boxRefresh table{ width: 100%; }
+div.boxRefresh table .tdIcons { width: 20px;}
+div.boxRefresh table div.right{  padding-right: 5px; }
+* HTML BODY div.boxRefresh table div.right{ padding-right: 10px; }
+div.boxRefresh #docIdInput{ width: 155px;}
+div.boxRefresh a:hover { text-decoration: none !important; }
+div.box_tab #groupIdInputBox { width: 40px; height: 12px; font-size:11px; line-height: 11px; padding: 0px; margin: 0px; border:0px; background-color: #A1ACAE; cursor: input; color: #E4E6E7; font-family: Arial,Helvetica,sans-serif; }
+/*
+.jScrollPaneContainer { position: relative; overflow: hidden; z-index: 1;}
+.jScrollPaneTrack { position: absolute;cursor: pointer; right: 7px; top: 0; height: 100%; background: #aaa; }
+.jScrollPaneDrag { position: absolute; background: #666; cursor: pointer; overflow: hidden; }
+.jScrollPaneDragTop { position: absolute; top: 0; left: 0; overflow: hidden; }
+.jScrollPaneDragBottom { position: absolute; bottom: 0; left: 0; overflow: hidden; }
+a.jScrollArrowUp { display: block; position: absolute; z-index: 1;top: 0; right: 7px; text-indent: -2000px; overflow: hidden; height: 9px; }
+a.jScrollArrowDown { display: block; position: absolute; z-index: 1; bottom: 0; right: 7px; text-indent: -2000px; overflow: hidden; height: 9px;}
+.jScrollPaneTrack { background: url(/admin/skins/webjet6/images/scrollPane/windows_track.gif) repeat-y 50% 0;}
+
+.jScrollPaneDrag { background: url(/admin/skins/webjet6/images/scrollPane/windows_drag_middle.gif) repeat-y 0 50%; }
+.jScrollPaneDragTop { background: url(/admin/skins/webjet6/images/scrollPane/windows_drag_top.gif) no-repeat; height: 3px;}
+.jScrollPaneDragBottom { background: url(/admin/skins/webjet6/images/scrollPane/windows_drag_bottom.gif) no-repeat; height: 3px;}
+a.jScrollArrowUp { height: 17px; background: url(/admin/skins/webjet6/images/scrollPane/windows_arrow_up.gif) no-repeat 0 0; }
+a.jScrollArrowDown { height: 17px; background: url(/admin/skins/webjet6/images/scrollPane/windows_arrow_down.gif) no-repeat 0 100%; }
+a.jScrollActiveArrowButton, .winXP a.jScrollActiveArrowButton:hover { background-position: 0 -40px;}
+*/
+
+
+
+ul.submenu{ display: none;}
+
+/**
+* DragDrop upload pre Firefox / WebKit
+*/
+#dragDropUploadContainer[dragenter="true"] { border: 5px dashed green; overflow: hidden;}
+div.dragDropUploadContainerPreview { margin: 0px; padding: 0px; clear: both;}
+div.dragDropUploadObj, div.dragDropUploadObjDone { font-size: 10px; font-weight: bold; color: #666; border: solid 1px #DDF0DD; background-color: #EBFFEB; width: 428px; height: 21px; padding: 2px; margin-top: 3px; margin-bottom: 2px;}
+p.dragDropUploadContainerTip { clear: both; margin-top: 5px; color: #666; text-align: left; }
+p.dragDropUploadContainerTip, p.dragDropUploadContainerTip a { font-size: 90%; }
+
+label.showHidePage{ padding: 0px 0px 0px 10px;}
+label.showHidePage input{ position: relative; top: 2px;}
+
+img.calendarIcon{ margin: 4px 10px 0px 0px !important; float: none !important;}
+
+a.changeFrameWidthRight, a.changeFrameWidthLeft, a.changeFrameWidthRight:hover, a.changeFrameWidthLeft:hover{ display: block; float: left; width: 10px; height: 7px; text-indent: -20000px; font-size: 0px;}
+a.changeFrameWidthLeft { background: url(/admin/skins/webjet6/images/arrow-l.gif) no-repeat 0px 0px;}
+a.changeFrameWidthRight { background: url(/admin/skins/webjet6/images/arrow-r.gif) no-repeat 0px 0px;}
+a.changeFrameWidthRight:hover, a.changeFrameWidthLeft:hover{ background-position: 0px -10px; text-decoration: none;}
+
+div.divPopUp { position: absolute; width: 450px; height: 150px; z-index:130; left: 71px; top: -200px; visibility: hidden; background: url(/admin/skins/webjet6/images/bg-popup-history.png) no-repeat 0px 0px;}
+div.divPopUp tr.hlavicka td{ color: #000000; font-size: 12px; font-weight: normal; padding: 2px 0px 0px 5px;}
+div.divPopUp tr.hlavicka .close{ background: url(/admin/skins/webjet6/images/icon/icon-close.gif) no-repeat 0px 0px; float: right; text-indent: -10000px; width: 9px; height: 9px; margin: 3px 6px 0px 2px}
+div.divPopUpLong { height: 300px; background-image: url(/admin/skins/webjet6/images/bg-popup-history-long.png);}
+
+table#tableStates { border: 1px solid #BDBCBC; border-collapse: collapse;}
+
+span.sidebar{ color: #ff0000; cursor: pointer; float: right;}
+
+#sidebarPublic, #sidebarPerexGroup{ float: left;}
+
+#sidebar{ height: 100%; overflow: auto; padding: 0px 10px 10px 0px;}
+#sidebar { padding: 0px;}
+#sidebar fieldset { padding: 0px 0px 0px 0px; margin: 10px 10px 0px 10px; float: none !important; clear: both;}
+#sidebar fieldset textarea{  width: 100%; margin: 0px; padding: 0px;}
+#sidebar table tr td { padding: 0px 0px 3px 0px; margin: 0px; /*white-space: nowrap;*/ width: auto;}
+#sidebar table { width: 0px; padding: 0px; margin: 0px;}
+#sidebar .pole625 { padding: 0px; margin: 0px; width: 100% !important;}
+#sidebar .pole650 { padding: 0px; margin: 0px; width: 100% !important;}
+#sidebar .tab4 .pole625, #sidebar .tab4 .pole650, #sidebar .tab4 .pole600 { padding: 0px; margin: 0px; width: 100% !important;}
+#sidebar .tdAttributeName { width: 60px;}
+#sidebar .tdInputLink { width: 30px;}
+#sidebar .selectDlhy, #sidebar .poleDlhe { width: 100%; padding: 0px;}
+div.box_tab .sidebarTitle{ float: right; color: #ffffff; padding: 7px 0px 0px 15px; background: url(/admin/skins/webjet6/images/icon/icon-sidebar.png) no-repeat 0px 9px;}
+div.box_tab .sidebarIcons{ float: right; color: #ffffff; padding: 11px 0px 0px 5px; width: 25px; }
+
+div.sidebarNav { float: right; width: 105px;}
+
+/* AUTOPCOMPLETE */
+
+.ui-autocomplete { position: absolute; cursor: default; }
+.ui-menu { list-style:none; background: #f8f8f8; border-bottom: 1px solid #dddddd; border-top: 1px solid #dddddd; padding: 0px;}
+.ui-menu .ui-menu-item { width: 100%; display: block; font-weight: normal; border-left: 1px solid #dddddd; border-right: 1px solid #dddddd;}
+.ui-menu .ui-menu-item a { text-decoration: none; font-weight: normal !important; display: block; clear: left; color: #555555; white-space: nowrap; margin: 0px; padding: 3px 3px 3px 3px;}
+.ui-menu .ui-menu-item a:hover, .ui-menu .ui-menu-item a.ui-state-hover, .ui-menu .ui-menu-item a.ui-state-active { font-weight: normal; color: #000000; border: 0px solid #67a9bf; background: #a4dbed;}
+.ui-menu .ui-menu-item a span{ width: 20px; float: left; display: block; padding: 0px; background-position: center top; }
+
+/* SPOTLIGHT */
+
+#spotlightDiv { top:0px; position: absolute; }
+#spotlightDiv input{ width: 1px; height: 1px; border: 0px none;}
+#spotlightDiv a { width: 20px; height: 18px; float: left; text-indent: -10000px;}
+.box-ui-autocomplete { height: 1px; position: absolute; top: 0px; position: expression("absolute"); top: expression(document.body.scrollTop + this.offsetHeight - this.offsetHeight); width: 240px;}
+.box-ui-autocomplete ul{ left: 0px !important; top: 0px !important; position:relative; margin: 0px;}
+
+/*
+ * CSS Styles that are needed by jScrollPane for it to operate correctly.
+ *
+ * Include this stylesheet in your site or copy and paste the styles below into your stylesheet - jScrollPane
+ * may not operate correctly without them.
+ */
+
+.jspContainer { overflow: hidden; position: relative; }
+.jspPane { position: absolute; }
+.jspVerticalBar { position: absolute; top: 0; right: 0px; width: 16px; height: 100%; }
+.webTreeMenu .jspVerticalBar, .webTreeMenu .jspHorizontalBar { background: #ffffff; }
+.jspHorizontalBar { position: absolute;	bottom: 0; left: 0; width: 100%; height: 16px; }
+.jspVerticalBar *,
+.jspHorizontalBar * { margin: 0; padding: 0; }
+.jspCap { display: none; }
+.jspHorizontalBar .jspCap { float: left; }
+
+.jspHorizontalBar .jspTrack { background: url(/admin/skins/webjet6/images/scrollPane/horizontal_track.gif) repeat-x 4px 50%; position: relative; }
+.jspHorizontalBar .jspDrag { background: url(/admin/skins/webjet6/images/scrollPane/horizontal_drag_middle.gif) repeat-x 50% 50%; position: relative; top: 0; left: 0; cursor: pointer; }
+
+.jspVerticalBar .jspTrack { background: url(/admin/skins/webjet6/images/scrollPane/vertical_track.gif) repeat-y 6px 0; position: relative; }
+.jspVerticalBar .jspDrag { background: url(/admin/skins/webjet6/images/scrollPane/vertical_drag_middle.gif) repeat-y 4px 50%; position: relative; top: 0; left: 0; cursor: pointer; }
+
+.jspHorizontalBar .jspTrack,
+.jspHorizontalBar .jspDrag { float: left; height: 100%; }
+.jspArrow { /*background: #50506d;*/ text-indent: -20000px; display: block; cursor: pointer; }
+.jspArrow.jspDisabled { cursor: default; }
+.jspVerticalBar .jspArrow { height: 16px; }
+.jspHorizontalBar .jspArrow { width: 16px; float: left; height: 16px; }
+.jspVerticalBar .jspArrow:focus { outline: none; }
+.jspCorner { background: #ffffff; float: left; height: 100%; }
+
+.jspHorizontalBar .jspDragLeft, .jspHorizontalBar .jspDragRight { height: 5px; width: 3px; position: absolute; top: 6px; overflow: hidden;}
+.jspHorizontalBar .jspDragLeft { background: url(/admin/skins/webjet6/images/scrollPane/horizontal_drag_top.gif) no-repeat 0px 0px; left: 0;}
+.jspHorizontalBar .jspDragRight { background: url(/admin/skins/webjet6/images/scrollPane/horizontal_drag_bottom.gif) no-repeat 0px 0px; right: 0; }
+
+.jspVerticalBar .jspDragTop, .jspVerticalBar .jspDragBottom { height: 3px; width: 5px; position: absolute; left: 4px; overflow: hidden;}
+.jspVerticalBar .jspDragTop { background: url(/admin/skins/webjet6/images/scrollPane/vertical_drag_top.gif) no-repeat 0px 0%; top: 0; }
+.jspVerticalBar .jspDragBottom { background: url(/admin/skins/webjet6/images/scrollPane/vertical_drag_bottom.gif) no-repeat 0px 0%; bottom: 0;}
+
+a.jspArrowLeft { width: 17px; background: url(/admin/skins/webjet6/images/scrollPane/horizontal_arrow_up.gif) no-repeat 50% 6px; }
+a.jspArrowRight { width: 17px; background: url(/admin/skins/webjet6/images/scrollPane/horizontal_arrow_down.gif) no-repeat 100% 6px; }
+
+a.jspArrowUp { height: 17px; background: url(/admin/skins/webjet6/images/scrollPane/vertical_arrow_up.gif) no-repeat 4px 0; }
+a.jspArrowDown { height: 17px; background: url(/admin/skins/webjet6/images/scrollPane/vertical_arrow_down.gif) no-repeat 4px 100%; }
+a.jspActiveArrowButton, .winXP a.jspActiveArrowButton:hover { background-position: 0 -40px;}
+
+/* Yuk! CSS Hack for IE6 3 pixel bug :( */
+* html .jspCorner { margin: 0 -3px 0 0; }
+
+#trEditor div.editorTab { background-color: #edeff1; }
+tr #expanded { background-color: #edeff1; }

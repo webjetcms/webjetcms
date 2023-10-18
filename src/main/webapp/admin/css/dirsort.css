@@ -1,0 +1,71 @@
+.sort-table {
+	font:		Icon;
+	border:		1px Solid ThreeDShadow;
+	border-right: 0px;
+	background:	Window;
+	color:		WindowText;
+}
+
+.sort-table thead {
+	background:	ButtonFace;
+}
+
+.sort-table td {
+	padding:	0px 2px;
+}
+
+.sort-table thead td {
+	border:			1px solid;
+	border-color:	ButtonHighlight ButtonShadow
+					ButtonShadow ButtonHighlight;
+	cursor:			pointer;
+	color: WindowText;
+}
+
+.sort-table thead td:active {
+	border-color:	ButtonShadow ButtonHighlight 
+					ButtonHighlight ButtonShadow;
+	padding:		3px 4px 1px 6px;
+}
+
+.sort-table tbody td {
+	border-right:	1px solid;
+	border-color:	ButtonHighlight ButtonShadow
+					   ButtonShadow ButtonHighlight;
+	color: WindowText;
+}
+
+.sort-arrow {
+	width:					11px;
+	height:					11px;
+	background-position:	center center;
+	background-repeat:		no-repeat;
+	margin:					0 2px;
+}
+
+.sort-arrow.descending {
+	background-image:		url("../images/dirsort/downsimple.png");
+	
+}
+
+.sort-arrow.ascending {
+	background-image:		url("../images/dirsort/upsimple.png");
+}
+
+.sort_td A {
+   font-family: Verdana, "Arial CE", "helvetica CE", Arial, Helvetica;
+   font-size: 8pt;
+   font-weight: normal;
+   color: #3366CC;
+   text-decoration: none;
+   background-color: transparent;
+}
+
+.sort_td A:hover {
+   font-family: Verdana, "Arial CE", "helvetica CE", Arial, Helvetica;
+   font-size: 8pt;
+   color: #FF3333;
+   background-color: #eeeeee;
+   text-decoration: none;
+   background-color: transparent;
+}

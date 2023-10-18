@@ -1,0 +1,19 @@
+.ly-container {
+    margin-left: 0;
+    max-width: 100%;
+}
+
+@media (max-width: $bp-laptop - 1) {
+    .ly-container {
+        max-width: 100%;
+    }
+}
+
+.row-no-padding {
+    [class*="col"] {
+        padding-left: 0 !important;
+    }
+    [class*="col"]:last-child {
+        padding-right: 0 !important;
+    }
+}

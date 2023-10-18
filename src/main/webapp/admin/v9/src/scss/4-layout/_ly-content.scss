@@ -1,0 +1,25 @@
+@charset "UTF-8";
+
+.ly-content {
+    // padding-top: 15px;
+    height: calc(100vh - 60px);
+    overflow: hidden;
+}
+
+@media (max-width: ($bp-laptop - 1)) {
+    .ly-content {
+        height: 100vh;
+    }
+}
+
+@media (max-width: ($bp-mobile - 1)) {
+    .ly-content {
+        height: 100%;
+    }
+}
+
+html.in-iframe, html.in-iframe-show-table {
+    .ly-content {
+        height: 100vh;
+    }
+}

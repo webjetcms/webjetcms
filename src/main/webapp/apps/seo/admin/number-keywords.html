@@ -1,0 +1,137 @@
+<script data-th-inline="javascript">
+    let columns = /*[(${layout.getDataTableColumns("sk.iway.iwcm.components.seo.jpa.NumberKeywordsDTO")})]*/ '';
+    let url = "/admin/rest/seo/number-keywords";
+</script>
+<script type="text/javascript">
+    var numberKeywordsDataTable;
+    let barChartKeywordsNumber;
+
+    WJ.breadcrumb({ 
+        id: "numberKeywords",
+        tabs: [
+            {
+                url: '/apps/seo/admin/number-keywords/',
+                title: '[[#{components.seo.number_keywords}]]',
+                active: true
+            },
+            {
+                url: '#dateRange',
+                title: '{filter}',
+                active: false
+            }
+        ]
+    });
+
+    window.getSearchAll = function (order) {
+        let keywordName = numberKeywordsDataTable.DATA.json[order - 1]['name'];
+        let groupId = $('#rootDir').val();
+        window.location.href="/admin/skins/webjet6/searchall.jsp?text=" + keywordName + "&groupId=" + groupId;
+    }
+
+    window.domReady.add(function () {
+        WJ.showLoader();
+
+        //presun filter do hlavicky
+        $("#pills-dateRange-tab").html("");
+        $("div#numberKeywordsDataTable_extfilter").appendTo("#pills-dateRange-tab");
+
+        numberKeywordsDataTable = WJ.DataTable({
+            url: url,
+            serverSide: false,
+            columns: columns,
+            id: "numberKeywordsDataTable",
+            idAutoOpener: false,
+            defaultSearch: ChartTools.getSearchCriteria(),
+            autoHeight: false,
+            onPreXhr: function(TABLE, e, settings, data) {
+                data.fixed_searchRootDir = $('#rootDir').val();
+                data.fixed_searchWebPage = $('#webPageSelect').val();
+            }
+        });
+        numberKeywordsDataTable.hideButtons(["create", "edit", "remove", "celledit", "import", "duplicate"]);
+
+        ChartTools.initGroupIdSelect();
+        ChartTools.setWebPagesSelect(getUrl("webPageSelect"), $('#webPageSelect').val());
+
+        //Create and set amcharts
+        createAmcharts();
+
+        //Onchange events - update amcharts
+        $("#numberKeywordsDataTable_extfilter").on("click", "button.filtrujem", function() {
+            updateTablesAndCharts("dayDate");
+        });
+
+        $("#rootDir").on("change", function() { 
+            updateTablesAndCharts("rootDir");
+        });
+
+        $("#webPageSelect").on("change", function() {
+            updateTablesAndCharts("webPageSelect");
+        });
+
+        async function createAmcharts() {
+            window.initAmcharts().then(module => {
+                $.ajax({url: getUrl(ChartTools.ChartType.Bar), success: function(result) {
+                    barChartKeywordsNumber = new ChartTools.BarChartForm("name", "numberOfKeywords", '[[#{components.seo.keywords.searchengines.graph.title2}]]', "numberKeywords-barKeywords", result);
+                    ChartTools.createAmchart(barChartKeywordsNumber);
+
+                    WJ.hideLoader();
+                }});
+            });
+        }
+
+        async function updateTablesAndCharts(refreshType) { 
+            if(refreshType == "rootDir")
+                await ChartTools.setWebPagesSelect(getUrl("webPageSelect"), null);
+
+            //Reload bar chart data
+            WJ.showLoader();
+            await $.ajax({url: getUrl(ChartTools.ChartType.Bar), success: function(result) {
+                barChartKeywordsNumber.chartData = result;
+                ChartTools.updateChart(barChartKeywordsNumber);
+            }});
+            WJ.hideLoader();
+
+            //Update values and reload table
+            numberKeywordsDataTable.ajax.url(WJ.urlUpdateParam(numberKeywordsDataTable.ajax.url(), "searchRootDir", $('#rootDir').val()));
+            numberKeywordsDataTable.ajax.url(WJ.urlUpdateParam(numberKeywordsDataTable.ajax.url(), "searchWebPage", $('#webPageSelect').val()));
+            numberKeywordsDataTable.ajax.reload();
+
+            ChartTools.saveSearchCriteria(numberKeywordsDataTable.DATA);
+        }
+
+        //Get url for bar chart
+        function getUrl(type) {
+            //Load values
+            let selectedPage = $('#webPageSelect').val();
+            let rootDir = $('#rootDir').val();
+
+            if(type == ChartTools.ChartType.Bar) {
+                let tmpDefURL = url + "/barChartData?rootDir=" + $('#rootDir').val();;
+                tmpDefURL += "&webPage=" + selectedPage;
+                return tmpDefURL;
+            } 
+
+            return "/admin/rest/seo/stat-keywords/webPageSelect?rootDir=" + rootDir;
+        }
+    });
+</script>
+
+<div id="numberKeywordsDataTable_extfilter">
+    <div class="row datatableInit">
+        <div class="col-auto" data-th-title="#{components.stat.filter.showOnlyFromGroup}" data-toggle="tooltip">
+            <input type="text" class="webjet-dte-jstree" id="rootDir" value="-1" data-th-data-text="#{components.stat.stats.root_dirs.all}" data-th-data-text-empty="#{components.stat.stats.root_dirs.all}"/>
+        </div>
+        <div class="col-auto">
+            <select id="webPageSelect">
+                <option value="-1">[[#{stat.search_engines.all_web_pages}]]</option>
+            </select>
+        </div>
+    </div>
+</div>
+
+<div id="graphsDiv" class="hide-while-loading">
+    <div id="numberKeywords-barKeywords" class="amcharts"></div>
+</div>
+
+<table id="numberKeywordsDataTable" class="datatableInit table"></table>

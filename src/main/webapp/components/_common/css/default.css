@@ -1,0 +1,44 @@
+.systemTable
+{
+   border-top: 1px solid buttonshadow;
+   border-left: 1px solid buttonshadow;
+   border-right: 1px solid buttonhighlight;
+   border-bottom: 1px solid buttonhighlight;
+   margin: 0px;
+	padding: 0px;
+}
+
+.systemTable tr
+{
+	background: window;
+	margin: 0px;
+	padding: 0px;
+}
+
+.systemTable th
+{
+	background: buttonface; 
+   font: menu; 
+	font-weight: bold;
+   border: 1px outset white;
+	padding: 1px;
+   padding-top: 0;
+	padding: bottom: 0;
+   border-top: 1px solid buttonhighlight;
+   border-left: 1px solid buttonhighlight;
+   border-right: 1px solid buttonshadow;
+   border-bottom: 1px solid buttonshadow;
+}
+
+.systemTable td
+{
+	margin: 0px;
+   color: windowtext; 
+   font: menu; 
+   padding: 1px; 
+   padding-left: 5px; 
+   padding-right: 5px;  
+   border-right: 1px solid buttonshadow;
+   border-bottom: 1px solid buttonshadow;
+}
+

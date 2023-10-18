@@ -1,0 +1,85 @@
+<script>
+    var searchDataTable;
+
+    function openDetails(url) {
+        //console.log("Open details, url=", url);
+
+        window.open(url);
+
+    }
+
+    window.domReady.add(function () {
+
+        window.helpLink = "/redactor/apps/gdpr/search";
+
+        WJ.breadcrumb({
+            id: "regexpsearch",
+            tabs: [
+                {
+                    url: '/apps/gdpr/admin/',
+                    title: '[[#{components.gdpr.menu}]]',
+                    active: false
+                },
+                {
+                    url: '/apps/gdpr/admin/search/',
+                    title: '[[#{components.gdpr.list}]]'
+                },
+                {
+                    url: '#value',
+                    title: '{filter}',
+                    active: false
+                }
+            ]
+        });
+
+        //presun filter hodnota do hlavicky
+        $("#pills-value-tab").html("");
+        $("div#searchDataTable_extfilter").appendTo("#pills-value-tab");
+        setTimeout(function() {
+            $("#pills-value-tab").find("div.input-group-prepend").remove();
+        }, 100);
+
+        let url = "/admin/rest/gdpr/search";
+        let columns = [(${layout.getDataTableColumns("sk.iway.iwcm.components.gdpr.GdprSearchEntity")})];
+
+        WJ.DataTable.mergeColumns(columns, {
+            name: "name",
+            renderFormatLinkTemplate: "javascript:openDetails('{{url}}')",
+            className: "required"
+        });
+
+        searchDataTable = WJ.DataTable({
+            url: url,
+            serverSide: false,
+            columns: columns,
+            id: "searchDataTable",
+            fetchOnEdit: true,
+            fetchOnCreate: true
+        });
+
+        searchDataTable.hideButton("create");
+        searchDataTable.hideButton("edit");
+        searchDataTable.hideButton("remove");
+        searchDataTable.hideButton("duplicate");
+        searchDataTable.hideButton("import");
+
+        $("#searchDataTable_extfilter").on("click", "button.filtrujem", function() {
+            //umele vyvolanie reloadu, kedze je zapnute klientske strankovanie/filtrovanie
+            searchDataTable.ajax.reload();
+        });
+    });
+</script>
+
+<div id="searchDataTable_extfilter">
+    <div class="row datatableInit">
+        <div class="col-auto dt-extfilter-title-value"></div>
+        <div class="col-auto dt-extfilter dt-extfilter-value"></div>
+    </div>
+</div>
+
+<style type="text/css">
+    table.datatableInit th:nth-child(4) form { display: none;}
+    span.yellow_color { background-color: yellow; }
+</style>
+
+<table id="searchDataTable" class="datatableInit table"></table>

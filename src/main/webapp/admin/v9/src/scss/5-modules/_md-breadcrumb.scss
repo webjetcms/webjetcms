@@ -1,0 +1,174 @@
+@charset "UTF-8";
+
+.md-breadcrumb {
+    padding: 15px 15px 14px 15px;
+    margin-left: -15px;
+    margin-right: -15px;
+    background-color: $nice-gray;
+    border-bottom: 1px solid $nice-gray-100;
+    font-family: $secondary-font-family;
+    font-size: 15px;
+    line-height: 30px;
+
+    &.border-top {
+        border-top: 1px solid $nice-gray-100;
+    }
+
+    .nav-link {
+        font-family: $secondary-font-family;
+        font-weight: 700;
+        color: #646979;
+        padding:0;
+        margin-right: 16px;
+
+        &:hover {
+            color: $nice-black;
+        }
+
+        &.active {
+            color: $primary;
+            &:hover {
+                cursor: default;
+            }
+        }
+
+        &.back-link, &.front-link {
+            color: $nice-black;
+            font-family: $secondary-font-family;
+            font-weight: 400;
+            margin-right: 15px;
+        }
+        &.front-link {
+            margin-right: 0px;
+            i.fal {
+                margin-left: 11px;
+            }
+        }
+
+        .fal,
+        .far,
+        .fas {
+            width: 1.25em;
+        }
+
+    }
+
+    div.bootstrap-select {
+        background-color: white;
+        border-width: 0px;
+        display: block !important;
+        padding: 0px;
+        border-radius: 6px !important;
+
+        button {
+            border-radius: 6px !important;
+            display: block;
+            border-width: 1px;
+            padding-top: 2px;
+        }
+    }
+
+    .breadcrumb-language-select {
+        font-size: 15px;
+        line-height: 30px;
+        padding: 0px;
+        margin-top: -3px;
+
+        .bootstrap-select {
+            width: auto !important;
+        }
+
+        .btn {
+            padding: 4px;
+            padding-bottom: 2px;
+            padding-right: 30px;
+            font-size: 15px
+        }
+    }
+
+    .btn-group {
+        padding:2px;
+        background-color: #b3b8c7;
+        border-radius: $border-radius !important;
+        margin-top: -3px;
+        .btn {
+            border-width: 0 !important;
+            margin-right: 0;
+            background-color: #b3b8c7;
+            border-radius: $border-radius !important;
+            padding: 3px 0.5rem;
+            min-width: 27px;
+            margin-left: 0;
+            &:hover {
+                background-color: $secondary;
+                color: white;
+                cursor: pointer;
+            }
+            &.active {
+                background-color: white;
+                color: $secondary;
+            }
+
+        }
+    }
+
+    input.datepicker {
+        max-width: 80px;
+    }
+
+    //inputy v navigacii, napr. mazanie dat
+    .nav-item .col-auto {
+        line-height: 30px;
+
+        input {
+            padding-top: 0px;
+            padding-bottom: 0px;
+            font-size: 13px;
+            &.form-control-sm, &.form-control {
+                background-color: white;
+            }
+        }
+        .bootstrap-select.filter-input-prepend {
+            margin-top: 0px;
+            width: 32px !important;
+            button.dropdown-toggle {
+                position: absolute;
+            }
+        }
+        .form-group button {
+            padding: 4px 8px;
+            i {
+                font-size: 14px;
+            }
+        }
+        #editorApprootDir {
+            width: 260px;
+        }
+    }
+    .nav-item .col-auto input, .nav-item .col-auto button {
+        max-height: 30px;
+        line-height: 21px;
+    }
+
+    .form-control:focus {
+        background-color: white;
+    }
+}
+
+@media (max-width: ($bp-laptop - 1)) {
+    .md-breadcrumb {
+        padding-top: 5px;
+        padding-bottom: 4px;
+        //vynechaj miesto pre open menu button
+        padding-left: 42px;
+        .nav-link {
+            font-size: 13px;
+        }
+    }
+    //v pravom stlpci vo web strankach/galerii miesto na button netreba
+    div.col-md-8 {
+        .md-breadcrumb {
+            padding-left: 15px;
+        }
+    }
+}

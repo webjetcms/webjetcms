@@ -1,0 +1,182 @@
+@charset "UTF-8";
+
+form {}
+
+label {}
+
+input {}
+input[type="text"] {}
+input[type="button"] {}
+input[type="submit"] {}
+input[type="checkbox"] {}
+input[type="radio"] {}
+input[type="email"] {}
+input[type="file"] {}
+input[type="hidden"] {}
+input[type="number"] {}
+input[type="password"] {}
+
+button[type="button"] {}
+button[type="send"] {}
+
+select {}
+
+textarea {}
+
+.btn .fal,
+.btn .far,
+.btn .fas {
+    width: 1.25em;
+}
+
+.btn-success,
+.btn-danger,
+.btn-warning {
+    color: $secondary !important;
+}
+.btn-duplicate {
+    background-color: $purple !important;
+    border-color: $purple !important;
+}
+
+.btn-outline-secondary {
+    border-color: $input-border-color;
+}
+
+.input-group-text {
+    background-color: transparent;
+    border-right: 0;
+    color: $nice-gray-100;
+    position: relative;
+    /*jeeff: toto netusim naco bolo ale sposobovalo to problem v liste Volitelne polia pri autocomplete inpute &::after {
+        content: "";
+        position: absolute;
+        right: -1px;
+        top: 0px;
+        bottom: 0px;
+        background-color: white;
+        width: 2px;
+        z-index: 2;
+    }*/
+}
+
+.modal {
+
+    // .modal-body {
+    //     padding-top: 0;
+    //     padding-bottom: 0;
+    // }
+
+    .col-form-label {
+        text-align: right;
+    }
+
+    .form-group-tooltip {
+        padding-left: 0;
+    }
+
+    // .form-group.row {
+    //     padding-bottom: 12px;
+    //     padding-top: 12px;
+    //     margin-bottom: 0;
+    //     border-bottom: 1px solid #e6e6e6;
+    //     &:nth-child(odd) {
+    //         background-color: #f9f9f9;
+    //     }
+    //     &:last-child {
+    //         border-color: transparent;
+    //     }
+    // }
+
+}
+
+.todo {
+    color: orange !important;
+}
+
+.dt-header-row, div.md-breadcrumb, .form-switch-big {
+    .form-switch {
+        position: relative;
+        display: inline-block;
+        padding-left: 0px;
+        border-width: 0 !important;
+        padding-top: 0px !important;
+        padding-bottom: 0px !important;
+        padding-right: 0px;
+        width: 50px;
+        min-height: 31px;
+        .form-check-label {
+            &::before {
+                content: "";
+                display: block;
+                position: absolute;
+                top:0;
+                left: 0px;
+                width: 50px;
+                height: 31px;
+                background-color: #b3b8c7;
+                border-width: 0 !important;
+                border-radius: 24px;
+            }
+            &::after {
+                content: "";
+                display: block;
+                position: absolute;
+                top: 2px;
+                left: 0px;
+                margin-left: 2px;
+                width: 27px;
+                height: 27px;
+                line-height: 27px;
+                text-align: center;
+                background-color: white;
+                font-family: $fa-font-name;
+                font-weight: 400;
+                font-size: 13px;
+                border-width: 0 !important;
+                color: #2D2E32;
+                border-radius: 50%;
+                transition: all 0.3s ease-in-out;
+            }
+            &.is-icon-arrows-v::after {
+                content: "\f07d";
+            }
+            &.is-icon-sort::after {
+                content: "\f0dc";
+            }
+            &:hover {
+                cursor: pointer;
+                &::after {
+                    margin-left: 6px;
+                }
+            }
+        }
+        .form-check-input {
+            opacity: 0;
+            z-index: -1;
+        }
+        .form-check-input:checked ~ .form-check-label::before {
+            background-color: $primary;
+        }
+        .form-check-input:checked ~ .form-check-label::after {
+            transform: translateX(19px);
+        }
+        .form-check-input:checked ~ .form-check-label:hover::after {
+            margin-left: -2px;
+        }
+        &.enabled {
+            .form-check-input ~ .form-check-label::before {
+                background-color: $primary;
+            }
+            .form-check-input ~ .form-check-label::after {
+                transform: translateX(19px);
+            }
+            .form-check-input ~ .form-check-label:hover::after {
+                margin-left: -2px;
+            }
+        }
+        &.buttons-select-cel .form-check-label.is-icon-arrows-v::after {
+            content: "\f4a4";
+        }
+    }
+}

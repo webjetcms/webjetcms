@@ -1,0 +1,52 @@
+<h3 data-th-text="#{components.contact.dialog_title}">Kontakt</h3>
+
+<!--/* https://spring.io/guides/gs/handling-form-submission/ */-->
+<form data-th-action="${request.getAttribute('ninja').page.urlPath}" data-th-object="${entity}" method="post">
+    <div data-th-if="${error!=null}" class="alert alert-danger">
+        <!--/* https://www.baeldung.com/spring-thymeleaf-error-messages */-->
+        <p data-th-text="#{chat.form_fill_error}"></p>
+        <ul style="margin: 0px;">
+            <li data-th-each="err : ${error.allErrors}">
+                <span data-th-text="#{components.contact.property.__${err.field}__}">zložený prekladový kľúč zo statického prefixu a dynamického mena poľa</span> - <span data-th-text="${err.defaultMessage}">chybová správa</span>
+            </li>
+        </ul>
+    </div>
+
+    <div class="mb-3">
+      <label class="form-label" data-th-text="#{components.contact.property.name}">Firma</label>
+      <input type="text" class="form-control" data-th-field="*{name}">
+    </div>
+    <div class="mb-3">
+        <label class="form-label" data-th-text="#{components.contact.property.vatid}">IČ DPH</label>
+        <input type="text" class="form-control" data-th-field="*{vatid}">
+    </div>
+    <div class="mb-3">
+        <label class="form-label" data-th-text="#{components.contact.property.street}"></label>
+        <input type="text" class="form-control" data-th-field="*{street}">
+    </div>
+    <div class="mb-3">
+        <label class="form-label" data-th-text="#{components.contact.property.city}"></label>
+        <input type="text" class="form-control" data-th-field="*{city}">
+    </div>
+    <div class="mb-3">
+        <label class="form-label" data-th-text="#{components.contact.property.zip}"></label>
+        <input type="text" class="form-control" data-th-field="*{zip}">
+    </div>
+    <div class="mb-3">
+        <label class="form-label" data-th-text="#{components.contact.property.country}"></label>
+        <!--/* https://www.baeldung.com/thymeleaf-select-option */-->
+        <select class="form-control" data-th-field="*{country}">
+            <option data-th-each="country : ${countries}" data-th-value="${country.value}" data-th-text="${country.label}"></option>
+        </select>
+    </div>
+    <div class="mb-3">
+        <label class="form-label" data-th-text="#{components.contact.property.contact}"></label>
+        <input type="text" class="form-control" data-th-field="*{contact}">
+    </div>
+    <div class="mb-3">
+        <label class="form-label" data-th-text="#{components.contact.property.phone}"></label>
+        <input type="text" class="form-control" data-th-field="*{phone}">
+    </div>
+    <button type="submit" class="btn btn-primary" data-th-text="#{button.submit}" name="saveForm">Submit</button>
+    <input type="hidden" name="id" data-th-field="*{id}"/>
+</form>

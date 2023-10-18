@@ -1,0 +1,79 @@
+extends ../../partials/layout
+
+block content
+
+    +breadcrumb(
+        'configuration',
+        [
+            [ '#configuration', '[[\#{webjet.left_conf.konfiguracia}]]', true ]
+        ]
+    )
+
+    style(type="text/css").
+        #import-settings, #dt-import-update-by-column {display: none;}
+
+    script.
+        var configurationDatatable;
+
+        function fillValue(){
+            var name = $("#DTE_Field_name").val();
+            $.ajax({
+                url: '/admin/rest/settings/configuration/autocomplete/detail',
+                data: { name: name },
+                success: function(data) {
+                    $('#DTE_Field_value').val(data.value);
+                    $('#DTE_Field_oldValue').val(data.oldValue);
+                    $('#DTE_Field_description').val(data.description);
+                    $('#DTE_Field_dateChanged').val(WJ.formatDateTimeSeconds(data.dateChanged));
+                }
+            });
+        }
+
+        function exportDialogCustomCallback(type, TABLE) {
+            window.open("/admin/conf_export.jsp");
+            return true;
+        }
+
+        function importDialogCustomCallback(type, TABLE) {
+            WJ.openPopupDialog("/admin/conf_import.jsp");
+            return true;
+        }
+
+        window.domReady.add(function () {
+
+            var order = [];
+            order.push([5, 'desc']);
+
+            var tabs = [
+                { id: 'basic', title: '[[\#{editor.tab.basic_info}]]', selected: true },
+                { id: 'advanced', title: '[[\#{editor.planned_changes}]]' },
+                { id: 'history', title: '[[\#{editor.tab.history}]]', hideOnCreate: true }
+            ];
+
+            let url = "/admin/rest/settings/configuration";
+            let columns = [(${layout.getDataTableColumns('sk.iway.iwcm.components.configuration.model.ConfDetailsDto')})];
+
+            configurationDatatable = WJ.DataTable({
+                url: url,
+                serverSide: false,
+                columns: columns,
+                tabs: tabs,
+                id: "configurationDatatable",
+                order: order,
+                idAutoOpener: false
+            });
+
+            WJ.notifyInfo("[[\#{text.warning}]]", "[[\#{admin.conf_editor.warningText}]]", 5000);
+        });
+
+    <table id="configurationDatatable" class="datatableInit table"></table>
+
+    div#datatableExportModalCustomOptions.hidden
+        div.form-check
+            input.form-check-input(type="radio" name="dt-settings-extend" id="dt-settings-extend-custom" value="custom" data-hide="#datatableExportModal .file-name,#pills-export-advanced-tab")
+            label.form-check-label(for="dt-settings-extend-custom") [[\#{admin.conf_editor.custom-xml-export}]]
+
+    div#datatableImportModalCustomOptions.hidden
+        div.form-check
+            input.form-check-input(type="radio" name="dt-settings-extend" id="dt-settings-import-extend-custom" value="custom" data-hide="#datatableImportModal .file-name,#import-settings")
+            label.form-check-label(for="dt-settings-import-extend-custom") [[\#{admin.conf_editor.custom-xml-export}]]

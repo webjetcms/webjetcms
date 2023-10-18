@@ -1,0 +1,158 @@
+<script data-th-inline="javascript">
+    let statKeywordsDetailsUrl = "/admin/rest/stat/search-engines-details";
+    let statKeywordsDetailsColumns = /*[(${layout.getDataTableColumns("sk.iway.iwcm.stat.jpa.SearchEnginesDetailsDTO")})]*/ '';
+
+    let enginesCountUrl = "/admin/rest/seo/stat-keywords-details";
+    let enginesCountColumns = /*[(${layout.getDataTableColumns("sk.iway.iwcm.stat.jpa.SearchEnginesDTO")})]*/ '';
+</script>
+<script>
+    var statKeywordsDetailsDataTable;
+    var enginesCountDataTable;
+    let queryName;
+    let dayDate;
+    let pieKeywordsEngines;
+
+    WJ.breadcrumb({
+        id: "statKeywordsDetails",
+        tabs: [
+            {
+                url: '/apps/seo/admin/stat-keywords/',
+                title: '[[#{stat.search_engines_details.title}]]',
+                active: true
+            },
+            {
+                url: '#dateRange',
+                title: '{filter}',
+                active: false
+            }
+        ]
+    });
+
+    window.domReady.add(function () {
+        WJ.showLoader();
+
+        //presun filter do hlavicky
+        $("#pills-dateRange-tab").html("");
+        $("div#statKeywordsDetailsDataTable_extfilter").appendTo("#pills-dateRange-tab");
+
+        //Set params from url
+        setParams();
+
+        statKeywordsDetailsDataTable = WJ.DataTable({
+            url: statKeywordsDetailsUrl,
+            serverSide: false, //false lebo sa nevyužíva repositár
+            columns: statKeywordsDetailsColumns,
+            id: "statKeywordsDetailsDataTable",
+            idAutoOpener: false,
+            defaultSearch: ChartTools.getSearchCriteria(),
+            autoHeight: false,
+            onPreXhr: function(TABLE, e, settings, data) {
+                data.fixed_searchUrl = $("#searchQuery").val();
+            }
+        });
+        statKeywordsDetailsDataTable.hideButtons(["create", "edit", "remove", "celledit", "import", "duplicate"]);
+
+        enginesCountDataTable = WJ.DataTable({ 
+            url: enginesCountUrl,
+            columns: ChartTools.filterColumns(["order", "serverName", "queryCount", "percentage"], enginesCountColumns),
+            serverSide: false,
+            id: "enginesCountDataTable",
+            idAutoOpener: false,
+            //defaultSearch: ChartTools.getSearchCriteria(),
+            autoHeight: false,
+            onPreXhr: function(TABLE, e, settings, data) {
+                data.fixed_searchUrl = $("#searchQuery").val();
+                data.fixed_searchdayDate = dayDate;
+            }
+        });
+        enginesCountDataTable.hideButtons(["create", "edit", "remove", "celledit", "import", "duplicate"]);
+
+        //Create and set amcharts
+        createAmcharts();
+
+        //Onchange events - update table
+        $("#statKeywordsDetailsDataTable_extfilter").on("click", "button.filtrujem", function() {
+            //reload table values
+            ChartTools.saveSearchCriteria(statKeywordsDetailsDataTable.DATA);
+            statKeywordsDetailsDataTable.ajax.reload();
+        });
+
+        function setParams() {
+            const queryString = window.location.search;
+            const urlParams = new URLSearchParams(queryString);
+            const queryUrl = urlParams.get('queryName');
+            queryName = queryUrl;
+            const dayDateUrl = urlParams.get('dayDate');
+            dayDate = dayDateUrl;
+
+            //Set header value
+            $("#searchQuery").val(queryName);
+        }
+
+        $("#statKeywordsDetailsDataTable_extfilter").on("click", "button.filtrujem", function() {
+            getDataAndUpdateAmcharts();
+        });
+
+        ChartTools.bindFilter(getDataAndUpdateAmcharts);
+
+        async function createAmcharts() {
+            window.initAmcharts().then(module => {
+                pieKeywordsEngines = new ChartTools.PieChartForm("accesCount", "serverName", '[[#{stat.graph.searchEnginesPie}]]', "statKeywordsDetails-pieAccessCount", enginesCountDataTable.DATA.json);
+                ChartTools.createAmchart(pieKeywordsEngines);
+
+                WJ.hideLoader();
+            });
+        }
+
+        async function getDataAndUpdateAmcharts() {
+            WJ.showLoader();
+            //add table filter params
+            let searchDateValue = ChartTools.getDateRange(30);
+            enginesCountDataTable.ajax.url(WJ.urlUpdateParam(enginesCountDataTable.ajax.url(), "searchUrl", $("#searchQuery").val()));
+            enginesCountDataTable.ajax.url(WJ.urlUpdateParam(enginesCountDataTable.ajax.url(), "searchdayDate", searchDateValue));
+
+            //reload table values
+            await enginesCountDataTable.ajax.reload();
+
+            pieKeywordsEngines.chartData = enginesCountDataTable.DATA.json;
+            ChartTools.updateChart(pieKeywordsEngines);
+            WJ.hideLoader();
+        }
+
+        function getPieChartUrl() {
+            let searchDateValue = ChartTools.getDateRange(30);
+            let url = enginesCountUrl + "/search/findByColumns?";
+            url += "searchUrl=" + $("#searchQuery").val();
+            url += "&searchdayDate=" + searchDateValue;
+            return url;
+        }
+    });
+</script>
+
+<div id="statKeywordsDetailsDataTable_extfilter">
+    <div class="row datatableInit">
+        <div class="col-auto dt-extfilter-title-dayDate" style="display: none;"></div>
+        <div class="col-auto dt-extfilter dt-extfilter-dayDate"></div>
+        <div class="col-auto dt-extfilter-title-url"></div>
+        <div style="width: 450px;" class="col-auto">
+            <div class="input-group">
+                <input type="text" id="searchQuery" class="form-control form-control-sm filter-input dt-search-query"/>
+                <button class="filtrujem btn btn-sm btn-outline-secondary dt-filtrujem-query" type="submit">
+                    <i class="far fa-search"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="tableDiv">
+    <table id="statKeywordsDetailsDataTable" class="datatableInit table"></table>
+</div>
+
+<div id="graphsDiv" class="hide-while-loading">
+    <div id="statKeywordsDetails-pieAccessCount" class="amcharts"></div>
+</div>
+
+<div id="tableDiv_2">
+    <table id="enginesCountDataTable" class="datatableInit table"></table>
+</div>

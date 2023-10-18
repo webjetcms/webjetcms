@@ -1,0 +1,29 @@
+extends ../../partials/layout
+
+block content
+
+    +breadcrumb(
+        'domain-redirect',
+        [
+            [ '#domain-redirect', '[[\#{components.redirect.leftmenuName}]]', true ]
+        ]
+    )
+
+    script.
+        var domainRedirectTable;
+        window.domReady.add(function () {
+
+            let url = "/admin/rest/settings/domain-redirect";
+            var columns = [(${layout.getDataTableColumns('sk.iway.iwcm.components.domainRedirects.DomainRedirectBean')})];
+
+            domainRedirectTable = WJ.DataTable({
+                url: '/admin/rest/settings/domain-redirect',
+                columns: columns,
+                serverSide: false,
+                editorId: "redirectId",
+                onRowCallback: function(TABLE, row, data) {
+                    if (data.active === false) $(row).addClass("is-not-public");
+                }
+            });
+        });
+    <table id="domainRedirectTable" class="datatableInit table"></table>

@@ -1,0 +1,1 @@
+﻿CKEDITOR.plugins.setLang("about","fa",{copy:"حق نشر \x26copy; $1. کلیه حقوق محفوظ است.",dlgTitle:"درباره CKEditor",moreInfo:"برای کسب اطلاعات مجوز لطفا به وب سایت ما مراجعه کنید:"});

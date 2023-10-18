@@ -1,0 +1,29 @@
+extends ../../partials/layout
+
+block content
+
+    +breadcrumb(
+        'audit-notifications',
+        [
+            [ '#', '[[\#{components.adminlog.notif}]]', true ]
+        ],
+        [ '/admin/v9/apps/audit-search/', '[[\#{components.adminlog.adminlog}]]' ]
+    )
+
+    script.
+        let auditNotificationsTable;
+        window.domReady.add(function () {
+            let url = "/admin/rest/audit/notify";
+            let columns = [(${layout.getDataTableColumns("sk.iway.iwcm.system.audit.AuditNotifyEntity")})];
+            //console.log(columns);
+
+            auditNotificationsTable = WJ.DataTable({
+                url: url,
+                serverSide: true,
+                columns: columns
+            });
+            //vypni zobrazenie tlacitka import
+            auditNotificationsTable.hideButton("import");
+        });
+
+    <table class="datatableInit table"></table>

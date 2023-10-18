@@ -1,0 +1,186 @@
+<script data-th-inline="javascript">
+    let columns = /*[(${layout.getDataTableColumns("sk.iway.iwcm.components.seo.jpa.StatKeywordsDTO")})]*/ '';
+    let url = "/admin/rest/seo/stat-keywords";
+</script>
+<script>
+    var statKeywordsDataTable;
+    let barChartKeywords;
+
+    WJ.breadcrumb({
+        id: "statKeywords",
+        tabs: [
+            {
+                url: '/apps/seo/admin/stat-keywords/',
+                title: '[[#{components.seo.stat_keywords}]]',
+                active: true
+            },
+            {
+                url: '#dateRange',
+                title: '{filter}',
+                active: false
+            }
+        ]
+    });
+
+    window.getSearchEnginesDetails = function (order) {
+        let daydate = statKeywordsDataTable.DATA.columns[1].searchVal;
+        if(daydate == null && daydate == undefined) daydate = "";
+        let queryName = statKeywordsDataTable.DATA.json[order - 1]['queryName'];
+        window.location.href="/apps/seo/admin/stat-keywords-details?queryName=" +  encodeURIComponent(queryName) + "&dayDate=" + (statKeywordsDataTable.DATA.columns[1].searchVal);
+    }
+
+    window.domReady.add(function () {
+        WJ.showLoader();
+
+        //presun filter do hlavicky
+        $("#pills-dateRange-tab").html("");
+        $("div#statKeywordsDataTable_extfilter").appendTo("#pills-dateRange-tab");
+
+        statKeywordsDataTable = WJ.DataTable({
+            url: url,
+            serverSide: false, //false lebo sa nevyužíva repositár
+            columns: columns,
+            id: "statKeywordsDataTable",
+            idAutoOpener: false,
+            defaultSearch: ChartTools.getSearchCriteria(),
+            onPreXhr: function(TABLE, e, settings, data) {
+                data.fixed_searchRootDir = $('#rootDir').val();
+                data.fixed_searchWebPage = $('#webPageSelect').val();
+                data.fixed_searchEngine = $('#searchEngineSelect').val();
+            }
+        });
+        statKeywordsDataTable.hideButtons(["create", "edit", "remove", "celledit", "import", "duplicate"]);
+
+        //Init all selects
+        ChartTools.initGroupIdSelect();
+        ChartTools.setWebPagesSelect(getUrl("webPageSelect"), $('#webPageSelect').val());
+        ChartTools.setSearchEnginesSelect(getUrl("searchEngineSelect"), $('#searchEngineSelect').val());
+
+        //Create and set amcharts
+        createAmcharts();
+
+        //Onchange events
+        $("#statKeywordsDataTable_extfilter").on("click", "button.filtrujem", function() {
+            updateTablesAndCharts("dayDate");
+        });
+
+        $("#rootDir").on("change", function() { 
+            updateTablesAndCharts("rootDir");
+        });
+
+        $("#searchEngineSelect").on("change", function() { 
+            updateTablesAndCharts("searchEngineSelect");
+        });
+
+        $("#webPageSelect").on("change", function() { 
+            updateTablesAndCharts("webPageSelect");
+        });
+
+        async function createAmcharts() {
+            window.initAmcharts().then(module => {
+                $.ajax({url: getUrl(ChartTools.ChartType.Bar), success: function(result) {
+                    barChartKeywords = new ChartTools.BarChartForm("queryName", "queryCount", '[[#{stat.graph.searchQueriesBars}]]', "statKeywords-barKeywords", result['content']);
+                    ChartTools.createAmchart(barChartKeywords);
+
+                    WJ.hideLoader();
+                }});
+
+            });
+        }
+
+        async function updateTablesAndCharts(refreshType) {
+            if(refreshType == "rootDir")
+                await ChartTools.setWebPagesSelect(getUrl("webPageSelect"), null);
+
+            if(refreshType != "searchEngineSelect")
+                await ChartTools.setSearchEnginesSelect(getUrl("searchEngineSelect"), null);
+
+            //Reload bar chart data
+            WJ.showLoader();
+            await $.ajax({url: getUrl(ChartTools.ChartType.Bar), success: function(result) {
+                barChartKeywords.chartData = result['content'];
+                ChartTools.updateChart(barChartKeywords);
+            }});
+            WJ.hideLoader();
+
+            //If update type is all we refreshing both tables, else onlz query table
+            await reloadQueryTable();
+
+            ChartTools.saveSearchCriteria(statKeywordsDataTable.DATA);
+        }
+
+        function reloadQueryTable() {
+            //add table filter params
+            statKeywordsDataTable.ajax.url(WJ.urlUpdateParam(url, "searchRootDir", $('#rootDir').val()));
+            statKeywordsDataTable.ajax.url(WJ.urlUpdateParam(statKeywordsDataTable.ajax.url(), "searchEngine", $('#searchEngineSelect').val()));
+            statKeywordsDataTable.ajax.url(WJ.urlUpdateParam(statKeywordsDataTable.ajax.url(), "searchWebPage", $('#webPageSelect').val()));
+            //reload tables values
+            statKeywordsDataTable.ajax.reload();
+        }
+
+        function getUrl(type) {
+            let tmpDefURL = "";
+
+            //Load values
+            let rootDir = $('#rootDir').val();
+            let filterEngine = $('#searchEngineSelect').val();
+            let filterWebPage = $('#webPageSelect').val();
+            let searchDateValue = ChartTools.getDateRange(30);
+
+            if(type == ChartTools.ChartType.Bar) {
+                tmpDefURL += url + "/search/findByColumns?";
+                tmpDefURL += "searchDayDate=" + searchDateValue;
+                tmpDefURL += "&searchRootDir=" + rootDir;
+                tmpDefURL += "&searchEngine=" + filterEngine;
+                tmpDefURL += "&searchWebPage=" + filterWebPage;
+            } 
+            else if(type == "searchEngineSelect") {
+                tmpDefURL += url + "/searchEnginesSelect?";
+                tmpDefURL += "dayDate=" + searchDateValue;
+                tmpDefURL += "&rootDir=" + rootDir;
+                tmpDefURL += "&webPage=" + filterWebPage;
+            } 
+            else if(type == "webPageSelect") {
+                tmpDefURL += url + "/webPageSelect?";
+                tmpDefURL += "rootDir=" + rootDir;
+            }
+            return tmpDefURL;
+        }
+    });
+
+</script>
+
+<style>
+    label[for=botFilterOut]::after {
+        content: "\f544" !important;
+    }
+</style>
+<div id="statKeywordsDataTable_extfilter">
+    <div class="row datatableInit">
+        <div class="col-auto dt-extfilter-title-dayDate" style="display: none;"></div>
+        <div class="col-auto dt-extfilter dt-extfilter-dayDate"></div>
+        <div class="col-auto" data-th-title="#{components.stat.filter.showOnlyFromGroup}" data-toggle="tooltip">
+            <input type="text" class="webjet-dte-jstree" id="rootDir" value="-1" data-th-data-text="#{components.stat.stats.root_dirs.all}" data-th-data-text-empty="#{components.stat.stats.root_dirs.all}"/>
+        </div>
+
+        <div class="col-auto">
+            <select id="searchEngineSelect">
+                <option value="">[[#{stat.search_engines.all_search_engines}]]</option>
+            </select>
+        </div>
+
+        <div class="col-auto">
+            <select id="webPageSelect">
+                <option value="-1">[[#{stat.search_engines.all_web_pages}]]</option>
+            </select>
+        </div>
+    </div>
+</div>
+
+<div id="graphsDiv" class="hide-while-loading">
+    <div id="statKeywords-barKeywords" class="amcharts"></div>
+</div>
+
+<div id="tableDiv">
+    <table id="statKeywordsDataTable" class="datatableInit table"></table>
+</div>

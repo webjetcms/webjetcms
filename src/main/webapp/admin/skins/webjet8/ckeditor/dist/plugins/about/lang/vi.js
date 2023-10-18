@@ -1,0 +1,1 @@
+﻿CKEDITOR.plugins.setLang("about","vi",{copy:"Bản quyền \x26copy; $1. Giữ toàn quyền.",dlgTitle:"Thông tin về CKEditor 4",moreInfo:"Vui lòng ghé thăm trang web của chúng tôi để có thông tin về giấy phép:"});

@@ -1,0 +1,259 @@
+    <script data-th-inline="javascript">
+        let columns = /*[(${layout.getDataTableColumns("sk.iway.iwcm.stat.jpa.VisitsDTO")})]*/ '';
+    </script>
+
+    <script>
+        var statsDataTable;
+
+        WJ.breadcrumb({
+            id: "stats",
+            tabs: [
+                {
+                    url: '/apps/stat/admin/',
+                    title: '[[#{components.stat.visits}]]',
+                    active: true
+                },
+                {
+                    url: '#dateRange',
+                    title: '{filter}',
+                    active: false
+                }
+            ]
+        });
+
+        window.domReady.add(function () {
+            WJ.showLoader();
+            //presun filter do hlavicky
+            $("#pills-dateRange-tab").html("");
+            $("div#statsDataTable_extfilter").appendTo("#pills-dateRange-tab");
+
+            let url = "/admin/rest/stat/views";
+            let lineChartVisits;
+
+            var order = [];
+            order.push([1, 'desc']);
+
+            statsDataTable = WJ.DataTable({
+                url: url,
+                serverSide: false, //false lebo sa nevyužíva repositár
+                columns: columns,
+                id: "statsDataTable",
+                idAutoOpener: false,
+                order: order,
+                defaultSearch: ChartTools.getSearchCriteria(),
+                autoHeight: false,
+                onPreXhr: function(TABLE, e, settings, data) {
+                    data.fixed_searchFilterBotsOut = $('#botFilterOut').is(':checked');
+                    data.fixed_searchRootDir = $('#rootDir').val();
+                    data.fixed_statType = getStatType();
+                }
+            });
+
+            ChartTools.initGroupIdSelect();
+
+            statsDataTable.hideButton("import");
+            statsDataTable.hideButton("create");
+            statsDataTable.hideButton("edit");
+            statsDataTable.hideButton("duplicate");
+            statsDataTable.hideButton("celledit");
+            statsDataTable.hideButton("remove");
+
+            //Create and set amcharts
+            createAmcharts();
+
+            //Onchange events - update amcharts
+            $("#statsDataTable_extfilter").on("click", "button.filtrujem", function() {
+                getDataAndUpdateAmcharts();
+            });
+
+            $("#statType button").on("click", function() {
+                $("#statType button").removeClass("active");
+                $(this).addClass("active");
+                getDataAndUpdateAmcharts();
+            });
+
+            function getStatType() {
+                let statType = $("#statType button.active").data("stat-type");
+                return statType;
+            }
+
+            ChartTools.bindFilter(getDataAndUpdateAmcharts);
+
+            //Hide/show columns depending on selected stat type
+            function changeColumnsVisibility() {
+                let statType = getStatType();
+                if(statType == "days") {
+                    statsDataTable.column(1).visible(true);
+                } else if(statType == "weeks") {
+                    statsDataTable.column(1).visible(false);
+                    statsDataTable.column(2).visible(true);
+                    statsDataTable.column(3).visible(true);
+                    statsDataTable.column(4).visible(false);
+                    statsDataTable.column(5).visible(false);
+                } else if(statType == "months") {
+                    statsDataTable.column(1).visible(false);
+                    statsDataTable.column(2).visible(true);
+                    statsDataTable.column(3).visible(false);
+                    statsDataTable.column(4).visible(true);
+                    statsDataTable.column(5).visible(false);
+                } else if(statType == "hours") {
+                    statsDataTable.column(1).visible(false);
+                    statsDataTable.column(2).visible(false);
+                    statsDataTable.column(3).visible(false);
+                    statsDataTable.column(4).visible(false);
+                    statsDataTable.column(5).visible(true);
+                }
+            }
+
+            async function getDataAndUpdateAmcharts() {
+                WJ.showLoader();
+
+                var statType = getStatType()
+                if(statType == "days") lineChartVisits.dateType = ChartTools.DateType.Days;
+                else if(statType == "weeks") lineChartVisits.dateType = ChartTools.DateType.Weeks;
+                else if(statType == "months") lineChartVisits.dateType = ChartTools.DateType.Months;
+                else lineChartVisits.dateType = ChartTools.DateType.Day_1;
+
+                await $.ajax({url: getGraphUrl(), success: function(result){
+                    lineChartVisits.chartData = convertData(result['content']);
+                    ChartTools.updateChart(lineChartVisits);
+                }});
+
+                WJ.hideLoader();
+
+                //add table filter params
+                statsDataTable.ajax.url(WJ.urlAddParam(url, "searchRootDir", $('#rootDir').val()));
+                statsDataTable.ajax.url(WJ.urlAddParam(statsDataTable.ajax.url(), "searchFilterBotsOut", $('#botFilterOut').is(':checked')));
+                statsDataTable.ajax.url(WJ.urlAddParam(statsDataTable.ajax.url(), "statType", getStatType()));
+
+                //reload table values
+                statsDataTable.ajax.reload();
+
+                changeColumnsVisibility();
+            }
+
+            //Return url composed of set params
+            function getGraphUrl() {
+                let rootDir = $('#rootDir').val();
+                let filterBotsOut = $('#botFilterOut').is(':checked');
+                let statType = getStatType();
+                let tmpDefURL = "/admin/rest/stat/views/search/findByColumns?";
+                let searchDateValue = ChartTools.getDateRange(30);
+
+                tmpDefURl = tmpDefURL + "searchDayDate=" + searchDateValue;
+
+                //add root dir param
+                tmpDefURl = tmpDefURl + "&searchRootDir=" + rootDir;
+
+                //add filter bots param
+                tmpDefURl = tmpDefURl + "&searchFilterBotsOut=" + filterBotsOut;
+
+                //add stat type param
+                tmpDefURl = tmpDefURl + "&statType=" + statType;
+
+                //add url tail
+                tmpDefURl = tmpDefURl + "&size=999999&page=0&sort=order%2Cdesc&pagination=true";
+
+                ChartTools.saveSearchCriteria(statsDataTable.DATA);
+
+                return tmpDefURl;
+            }
+
+            function convertData(dataToConvert) {
+                let tmpObject = {};
+                let tmpMapArray = [];
+                let emptyArray = [];
+                let convertedData;
+
+                let convertedDataMap = new Map();
+
+                //Return empty array if there are no any data to convert
+                if(dataToConvert == undefined || dataToConvert === null) {
+                    return [];
+                }
+                //Loop dataToConvertn and transform them to array of objects (needed data format for charts !!)
+                for(i = 0; i < dataToConvert.length; i++) {
+                    tmpObject = {
+                                'visits' : dataToConvert[i]['visits'],
+                                'sessions' : dataToConvert[i]['sessions'],
+                                'uniqueUsers' : dataToConvert[i]['uniqueUsers'],
+                                'dayDate' : dataToConvert[i]['dayDate'],
+                                'hour' : dataToConvert[i]['hour']
+                                };
+
+                    tmpMapArray[tmpMapArray.length] = tmpObject;
+                }
+
+                //Need too be converted to map (line chart logic requires)
+                //In this case we want 3 different lines in 1 graph (visits/session/uniqueUser) so mapKey is empty ""
+                //Reason is that this key is used for setting line name and we want line name be set by used value
+
+                convertedDataMap.set("", tmpMapArray);
+                return convertedDataMap;
+            }
+
+            function convertHour(hourToConvert) {
+                var newDate = new Date();
+                return new Date(newDate.getFullYear(), 0o1, 0o1, hourToConvert, 0o0, 0o0);
+            }
+
+            async function createAmcharts() {
+                window.initAmcharts().then(module => {
+
+                    let yAxeNames =
+                        ChartTools.getLineChartYAxeNameObjs(
+                            ["visits", "sessions", "uniqueUsers"],
+                            ["stat.visits.js", "stat.sessions.js", "stat.unique_users.js"]
+                        );
+
+                    $.ajax({url: getGraphUrl(), success: function(result) {
+                        lineChartVisits = new ChartTools.LineChartForm(yAxeNames, "dayDate", '[[#{stat.top.lineChart}]]', "stat-lineVisits", convertData(result['content']), ChartTools.DateType.Days);
+
+                        ChartTools.createAmchart(lineChartVisits);
+
+                        WJ.hideLoader();
+                    }});
+
+                });
+            }
+        });
+    </script>
+
+    <style>
+        /* .amchart-header { display: none; } */
+        #visits { margin-top: 8px; }
+        label[for=botFilterOut]::after {
+            content: "\f544" !important;
+        }
+    </style>
+    <div id="statsDataTable_extfilter">
+        <div class="row datatableInit">
+            <div class="col-auto dt-extfilter-title-dayDate" style="display: none;"></div>
+            <div class="col-auto dt-extfilter dt-extfilter-dayDate"></div>
+            <div class="col-auto">
+                <div class="btn-group btn-group-toggle" id="statType">
+                    <button class="btn btn-sm btn-outline-secondary active" data-th-title="#{components.stat.groupBy.days}"     data-toggle="tooltip" data-stat-type="days">[[#{components.basket.invoice.stats.days}]]</button>
+                    <button class="btn btn-sm btn-outline-secondary"        data-th-title="#{components.stat.groupBy.weeks}"    data-toggle="tooltip" data-stat-type="weeks">[[#{components.basket.invoice.stats.weeks}]]</button>
+                    <button class="btn btn-sm btn-outline-secondary"        data-th-title="#{components.stat.groupBy.months}"   data-toggle="tooltip" data-stat-type="months">[[#{components.basket.invoice.stats.months}]]</button>
+                    <button class="btn btn-sm btn-outline-secondary"        data-th-title="#{components.stat.groupBy.hours}"    data-toggle="tooltip" data-stat-type="hours">[[#{components.basket.invoice.stats.hours}]]</button>
+                </div>
+            </div>
+            <div class="col-auto" data-th-title="#{components.stat.filter.showOnlyFromGroup}" data-toggle="tooltip">
+                <input type="text" class="webjet-dte-jstree" id="rootDir" value="-1" data-th-data-text="#{components.stat.stats.root_dirs.all}" data-th-data-text-empty="#{components.stat.stats.root_dirs.all}"/>
+            </div>
+            <div class="col-auto">
+                <div class="btn btn-sm custom-control form-switch" data-toggle="tooltip" data-th-title="#{stat.withoutBots}">
+                    <input id="botFilterOut" type="checkbox" class="form-check-input" value="true" />
+                    <label for="botFilterOut" class="form-check-label is-icon-arrows-v"></label>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="graphsDiv" class="hide-while-loading">
+        <div id="stat-lineVisits" class="amcharts"></div>
+    </div>
+
+    <div id="tableDiv">
+        <table id="statsDataTable" class="datatableInit table"></table>
+    </div>

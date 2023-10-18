@@ -1,0 +1,388 @@
+div.productsOrder {float: right;}
+div.productsOrder select {background: #fff; border: 1px solid #d4d4d4; border-radius: 3px; padding: 7px 10px 7px 10px;}
+div.productsTags a {display: inline-block; padding: 7px 12px; border: 1px solid #d4d4d4; border-radius: 3px; background: #f8f8f8; color: #000; font-size: 12px; text-decoration: none; font-weight: normal; font-family: Arial, Helvetica, sans-serif; height: auto; line-height: 100%; margin-right: 2px;}
+div.productsTags a:hover {background-color: #eeeeee;}
+
+div.productsNavbar {border: 1px solid #d4d4d4; border-radius: 5px; height: 33px; margin-bottom: 15px;}
+div.productsNavbar ul {height: 33px; margin: 0px; padding: 0px; padding-left: 10px;}
+div.productsNavbar li {float: left; margin-right: 10px; list-style: none; background: none; line-height: 33px; height: 33px; background: url(/components/basket/img/bg-breadcrumg-li.png) right center no-repeat; padding: 0px;}
+div.productsNavbar li a {padding: 0 30px 0 10px; display: block;}
+div.productsNavbar li:before {display: none;}
+
+
+div.products {
+    margin: 0 0 0 -35px;
+    padding: 15px 0 0;
+    /*width: 600px;*/
+}
+div.products div.itemDiv {
+    float: left;
+    margin: 0 35px 25px;
+    overflow: hidden;
+    padding: 0 0 65px;
+    position: relative;
+    width: 190px;
+}
+div.products div.itemDiv h2 {
+    margin: 0;
+    padding: 0;
+}
+div.products div.itemDiv h2 a {
+    display: block;
+    font-size: 13px;
+    font-weight: bold;
+    height: 32px;
+    line-height: 16px;
+    overflow: hidden;
+    text-decoration: none;
+}
+div.products div.itemDiv a.info {
+    display: block;
+    font-size: 12px;
+    left: 0;
+    position: absolute;
+}
+div.products div.itemDiv a.cart {
+    background: none repeat scroll 0 0 #000;
+    border-radius: 4px;
+    bottom: 0;
+    display: block;
+    height: 25px;
+    position: absolute;
+    right: 0;
+    text-indent: -10000px;
+    width: 40px;
+}
+div.products div.itemDiv a.cart img {
+    display: block;
+    margin: 8px auto 0;
+}
+div.products div.itemDiv span.cena {
+    bottom: 0;
+    display: block;
+    font-size: 13px;
+    height: 25px;
+    line-height: 25px;
+    position: absolute;
+    right: 50px;
+}
+div.itemDiv div.itemImageDiv {
+    width: 190px;
+}
+div.itemDiv div.itemImageDiv img {
+    display: block;
+    margin: 0 auto;
+}
+#content table.basketOrderTable {
+    border: 0 none;
+    border-collapse: collapse;
+    margin: 15px 0 25px;
+    width: 100%;
+}
+#content table.basketOrderTable td, #content table.basketOrderTable th {
+    line-height: 30px;
+    padding: 10px 15px 10px 0;
+    vertical-align: top;
+}
+#content table.basketOrderTable td input {
+    background-color: #fff;
+    border: 1px solid #000;
+    height: 30px;
+    line-height: 30px;
+    padding: 0 10px;
+    width: 200px;
+}
+#content table.basketOrderTable td label {
+    display: block;
+    height: 30px;
+    line-height: 30px;
+}
+#content table.basketOrderTable td.basketOrderTableHeader {
+    font-weight: bold;
+}
+#content table.basketOrderTable select {
+    border: 1px solid #000;
+    left: auto !important;
+    margin: 0;
+    padding: 4px;
+    width: 200px;
+}
+#content table.basketOrderTable textarea {
+    border: 1px solid #000;
+    border-radius: 7px;
+    height: 120px;
+    margin: 0;
+    padding: 2%;
+    width: 96%;
+}
+#content table.basketOrderTable td input.btn {
+    background: none repeat scroll 0 0 #000;
+    color: #fff;
+    cursor: pointer;
+    float: right;
+    height: 30px;
+    line-height: 30px;
+    padding: 0;
+}
+#cL {
+    float: left;
+    padding: 15px 0 0;
+    width: 390px;
+}
+body.editorOn #cL {
+    display: none;
+}
+#cR {
+    float: right;
+    padding: 35px 0 0;
+    width: 570px;
+}
+body.editorOn #cR {
+    width: 100%;
+}
+body #cL ul.thumbs li {
+    height: 80px !important;
+    margin: 0 15px 11px 0;
+    padding: 0;
+    width: 120px !important;
+}
+#cL div#thumbs img {
+    width: 120px !important;
+}
+#cL ul.thumbs li a {
+    border: 0 none;
+    height: 80px !important;
+    line-height: 100%;
+    margin: 0;
+    padding: 0;
+}
+#cR span.priceSpan {
+    border-top: 1px solid #000;
+    display: block;
+    font-size: 13px;
+    height: 25px;
+    line-height: 25px;
+    padding: 15px 50px 15px 0;
+    position: relative;
+    text-align: right;
+}
+#cR span.priceSpan a {
+    background: none repeat scroll 0 0 #000;
+    border-radius: 4px;
+    bottom: 15px;
+    display: block;
+    height: 25px;
+    position: absolute;
+    right: 0;
+    text-indent: -10000px;
+    width: 40px;
+}
+#cR span.priceSpan a img {
+    display: block;
+    margin: 7px auto 0;
+}
+#cR span.priceSpan span.cena {
+    font-weight: bold;
+}
+#cR span.priceSpan span.cenaOld {
+    text-decoration: line-through;
+}
+div.productGallery ul {
+    margin: 0 0 0 -10px;
+}
+div.productGallery ul li {
+    margin: 5px;
+    width: 110px !important;
+}
+div.productGallery ul li a {
+    background: none repeat scroll 0 0 rgba(0, 0, 0, 0);
+    border: 0 none;
+    display: block;
+    height: 58px !important;
+    padding: 0;
+    width: 90px !important;
+}
+div.productGallery ul li a img {
+    display: block;
+    height: auto !important;
+    width: 90px !important;
+}
+div.basketSmallBox {
+    height: 36px;
+    position: relative;
+    width: 143px;
+    z-index: 999;
+    margin-left: auto;
+    margin-right: 0px;
+    margin-bottom: 10px;
+}
+div.basketSmallBox a {
+    background: url("/components/basket/img/basket-icon.png") no-repeat scroll center center rgba(0, 0, 0, 0);
+    border-radius: 4px;
+    display: block;
+    height: 30px;
+    position: absolute;
+    right: 0;
+    text-indent: -10000px;
+    top: 3px;
+    width: 40px;
+}
+div.basketSmallBox span.basketSmallPrice {
+    border-radius: 4px;
+    display: block;
+    height: 30px;
+    left: 3px;
+    position: absolute;
+    top: 3px;
+    width: 90px;
+}
+div.basketSmallBox span.basketSmallPrice span {
+    background: url("/components/basket/img/basket-shadow.png") repeat scroll 0 0 rgba(0, 0, 0, 0);
+    display: block;
+    height: 36px;
+    left: -3px;
+    line-height: 36px;
+    padding: 0 10px;
+    position: absolute;
+    text-align: right;
+    top: -3px;
+    width: 76px;
+}
+div.basketSmallBox span.basketSmallItems {
+    background: url("/components/basket/img/basket-items.png") repeat scroll 0 0 rgba(0, 0, 0, 0);
+    color: #fff;
+    display: block;
+    height: 27px;
+    left: -6px;
+    line-height: 25px;
+    padding: 0 2px 0 0;
+    position: absolute;
+    text-align: center;
+    top: -5px;
+    width: 25px;
+    z-index: 1;
+}
+div.basketBox {
+    background: url("/components/basket/img/basketbox-shadow.png") no-repeat scroll center bottom rgba(0, 0, 0, 0);
+    left: 20px;
+    padding: 0 0 72px;
+    /*position: absolute;*/
+    /*top: 0;*/
+
+    z-index: 1000;
+}
+div.basketBox table.basketListTable {
+    border: 0 none;
+    border-collapse: collapse;
+    margin: 0;
+    width: 100%;
+}
+div.basketBox table.basketListTable th {
+    border: 0 none;
+    font-size: 14px;
+    font-weight: normal;
+    padding: 20px;
+    text-align: left;
+}
+div.basketBox table.basketListTable th strong {
+    font-size: 20px;
+    font-weight: normal;
+}
+div.basketBox table.basketListTable td {
+    border: 0 none;
+    font-size: 14px;
+    padding: 20px;
+    text-align: left;
+    background-color: white;
+}
+div.basketBox table.basketListTable a.deleteItem {
+    background: url("/components/basket/img/basketbox-delete.png") no-repeat scroll center center rgba(0, 0, 0, 0);
+    display: block;
+    text-indent: -10000px;
+    width: 30px;
+}
+div.basketBox table.basketListTable th a.closeBasket {
+    background: url("/components/basket/img/basketbox-close.png") no-repeat scroll center center rgba(0, 0, 0, 0);
+    border-radius: 7px;
+    display: block;
+    height: 30px;
+    text-indent: -10000px;
+    width: 30px;
+}
+div.basketBox table.basketListTable input.basketQty {
+    border-style: solid;
+    border-width: 1px;
+    display: block;
+    float: left;
+    font-size: 14px;
+    height: 30px;
+    line-height: 30px;
+    margin: 0 5px;
+    text-align: center;
+    width: 65px;
+}
+div.basketBox table.basketListTable a.addItem, div.basketBox table.basketListTable a.removeItem {
+    border-radius: 4px;
+    display: block;
+    float: left;
+    height: 20px;
+    margin: 6px 0 0;
+    text-indent: -10000px;
+    width: 20px;
+}
+div.basketBox table.basketListTable a.addItem {
+    background: url("/components/basket/img/basketbox-plus.png") no-repeat scroll center center rgba(0, 0, 0, 0);
+}
+div.basketBox table.basketListTable a.removeItem {
+    background: url("/components/basket/img/basketbox-minus.png") no-repeat scroll center center rgba(0, 0, 0, 0);
+}
+div.basketBox table.basketListTable td.first a {
+    display: block;
+    font-size: 16px;
+    text-decoration: none;
+}
+div.basketBox table.basketListTable tr.basketListTableTotalVat td {
+    padding: 30px 20px;
+}
+div.basketBox table.basketListTable td.first a.closeBasket {
+    display: block;
+    font-size: 12px;
+    height: 36px;
+    line-height: 36px;
+    text-align: left;
+    text-decoration: underline;
+}
+div.basketBox table.basketListTable span.basketPrice {
+    background: url("/components/basket/img/basketbox-total.png") repeat scroll 0 0 rgba(0, 0, 0, 0);
+    display: block;
+    float: right;
+    font-size: 12px;
+    height: 30px;
+    line-height: 30px;
+    padding: 4px 10px 2px;
+    text-align: right;
+    width: 76px;
+}
+div.basketBox table.basketListTable span#orderButton a {
+    border-radius: 4px;
+    display: block;
+    float: right;
+    height: 30px;
+    line-height: 30px;
+    margin: 3px 0 0 15px;
+    text-align: center;
+    text-decoration: none;
+    width: 100px;
+}
+div.basketBox table.basketListTable span.mob {
+    display: none;
+}
+
+div.basketBox table.basketListTable a.addItem, div.basketBox table.basketListTable a.removeItem {
+    background-color: #c5c5c5;
+}
+div.basketBox table.basketListTable th {
+    background: none repeat scroll 0 0 #cfeaf3;
+}div.basketBox table.basketListTable tr.basketListTableTotalVat td {
+    background: none repeat scroll 0 0 #cfeaf3;
+}

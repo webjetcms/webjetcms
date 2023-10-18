@@ -1,0 +1,201 @@
+@charset "UTF-8";
+
+//FONT AWESOME 6
+$fa-font-path : "~@fortawesome/fontawesome-pro/webfonts";
+$fa-font-name: "Font Awesome 6 Pro";
+
+$input-btn-focus-width: 0;
+
+$white: #fff;
+$primary: #0063FB;
+$nice-primary: #0090FC;
+$secondary: #13151B;
+$success: #00BE9F;
+$danger: #FF4B58;
+$warning: #FABD00;
+//https://developer.apple.com/design/human-interface-guidelines/macos/visual-design/color/ purple z dark stlpca
+$purple: rgb(191, 90, 242);
+
+$gray-300: #dee2e6;
+
+$nice-gray: #F3F3F6;
+$nice-gray-100: #DDDFE6;
+$nice-gray-200: #B2B8C8;
+$nice-gray-300: #868EA5;
+$nice-gray-400: #C2C6D2;
+
+$nice-black: #1f2022;
+
+$body-color: #272727;
+
+$pagination-color: $secondary;
+$pagination-bg: transparent;
+$pagination-border-color: transparent;
+
+$pagination-hover-color: $primary;
+$pagination-hover-bg: transparent;
+$pagination-hover-border-color: transparent;
+
+$pagination-active-color: $primary;
+$pagination-active-bg: transparent;
+$pagination-active-border-color: $primary;
+
+$pagination-disabled-color: $gray-300;
+$pagination-disabled-border-color: transparent;
+$pagination-disabled-bg: transparent;
+
+$border-radius: 6px;
+$border-radius-sm: 6px;
+$border-radius-lg: 6px;
+
+$font-size-sm: 14px;
+$line-height-sm: 1.5;
+
+// $input-btn-padding-x-sm: 14px;
+
+$tooltip-bg: $secondary;
+$tooltip-arrow-color: transparent;
+$tooltip-arrow-width: .4rem;
+$tooltip-arrow-height: .2rem;
+
+$input-color: #23262E;
+$input-border-color: $nice-gray-300;
+
+$input-disabled-bg: $nice-gray;
+$input-disabled-border-color: #ffffff;
+
+$input-focus-border-color: #62697C;
+$input-focus-bg: transparent;
+
+$modal-lg: 900px;
+$modal-xl: 1210px;
+// $modal-inner-padding: 15px;
+
+$state-warning-text:red;
+$state-warning-bg:red;
+
+$alert-padding: 100px;
+$alert-warning-bg:green;
+$alert-warning-text: green;
+
+//bootstrap nastavenia
+$link-decoration: none;
+$grid-gutter-width: 30px;
+$input-disabled-border-color: $input-border-color;
+
+@import "~bootstrap/scss/bootstrap";
+
+@import "~@fortawesome/fontawesome-pro/scss/fontawesome";
+@import "~@fortawesome/fontawesome-pro/scss/light";
+@import "~@fortawesome/fontawesome-pro/scss/solid";
+@import "~@fortawesome/fontawesome-pro/scss/regular";
+@import "~@fortawesome/fontawesome-pro/scss/duotone";
+@import "~@fortawesome/fontawesome-pro/scss/_duotone-icons";
+@import "~@fortawesome/fontawesome-pro/scss/brands";
+
+@import "~datatables.net-bs5";
+@import "~datatables.net-editor-bs5/css/editor.bootstrap5.min.css";
+@import "~datatables.net-autofill-bs5";
+@import "~datatables.net-buttons-bs5";
+@import "~datatables.net-colreorder-bs5";
+//nepotrebujeme, kazi to diazjn @import "~datatables.net-fixedcolumns-bs5";
+@import "~datatables.net-fixedheader-bs5";
+@import "~datatables.net-keytable-bs5";
+@import "~datatables.net-responsive-bs5";
+@import "~datatables.net-rowgroup-bs5";
+@import "~datatables.net-scroller-bs5";
+@import "~datatables.net-select-bs5";
+@import "~datatables.net-datetime";
+
+@import "~dropzone/src/dropzone";
+@import "~toastr";
+
+@import "~jquery-ui/themes/base/autocomplete";
+
+//TOOLS
+// @import "1-tools/editor.dataTables.min.css";
+// @import "1-tools/editor.bootstrap4.min.css";
+
+//HELPERS
+@import "2-helpers/variables";
+@import "2-helpers/functions";
+@import "2-helpers/mixins";
+@import "2-helpers/placeholders";
+
+//BASE
+@import "3-base/font-face";
+@import "3-base/body";
+@import "3-base/selection";
+@import "3-base/grid";
+@import "3-base/typography";
+@import "3-base/multimedia";
+@import "3-base/form";
+@import "3-base/link";
+@import "3-base/list";
+@import "3-base/table";
+@import "3-base/address";
+@import "3-base/blockquote";
+@import "3-base/code";
+
+@import "3-base/alert";
+@import "3-base/modal";
+
+@import "3-base/js-tree";
+@import "~quill/dist/quill.snow";
+@import "3-base/quill";
+
+
+@import "3-base/dropdown";
+
+//LAYOUT
+@import "4-layout/ly-page-wrapper";
+@import "4-layout/ly-header";
+@import "4-layout/ly-sidebar";
+@import "4-layout/ly-content-wrapper";
+@import "4-layout/ly-content";
+@import "4-layout/ly-container";
+
+//MODULES
+@import "5-modules/md-amcharts";
+@import "5-modules/md-breadcrumb";
+@import "5-modules/md-navigation";
+@import "5-modules/md-browser-support";
+@import "5-modules/md-debug-info";
+@import "5-modules/md-search";
+@import "5-modules/md-sitemap";
+
+@import "5-modules/md-main-menu";
+@import "5-modules/md-large-menu";
+@import "5-modules/scrollbar-track";
+@import "5-modules/md-gallery-list";
+@import "5-modules/md-page-editor-wrapper";
+
+@import "5-modules/md-dt-upload";
+@import "5-modules/md-toastr";
+@import "5-modules/md-dt-ckeditor";
+
+@import "5-modules/md-ui-autocomplete";
+@import "5-modules/md-server-monitoring-table";
+@import "5-modules/md-page-builder";
+
+//PAGES
+@import "6-pages/pg-homepage";
+@import "6-pages/pg-subpage";
+
+//THEMES
+//@import "7-themes/";
+
+//VIEWS
+@import "8-views/no-js";
+@import "8-views/no-cookies";
+@import "8-views/no-touchevents";
+@import "8-views/no-pointerevents";
+@import "8-views/browser-type";
+@import "8-views/device-type";
+@import "8-views/high-contrast";
+@import "8-views/print";
+@import "8-views/webjet-editor";
+@import "8-views/webjet-mail";
+
+// HOTFIX
+@import "hotfix";

@@ -1,0 +1,30 @@
+extends ../../partials/layout
+
+block content
+
+    +breadcrumb(
+        'attributes',
+        [
+            [ '/admin/v9/webpages/attributes/', '[[\#{editor.atributes}]]', true]
+        ]
+    )
+
+    script.
+        var attributesDataTable;
+
+        window.domReady.add(function () {
+
+            let url = "/admin/rest/webpages/attributes/def";
+            let columns = [(${layout.getDataTableColumns("sk.iway.iwcm.doc.attributes.jpa.DocAtrDefEntity")})];
+
+            attributesDataTable = WJ.DataTable({
+                url: url,
+                serverSide: true,
+                columns: columns,
+                id: "attributesDataTable",
+                fetchOnEdit: true,
+                fetchOnCreate: true
+            });
+        })
+
+    <table id="attributesDataTable" class="datatableInit table"></table>

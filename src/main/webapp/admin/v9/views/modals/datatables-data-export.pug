@@ -1,0 +1,181 @@
+include ../pug/mixins
+
+<div class="modal DTED fade" id="datatableExportModal" tabindex="-1" role="dialog" aria-labelledby="datatableExportModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+        <div class="DTE_Action_Edit modal-content">
+            <div class="modal-header">
+                <div class="row">
+                    <div class="col-sm-4">
+                        <h5 class="modal-title ui-draggable-handle"> [[\#{components.datatables-data-export.Nastavenia_exportu}]]</h5>
+                    </div>
+                    <div class="col-sm-8">
+                        +breadcrumb(
+                            'exportData',
+                            [
+                                [ '#export-basic', '[[\#{datatable.tab.basic}]]', true ],
+                                [ '#export-advanced', '[[\#{datatable.tab.advanced}]]', false ]
+                            ]
+                        )
+                    </div>
+                </div>
+            </div>
+            <div class="DTE_Body modal-body">
+                <div class="modal-body-bg">
+
+                    <div class="tab-content" id="pills-exportData">
+
+                        <div class="tab-pane fade show active" id="pills-export-basic" role="tabpanel" aria-labelledby="pills-export-basic-tab">
+
+                            //- <div class="form-group row">
+                            //-     <label for="" class="col-sm-5 col-form-label">Nadpis exportu</label>
+                            //-     <div class="col-sm-6">
+                            //-         <input type="text" class="form-control dt-settings-title">
+                            //-     </div>
+                            //- </div>
+
+                            <div class="form-group row export-options">
+                                <label for="" class="col-sm-4 col-form-label">[[\#{components.datatables-data-export.Typ_exportu}]]</label>
+                                <div class="col-sm-7" id="datatableExportModalOptions">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="dt-settings-extend" id="dt-settings-extend1" value="excelHtml5" checked>
+                                        <label class="form-check-label" for="dt-settings-extend1">[[\#{components.datatables-data-export.Excel}]]</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="dt-settings-extend" id="dt-settings-extend4" value="csvHtml5">
+                                        <label class="form-check-label" for="dt-settings-extend4">[[\#{components.datatables-data-export.csv}]]</label>
+                                    </div>
+                                    <div class="form-check todo" style="display: none;">
+                                        <input class="form-check-input" type="radio" name="dt-settings-extend" id="dt-settings-extend2" value="pdfHtml5">
+                                        <label class="form-check-label" for="dt-settings-extend2">[[\#{components.datatables-data-export.PDF}]]</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="dt-settings-extend" id="dt-settings-extend3" value="print">
+                                        <label class="form-check-label" for="dt-settings-extend3">[[\#{components.datatables-data-export.Tlac}]]</label>
+                                    </div>
+                                    <div class="alert alert-info alert-small" role="alert">[[\#{components.datatables-data-export.size_note(${layout.getConstantInt('datatablesExportMaxRows', 50000)})}]]</div>
+                                </div>
+                            </div>
+
+                            <div class="form-group row file-name">
+                                <label for="" class="col-sm-4 col-form-label">[[\#{components.datatables-data-export.Nazov_suboru}]]</label>
+                                <div class="col-sm-7">
+                                    <input type="text" class="form-control dt-settings-filename" value="export">
+                                </div>
+                                <div class="col-sm-1 form-group-tooltip">
+                                    <button type="button" class="btn btn-link" data-toggle="tooltip" data-th-title="\#{components.datatables-data-export.Nazov_suboru.title}"><i class="far fa-info-circle"></i></button>
+                                </div>
+                            </div>
+
+                        </div>
+
+                        <div class="tab-pane fade" id="pills-export-advanced" role="tabpanel" aria-labelledby="pills-export-advanced-tab">
+
+                            <div class="form-group row dt-settings-export-printsettings">
+                                <label for="" class="col-sm-4 col-form-label">[[\#{components.datatables-data-export.Text_pred_datami}]]</label>
+                                <div class="col-sm-7">
+                                    <input type="text" class="form-control dt-settings-message-top">
+                                </div>
+                            </div>
+
+                            <div class="form-group row dt-settings-export-printsettings">
+                                <label for="" class="col-sm-4 col-form-label">[[\#{components.datatables-data-export.Text_za_datami}]]</label>
+                                <div class="col-sm-7">
+                                    <input type="text" class="form-control dt-settings-message-bottom">
+                                </div>
+                            </div>
+
+                            <div class="form-group row">
+                                <label for="" class="col-sm-4 col-form-label">[[\#{components.datatables-data-export.Ktore_strany_zaznamov_exportovat}]]</label>
+                                <div class="col-sm-7">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="dt-settings-page" id="dt-settings-page1" value="all" checked><label class="form-check-label" for="dt-settings-page1">[[\#{components.datatables-data-export.Vsetky_strany}]]
+                                        </label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="dt-settings-page" id="dt-settings-page2" value="current">
+                                        <label class="form-check-label" for="dt-settings-page2">[[\#{components.datatables-data-export.Aktualne_nastavena_strana}]]</label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="form-group row" id="datatablesExportWhichData">
+                                <label for="" class="col-sm-4 col-form-label">[[\#{components.datatables-data-export.Ktore_data_exportovat}]]</label>
+                                <div class="col-sm-7">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="dt-settings-search" id="dt-settings-search2" value="applied" checked>
+                                        <label class="form-check-label" for="dt-settings-search2">[[\#{components.datatables-data-export.Aktualne_vyfiltrovane_data}]]</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="dt-settings-search" id="dt-settings-search1" value="none">
+                                        <label class="form-check-label" for="dt-settings-search1">[[\#{components.datatables-data-export.Vsetky_data}]]</label>
+                                    </div>
+                                    <div class="form-check" style="display: none;" id="exportLastExportOption">
+                                        <input class="form-check-input" type="radio" name="dt-settings-search" id="dt-settings-search3" value="lastExport">
+                                        <label class="form-check-label" for="dt-settings-search3">[[\#{components.datatables-data-export.fromLastExport}]]</label>
+                                    </div>
+                                    <div class="form-check" style="display: none;" id="exportByIdExportOption">
+                                        <input class="form-check-input" type="radio" name="dt-settings-search" id="dt-settings-search4" value="selected">
+                                        <label class="form-check-label" for="dt-settings-search4">[[\#{components.datatables-data-export.Iba_oznacene_riadky}]]</label>
+                                    </div>
+                                </div>
+                                <div class="col-sm-1 form-group-tooltip">
+                                    <button type="button" class="btn btn-link" data-toggle="tooltip" data-th-title="\#{components.datatables-data-export.filter.tooltip}"><i class="far fa-info-circle"></i></button>
+                                </div>
+                            </div>
+
+                            <div class="form-group row" id="datatablesExportSortOrder">
+                                <label for="" class="col-sm-4 col-form-label">[[\#{components.datatables-data-export.Ako_zoradit_data_pri_exporte}]]</label>
+                                <div class="col-sm-7">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="dt-settings-order" id="dt-settings-order1" value="applied" checked>
+                                        <label class="form-check-label" for="dt-settings-order1">[[\#{components.datatables-data-export.Aktualne_zoradenie_dat}]]</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="dt-settings-order" id="dt-settings-order2" value="original">
+                                        <label class="form-check-label" for="dt-settings-order2">[[\#{components.datatables-data-export.Zakladne_zoradenie_dat}]]</label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="form-group row" style="display: none;">
+                                <label for="" class="col-sm-4 col-form-label">[[\#{components.datatables-data-export.Ktore_stlpce_exportovat}]]</label>
+                                <div class="col-sm-7">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="dt-settings-columns" id="dt-settings-columns2" value=":not(.not-export)" checked>
+                                        <label class="form-check-label" for="dt-settings-columns2">[[\#{components.datatables-data-export.Vsetky_stlpce}]]</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="dt-settings-columns" id="dt-settings-columns1" value=":visible:not(.not-export)">
+                                        <label class="form-check-label" for="dt-settings-columns1">[[\#{components.datatables-data-export.Aktualne_viditelne_stlpce}]]</label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="form-group row todo" style="display: none;">
+                                <label for="" class="col-sm-4 col-form-label">[[\#{components.datatables-data-export.Orientacia_dokumentu}]]</label>
+                                <div class="col-sm-7">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="dt-settings-orientation" id="dt-settings-orientation1" value="portrait" checked>
+                                        <label class="form-check-label" for="dt-settings-orientation1">[[\#{components.datatables-data-export.Na_vysku}]]</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="dt-settings-orientation" id="dt-settings-orientation2" value="landscape">
+                                        <label class="form-check-label" for="dt-settings-orientation2">[[\#{components.datatables-data-export.Na_sirku}]]</label>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-link" onclick="WJ.showHelpWindow()"><i class="far fa-question-circle"></i> [[\#{button.help}]]</button>
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal"><i class="fal fa-times"></i> [[\#{button.cancel}]]</button>
+                <button type="button" class="btn btn-primary" id="submit-export"><i class="fal fa-check"></i> [[\#{components.datatables-data-export.Exportovat}]]</button>
+            </div>
+        </div>
+    </div>
+</div>

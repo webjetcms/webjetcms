@@ -1,0 +1,49 @@
+<script data-th-inline="javascript">
+    let logonUrl = "/admin/rest/stat/logon-user";
+    let actualLogonColumns = /*[(${layout.getDataTableColumns("sk.iway.iwcm.stat.jpa.ActualLogonUserDTO")})]*/ '';
+</script>
+<script>
+    var logonUserDataTable;
+    var actualLogonUserDataTable;
+
+    WJ.breadcrumb({
+        id: "logonUser",
+        tabs: [
+            {
+                url: '/apps/stat/admin/logon-current',
+                title: '[[#{components.stat.actual_users}]]',
+                active: true
+            }
+        ]
+    });
+
+    window.getUserDetails =  function (userId) {
+        window.location.href="/apps/stat/admin/logon-user-details/?userId=" + userId;
+    }
+
+    var order = [];
+    order.push([1, 'desc']);
+
+    window.domReady.add(function () {
+        actualLogonUserDataTable = WJ.DataTable({
+            url: logonUrl + "/actuals",
+            serverSide: false, //false lebo sa nevyužíva repositár
+            columns: actualLogonColumns,
+            id: "actualLogonUserDataTable",
+            idAutoOpener: false,
+            noAll: true,
+            order: order
+        });
+
+        actualLogonUserDataTable.hideButton("import");
+        actualLogonUserDataTable.hideButton("create");
+        actualLogonUserDataTable.hideButton("edit");
+        actualLogonUserDataTable.hideButton("duplicate");
+        actualLogonUserDataTable.hideButton("celledit");
+        actualLogonUserDataTable.hideButton("remove");
+    });
+</script>
+
+<div id="tableDiv">
+    <table id="actualLogonUserDataTable" class="datatableInit table"></table>
+</div>

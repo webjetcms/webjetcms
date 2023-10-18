@@ -1,0 +1,69 @@
+BODY {
+	BACKGROUND-COLOR: #ffffff
+}
+P {
+	FONT-FAMILY: verdana, arial, helvetica, sans-serif
+}
+TD {
+	FONT-FAMILY: verdana, arial, helvetica, sans-serif
+}
+TH {
+	FONT-FAMILY: verdana, arial, helvetica, sans-serif
+}
+UL {
+	FONT-FAMILY: verdana, arial, helvetica, sans-serif
+}
+OL {
+	FONT-FAMILY: verdana, arial, helvetica, sans-serif
+}
+H1 {
+	FONT-FAMILY: verdana, arial, helvetica, sans-serif
+}
+H2 {
+	FONT-FAMILY: verdana, arial, helvetica, sans-serif
+}
+H3 {
+	FONT-FAMILY: verdana, arial, helvetica, sans-serif
+}
+DIV {
+	FONT-FAMILY: verdana, arial, helvetica, sans-serif
+}
+SPAN {
+	FONT-FAMILY: verdana, arial, helvetica, sans-serif
+}
+P {
+	FONT-SIZE: small; FONT-FAMILY: verdana, arial, helvetica, sans-serif
+}
+TD {
+	FONT-SIZE: small; FONT-FAMILY: verdana, arial, helvetica, sans-serif
+}
+TH {
+	FONT-SIZE: small; FONT-FAMILY: verdana, arial, helvetica, sans-serif
+}
+UL {
+	FONT-SIZE: small; FONT-FAMILY: verdana, arial, helvetica, sans-serif
+}
+OL {
+	FONT-SIZE: small; FONT-FAMILY: verdana, arial, helvetica, sans-serif
+}
+DIV {
+	FONT-SIZE: small; FONT-FAMILY: verdana, arial, helvetica, sans-serif
+}
+SPAN {
+	FONT-SIZE: small; FONT-FAMILY: verdana, arial, helvetica, sans-serif
+}
+H1 {
+	FONT-SIZE: large; font-weigh: bold
+}
+H2 {
+	FONT-WEIGHT: bold; FONT-SIZE: medium;
+}
+H3 {
+	FONT-WEIGHT: bold; FONT-SIZE: small; FONT-STYLE: italic
+}
+FORM {
+	MARGIN: 0px
+}
+A IMG {
+	BORDER-TOP-WIDTH: 0px; BORDER-LEFT-WIDTH: 0px; BORDER-BOTTOM-WIDTH: 0px; BORDER-RIGHT-WIDTH: 0px
+}

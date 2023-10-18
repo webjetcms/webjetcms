@@ -1,0 +1,7 @@
+.webjet5hidden, .webjet6hidden, div.box_tab, div.box_toggle, div#waitDiv, div.exportlinks
+{
+
+	display: none;	
+}
+
+a { color: black !important; font-weight: normal !important;}

@@ -1,0 +1,31 @@
+@charset "UTF-8";
+
+.ly-content-wrapper {
+    padding-top: 60px;
+    padding-left: 220px;
+    padding-right: 0;
+    padding-bottom: 0;
+
+    min-height: 100%;
+
+    // background-color: yellow;
+}
+
+@media (max-width: ($bp-laptop - 1)) {
+    .ly-content-wrapper {
+        padding-left: 0;
+        padding-top: 34px;
+    }
+}
+@media (max-width: $bp-laptop - 1) {
+    .ly-content-wrapper {
+        padding-top: 0px;
+    }
+}
+
+html.in-iframe, html.in-iframe-show-table {
+     .ly-content-wrapper {
+        padding-left: 0px;
+        padding-top: 0px;
+    }
+}

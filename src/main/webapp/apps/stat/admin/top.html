@@ -1,0 +1,168 @@
+<script data-th-inline="javascript">
+    let url = "/admin/rest/stat/top";
+    let columns = /*[(${layout.getDataTableColumns("sk.iway.iwcm.stat.jpa.TopDTO")})]*/ '';
+</script>
+
+<script>
+    var topDataTable;
+
+    WJ.breadcrumb({
+        id: "top",
+        tabs: [
+            {
+                url: '/apps/stat/admin/top',
+                title: '[[#{stat_menu.top}]]',
+                active: true
+            },
+            {
+                url: '#dateRange',
+                title: '{filter}',
+                active: false
+            }
+        ]
+    });
+
+    window.getDocNew =  function (docId) {
+        let dateRange = "";
+        if(topDataTable.DATA.columns[1].searchVal != undefined && topDataTable.DATA.columns[1].searchVal != null)
+            dateRange = topDataTable.DATA.columns[1].searchVal;
+
+        window.location.href="/apps/stat/admin/top-details/?docId=" + docId + "&dateRange=" + dateRange;
+    }
+
+    window.domReady.add(function () {
+        WJ.showLoader();
+        //presun filter do hlavicky
+        $("#pills-dateRange-tab").html("");
+        $("div#topDataTable_extfilter").appendTo("#pills-dateRange-tab");
+
+        let pieChartVisits;
+        let lineChartVisits;
+
+        topDataTable = WJ.DataTable({
+            url: url,
+            serverSide: false, //false lebo sa nevyužíva repositár
+            columns: columns,
+            id: "topDataTable",
+            idAutoOpener: false,
+            defaultSearch: ChartTools.getSearchCriteria(),
+            autoHeight: false
+        });
+
+        //window.appModule.initGroupIdSelect();
+        ChartTools.initGroupIdSelect();
+
+        topDataTable.hideButton("import");
+        topDataTable.hideButton("create");
+        topDataTable.hideButton("edit");
+        topDataTable.hideButton("duplicate");
+        topDataTable.hideButton("celledit");
+        topDataTable.hideButton("remove");
+
+        //Create and set amcharts
+        createAmcharts();
+
+        //Onchange events - update amcharts
+        $("#topDataTable_extfilter").on("click", "button.filtrujem", function() {
+            getDataAndUpdateAmcharts();
+        });
+
+        //window.appModule.bindFilter(getDataAndUpdateAmcharts);
+        ChartTools.bindFilter(getDataAndUpdateAmcharts);
+
+        async function createAmcharts() {
+            window.initAmcharts().then(module => {
+
+                $.ajax({url: getGraphUrl("pieVisits"), success: function(result) {
+                    pieChartVisits = new ChartTools.PieChartForm("visits", "name", '[[#{stat.top.pieChart}]]', "top-pieVisits", result['content']);
+                    ChartTools.createAmchart(pieChartVisits);
+                }});
+
+                $.ajax({url: getGraphUrl("lineVisits"), success: function(result) {
+                    lineChartVisits = new ChartTools.LineChartForm(ChartTools.getLineChartYAxeNameObjs(["visits"], [undefined]), "dayDate", '[[#{stat.top.lineChart}]]', "top-lineVisits", ChartTools.convertDataForLineChart(result), ChartTools.DateType.Days);
+                    ChartTools.createAmchart(lineChartVisits);
+
+                    //After last load data
+                    WJ.hideLoader();
+                }});
+            });
+        }
+
+        async function getDataAndUpdateAmcharts() {
+            WJ.showLoader();
+
+            await $.ajax({url: getGraphUrl("pieVisits"), success: function(result) {
+                pieChartVisits.chartData =  result['content'];
+                ChartTools.updateChart(pieChartVisits);
+            }});
+
+            await $.ajax({url: getGraphUrl("lineVisits"), success: function(result) {
+                lineChartVisits.chartData = ChartTools.convertDataForLineChart(result);
+                ChartTools.updateChart(lineChartVisits);
+            }});
+
+            WJ.hideLoader();
+
+            //add table filter params
+            topDataTable.ajax.url(WJ.urlAddParam(url, "chartType", ChartTools.ChartType.Not_Chart));
+            topDataTable.ajax.url(WJ.urlAddParam(topDataTable.ajax.url(), "searchRootDir", $('#rootDir').val()));
+            topDataTable.ajax.url(WJ.urlAddParam(topDataTable.ajax.url(), "searchFilterBotsOut", $('#botFilterOut').is(':checked')));
+
+            //reload table values
+            topDataTable.ajax.reload();
+        }
+
+        function getGraphUrl(chartDivId) {
+            let tmpDefURL = "";
+
+            //Load values
+            let rootDir = $('#rootDir').val();
+            let filterBotsOut = $('#botFilterOut').is(':checked');
+            let searchDateValue = ChartTools.getDateRange(30);
+
+            if(chartDivId == "lineVisits") {
+                tmpDefURL = url + "/lineChartData?dayDate=" + searchDateValue;
+                tmpDefURL += "&rootDir=" + rootDir + "&filterBotsOut=" + filterBotsOut;
+            } else if(chartDivId == "pieVisits") {
+                tmpDefURL += url + "/search/findByColumns?chartType=" + ChartTools.ChartType.Pie;
+                tmpDefURL += "&searchDayDate=" + searchDateValue;
+                tmpDefURL += "&searchRootDir=" + rootDir + "&searchFilterBotsOut=" + filterBotsOut;
+            }
+
+            ChartTools.saveSearchCriteria(topDataTable.DATA);
+
+            return tmpDefURL;
+        }
+    });
+
+</script>
+
+<style>
+    label[for=botFilterOut]::after {
+        content: "\f544" !important;
+    }
+</style>
+<div id="topDataTable_extfilter">
+    <div class="row datatableInit">
+        <div class="col-auto dt-extfilter-title-dayDate" style="display: none;"></div>
+        <div class="col-auto dt-extfilter dt-extfilter-dayDate"></div>
+        <div class="col-auto" data-th-title="#{components.stat.filter.showOnlyFromGroup}" data-toggle="tooltip">
+            <input type="text" class="webjet-dte-jstree" id="rootDir" value="-1" data-th-data-text="#{components.stat.stats.root_dirs.all}" data-th-data-text-empty="#{components.stat.stats.root_dirs.all}"/>
+        </div>
+        <div class="col-auto">
+            <div class="btn btn-sm custom-control form-switch" data-toggle="tooltip" data-th-title="#{stat.withoutBots}">
+                <input id="botFilterOut" type="checkbox" class="form-check-input" value="true" />
+                <label for="botFilterOut" class="form-check-label is-icon-arrows-v"></label>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="graphsDiv" class="hide-while-loading">
+    <div id="top-pieVisits" class="amcharts"></div>
+    <div id="top-lineVisits" class="amcharts"></div>
+</div>
+
+<div id="tableDiv">
+    <table id="topDataTable" class="datatableInit table"></table>
+</div>

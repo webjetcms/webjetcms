@@ -1,0 +1,51 @@
+.elementBox {padding: 20px 0;}
+
+.elementBox .box {padding: 40px; position: relative; float: left;}
+.elementBox .box .name {left: 40px; top: 10px; position: absolute;}
+
+.elementBox .box.margin,
+.elementBox .legendBox li.margin span {background-color: #ffffff; border: 1px dashed #bbbbbb;}
+.elementBox .box.border,
+.elementBox .legendBox li.border span {background-color: #bbbbbb; border: 1px solid #888888;}
+.elementBox .box.padding,
+.elementBox .legendBox li.padding span {background-color: #dddddd; border: 1px solid #888888;}
+.elementBox .box.element {background-color: #dddddd; border: 1px solid #888888;}
+.elementBox .box.hover {background-color: #3399ff;}
+
+.elementBox .inputBox {display: none; position: absolute; width: 150px; z-index: 2;}
+.elementBox .border .inputBox {width: 300px;}
+
+.elementBoxInputBox {background: #fff; border: 1px dashed #bbbbbb; padding: 10px;}
+.elementBoxInputBox .valueInputBox,
+.elementBoxInputBox .borderSelectBox,
+.elementBoxInputBox .colorInputBox,
+.elementBoxInputBox .allInputBox {float: left; margin-right: 10px;}
+.elementBoxInputBox .allInputBox .checker {display: block; margin-top: 7px !important;}
+.elementBoxInputBox .allInputBox .checker > span {margin: 0 auto;}
+.elementBoxInputBox input {max-width: 70px; text-align: center;}
+.elementBoxInputBox input.colorInput {max-width: 110px; text-align: left;}
+.elementBoxInputBox select {width: 110px;}
+.elementBoxInputBox input.btn {margin-top: 25px;}
+
+.elementBox .element {width: 50px; height: 50px;}
+.elementBox .valueBox {position: absolute;  height: 40px; line-height: 40px; text-align: center; cursor: pointer;}
+.elementBox .valueBox .value {display: block; height: 40px; line-height: 40px; width: auto; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: #666;}
+.elementBox .valueBox .value:hover {color: #fff;}
+.elementBox .valueBox.topValueBox {top: 0px; left: 50%; margin-left: -50px; width: 100px;}
+.elementBox .valueBox.rightValueBox {right: 0px; top: 50%; margin-top: -50px; width: 40px; height: 100px; line-height: 100px;}
+.elementBox .valueBox.bottomValueBox {bottom: 0px; left: 50%; margin-left: -50px; width: 100px;}
+.elementBox .valueBox.leftValueBox {left: 0px;top: 50%; margin-top: -50px; width: 40px; height: 100px; line-height: 100px;}
+.elementBox .valueBox.rightValueBox span,
+.elementBox .valueBox.leftValueBox span {height: 100px; line-height: 100px;}
+
+.elementBoxInputBoxOverlay {position: absolute; top: 0; right: 0; bottom: 0; left: 0; z-index: 2;}
+.elementBoxInputBox {position: absolute; z-index: 3;}
+
+.elementBoxInputBox .minicolors-panel {margin-top: -188px;}
+
+.elementBox .legendBox {padding-left: 30px; float: left;}
+.elementBox .legendBox ul {margin: 0px; padding: 0px; list-style: none;}
+.elementBox .legendBox li {line-height: 20px; padding: 10px 0; line-height: 20px;}
+.elementBox .legendBox li span {float: left; height: 20px; width: 20px; margin-right: 10px;}
+.elementBox .legendBox li.border {border: 0px none;}
+.elementBox .legendBox li.hover span {background-color: #3399ff;}

@@ -1,0 +1,70 @@
+# Ignore Gradle project-specific cache directory
+.gradle
+
+# Ignore Gradle build output directory
+build
+bin/
+src/main/webapp/admin/v9/dist
+src/test/webapp/screenshots/diff/
+
+# Ignore vscode/intellij java project files
+.classpath
+
+#WebJET imgcache a tmp adresar
+**/WEB-INF/imgcache
+**/WEB-INF/tmp
+src/main/webapp/images/gallery/test/subfolder1
+src/main/webapp/files/protected/backup/
+**/_tmp_*
+
+#node_modules nepotrebujeme
+node_modules/
+
+#lokalne JSP subory
+localconf*.jsp
+scratchpad*.jsp
+/target
+.vscode\settings.json
+src/main/resources/poolman-local*.xml
+html/
+
+#logy
+*.log
+
+#idea
+.idea
+.settings/org.eclipse.buildship.core.prefs
+.iml
+
+#eclipse
+.settings/org.eclipse.wst.common.component
+.settings/org.eclipse.wst.common.project.facet.core.xml
+
+#macos
+**/.DS_Store
+
+#interway web (sluzi len na testovanie)
+src/main/webapp/templates/interway
+src/main/webapp/images/o-spolocnosti
+src/main/webapp/images/gallery/o-spolocnosti
+
+# templates z demo projektu, potrebujeme len kvoli debugovaniu
+src/main/webapp/templates/bare
+src/main/webapp/templates/agency
+src/main/webapp/templates/creative
+src/main/webapp/static-files
+src/main/webapp/templates/kostal
+src/main/webapp/templates/tmp_generic.jsp
+src/main/webapp/templates/wa
+src/main/webapp/templates/vesmir
+src/main/webapp/images/gallery/produktova-stranka/zijeme
+src/main/webapp/templates/usti-nad-labem
+
+#javadoc je generovany, nema zmysel ho mat v gite
+/docs/developer/javadoc
+            
+
+# Licensed DT Editor
+src/main/webapp/admin/v9/src/js/plugins/Editor-*.zip
+
+        

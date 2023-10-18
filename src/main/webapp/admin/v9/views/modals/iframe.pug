@@ -1,0 +1,19 @@
+<div id="modalIframe" class="modal" tabindex="-1" role="dialog">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">&nbsp;</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" data-toggle="tooltip" data-th-title="\#{button.cancel}"><i class="far fa-times-circle"></i></button>
+      </div>
+      <div class="modal-body">
+        <iframe src='about:blank' id="modalIframeIframeElement"></iframe>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-primary" tabindex="0"><i class="fal fa-check"></i> <span>[[\#{button.submit}]]</span></button>
+      </div>
+    </div>
+  </div>
+</div>
+<div id="modalIframeLoader">
+  <span data-th-text="\#{divpopup-blank.wait_please}">Wait please</span>
+</div>

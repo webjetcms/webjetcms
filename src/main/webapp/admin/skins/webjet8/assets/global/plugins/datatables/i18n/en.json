@@ -1,0 +1,36 @@
+
+{
+  "buttons": {
+    "pageLength": {
+      "_": "<i class=\"fa fa-bars\" aria-hidden=\"true\"></i>%d z�znamov",
+      "-1": "<i class=\"fa fa-bars\" aria-hidden=\"true\"></i>V�etky z�znamy"
+    }
+  },
+	"sEmptyTable":     "No data available in table",
+	"sInfo":           "Entries: _TOTAL_",
+	"sInfoEmpty":      "Entries: 0",
+	"sInfoFiltered":   "",
+	"sInfoPostFix":    "",
+  	"sInfoThousands":  ",",
+	"sLengthMenu":     "Show _MENU_ entries",
+	"sLoadingRecords": "Loading...",
+	"sProcessing":     "Processing...",
+	"sSearch":         "",
+	"sZeroRecords":    "No data available in table",
+    "sSearchPlaceholder": "Search",
+	"oPaginate": {
+        "previous": "Previous",
+        "next": "Next",
+		"sFirst":    "<i class=\"far fa-angle-double-left\"></i>",
+		"sLast":     "<i class=\"far fa-angle-double-right\"></i>",
+		"sNext":     "<i class=\"far fa-angle-right\"></i>",
+		"sPrevious": "<i class=\"far fa-angle-left\"></i>",
+		"page": "",
+      "pageOf": "<span>&nbsp;of&nbsp;</span>"
+	},
+    "lengthMenu": "Display _MENU_ records",
+	"oAria": {
+		"sSortAscending":  ": activate to sort column ascending",
+		"sSortDescending": ": activate to sort column descending"
+	}
+}

@@ -1,0 +1,39 @@
+
+    <script>
+        var regExpDataTable;
+
+        window.domReady.add(function () {
+
+            window.helpLink = "/redactor/apps/gdpr/regexps";
+
+            WJ.breadcrumb({
+                id: "regexp",
+                tabs: [
+                    {
+                        url: '/apps/gdpr/admin/',
+                        title: '[[#{components.gdpr.menu}]]',
+                        active: false
+                    },
+                    {
+                        url: '/apps/gdpr/admin/regexps/',
+                        title: '[[#{components.gdpr.regexp.title}]]'
+                    }
+                ]
+            })
+
+            let url = "/admin/rest/gdpr_regexp";
+            let columns = [(${layout.getDataTableColumns("sk.iway.iwcm.components.gdpr.model.GdprRegExpBean")})];
+
+            regExpDataTable = WJ.DataTable({
+                url: url,
+                serverSide: true,
+                columns: columns,
+                id: "regExpDataTable",
+                fetchOnEdit: false,
+                fetchOnCreate: true
+            });
+        });
+
+    </script>
+
+    <table id="regExpDataTable" class="datatableInit table"></table>

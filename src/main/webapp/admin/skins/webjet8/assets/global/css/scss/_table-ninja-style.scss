@@ -1,0 +1,559 @@
+/*=====================================================================
+Novy vizual tabulky pre datatables
+=====================================================================*/
+
+.full-height-content-for-datatables {
+    visibility: hidden;
+    opacity: 0;
+    position: absolute;
+    left: -1000px;
+    width: 1px;
+}
+
+//Styl tabulky
+table.table-ninja-style {
+    margin: 0 !important;
+    white-space: nowrap;
+    word-break: keep-all;
+
+    &.table-bordered { border: 0px solid transparent !important; }
+
+    >tbody>tr {
+        height: auto !important;
+    }
+
+    >thead>tr>th,
+    >tbody>tr>th,
+    >tfoot>tr>th,
+    >thead>tr>td,
+    >tbody>tr>td,
+    >tfoot>tr>td {
+        border-top-color: #ddd;
+        border-left-color: #eee;
+        border-right-width: 0;
+        border-left-width: 1px;
+        padding: 12px 14px;
+        font-size: 12px;
+        line-height: 17px;
+        color: #666;
+        max-width: 450px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        font-weight: 400;
+    }
+    >thead>tr>th.text-wrap,
+    >tbody>tr>th.text-wrap,
+    >tfoot>tr>th.text-wrap,
+    >thead>tr>td.text-wrap,
+    >tbody>tr>td.text-wrap,
+    >tfoot>tr>td.text-wrap {
+        white-space: normal;
+        line-break: auto;
+        -ms-word-break: break-all;
+        word-break: break-all;
+        word-break: break-word;
+        -webkit-hyphens: auto;
+        -moz-hyphens: auto;
+        hyphens: auto;
+    }
+
+    >tbody>tr:last-child>td { border-bottom: 1px solid #ddd; }
+
+    >thead>tr.heading>th,
+    >thead>tr.heading>td,
+    >thead>tr>th,
+    >thead>tr>td {
+        font-weight: 600;
+        color: #2b2b2c !important;
+        background-color: transparent !important;
+        text-align: left !important;
+    }
+
+    >tbody>tr:nth-child(odd)>td,
+    >tbody>tr:nth-child(odd)>th {
+        background-color: white;
+    }
+    >tbody>tr:nth-child(even)>td,
+    >tbody>tr:nth-child(even)>th {
+        background-color: #f6f9fb;
+    }
+    >tbody>tr:hover>td {
+        background-color: #e5eef9;
+        border-left-color: #e5eef9;
+        border-top-color: #cad9ea;
+        color:#55595c;
+    }
+    >tbody>tr:hover+tr>td {
+        border-top-color: #cad9ea;
+    }
+     > thead > tr > th.sorting,
+     > thead > tr > th.sorting_asc,
+     > thead > tr > th.sorting_desc {
+        padding-left: 14px;
+        padding-right: 14px;
+    }
+     > thead > tr > th.sorting_asc {
+        background-position: top 15px left 10px !important;
+    }
+     > thead > tr > th.sorting_desc {
+        background-position: top 8px left 10px !important;
+    }
+     > thead > tr > th.sorting_asc,
+     > thead > tr > th.sorting_desc {
+        color: #1185f4 !important;
+    }
+     > thead > tr > th.sorting:hover {
+        background-image: url("/admin/skins/webjet8/assets/global/plugins/datatables/media/images/sort_asc.png");
+    }
+     > thead > tr:first-child th,
+     > thead > tr:first-child td {
+        background-color: white !important;
+    }
+     > thead > tr.filter td {
+        padding-top: 0;
+        border-top-color:transparent;
+        border-bottom-color:transparent;
+        font-size: 13px !important;
+        font-weight: 300 !important;
+        color: #767676 !important;
+    }
+     > thead > tr.filter td input {
+        font-size: 13px !important;
+        font-weight: 300 !important;
+        color: #767676;
+    }
+     thead tr th {
+        vertical-align: top;
+        height: 48px;
+        cursor: default !important;
+        position: relative;
+    }
+     > thead > tr > th label {
+        margin: 0;
+    }
+     thead tr th a.table-clear-search-input {
+        position: absolute;
+        top: 12px;
+        right: 14px;
+        display: inline-block;
+        color: #ff6a6a;
+        opacity: 0.5;
+    }
+     thead tr th a.table-clear-search-input:hover {
+        opacity: 1;
+    }
+     thead tr th a.table-clear-search-input i.fa { font-size: 13px; }
+
+     thead tr th .table-title {
+        display: inline-block;
+        width: auto;
+        height: 24px;
+        white-space: nowrap;
+        margin-right: 20px;
+        -webkit-touch-callout: none; /* iOS Safari */
+        -webkit-user-select: none; /* Safari */
+        -khtml-user-select: none; /* Konqueror HTML */
+        -moz-user-select: none; /* Firefox */
+        -ms-user-select: none; /* Internet Explorer/Edge */
+        user-select: none; /* Non-prefixed version, currently supported by Chrome and Opera */
+    }
+     thead tr th .table-title.sortable:hover {
+        cursor: pointer;
+        color: #1185f4 !important;
+    }
+     > thead > tr > th .table-title.sortable {
+        margin-right: 35px;
+    }
+     > thead > tr > th.sorting_asc .table-title,
+     > thead > tr > th.sorting_desc .table-title {
+        padding-left: 15px;
+        margin-right: 20px;
+    }
+     > thead > tr > th.sorting_desc .table-title.title-empty {
+        margin: 0; padding: 0; min-width: 1px; width: 1px;
+    }
+     thead tr th .table-input {
+        font-weight: normal;
+        color: #767676;
+    }
+     thead tr th .table-input .checker {
+        margin-left: 0;
+    }
+     thead tr th .form-control {
+        display: inline-block;
+        height: 24px;
+        line-height: 24px;
+        padding-top: 0;
+        padding-bottom: 0;
+        font-size: 12px;
+        color: #767676;
+        min-width: 45px;
+    }
+     input.date-picker {
+        background-image: none;
+        width: 50%;
+        min-width: 90px !important;
+    }
+     input.date-picker:first-of-type {
+        margin-right: 5px;
+    }
+     a.doc-title-link-show {
+        display: inline-block;
+        margin: 0;
+    }
+     td > a:not(.doc-title-link-show),
+     td a.doc-title-link-edit {
+        position: relative;
+        border: 0px solid transparent;
+        padding: 4px 0;
+    }
+     td > a:not(.doc-title-link-show):hover,
+     td > a:not(.doc-title-link-show):focus,
+     td a.doc-title-link-edit:hover,
+     td a.doc-title-link-edit:focus {
+        text-decoration: none;
+    }
+     td a:not(.doc-title-link-show)::after,
+     td a.doc-title-link-edit::after {
+        position: absolute;
+        content: " ";
+        display: inline-block;
+        top: 0;
+        bottom: 0;
+        left: -8px;
+        right: -8px;
+        background-color: transparent;
+        border:1px solid #428bca;
+        border-radius: 4px;
+        visibility: hidden;
+        opacity: 0;
+        transition: opacity 0.2s ease-in;
+    }
+     td > a:not(.doc-title-link-show):hover::after,
+     td > a:not(.doc-title-link-show):focus::after,
+     td a.doc-title-link-edit:hover::after,
+     td a.doc-title-link-edit:focus::after {
+        visibility: visible;
+        opacity: 1;
+    }
+     a.doc-title-link-edit .fa {
+        margin-right: 4px;
+    }
+     tr.is-default-doc td {
+        background-color: #fffae9 !important;
+        border-top-color: #dcce87 !important;
+        border-left-color: #f5f1db !important;
+    }
+     tr.is-default-doc:hover td {
+        background-color: #f3e9b7 !important;
+        border-left-color: #f3e9b7 !important;
+    }
+     tr.is-default-doc + tr td{
+        border-top-color: #dcce87 !important;
+    }
+     tr.is-not-available td {
+        background-color: #fff1f1 !important;
+        border-top-color: #dab0b1 !important;
+        border-left-color: #fce3e3 !important;
+    }
+     tr.is-not-available:hover td {
+        background-color: #f3d6d6 !important;
+        border-left-color: #f3d6d6 !important;
+    }
+     tr.is-not-available + tr td {
+        border-top-color: #dab0b1 !important;
+    }
+     tr.is-row-acctive td {
+        background-color: #e2f8e4 !important;
+        border-left-color: #e2f8e4 !important;
+        border-top-color: #b1e4b1 !important;
+        color: #309227 !important;
+    }
+     tr.is-row-acctive+ tr td {
+        border-top-color: #b1e4b1 !important;
+    }
+     tr.is-row-acctive:hover td {
+        background-color: #beefbe !important;
+        border-left-color: #beefbe !important;
+    }
+     tr td.dataTables_empty {
+        text-align: left;
+        color: #ff6a6a !important;
+    }
+     img.vlastnostiImg {
+        display: inline-block;
+        width: 15px;
+        height: auto;
+    }
+     tr.doc-controller-shown + tr td {
+        padding: 10px 3px;
+        background-color: white;
+    }
+     tr.doc-controller-shown + tr td .btn-default {
+        background-color: transparent;
+        color: #5d5d5d;
+        border: 0px solid transparent;
+        border-right: 1px solid transparent;
+        font-size: 13px;
+        margin:0;
+    }
+     tr.doc-controller-shown + tr td .btn-default:hover {
+        color: #428bca;
+    }
+     tr.doc-controller-shown + tr td i {
+        margin-right: 4px;
+        color:#5d5d5d;
+    }
+     tr.doc-controller-shown + tr td .btn-default:hover i {
+        color: #428bca;
+    }
+     .properties-icons .fa {
+        color: #428bca;
+        font-size: 14px;
+    }
+     .properties-icons span {
+        display: inline-block;
+        margin: 0 10px 0 0;
+    }
+     .properties-icons span:last-of-type {
+        margin-right: 0;
+    }
+     .tooltip {
+        opacity: 0.8 !important;
+    }
+     .tooltip-inner {
+        max-width: 600px;
+        border-radius: 4px !important;
+    }
+}
+
+//Ovladaci panel pod tabulkov
+.table-control-panel {
+    background-color:#fff; overflow:hidden; padding:10px; height:50px; width:100%; clear:both;
+
+    .table-control-panel-info,
+    .table-control-panel-buttons,
+    .table-control-panel-info > * {  float:left; height:30px; padding:0; margin:0; overflow:hidden; white-space:nowrap; }
+
+    .table-control-panel-info {
+        width:65%;
+
+        > * {  float:none; width:auto; display:inline-block; margin:0; padding:0; line-height:30px; color:#6b6a6a; }
+
+        .dataTables_info {
+            margin-right: 35px !important;
+            .fa {  font-size:14px; margin-right:8px; color:#888; }
+        }
+
+        div.dataTables_paginate {
+            margin:0 35px 0 0 !important;
+
+            .pagination-panel {
+                > * {  display:block; float:left; }
+
+                .btn.default {
+                    height:30px; line-height:30px; position:relative; width:30px; padding:0;
+
+                    i.fa {  position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); }
+                }
+            }
+        }
+    }
+
+    .table-control-panel-buttons {
+        width:35%;
+
+        .dt-buttons {
+            padding:0;
+            margin:0;
+            width:100%;
+
+            .dt-button {
+                width:auto; float:right; margin:0 0 0 6px; padding:0 10px; height:30px; line-height:30px; border-radius:0; text-align:center; color:#6b6a6a; background-color:#f3f3f3; border:1px solid #ccc; background-image:none;
+
+                &:hover,
+                &:focus { background-color: #e9e9e9; border-color:#aaa; }
+
+                & .fa {  font-size:12px; margin-right:4px; color:#888; }
+            }
+        }
+    }
+
+    .seperator {  display:none; visibility:hidden; }
+    .dataTables_filter .form-control,
+    .pagination-panel-input {  margin:0; float:left; height:30px !important; width:200px !important; color: #6b6a6a; }
+    .pagination-panel-input {  width:50px !important; text-align:center; margin:0 5px; }
+
+    .dataTables_filter {
+        label {  margin:0; padding:0; }
+        .form-control {
+            ::-webkit-input-placeholder {
+                color: #999;
+            }
+            :-moz-placeholder {
+                color: #999;
+                opacity:  1;
+            }
+            ::-moz-placeholder {
+                color: #999;
+                opacity:  1;
+            }
+            :-ms-input-placeholder {
+                color: #999;
+            }
+            ::-ms-input-placeholder {
+                color: #999;
+            }
+            ::placeholder {
+                color: #999;
+            }
+        }
+    }
+
+}
+
+//Styl pre ovladacie centrum v tabulke, ktore sa zobrazi po kliknuti na koliecko nastavenia
+.row-controller-and-settings {
+    text-align:right;
+
+    &.text-left { text-align:left; }
+
+    .row-two-block { position:relative; }
+
+    .row-two-block-tools {
+        position:absolute; top:0; left:0;
+
+        .checker {  margin:0 !important; }
+        a.show-doc-controller {  display:inline-block; margin-left:12px; }
+    }
+
+    .row-two-block-numbers {
+        padding-left:60px;
+
+        a.doc-title-link-edit { margin-left: 5px; }
+    }
+
+    .not-checkbox {
+        .row-two-block-tools a.show-doc-controller {  display:inline-block; margin-left:0; }
+        .row-two-block-numbers {  padding-left:25px; }
+    }
+}
+
+//Styly pre buttony zobrazene vo vrstve nad tabulkov pri kliknuti na strankovanie,export,zobrazenie stlpcov
+.table-buttons-collections-style.dt-button-collection.fixed {
+    background-color: white;
+    width: 200px;
+    top: auto;
+    left: auto;
+    bottom: 100px;
+    right: 100px;
+    margin: 0;
+    padding: 15px;
+    column-gap: 15px;
+    box-shadow: none;
+    border: 0 solid transparent;
+
+    &.two-column { width: 600px; column-count: 3; }
+
+    a.dt-button {
+        display: block;
+        width: 100%;
+        padding:0 5px;
+        height:30px;
+        line-height:30px;
+        font-size: 13px;
+        border-radius:0;
+        text-align:left;
+        color:#6b6a6a;
+        background-color:#f3f3f3;
+        border:1px solid #ccc;
+        background-image:none !important;
+        box-shadow: none !important;
+        text-shadow: none !important;
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+
+        &:hover,
+        &:focus {
+            background-color: #e9e9e9;
+            border-color: #aaa;
+        }
+
+        &.active {
+            border-color: #35aa47;
+            background-color: #def1e1;
+            background-image: none;
+            color: #417949;
+            box-shadow: none;
+
+            &:hover,
+            &:focus {
+                background-color: #bfe6c5;
+            }
+        }
+    }
+}
+
+.table-ninja-style-wrapper {
+    overflow: hidden; position: relative;
+
+    //Zakrytie tabulky kym sa nevyrenderuje a nezinicializuje
+    &::before {
+        content: " ";
+        display: inline-block;
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background-color: white;
+        z-index: 99999999;
+        opacity: 1;
+        animation: showDatatables 2s ease-in-out;
+    }
+    body.is-table-ninja-style-init &::before {
+        opacity: 0;
+        bottom: auto;
+        right: auto;
+    }
+
+    //Uprava scrollovacich obalovacov datatables
+    .dataTables_scrollHead {  border:0 !important; }
+    .dataTables_scroll {  margin:0 !important; }
+    .dataTables_scrollBody {  border-bottom:0px solid transparent !important; }
+    .DTFC_LeftWrapper {  z-index:3; height:auto !important; transform:translateX(-100%); transition:transform 0.3s ease-in-out; }
+    .DTFC_LeftWrapper table {  border-right:2px solid #bad7fb !important; width: auto !important; }
+    .DTFC_LeftWrapper td {  display:none; width: auto !important; max-width: 250px; }
+    .DTFC_LeftWrapper td:last-child {  display: table-cell; }
+    .DTFC_LeftWrapper th {  display:none; width: auto !important; }
+    .DTFC_LeftWrapper th:last-child {  display: table-cell; }
+    .is-left-sidebar-fixed .DTFC_LeftWrapper {  transform:translateX(0); }
+    .dataTables_scrollHead {  z-index:2; border-bottom:4px solid #bad7fb !important; box-shadow:0px 15px 20px -2px rgba(0,0,0,0.1); }
+    .DTFC_LeftHeadWrapper {  border-bottom:4px solid #bad7fb !important; visibility:hidden; }
+
+    //Nastylovanie informacnych hlasok v tabulke
+    .table-alert-text { color: #ff6a6a; }
+    .table-warning-text { color: #ff9800; }
+    .table-alert-text .fa,
+    .table-warning-text .fa { margin-right: 4px; }
+}
+
+@keyframes showDatatables {
+    from {
+        opacity: 1;
+        bottom: 0;
+        right: 0;
+    }
+    99% {
+        opacity: 0.1;
+        bottom: auto;
+        right: auto;
+    }
+    to {
+        opacity: 0;
+        bottom: auto;
+        right: auto;
+    }
+}

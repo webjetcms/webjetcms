@@ -1,0 +1,40 @@
+extends ../../partials/layout
+
+block content
+
+    +breadcrumb(
+        'cronjob',
+        [
+            [ '#cronjob', '[[\#{admin.crontab.view}]]', true ]
+        ]
+    )
+
+    script.
+        var cronTable;
+        window.domReady.add(function () {
+            var columns = [(${layout.getDataTableColumns('sk.iway.iwcm.system.cron.CronTask')})];
+
+            cronTable = WJ.DataTable({
+                url: "/admin/rest/settings/cronjob",
+                columns: columns
+            });
+
+            cronTable.button().add(4, {
+                extends: 'edit',
+                editor: cronTable.EDITOR,
+                text: '<i class="fas fa-play"></i>',
+                action: function (e, dt, node) {
+                    cronTable.executeAction("play", false, "[[\#{components.cron_task.run.areYouSure}]]");
+                },
+                className: 'btn btn-outline-secondary buttons-divider button-execute-task',
+                init: function ( dt, node, config ) {
+                    $.fn.dataTable.Buttons.showIfRowSelected(this, dt);
+                },
+                attr: {
+                    'title': '[[\#{admin.crontab.launch_task}]]',
+                    'data-toggle': 'tooltip'
+                }
+            });
+        });
+
+    <table class="datatableInit table"></table>

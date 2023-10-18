@@ -1,0 +1,32 @@
+{
+    "java.configuration.updateBuildConfiguration": "automatic",
+    "git.ignoreLimitWarning": true,
+    "files.exclude": {
+        "**/.classpath": true,
+        "**/.project": true,
+        "**/.settings": true,
+        "**/.factorypath": true
+    },
+    "spellright.documentTypes": [
+        "markdown"
+    ],
+    "markdown.validate.enabled": true,
+    "java.compile.nullAnalysis.mode": "automatic",
+    "sqltools.useNodeRuntime": true,
+    "sqltools.connections": [
+        {
+            "oracleOptions": {
+                "autoCommit": true,
+                "lowerCase": false
+            },
+            "previewLimit": 50,
+            "server": "oracle81.dev.iway.local",
+            "port": 1521,
+            "driver": "Oracle",
+            "name": "WEBJET2022_WEB",
+            "database": "pdb19c.dev.iway.local",
+            "username": "WEBJET2022_WEB",
+            "password": "p1Sk0tov4tOrt4"
+        }
+    ]
+}

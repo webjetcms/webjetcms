@@ -1,0 +1,390 @@
+/* WebJET 6 */
+
+div.topNotify { padding: 10px 5px 10px 5px;	background-color: #fdede2; }
+div.topNotifyOk { background-color: #e3ffc0; }
+div.topWaiting { padding: 10px 5px 10px 28px;  background: url(/admin/images/ajax-loader.gif) no-repeat 5px 50%; color: #ff0000; }
+.notifyText { padding: 0px 0px 0px 20px; background: url(/admin/images/warning.gif) no-repeat left top; }
+div.topNotifyOk .notifyText { background: url(/admin/images/icon_confirm_circle.png) no-repeat left top; height: 16px; }
+#closeLinkValidationDivId { margin: 10px 10px 0px 10px; }
+.pageSaved { background: url(/admin/FCKeditor/editor/skins/webjet/toolbar/wjpublish.gif) no-repeat right top; padding: 2px 8px; }
+
+/* WebJET 6 koniec */
+
+/*select {background: white; font: 8pt tahoma,verdana,arial,sans-serif}*/
+input {font-size: 11px; font-family: Arial, Helvetica, sans-serif;  border: 1px solid #ABABAB; color: #000000;}
+.gen {position: relative;}
+table {/*position: relative;*/ padding: 0px; margin: 0px; border: 0px; border-collapse: collapse;}
+table td{ padding: 0px; margin: 0px; border: 0px;}
+
+.editorTab table td{ padding: 0px 0px 5px 0px;}
+
+fieldset{ padding: 0px 10px 0px 0px;}
+fieldset#sidebarPerex { clear: both; }
+fieldset#sidebarNavbar table td { vertical-align: top; }
+fieldset#sidebarNavbar .otherGroupItem { padding: 0px 0px 5px 0px;}
+
+table.tableclass { border-right: 1px solid #c7c7c7; border-top: 0px solid #c7c7c7; border-left: 1px solid #c7c7c7; cursor: default; border-bottom: 0px solid #c7c7c7; background-color: #edeff1; }
+   
+TABLE.tableClassTop {
+      BORDER-RIGHT: buttonface 1px outset; 
+      BORDER-TOP: buttonface 1px outset; 
+      BORDER-LEFT: buttonface 1px outset; 
+      CURSOR: default; 
+      BORDER-BOTTOM: buttonface 0px; 
+      BACKGROUND-COLOR: buttonface; 
+   } 
+TABLE.tableClassTop .heading {BACKGROUND-COLOR: lightgrey; COLOR: navy}
+.tbContentElement {BACKGROUND-COLOR: #ffffff; POSITION: relative; FONT: 8pt arial}
+.tbToolbar {
+   BACKGROUND-COLOR: buttonface; 
+   BORDER-BOTTOM: buttonshadow 1px solid; 
+   BORDER-LEFT: buttonhighlight 1px solid; 
+   BORDER-RIGHT: buttonshadow 1px solid; 
+   BORDER-TOP: buttonhighlight 1px solid; 
+   HEIGHT: 26px; 
+   LEFT: 0px; 
+   POSITION: relative; 
+   TOP: 0px;
+}
+.tbButton, .tbButtonPopup {
+   BACKGROUND-COLOR: buttonface;
+   BORDER-BOTTOM: buttonface 1px solid; 
+   BORDER-LEFT: buttonface 1px solid; 
+   BORDER-RIGHT: buttonface 1px solid; 
+   BORDER-TOP: buttonface 1px solid; 
+   HEIGHT: 22px; LEFT: 0px; POSITION: relative; TOP: 0px; BOTTOM: 0px; WIDTH: 23px; CURSOR: pointer;
+}
+.tbIcon {
+   HEIGHT: 22px; LEFT: 0px; POSITION: relative; TOP: 0px; BOTTOM: 0px; WIDTH: 23px; CURSOR: pointer;
+}
+.tbSeparator {
+   BORDER-LEFT: buttonshadow 1px solid; BORDER-RIGHT: buttonhighlight 1px solid; FONT-SIZE: 0px; HEIGHT: 22px; POSITION: relative; TOP: 0px; WIDTH: 1px
+}
+.tbGeneral {
+   HEIGHT: 22px; 
+   POSITION: relative;
+   TOP: 0px
+}
+.tbHandleDiv {
+   BACKGROUND-COLOR: buttonface; BORDER-LEFT: buttonhighlight 1px solid; BORDER-RIGHT: buttonshadow 2px solid; BORDER-TOP: buttonhighlight 1px solid; FONT-SIZE: 1px; HEIGHT: 22px; POSITION: relative; TOP: 0px; WIDTH: 3px
+}
+.tbButtonMouseOverDown {
+   BACKGROUND-COLOR: gainsboro;
+   BORDER-BOTTOM: buttonhighlight 1px solid;
+   BORDER-LEFT:  black 1px solid;
+   BORDER-RIGHT: buttonhighlight 1px solid;
+   BORDER-TOP: black 1px solid;
+   HEIGHT: 22px; POSITION: relative; TOP: 0px; WIDTH: 23px
+}
+.tbButtonMouseOverUp {
+   BACKGROUND-COLOR: gainsboro;
+   BORDER-BOTTOM: buttonhighlight 1px solid;
+   BORDER-LEFT: 1px solid Black;
+   BORDER-RIGHT: buttonhighlight 1px solid;
+   BORDER-TOP: 1px solid Black;
+   HEIGHT: 22px; POSITION: relative; TOP: 0px; WIDTH: 23px
+}
+.tbButtonDown {
+   BACKGROUND-COLOR: gainsboro; 
+   BORDER-BOTTOM: buttonhighlight 1px solid; 
+   BORDER-LEFT: buttonshadow 1px solid; 
+   BORDER-RIGHT: buttonhighlight 1px solid; 
+   BORDER-TOP: buttonshadow 1px solid; 
+   HEIGHT: 22px; POSITION: relative; TOP: 0px; WIDTH: 23px
+}
+.tbIconDown {
+   HEIGHT: 22px; LEFT: 0px; POSITION: relative; TOP: 0px; WIDTH: 23px
+}
+.tbIconDownPressed {
+   LEFT: 1px; POSITION: relative; TOP: 1px
+}
+
+.tbMenu
+{
+    POSITION: relative;
+    CURSOR: default;
+    BACKGROUND-COLOR: buttonface; 
+   BORDER-BOTTOM: buttonface solid 1px; 
+    BORDER-LEFT: buttonface solid 1px; 
+    BORDER-RIGHT: buttonface solid 1px; 
+    BORDER-TOP:  buttonface solid 1px; 
+    PADDING-TOP: 4;
+    PADDING-BOTTOM: 2;
+    TOP: 1px;
+   WIDTH: 1px; 
+    FONT-FAMILY: MS Sans Serif; 
+    FONT-SIZE: 8px;
+}
+.tbMenuItem
+{
+    CURSOR: default;
+    FONT-FAMILY: MS Sans Serif; 
+    FONT-SIZE: 8px;
+    DISPLAY: none;    
+}
+.tbSubmenu 
+{
+    CURSOR: default;
+    FONT-FAMILY: MS Sans Serif; 
+    FONT-SIZE: 8px;    
+    DISPLAY: none;    
+} 
+.tbMenuBodyOuterDiv
+{
+    CURSOR: default; 
+    BACKGROUND-COLOR: menu;
+   BORDER-BOTTOM: threeddarkshadow solid 1px; 
+    BORDER-LEFT: threedface solid 1px; 
+    BORDER-RIGHT: threeddarkshadow solid 1px; 
+    BORDER-TOP:  threedface solid 1px; 
+    POSITION: relative;
+}
+.tbMenuBodyInnerDiv
+{
+    CURSOR: default; 
+   BORDER-BOTTOM: threedshadow solid 1px; 
+    BORDER-LEFT: threedhighlight solid 1px; 
+    BORDER-RIGHT: threedshadow solid 1px; 
+    BORDER-TOP:  threedhighlight solid 1px; 
+}
+.tbMenuBodyTable
+{
+    CURSOR: default; 
+   BORDER-BOTTOM: menu solid 1px; 
+    BORDER-LEFT: menu solid 1px; 
+    BORDER-RIGHT: menu solid 1px; 
+    BORDER-TOP:  menu solid 1px; 
+}
+.tbMenuSeparator
+{
+    DISPLAY: none;    
+}
+.tbMenuSeparatorTop
+{
+   POSITION: RELATIVE;
+   BORDER-BOTTOM: buttonshadow solid 1px; 
+   HEIGHT: 5px;
+   WIDTH: 94%;
+   FONT-SIZE: 0px;
+}
+.tbMenuSeparatorBottom
+{
+   POSITION: RELATIVE;
+   BORDER-TOP: buttonhighlight solid 1px; 
+   HEIGHT: 5px;
+   WIDTH: 94%;
+   FONT-SIZE: 0px;
+}
+.tbMenuBlankSpace
+{
+   WIDTH: 20; 
+}
+.tbSubmenuGlyph
+{
+   FONT-FAMILY: webdings; 
+   WIDTH: 20; 
+   TEXT-ALIGN: right;
+}
+.tbMenuItemChecked
+{
+   FONT-FAMILY: webdings; 
+   WIDTH: 20; 
+   TEXT-ALIGN: right;
+}
+.tbMenuIcon
+{
+    BACKGROUND-COLOR: buttonface; 
+    BORDER-BOTTOM: buttonface solid 1px; 
+    BORDER-LEFT: buttonface solid 1px; 
+    BORDER-RIGHT: buttonface solid 1px; 
+    BORDER-TOP:  buttonface solid 1px; 
+}
+.tbMenuIconChecked
+{
+    BACKGROUND-COLOR: threedlightshadow; 
+    BORDER-BOTTOM: buttonhighlight solid 1px; 
+    BORDER-LEFT: buttonshadow solid 1px; 
+    BORDER-RIGHT: buttonhighlight solid 1px; 
+    BORDER-TOP:  buttonshadow solid 1px; 
+}
+.tbMenuIconMouseOver
+{
+    BACKGROUND-COLOR: buttonface; 
+    BORDER-BOTTOM: buttonshadow solid 1px; 
+    BORDER-LEFT: buttonhighlight solid 1px; 
+    BORDER-RIGHT: buttonshadow solid 1px; 
+    BORDER-TOP:  buttonhighlight solid 1px; 
+}
+.tbMenuIconCheckedMouseOver
+{
+    BACKGROUND-COLOR: buttonface; 
+    BORDER-BOTTOM: buttonhighlight solid 1px; 
+    BORDER-LEFT: buttonshadow solid 1px; 
+    BORDER-RIGHT: buttonhighlight solid 1px; 
+    BORDER-TOP:  buttonshadow solid 1px; 
+}
+.tbScriptlet
+{
+    POSITION: relative;
+    CURSOR: default; 
+    VISIBILITY: hidden;
+}
+
+.doc
+{
+   font-family: Arial, Helvetica, sans-serif; 
+      font-size: 11px; 
+      font-weight: normal; 
+      color: #DD0000; 
+   text-decoration: none;
+   padding: 0px 5px 0px 0px;
+}
+
+.tree
+{
+   font-family: Arial, Helvetica, sans-serif; 
+      font-size: 8pt; 
+      font-weight: normal; 
+      color: #000000; 
+   text-decoration: none
+}
+A.tree {  
+   font-family: Arial, Helvetica, sans-serif; 
+   font-size: 8pt; 
+   font-weight: normal; 
+   color: #000000; 
+   text-decoration: none
+}
+
+A.tree:hover {  
+   font-family: Arial, Helvetica, sans-serif; 
+   font-size: 8pt; 
+   color: #FF3333; 
+   background-color: #ccccff; 
+   text-decoration: underline overline
+}
+
+.tbToolbar2 {
+   BACKGROUND-COLOR: buttonface; 
+   BORDER-BOTTOM: buttonshadow 1px solid; 
+   BORDER-LEFT: buttonhighlight 1px solid; 
+   BORDER-RIGHT: buttonshadow 1px solid; 
+   BORDER-TOP: buttonhighlight 1px solid; 
+   HEIGHT: 26px; 
+   LEFT: 0px; 
+   POSITION: relative; 
+   TOP: 0px
+}
+
+.tab_main, .tab_main_visible
+{
+   BORDER-RIGHT: ButtonShadow 2px solid; 
+   PADDING-RIGHT: 5px; 
+   PADDING-LEFT: 5px; 
+   PADDING-BOTTOM: 5px; 
+   BORDER-LEFT: ButtonHighlight 2px solid; 
+   COLOR: buttontext; 
+   PADDING-TOP: 5px; 
+   BORDER-BOTTOM: ButtonShadow 2px solid; 
+   BACKGROUND-COLOR: buttonface
+}
+.tab_on 
+{
+   font-family: Arial, Helvetica, sans-serif; 
+   font-size: 8pt; 
+   font-weight: bold;
+   BORDER-RIGHT: ButtonShadow 2px solid; 
+   PADDING-RIGHT: 2px; 
+   BORDER-TOP: ButtonHighlight 2px solid; 
+   PADDING-LEFT: 2px; 
+   PADDING-BOTTOM: 2px; 
+   BORDER-LEFT: ButtonHighlight 2px solid; 
+   CURSOR: pointer; 
+   COLOR: buttontext; 
+   PADDING-TOP: 2px; 
+   BACKGROUND-COLOR: buttonface;
+}
+.tab_off 
+{
+   font-family: Arial, Helvetica, sans-serif; 
+   font-size: 8pt; 
+   font-weight: normal;
+   BORDER-RIGHT: ButtonShadow 1px solid; 
+   PADDING-RIGHT: 2px; 
+   BORDER-TOP: ButtonHighlight 1px solid; 
+   PADDING-LEFT: 2px; 
+   PADDING-BOTTOM: 2px; 
+   BORDER-LEFT: ButtonHighlight 1px solid; 
+   CURSOR: pointer; 
+   COLOR: buttontext; 
+   PADDING-TOP: 2px; 
+   BORDER-BOTTOM: ButtonShadow 2px solid; 
+   BACKGROUND-COLOR: ButtonHighlight;
+}
+
+.buttonEditor { width: 65px; } 
+
+.groups
+{
+   font-family: Arial, Helvetica, sans-serif; 
+   font-size: 8pt; 
+   font-weight: normal; 
+   color: #3366CC; 
+   text-decoration: none
+}
+A.groups 
+{  
+   font-family: Arial, Helvetica, sans-serif; 
+   font-size: 8pt; 
+   font-weight: normal; 
+   color: #3366CC; 
+   text-decoration: none
+}
+
+A.groups:hover 
+{  
+   font-family: Arial, Helvetica, sans-serif; 
+   font-size: 8pt; 
+   color: #FF3333; 
+   background-color: #eeeeee; 
+   text-decoration: underline
+}
+
+.contextMenu, .popupMenu
+{
+   BORDER-LEFT: threedface 1px solid; 
+   BORDER-TOP: threedface 1px solid; 
+   BORDER-RIGHT: #404040 1px solid; 
+   BORDER-BOTTOM: #404040 1px solid;
+   width: 160px;
+}   
+
+.contextMenu table
+{
+   BORDER-RIGHT: #808080 1px solid; 
+   BORDER-TOP: buttonhighlight 1px solid; 
+   BORDER-LEFT: buttonhighlight 1px solid; 
+   BORDER-BOTTOM: #808080 1px solid;
+   CURSOR: pointer; 
+   FONT: 8pt tahoma; 
+   width: 160px;
+   background-color: buttonface;
+}
+
+.contextMenu table td
+{
+   BORDER-RIGHT: buttonface 1px solid; 
+   BORDER-TOP: buttonface 1px solid; 
+   BORDER-BOTTOM: buttonface 1px solid
+   BORDER-LEFT: buttonface 1px solid; 
+   CURSOR: pointer; 
+   FONT: 8pt tahoma; 
+}
+
+.popupMenu td { cursor: pointer; font:8pt tahoma; BORDER-LEFT: threedface 1px solid; BORDER-RIGHT: threedface 1px solid; BORDER-TOP: threedface 1px solid; BORDER-BOTTOM: threedface 1px solid; }
+.editorTab { display: none; height: 100%; overflow: auto; border-left: 1px solid #C7C7C7; border-right: 1px solid #C7C7C7; padding: 10px 0px 10px 10px; }
+.tdCenter{ text-align: center;}
+
+table.editorHistoryTable { border-collapse: collapse; padding: 0px; margin: 10px 0px 0px 0px; border: 0px none; }
+table.editorHistoryTable th { font-size: 11px; font-weight: bold; text-align: left; padding: 2px 5px 2px 5px; }
+table.editorHistoryTable td { border-top: 1px solid #fdb8b0; padding: 2px 5px; vertical-align: middle; }

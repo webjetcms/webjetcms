@@ -1,0 +1,1 @@
+﻿CKEDITOR.plugins.setLang("maximize","en-au",{maximize:"Maximise",minimize:"Minimise"});

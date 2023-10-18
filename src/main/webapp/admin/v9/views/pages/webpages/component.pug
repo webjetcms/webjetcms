@@ -1,0 +1,174 @@
+extends ../../partials/layout
+
+block content
+
+    +breadcrumb(
+        'forms',
+        [
+            [ '#form-detail', '[[\#{admin.components_list.component}]]', true ]
+        ],
+        [ '/admin/v9/components/component', '[[\#{admin.components_list.title}]]' ]
+    )
+
+    style.
+        .modal-header {
+            margin-top: 6px !important;
+            border-top-width: 0px !important;
+        }
+        div.DTE_Action_Edit div.DTE_Footer {
+            display: none;
+        }
+
+    script.
+        let componentDatatable = null,
+            componentClass;
+
+        window.domReady.add(function () {
+            componentClass = $('#className', window.parent.document).val();
+            let parameters = $('#parameters', window.parent.document).val();
+
+            if (componentClass === '') {
+                return;
+            }
+
+            //console.log("parameters=", parameters);
+
+            $.ajax({
+                method: 'post',
+                url: '/admin/rest/components/component',
+                data: JSON.stringify({
+                    className: componentClass,
+                    parameters: parameters
+                }),
+                dataType: 'json',
+                contentType: 'application/json',
+                success: function(response) {
+
+                    //console.log("success, response=", response);
+
+                    if (typeof response.error !== 'undefined') {
+                        WJ.notifyError(response.error);
+                        return;
+                    }
+
+                    let componentInitialUrl = '/admin/rest/components',
+                        componentColumns = response.columns;
+
+                    componentColumns.push({
+                        "data" : "id",
+                        "name" : "id",
+                        "title" : "ID",
+                        "defaultContent" : "",
+                        "className" : "dt-select-td cell-not-editable",
+                        "renderFormat" : "dt-format-selector",
+                        "editor" : {
+                          "type" : "hidden",
+                          "required" : false
+                        },
+                        "sortAfter" : "",
+                        "perms" : "",
+                        "array" : false
+                    });
+
+                    //console.log("componentColumns=", componentColumns);
+
+                    componentDatatable = WJ.DataTable({
+                        id: 'component-datatable',
+                        url: componentInitialUrl,
+                        columns: componentColumns,
+                        serverSide: false,
+                        editorId: "id",
+                        fetchOnCreate: false,
+                        fetchOnEdit: false,
+                        idAutoOpener: true,
+                        tabs: response.tabs
+                        //hideTable:true
+                    });
+
+                    response.data['id'] = 1;
+                    componentDatatable.row.add(response.data).draw();
+                }
+            });
+        });
+
+        function getParamValue(paramName) {
+            var url = window.location.search.substring(1); //get rid of "?" in querystring
+            var qArray = url.split('&'); //get key-value pairs
+            for (var i = 0; i < qArray.length; i++)
+            {
+                var pArr = qArray[i].split('='); //split key and value
+                if (pArr[0] === paramName) {
+                    return pArr[1]; //return value
+                }
+            }
+
+            return '';
+        }
+
+        function Ok() {
+            try {
+                let params = componentDatatable.EDITOR.get();
+                delete params['id'];
+                let include = "!INCLUDE(" + componentClass;
+                if (Object.keys(params).length > 0) {
+                    include += ", " + convertObjectToInludeParams(params);
+                }
+                include += ")!";
+                $("#componentCode", window.parent.document).val(include);
+                return true;
+            } catch (e) {
+                console.log(e);
+            }
+            return false;
+        }
+
+        function convertObjectToInludeParams(params) {
+            let result = [];
+            $.each(params, function(key, value) {
+                // boolean prichadza ako array
+                //console.log("key=", key, "value=", value, "typeof=", typeof value, "isArray=", Array.isArray(value));
+
+                //GroupDetails/DocDetails object
+                if (typeof value == "object") {
+                    try {
+                        var id = null;
+
+                        var valueArray = Array.isArray(value) ? value : [value];
+
+                        for (var item of valueArray) {
+                            //console.log("item=", item);
+                            if (item == null) continue;
+
+                            var idToAdd = null;
+                            if (typeof item.id != "undefined") idToAdd = item.id;
+                            else if (typeof item.docId != "undefined") idToAdd = item.docId;
+                            else if (typeof item.groupId != "undefined") idToAdd = item.groupId;
+
+                            //console.log("idToAdd=", idToAdd);
+
+                            if (id == null) id = idToAdd;
+                            else id += "+" + idToAdd;
+                        }
+
+                        //console.log("key=", key, " id=", id);
+
+                        if (id != null) {
+                            result.push(key + '="' + id + '"');
+                            return;
+                        }
+                    } catch (e) {
+                        console.log(e);
+                    }
+                }
+
+                value = Array.isArray(value) ? value[0] : value;
+                if (typeof value === "string") {
+                    value = value.replace(/\"/gi, "&amp;quot;");
+                    value = value.replace(/, /gi, ",&nbsp;");
+                }
+                result.push(key + '="' + value + '"');
+            });
+            return result.join(", ");
+        }
+
+    <table id="component-datatable" class="datatableInit table"></table>

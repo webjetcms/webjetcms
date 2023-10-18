@@ -1,0 +1,47 @@
+.#{$prefix}-size-changer {
+    display: none;
+    position: absolute;
+    top: $highlighter-size;
+    left: $highlighter-size;
+    height: $size-changer-size;
+    z-index: $size-changer-index;
+    overflow: hidden;
+    white-space: nowrap;
+    background-color: $color-column;
+    border-bottom-right-radius: $size-changer-radius;
+
+    &__down,
+    &__up,
+    &__number {
+        display: inline-block;
+        width: $size-changer-size;
+        height: $size-changer-size;
+        line-height: $size-changer-size;
+        overflow: hidden;
+        text-align: center;
+        font-size: 13px;
+        color: white;
+        font-weight: bold;
+        background-repeat: no-repeat;
+        background-position: center;
+        background-size: auto ($size-changer-size/2);
+    }
+
+    &__down,
+    &__up {
+        text-indent: -2000px;
+
+        &:hover {
+            cursor: pointer;
+            background-color: darken($color-column, 5%);
+        }
+    }
+
+    &__down {   background-image: url("../images/move-left.png"); }
+    &__up {     background-image: url("../images/move-right.png"); }
+
+    .#{$prefix}-container.#{$prefix}-is-resize-columns & {
+        display: block;
+    }
+    
+}

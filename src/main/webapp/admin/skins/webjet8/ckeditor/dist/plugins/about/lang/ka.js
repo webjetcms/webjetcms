@@ -1,0 +1,1 @@
+﻿CKEDITOR.plugins.setLang("about","ka",{copy:"Copyright \x26copy; $1. ყველა უფლება დაცულია.",dlgTitle:"CKEditor-ის შესახებ",moreInfo:"ლიცენზიის ინფორმაციისთვის ეწვიეთ ჩვენს საიტს:"});

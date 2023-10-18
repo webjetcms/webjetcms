@@ -1,0 +1,44 @@
+<script data-th-inline="javascript">
+    let url = "/admin/rest/seo/positions";
+    let columns = /*[(${layout.getDataTableColumns("sk.iway.iwcm.components.seo.jpa.ManagementKeywordsEntity")})]*/ '';
+</script>
+
+<script type="text/javascript">
+    var positionsDataTable;
+
+    function openDetails(id) {
+        window.location.href="/apps/seo/admin/positions-details?keywordId=" + id;
+    }
+
+    WJ.breadcrumb({
+        id: "positions",
+        tabs: [
+            {
+                url: '/apps/seo/admin/positions/',
+                title: '[[#{components.seo.leftMenu.positions}]]',
+                active: true
+            }
+        ]
+    });
+
+    window.domReady.add(function () {
+        //Add open dialog link
+        WJ.DataTable.mergeColumns(columns, {
+            name: "name",
+            renderFormatLinkTemplate: "javascript:openDetails('{{id}}')",
+            className: "required"
+        });
+
+        positionsDataTable = WJ.DataTable({
+            url: url,
+            serverSide: true,
+            columns: ChartTools.filterColumns(["id", "name", "domain", "searchBot", "actualPosition"], columns),
+            id: "positionsDataTable",
+            idAutoOpener: false
+        });
+        positionsDataTable.hideButtons(["create", "edit", "remove", "celledit", "import", "duplicate"]);
+
+    });
+</script>
+
+<table id="positionsDataTable" class="datatableInit table"></table>

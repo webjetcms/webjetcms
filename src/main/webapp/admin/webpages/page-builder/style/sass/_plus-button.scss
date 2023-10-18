@@ -1,0 +1,271 @@
+.#{$prefix}-plus-button {
+    display: none;
+    position: absolute;
+    width: $plus-button-size;
+    height: $plus-button-size;
+    z-index: $plus-button-index;
+    background-image: url("../images/plus.png");
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: auto $plus-button-icon-size;
+    transition: background-color 0.3s ease-in-out;
+
+    &:hover {
+        opacity: 1 !important;
+        cursor: pointer;
+        animation: none !important;
+    }
+}
+
+.#{$prefix}-column > .#{$prefix}-plus-button {
+    top: 50%;
+    margin-top: -($plus-button-size/2);
+    background-color: $color-column;
+
+    &:hover {
+        background-color: darken($color-column,15%);
+    }
+
+    &.#{$prefix}-prepend {
+        left: $highlighter-size;
+        border-top-right-radius: $plus-button-radius;
+        border-bottom-right-radius: $plus-button-radius;
+        box-shadow: 4px 0 25px 2px rgba(50, 50, 50, 0.25);
+    }
+
+    &.#{$prefix}-append {
+        right: $highlighter-size;
+        border-top-left-radius: $plus-button-radius;
+        border-bottom-left-radius: $plus-button-radius;
+        box-shadow: -4px 0 25px 2px rgba(50, 50, 50, 0.25);
+    }
+}
+
+.#{$prefix}-container > .#{$prefix}-plus-button {
+    background-color: $color-container;
+
+    &:hover {
+        background-color: darken($color-container,15%);
+    }
+
+    &.#{$prefix}-prepend {
+        top: $highlighter-size;
+        left: 50%;
+        margin-left: $highlighter-size;
+        border-bottom-right-radius: $plus-button-radius;
+        border-bottom-left-radius: $plus-button-radius;
+        box-shadow: 0 4px 25px 2px rgba(50, 50, 50, 0.25);
+    }
+
+    &.#{$prefix}-append {
+        bottom: $highlighter-size;
+        right: 50%;
+        margin-right: $highlighter-size;
+        border-top-right-radius: $plus-button-radius;
+        border-top-left-radius: $plus-button-radius;
+        box-shadow: 0 -4px 25px 2px rgba(50, 50, 50, 0.25);
+    }
+}
+
+.#{$prefix}-section > .#{$prefix}-plus-button {
+    background-color: $color-section;
+
+    &:hover {
+        background-color:darken($color-section,15%);
+    }
+
+    &.#{$prefix}-prepend {
+        top: $highlighter-size;
+        left: 50%;
+        margin-left: $highlighter-size;
+        border-bottom-right-radius: $plus-button-radius;
+        border-bottom-left-radius: $plus-button-radius;
+    }
+
+    &.#{$prefix}-append {
+        bottom: $highlighter-size;
+        right: 50%;
+        margin-right: $highlighter-size;
+        border-top-right-radius: $plus-button-radius;
+        border-top-left-radius: $plus-button-radius;
+    }
+}
+
+/*==================================================================
+  /*====================|> TOOLBAR IS ACTIVE
+  /*=================================================================*/
+
+.#{$prefix}-wrapper {
+    &.#{$prefix}-has-child-toolbar-active {
+        .#{$prefix}-grid-element.#{$prefix}-has-toolbar-active:not(.#{$prefix}-is-resize-columns) {
+            > .#{$prefix}-plus-button {
+                display: block;
+            }
+        }
+
+        .#{$prefix}-container.#{$prefix}-is-resize-columns .#{$prefix}-column {
+            > .#{$prefix}-plus-button {
+                display: none;
+            }
+        }
+    }
+
+    &.#{$prefix}-is-moving-child {
+
+        /*==================================================================
+        /*====================|> GRID ELEMENT IS DUPLICATING
+        /*=================================================================*/
+
+        &.#{$prefix}-is-moving-column .#{$prefix}-column > .#{$prefix}-plus-button,
+        &.#{$prefix}-is-moving-container .#{$prefix}-container > .#{$prefix}-plus-button,
+        &.#{$prefix}-is-moving-section .#{$prefix}-section > .#{$prefix}-plus-button {
+            display: block;
+        }
+        &.#{$prefix}-is-moving-section .#{$prefix}-section > .#{$prefix}-plus-button {
+            animation: pulse_section 3s ease-in-out infinite;
+        }
+        &.#{$prefix}-is-moving-container .#{$prefix}-container > .#{$prefix}-plus-button {
+            animation: pulse_container 3s ease-in-out infinite;
+        }
+        &.#{$prefix}-is-moving-column .#{$prefix}-column > .#{$prefix}-plus-button {
+            animation: pulse_column 3s ease-in-out infinite;
+        }
+
+        &.#{$prefix}-is-moving-column {
+            .#{$prefix}-container > .#{$prefix}-empty-placeholder {
+                opacity: 1;
+            }
+
+            .#{$prefix}-column > .#{$prefix}-plus-button {
+                border-radius: $plus-button-radius;
+                z-index: $plus-button-moving-index;
+
+                &.#{$prefix}-prepend {
+                    background-image: url("../images/move-left.png");
+                }
+
+                &.#{$prefix}-append {
+                    background-image: url("../images/move-right.png");
+                }
+            }
+        }
+
+        &.#{$prefix}-is-moving-container .#{$prefix}-section > .#{$prefix}-empty-placeholder,
+        &.#{$prefix}-is-moving-row .#{$prefix}-section > .#{$prefix}-empty-placeholder {
+            opacity: 1;
+        }
+
+        &.#{$prefix}-is-moving-container {
+            .#{$prefix}-container > .#{$prefix}-plus-button,
+            .#{$prefix}-section > .#{$prefix}-plus-button {
+                width: $plus-button-moving-size;
+                border-radius: $plus-button-radius;
+                z-index: $plus-button-moving-index;
+                margin-top: - $highlighter-size;
+            }
+        }
+
+        &.#{$prefix}-is-moving-section {
+            .#{$prefix}-container > .#{$prefix}-plus-button,
+            .#{$prefix}-section > .#{$prefix}-plus-button {
+                width: $plus-button-moving-size;
+                border-radius: $plus-button-radius;
+                z-index: $plus-button-moving-index;
+                margin-bottom: - $highlighter-size;
+            }
+        }
+
+        &.#{$prefix}-is-moving-container {
+            .#{$prefix}-container > .#{$prefix}-plus-button.#{$prefix}-prepend,
+            .#{$prefix}-section > .#{$prefix}-plus-button.#{$prefix}-prepend {
+                background-image: url("../images/move-top.png");
+            }
+        }
+
+        &.#{$prefix}-is-moving-section {
+            .#{$prefix}-container > .#{$prefix}-plus-button.#{$prefix}-prepend,
+            .#{$prefix}-section > .#{$prefix}-plus-button.#{$prefix}-prepend {
+                background-image: url("../images/move-top.png");
+            }
+        }
+
+        &.#{$prefix}-is-moving-container {
+            .#{$prefix}-container > .#{$prefix}-plus-button.#{$prefix}-append,
+            .#{$prefix}-section > .#{$prefix}-plus-button.#{$prefix}-append {
+                background-image: url("../images/move-bottom.png");
+            }
+        }
+
+        &.#{$prefix}-is-moving-section {
+            .#{$prefix}-container > .#{$prefix}-plus-button.#{$prefix}-append,
+            .#{$prefix}-section > .#{$prefix}-plus-button.#{$prefix}-append {
+                background-image: url("../images/move-bottom.png");
+            }
+        }
+
+        .#{$prefix}-grid-element {
+            &.#{$prefix}-is-moving > .#{$prefix}-plus-button,
+            + .#{$prefix}-grid-element > .#{$prefix}-prepend,
+            &.#{$prefix}-is-sibling-left > .#{$prefix}-plus-button.#{$prefix}-append,
+            &.#{$prefix}-is-sibling-right > .#{$prefix}-plus-button.#{$prefix}-prepend {
+                display: none !important;
+            }
+        }
+
+        &.#{$prefix}-is-duplicating .#{$prefix}-grid-element.#{$prefix}-is-moving > .#{$prefix}-plus-button {
+            display: block !important;
+        }
+    }
+
+    &.#{$prefix}-is-modal-open .#{$prefix}-grid-element.#{$prefix}-is-moving > .#{$prefix}-plus-button {
+        display: none !important;
+    }
+}
+
+@keyframes pulse_section {
+    0%, 19% {
+        box-shadow: 0 0 0 0 rgba($color-section, 0);
+    }
+    20% {
+        box-shadow: 0 0 0 0 rgba($color-section, 0.6);
+        background-color: darken($color-section,10%);
+    }
+    70% {
+        box-shadow: 0 0 0 30px rgba($color-section, 0);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba($color-section, 0);
+    }
+}
+
+@keyframes pulse_container {
+    0%, 19% {
+        box-shadow: 0 0 0 0 rgba($color-container, 0);
+    }
+    20% {
+        box-shadow: 0 0 0 0 rgba($color-container, 0.6);
+        background-color: darken($color-container,15%);
+    }
+    70% {
+        box-shadow: 0 0 0 30px rgba($color-container, 0);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba($color-container, 0);
+    }
+}
+
+@keyframes pulse_column {
+    0%, 19% {
+        box-shadow: 0 0 0 0 rgba($color-column, 0);
+    }
+    20% {
+        box-shadow: 0 0 0 0 rgba($color-column, 0.6);
+        background-color: darken($color-column,10%);
+    }
+    70% {
+        box-shadow: 0 0 0 20px rgba($color-column, 0);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba($color-column, 0);
+    }
+}

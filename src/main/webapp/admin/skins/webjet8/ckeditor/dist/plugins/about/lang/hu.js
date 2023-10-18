@@ -1,0 +1,1 @@
+﻿CKEDITOR.plugins.setLang("about","hu",{copy:"Copyright \x26copy; $1. Minden jog fenntartva.",dlgTitle:"A CKEditor 4-ről",moreInfo:"Licenszelési információkért kérjük látogassa meg weboldalunkat:"});

@@ -1,0 +1,1 @@
+﻿CKEDITOR.plugins.setLang("about","it",{copy:"Copyright \x26copy; $1. Tutti i diritti riservati.",dlgTitle:"Informazioni su CKEditor 4",moreInfo:"Per le informazioni sulla licenza si prega di visitare il nostro sito:"});

@@ -1,0 +1,106 @@
+//import Quill from 'quill';
+//import Toolbar from 'quill/modules/toolbar';
+//import Snow from 'quill/themes/snow';
+
+//https://www.npmjs.com/package/quill-html-edit-button
+import htmlEditButton from "quill-html-edit-button";
+
+export function typeQuill() {
+
+    var toolbarOptions = [
+        [{ 'header': [1, 2, 3, 4, 5, 6, false] }],
+        [
+            'bold', 'italic', 'underline', 'strike',
+            { 'align': [] },
+            { 'script': 'sub'}, { 'script': 'super' }, // superscript/subscript
+            { 'color': [] }, { 'background': [] },          // dropdown with defaults from theme
+            'clean'                                         // remove formatting button
+        ],
+
+        [
+            { 'list': 'ordered'}, { 'list': 'bullet' },
+            { 'indent': '-1'}, { 'indent': '+1' }          // outdent/indent
+        ],
+
+        [
+            'link',
+        ]
+
+    ];
+
+    return {
+        create: function (conf) {
+            //console.log("Creating quill editor");
+            var safeId = $.fn.dataTable.Editor.safeId(conf.id);
+            var input = $(
+                '<div id="' + safeId + '" class="quill-wrapper">' +
+                '<div class="editor"></div>' +
+                '</div>'
+            );
+
+            Quill.debug('error');
+            Quill.register({
+                //'modules/toolbar': Toolbar,
+                //'themes/snow': Snow,
+                "modules/htmlEditButton": htmlEditButton
+            });
+
+            conf._quill = new Quill(input.find('.editor')[0], $.extend(true, {
+                theme: 'snow',
+                modules: {
+                    toolbar: toolbarOptions,
+                    htmlEditButton: {
+                        msg: WJ.translate("datatables.quill.htmlButton.tooltip.js"), //Custom message to display in the editor, default: Edit HTML here, when you click "OK" the quill editor's contents will be replaced
+                        okText: '<i class="fal fa-check"></i> '+WJ.translate("button.submit"), // Text to display in the OK button, default: Ok,
+                        cancelText: '<i class="fal fa-times"></i> '+WJ.translate("button.cancel"), // Text to display in the cancel button, default: Cancel
+                        buttonHTML: "<i class='fa fa-code'></i> ", // Text to display in the toolbar button, default: <>
+                        buttonTitle: WJ.translate("datatables.quill.htmlButton.tooltip.js"), // Text to display as the tooltip for the toolbar button, default: Show HTML source
+                    }
+                }
+            }, conf.opts));
+
+            return input;
+        },
+
+        get: function (conf) {
+            //console.log("QUILL GET=", conf._quill.root.innerHTML);
+            var htmlCode = conf._quill.root.innerHTML;
+            //prazdny text povazuj za prazdny, aby nam fungovalo required field
+            if ("<p><br></p>"==htmlCode || ""==conf._quill.getText()) htmlCode = "";
+            return htmlCode;
+        },
+
+        set: function (conf, val) {
+            var htmlCode = val;
+            //console.log("QUILL SET, htmlCode=", htmlCode);
+            if (htmlCode == null || htmlCode=="") htmlCode = "<p><br/></p>";
+            if (htmlCode.indexOf("<p>")==-1) htmlCode = "<p>"+htmlCode+"</p>";
+            //aktualna verzia pracuje s P elementami namiesto DIV elementov, musime upravit povodny zapis
+            htmlCode = htmlCode.replace(/<div>/gi, "<p>");
+            htmlCode = htmlCode.replace(/<\/div>/gi, "</p>");
+
+            //nahrad inline styl za tagy em a strong
+            htmlCode = htmlCode.replace(/<span[^<>]+style="font-style:italic">([^<>]+)<\/span>/gi, '<em>$&</em>');
+            htmlCode = htmlCode.replace(/<span[^<>]+style="font-weight:bold">([^<>]+)<\/span>/gi, '<strong>$&</strong>');
+
+            //FIX: ak do style elementu pridame aj color, tak quill zachova cely span element (inak ho zmaze)
+            //pridame to ako prve, ak by tam bolo dalsie color:nieco
+            htmlCode = htmlCode.replace(/ style="/gi, ' style="color:inherit;');
+
+            //console.log("QUILL SET, FIXED htmlCode=", htmlCode);
+            conf._quill.root.innerHTML = htmlCode;
+        },
+
+        enable: function (conf) {
+        }, // not supported by Quill
+
+        disable: function (conf) {
+        }, // not supported by Quill
+
+        // Get the Quill instance
+        quill: function (conf) {
+            return conf._quill;
+        }
+    }
+
+}

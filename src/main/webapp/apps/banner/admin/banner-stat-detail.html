@@ -1,0 +1,168 @@
+<script data-th-inline="javascript">
+    let url = "/admin/rest/banner-stat";
+    let columns = /*[(${layout.getDataTableColumns("sk.iway.iwcm.components.banner.model.BannerBean")})]*/ '';
+</script>
+
+<script>
+    var bannerDetailDataTable;
+
+    WJ.breadcrumb({
+        id: "banner-stat-detail",
+        tabs: [
+            {
+                url: '/apps/banner/admin/banner-stat/',
+                title: '[[#{components.banner.banners_stat}]]',
+                active: true
+            },
+            {
+                url: '/apps/banner/admin/banner-stat/',
+                title: '<span class="bannerTitle"></span>',
+                active: false
+            },
+            {
+                url: '#dateRange',
+                title: '{filter}',
+                active: false
+            }
+        ]
+    });
+
+    window.redirect = function (id) {
+        window.location.href="/apps/banner/admin?id=" + id;
+    }
+
+    window.domReady.add(function () {
+        //presun filter do hlavicky
+        $("#pills-dateRange-tab").html("");
+        $("div#bannerDetailDataTable_extfilter").appendTo("#pills-dateRange-tab");
+
+        let bannerId;
+        let dateRange;
+
+        let lineChartViews;
+        let lineChartClicks;
+
+        WJ.showLoader();
+
+        //Set bannerId and dateRange from url
+        parseUrlParams();
+
+        $.get({
+            url: url+"/banner-title/?bannerId="+bannerId,
+            success: function(response) {
+                $("span.bannerTitle").text(response);
+            }
+        });
+
+        bannerDetailDataTable = WJ.DataTable({
+            url: url,
+            serverSide: false, //false lebo sa nevyužíva repositár ale BannerDB
+            columns: columns,
+            id: "bannerDetailDataTable",
+            forceVisibleColumns: "id,nameLink,bannerType,bannerGroup,statViews,statClicks",
+            autoHeight: false,
+            defaultSearch: ChartTools.getSearchCriteria(),
+            onPreXhr: function(TABLE, e, settings, data) {
+                //console.log('onPreXhr, docId=', docId);
+                //data.fixed_dayDate = dateRange;
+                data.fixed_bannerId = bannerId;
+            },
+            hideTable: true
+        });
+        bannerDetailDataTable.hideButton("create");
+        bannerDetailDataTable.hideButton("edit");
+        bannerDetailDataTable.hideButton("remove");
+        bannerDetailDataTable.hideButton("celledit");
+        bannerDetailDataTable.hideButton("import");
+        bannerDetailDataTable.hideButton("duplicate");
+
+        //Create and set amcharts
+        createAmcharts();
+
+        //Onchange events - update amcharts
+        $("#bannerDetailDataTable_extfilter").on("click", "button.filtrujem", function() {
+            getDataAndUpdateAmcharts();
+        });
+
+        async function createAmcharts() {
+            window.initAmcharts().then(module => {
+
+                $.ajax({url: getGraphUrl("views"), success: function(result) {
+                    lineChartViews = new ChartTools.LineChartForm(ChartTools.getLineChartYAxeNameObjs(["statViews"], ["stat.visits.js"]), "dayDate", '[[#{stat.graph.banner_views}]]', "bannerStatDetail-lineViews", ChartTools.convertDataForLineChart(result), ChartTools.DateType.Auto);
+                    ChartTools.createAmchart(lineChartViews);
+                }});
+
+                $.ajax({url: getGraphUrl("clicks"), success: function(result) {
+                    lineChartClicks = new ChartTools.LineChartForm(ChartTools.getLineChartYAxeNameObjs(["statClicks"], ["stat.clicks.js"]), "dayDate", '[[#{stat.graph.banner_clicks}]]', "bannerStatDetail-lineClicks", ChartTools.convertDataForLineChart(result), ChartTools.DateType.Auto);
+                    ChartTools.createAmchart(lineChartClicks);
+
+                    WJ.hideLoader();
+                }});
+
+            });
+        }
+
+        async function getDataAndUpdateAmcharts() {
+            WJ.showLoader();
+
+            await $.ajax({url: getGraphUrl("views"), success: function(result) {
+                lineChartViews.chartData = ChartTools.convertDataForLineChart(result);
+                ChartTools.updateChart(lineChartViews);
+            }});
+
+            await $.ajax({url: getGraphUrl("clicks"), success: function(result) {
+                lineChartClicks.chartData = ChartTools.convertDataForLineChart(result);
+                ChartTools.updateChart(lineChartClicks);
+            }});
+
+            WJ.hideLoader();
+        }
+
+        function getGraphUrl(dataType) {
+            let tmpDefURL = "";
+
+            //Load values
+            let searchDateValue = bannerDetailDataTable.DATA.columns[1].searchVal;
+
+            if(typeof searchDateValue=="undefined" || searchDateValue=='') {
+                //Use default values
+                let defaultEndDate = new Date().getTime();
+                let defaultStartDate = defaultEndDate - (60*60*24*30*1000); //-30 dni
+                searchDateValue = "daterange:"+defaultStartDate + "-" + defaultEndDate
+            }
+
+            //Prepare url
+            tmpDefURL = url.split("?")[0] + "/detailLineChartData";
+            tmpDefURL += "?bannerId=" + bannerId;
+            tmpDefURL += "&dayDate=" + searchDateValue;
+            tmpDefURL += "&dataType=" + dataType;
+
+            return tmpDefURL;
+        }
+
+        function parseUrlParams() {
+            const queryString = window.location.search;
+            const urlParams = new URLSearchParams(queryString);
+            bannerId = urlParams.get('bannerId');
+            dateRange = urlParams.get('dateRange');
+        }
+    });
+</script>
+
+<div id="bannerDetailDataTable_extfilter">
+    <div class="row">
+        <div class="col-auto dt-extfilter-title-dayDate" style="display: none;"></div>
+        <div class="col-auto dt-extfilter dt-extfilter-dayDate" id="datepicker"></div>
+    </div>
+</div>
+
+<div id="tableDiv">
+    <table id="bannerDetailDataTable" class="datatableInit table"></table>
+</div>
+
+<div id="graphsDiv" class="hide-while-loading" style="margin-bottom: 30px;">
+    <div id="bannerStatDetail-lineViews" class="amcharts"></div>
+    <div id="bannerStatDetail-lineClicks" class="amcharts"></div>
+</div>
+
+<p>&nbsp;</p>

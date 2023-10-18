@@ -1,0 +1,97 @@
+<script data-th-inline="javascript">
+    let url = "/admin/rest/stat/search-engines-details";
+    let columns = /*[(${layout.getDataTableColumns("sk.iway.iwcm.stat.jpa.SearchEnginesDetailsDTO")})]*/ '';
+</script>
+<script>
+    var searchEnginesDetailsDataTable;
+
+    WJ.breadcrumb({
+        id: "searchEnginesDetails",
+        tabs: [
+            {
+                url: '/apps/stat/admin/search-engines-details',
+                title: '[[#{stat.search_engines_details.title}]]',
+                active: true
+            },
+            {
+                url: '#dateRange',
+                title: '{filter}',
+                active: false
+            }
+        ]
+    });
+
+    window.domReady.add(function () {
+
+        //presun filter do hlavicky
+        $("#pills-dateRange-tab").html("");
+        $("div#searchEnginesDetailsDataTable_extfilter").appendTo("#pills-dateRange-tab");
+
+        let queryName;
+        let dayDate;
+
+        //Set params from url
+        setParams();
+
+        searchEnginesDetailsDataTable = WJ.DataTable({
+            url: url,
+            serverSide: false, //false lebo sa nevyužíva repositár
+            columns: columns,
+            id: "searchEnginesDetailsDataTable",
+            idAutoOpener: false,
+            defaultSearch: ChartTools.getSearchCriteria(),
+            onPreXhr: function(TABLE, e, settings, data) {
+                console.log('onPreXhr, queryName=', queryName, "dayDate=", dayDate);
+                data.fixed_searchUrl = $("#searchQuery").val();
+            }
+        });
+
+        searchEnginesDetailsDataTable.hideButton("import");
+        searchEnginesDetailsDataTable.hideButton("create");
+        searchEnginesDetailsDataTable.hideButton("edit");
+        searchEnginesDetailsDataTable.hideButton("duplicate");
+        searchEnginesDetailsDataTable.hideButton("celledit");
+        searchEnginesDetailsDataTable.hideButton("remove");
+
+        dtWJ.fixTableSize(searchEnginesDetailsDataTable);
+
+        //Onchange events - update table
+        $("#searchEnginesDetailsDataTable_extfilter").on("click", "button.filtrujem", function() {
+            //reload table values
+            ChartTools.saveSearchCriteria(searchEnginesDetailsDataTable.DATA);
+            searchEnginesDetailsDataTable.ajax.reload();
+        });
+
+        function setParams() {
+            const queryString = window.location.search;
+            const urlParams = new URLSearchParams(queryString);
+            const queryUrl = urlParams.get('queryName');
+            queryName = queryUrl;
+            const dayDateUrl = urlParams.get('dayDate');
+            dayDate = dayDateUrl;
+
+            //Set header value
+            $("#searchQuery").val(queryName);
+        }
+    });
+</script>
+
+<div id="searchEnginesDetailsDataTable_extfilter">
+    <div class="row datatableInit">
+        <div class="col-auto dt-extfilter-title-dayDate" style="display: none;"></div>
+        <div class="col-auto dt-extfilter dt-extfilter-dayDate"></div>
+        <div class="col-auto dt-extfilter-title-url"></div>
+        <div style="width: 450px;" class="col-auto">
+            <div class="input-group">
+                <input type="text" id="searchQuery" class="form-control form-control-sm filter-input dt-search-query"/>
+                <button class="filtrujem btn btn-sm btn-outline-secondary dt-filtrujem-query" type="submit">
+                    <i class="far fa-search"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="tableDiv">
+    <table id="searchEnginesDetailsDataTable" class="datatableInit table"></table>
+</div>

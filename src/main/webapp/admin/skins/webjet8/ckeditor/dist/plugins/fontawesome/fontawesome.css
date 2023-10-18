@@ -1,0 +1,9 @@
+div.fontawesomeIconsSelector {overflow:auto; text-align:center; height:400px; width:100%;}
+div.fontawesomeIconsSelector div {text-align:center;}
+div.fontawesomeIconsSelector a, div.fontawesomeIconsSelector span {margin-bottom:.5em; text-align:center;}
+div.fontawesomeIconsSelector a {padding:.5em; display:block; float:left; width:100px; border:1px solid #fff; -webkit-border-radius:5px; border-radius:5px; white-space:normal; text-align:center; height:68px;overflow:hidden;}
+div.fontawesomeIconsSelector a:hover, div.fontawesomeIconsSelector a.active {border:1px solid #ddd; background:#eee;}
+div.fontawesomeIconsSelector span {font-size:24px; color:#000;}
+span.cke_widget_fontawesome { display: inline; position: static; }
+span.cke_widget_fontawesome span::before, span.cke_widget_fontawesome i::before { cursor: pointer; }
+.cke_dialog label { border: 0px; }

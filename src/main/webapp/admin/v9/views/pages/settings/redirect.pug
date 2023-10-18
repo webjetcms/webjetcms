@@ -1,0 +1,34 @@
+extends ../../partials/layout
+
+block content
+
+    +breadcrumb(
+        'redirect',
+        [
+            [ '#redirect', '[[\#{components.redirect.admin_list.search}]]', true ]
+        ]
+    )
+
+    script.
+        var redirectTable;
+        window.domReady.add(function () {
+
+            let url = "/admin/rest/settings/redirect";
+            var columns = [(${layout.getDataTableColumns('sk.iway.iwcm.system.UrlRedirectBean')})];
+
+            var order = [];
+            order.push([0, 'desc']);
+
+            redirectTable = WJ.DataTable({
+                url: url,
+                columns: columns,
+                serverSide: true,
+                editorId: "urlRedirectId",
+                order: order
+            });
+        });
+
+
+    <table id="redirectTable" class="datatableInit table"></table>
+
+    include ../../partials/datatables-upload

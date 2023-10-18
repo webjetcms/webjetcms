@@ -1,0 +1,507 @@
+.#{$prefix}-modal {
+    font-family: 'Roboto', sans-serif;
+    opacity: 0;
+    visibility: hidden;
+    transform: scale(0.4);
+    position: fixed;
+    top: 50px;
+    left: 50px;
+    height: auto;
+    width: 380px;
+    z-index: $modal-index;
+    background-color: $modal-color;
+
+    border-radius: $modal-radius;
+    overflow: hidden;
+    box-shadow: 0 1px 14px 0px rgba(0, 0, 0, 0.1);
+
+    transition: opacity 0.2s ease-in-out, visibility 0.2s ease-in-out, transform 0.3s ease-in-out;
+
+    &__header {
+        position: relative;
+        overflow: hidden;
+        padding:  0 0 $modal-padding 0;
+
+        &__button-show {
+            display: block;
+            float: left;
+            width: 44px;
+            height: 44px;
+            opacity: 0.7;
+            margin-left: 10px;
+            background-color: transparent;
+            background-image: url("../images/icon-crosshairs.png");
+            background-repeat: no-repeat;
+            background-position: center;
+            background-size: 20px auto;
+            transition: opacity 0.3s ease-in-out;
+
+            &:hover {
+                opacity: 1;
+                cursor: pointer;
+            }
+        }
+
+        .header-title {
+            display: block;
+            float: left;
+            background-color: transparent;
+            line-height: 44px;
+            font-size: 14px;
+            font-weight: 700;
+            color: #4e5e70;
+            margin-left: $modal-padding;
+
+            &:hover {
+                cursor: move;
+            }
+        }
+    }
+
+    &__content {
+        padding:0 $modal-padding;
+        overflow-y: auto;
+        width: 100%;
+        max-height: 60vh;
+    }
+
+    &__footer {
+        height: auto;
+        padding: $modal-padding;
+        overflow: hidden;
+        clear: both;
+        text-align: center;
+
+        &__button-reset,
+        &__button-close,
+        &__button-save {
+            display: inline-block;
+            width: auto;
+            height: 30px;
+            line-height: 30px;
+            padding: 0 16px;
+            font-size: 13px;
+            font-weight: 600;
+            opacity: 0.8;
+            text-align: center;
+            border-radius: $modal-radius;
+            transition: all 0.3s ease-in-out;
+        }
+
+        &__button-reset:hover,
+        &__button-close:hover,
+        &__button-save:hover {
+            cursor: pointer;
+            opacity: 1;
+        }
+
+        &__button-close {
+            float: left;
+            border: 2px solid #ea4c7f;
+            background-color: transparent;
+            color: #ea4c7f;
+        }
+
+        &__button-save {
+            float: right;
+            background-color: #41ff9a;
+            color: #42485c;
+        }
+
+        &__button-reset {
+            text-align: center;
+            background-color: transparent;
+            color: #7e9bc0;
+            font-weight: 400;
+        }
+    }
+
+
+
+    .#{$prefix}-style-input-group {
+        display: none;
+        clear: both;
+
+        &.active {
+            display: block;
+        }
+
+        .#{$prefix}-style-input-group-headline {
+            font-size: 14px;
+            line-height: 16px;
+            color: white;
+            font-weight: 500;
+            padding: 0;
+            margin: 12px 0 6px 0;
+        }
+
+        .#{$prefix}-style-input-group-content {
+
+            .#{$prefix}-style-input-wrapper {
+                display: block;
+                padding: 0;
+                width: 100%;
+                margin:8px 0;
+
+                .#{$prefix}-style-input {
+                    width: 100%;
+                }
+
+                .#{$prefix}-style-label {
+                    display: block;
+                    font-size: 13px;
+                    font-weight: 300;
+                    line-height: 14px;
+                    margin-bottom: 5px;
+                    padding: 0;
+                    color: #fff;
+                }
+
+
+                .ui-spinner.ui-widget.ui-widget-content {
+                    width: 100%;
+                    overflow: hidden;
+                    background-color: transparent;
+                    border: 0px solid transparent !important;
+
+                    &::after {
+                        content: " ";
+                        position: absolute;
+                        top: 0;
+                        bottom: 0;
+                        right: 0;
+                        width: 26px;
+                        background-color: transparent;
+                        z-index: 1;
+                    }
+
+                    .ui-spinner-input {
+                        font-size: 14px;
+                        line-height: 18px;
+                        font-weight: 400;
+                        padding: 6px 10px;
+                        margin: 0;
+                        width: 100%;
+                        border-radius: 4px;
+                        background-color: #304866;
+
+                        color: #fff;
+                        outline: none;
+                    }
+
+                    a.ui-spinner-button {
+                        width: 20px;
+                        height: 12px;
+                        border-radius: 4px;
+                        border: 0 solid transparent;
+                        background-color: #464d61;
+                        right: 3px;
+                        z-index: 2;
+                        opacity: 0;
+                        transition: opacity 0.3s ease-in-out, background-color 0.3s ease-in-out;
+
+                        span {
+                            display: none;
+                        }
+
+                        &.ui-spinner-down {
+                            bottom: 3px;
+                            border-top-right-radius: 0;
+                            border-top-left-radius: 0;
+                        }
+
+                        &.ui-spinner-up {
+                            top: 3px;
+                            border-bottom-right-radius: 0;
+                            border-bottom-left-radius: 0;
+                        }
+
+                        &:hover {
+                            background-color: #34394c;
+                            cursor: pointer;
+                        }
+                    }
+
+                    &:hover a.ui-spinner-button {
+                        opacity: 1;
+                    }
+                }
+            }
+
+            .#{$prefix}-style-input-group-four-in-row {
+                overflow: hidden;
+                position: relative;
+
+                .#{$prefix}-style-input-wrapper {
+                    float: left;
+                    width: 22.75%;
+                    margin-right: 3%;
+
+                    &:last-child {
+                        margin-right: 0;
+                    }
+                }
+
+                .#{$prefix}-style-input-group-four-in-row-tools {
+                    position: absolute;
+                    bottom: 0;
+                    width: 100%;
+                    border-bottom: 1px solid #fff;
+                    margin-bottom: 5px;
+
+                    .#{$prefix}-style-input-group-four-in-row-checkbox {
+                        position: absolute;
+                        bottom: 10px;
+                        z-index: 9;
+
+                        &.#{$prefix}-style-input-group-four-in-row-all {
+                            bottom: -7px;
+                            left: 50%;
+                            transform: translateX(-50%);
+                        }
+                        &.#{$prefix}-style-input-group-four-in-row-first-second {
+                            left: 22.5%;
+                        }
+                        &.#{$prefix}-style-input-group-four-in-row-third-fourth {
+                            right: 22.5%;
+                        }
+                    }
+                }
+
+                &.all .#{$prefix}-style-input-wrapper:not(.#{$prefix}-style-input-group-four-in-row-first),
+                &.first-second .#{$prefix}-style-input-wrapper.#{$prefix}-style-input-group-four-in-row-second,
+                &.third-fourth .#{$prefix}-style-input-wrapper.#{$prefix}-style-input-group-four-in-row-fourth {
+                    .ui-spinner {
+                        input {
+                            background-color: transparent;
+                        }
+                        a {
+                            display: none;
+                        }
+                    }
+                }
+                &.all {
+                    .pb-style-input-group-four-in-row-first-second,
+                    .pb-style-input-group-four-in-row-third-fourth {
+                        display: none;
+                    }
+                }
+            }
+        }
+
+        &:last-child .#{$prefix}-style-input-group-headline {
+            margin-bottom: 0;
+        }
+
+
+    }
+
+    $bg: #304866;
+    $fg: #304866;
+    $borderWidth: 2px;
+
+
+    input[type=radio] {
+        position: absolute;
+        visibility: hidden;
+        display: none;
+      }
+      
+      label {
+        color: white;
+        display: table-cell;
+        cursor: pointer;
+        padding: 5px 20px;
+        margin: 0;
+        font-size: 14px;
+        font-weight: 400;
+        text-align: center;
+        border: 0 !important;
+      }
+      
+      input[type=radio]:checked + label {
+        color: white;
+        background: $fg;
+      }
+      
+      label + input[type=radio] + label {
+        border-left: solid $borderWidth $fg;
+      }
+      .radio-group {
+        border: solid $borderWidth $fg;
+        display: table;
+        width: 100%;
+        margin: 0;
+        border-radius: $modal-radius;
+        overflow: hidden;
+      }
+
+    .style-connections-list {
+        overflow: hidden;
+        clear: both;
+
+        .pb-connection-reference {
+            float: left;
+            display: block;
+            color: white;
+            font-size: 13px;
+            line-height: 24px;
+            padding: 0 8px;
+            border-radius: 4px;
+            background-color: #1e3654;
+            margin:6px 6px 0 0;
+            
+            &:hover {
+                cursor: pointer;
+                background-color: #304866;
+            }
+        }
+    }
+
+    .minicolors {
+        width: 210px !important;
+    }
+
+    .minicolors-with-opacity .minicolors-panel {
+        background-color: transparent;
+        border: 0;
+        width:100%;
+    }
+
+    .minicolors .minicolors-grid {
+        top: 0;
+        left: 0;
+        border-radius: 8px;
+        margin: 0;
+    }
+
+    .minicolors .minicolors-grid-inner {
+        border-radius: 8px;
+    }
+
+    .minicolors-opacity-slider {
+        left: auto;
+        right: 0;
+        border-radius: 8px;
+        top: 0;
+    }
+
+    .minicolors-slider {
+        left: auto;
+        right: 30px;
+        border-radius: 8px;
+        top: 0;
+    }
+
+    .minicolors-picker {
+        width: 22px;
+        margin-left: -3px;
+        border-radius: 8px;
+        border: 2px solid white;
+        background-color: black;
+    }
+
+    .minicolors-swatches {
+        margin: 10px 0 0 0;
+        width: 100%;
+    }
+
+    .minicolors-with-opacity .minicolors-swatches .minicolors-swatch {
+        border-radius: 50%;
+        overflow: hidden;
+        margin-right: 8px;
+        margin-bottom: 8px;
+    }
+
+    .tab-menu {
+        margin: 0 $modal-padding 0 0;
+        float: right;
+
+        .tab-link {
+            position: relative;
+            display: inline-block;
+            padding: 0 10px;
+            background-color: transparent;
+            color: #7e9bc0;
+            line-height: 44px;
+            font-size: 13px;
+            font-weight: 400;
+
+            &:first-child {
+                border-top-left-radius: 8px;
+            }
+            &:last-child {
+                border-top-right-radius: 8px;
+            }
+
+            &.active {
+                color: #fbfcfc;
+                font-weight: 500;
+            }
+            &:hover {
+                cursor: pointer;
+            }
+        }
+
+    }
+
+    .tab-content {
+        border-radius: $modal-radius;
+        overflow: hidden;
+        overflow: hidden;
+        clear: both;
+        width: 100%;
+
+        .tab-item {
+            display: none;
+            overflow: hidden;
+            margin: 0 $modal-padding;
+
+            span {
+                display: block; 
+                float: left;
+                width: 32.3333%;
+                margin: 0.5%;
+                padding: 0 10px;
+                color: #ffffff;
+                font-size: 13px;
+                line-height: 30px;
+                font-weight: 400;
+                text-align: center;
+                background-color: #304866;
+                border-radius: $modal-radius;
+                transition: background 0.3s ease-in-out;
+
+                &.active {
+                    color: #152942;
+                    font-weight: 700;
+                    &:nth-child(1) { background-image: linear-gradient(to right, #3bb6b5, #21c2b5, #0eceaf, #22daa5, #42e496); }
+                    &:nth-child(2) { background-image: linear-gradient(to right, #7e72fe, #a375fd, #c279fc, #dd7dfa, #f583f7); }
+                    &:nth-child(3) { background-image: linear-gradient(to right, #bea6a0, #b49a99, #a98f92, #9d848d, #907a87); }
+                    &:nth-child(4) { background-image: linear-gradient(to right, #f48e82, #fb9f7e, #feb27e, #fec581, #fbd889); }
+                    &:nth-child(5) { background-image: linear-gradient(to right, #5190e7, #00a8f3, #00bef3, #00d1ea, #1de2db); }
+                    &:nth-child(6) { background-image: linear-gradient(to right, #f6529d, #fa5893, #fd608a, #fe6882, #fe717b); }
+                }
+
+                &:hover {
+                    cursor: pointer;
+                    background-color: darken(#304866, 5%);
+                }
+            }
+            &.active {
+                display: block;
+            }
+        }
+    }
+
+
+    /*==================================================================
+    /*====================|> IS MODAL OPEN
+    /*=================================================================*/
+
+    .#{$prefix}-wrapper.#{$prefix}-is-modal-open & {
+        opacity: 1;
+        visibility: visible;
+        transform: scale(1);
+    }
+}

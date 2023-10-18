@@ -1,0 +1,256 @@
+package sk.iway.iwcm.common;
+
+import javax.servlet.http.HttpServletRequest;
+
+import org.apache.commons.lang.StringUtils;
+
+import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.FileTools;
+import sk.iway.iwcm.Identity;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.doc.DocDB;
+import sk.iway.iwcm.doc.DocDetails;
+import sk.iway.iwcm.doc.GroupDetails;
+import sk.iway.iwcm.doc.GroupsDB;
+
+public class UploadFileTools {
+
+    private UploadFileTools() {
+        //utility class
+    }
+
+    private static String clearVirtualPath(String virtualPath)
+    {
+        if (virtualPath.endsWith(".html")) {
+            virtualPath = virtualPath.substring(0, virtualPath.lastIndexOf(".html"));
+        }
+
+        return virtualPath;
+    }
+
+    /**
+     * Vrati subadresar pre upload obrazkov / suborov pre zadanu stranku, napr. /sk/produkty/webjet8 to sa nasledne prida k /images alebo /files a pouzije sa pre uload k "Aktualna stranka"
+     * @param docId
+     * @param groupId
+     * @param prefix
+     * @return
+     */
+    public static String getPageUploadSubDir(int docId, int groupId, String prefix)
+    {
+        StringBuilder path = new StringBuilder();
+        if (Constants.getBoolean("galleryUploadDirVirtualPath") && docId > 0)
+        {
+            String virtualPath = DocDB.getURLFromDocId(docId, null);
+            if (Tools.isNotEmpty(virtualPath))
+            {
+                virtualPath = clearVirtualPath(virtualPath);
+                if (Tools.isNotEmpty(prefix))
+                    path.append(prefix);
+                path.append(virtualPath);
+                return path.toString();
+            }
+        }
+
+        GroupsDB groupsDB = GroupsDB.getInstance();
+
+        if (Tools.isNotEmpty(prefix))
+        {
+            path.append(prefix);
+        }
+
+        String domainAlias = AdminTools.getDomainNameFileAliasAppend();
+        if (Tools.isNotEmpty(domainAlias))
+        {
+            if (prefix.startsWith("/images/gallery")) {
+                path.setLength(0);
+                path.append("/images"+domainAlias+prefix.substring("/images".length()));
+            } else {
+                path.append(domainAlias);
+            }
+        }
+
+        path.append(groupsDB.getURLPath(groupId));
+
+        if (path.length() == 0) {
+            path.append("/");
+        }
+
+        if (Constants.getBoolean("elfinderCreateFolderForPages") && docId > 0)
+        {
+            GroupDetails group = groupsDB.getGroup(groupId);
+            DocDetails doc = DocDB.getInstance().getBasicDocDetails(docId, false);
+            if (doc != null && group != null && group.getDefaultDocId()!=doc.getDocId())
+            {
+                String pageUrlName = null;
+
+                String url = doc.getVirtualPath();
+                if (Tools.isNotEmpty(url) && url.length()>5)
+                {
+                    if (url.endsWith("/"))
+                    {
+                        int predposlednaLomka = url.substring(0, url.length()-1).lastIndexOf("/");
+                        if (predposlednaLomka>1) pageUrlName = url.substring(predposlednaLomka+1, url.length()-1);
+                    }
+                    else if (url.endsWith(".html"))
+                    {
+                        int poslednaLomka = url.lastIndexOf("/");
+                        if (poslednaLomka>1) pageUrlName = url.substring(poslednaLomka+1, url.length()-5);
+                    }
+                }
+
+                if (Tools.isEmpty(pageUrlName))
+                {
+                    pageUrlName = DocTools.removeChars(doc.getTitle(), true);
+                }
+
+                if (path.toString().endsWith("/")==false) path.append("/");
+                path.append(pageUrlName);
+            }
+        }
+
+        path = new StringBuilder(DocTools.removeCharsDir(path.toString(), true).toLowerCase());
+
+        // #18512 vratenie cesty len do urcitej hlbky
+        int maxDeep = Constants.getInt("editorUploadActualPageMaxDeep");
+        if (StringUtils.countMatches(path.toString(), "/") > maxDeep) {
+            path.substring(0, StringUtils.ordinalIndexOf(path.toString(), "/", maxDeep + 1));
+        }
+
+        if (path.length()>3 && path.charAt(path.length()-1)=='/') {
+            //odstrank koncove lomitko (3 hodiny debugovania zacykleneho otvarania priecinka ked group mal nastavene /sk/)
+            path.deleteCharAt(path.length()-1);
+        }
+
+        return path.toString();
+    }
+
+    public static boolean isFileAllowed(String uploadType, String fileName, long fileSize, Identity user, HttpServletRequest request)
+    {
+        request.removeAttribute("permissionDenied");
+
+        if (user == null || user.isDisabledItem("menuFbrowser") || request.getRequestURI().contains("/admin/upload/chunk"))
+        {
+            //#32245 pentesty ING Bank
+            //ak user nema povolene subory, stale je dostupny elfinder napr. v banneroch a teoreticky moze nahrat skodlivy subor
+            //zakazeme mu upload skodlivych suborov, nie je dovod aby takyto subor vedel nahrat
+            String ext = FileTools.getFileExtension(fileName);
+            if (ext.equals("jsp") || ext.equals("php") || ext.equals("class") || ext.equals("jar") || FileBrowserTools.hasForbiddenSymbol(fileName))
+            {
+                request.setAttribute("permissionDenied", "fileType");
+                return false;
+            }
+        }
+
+        int uploadMaxSize = getUploadMaxSize(user, uploadType);
+        String uploadFileTypes = getUploadFileTypes(user, uploadType);
+
+        if (uploadMaxSize > 0 && fileSize > uploadMaxSize)
+        {
+            request.setAttribute("permissionDenied", "fileSize");
+            return false;
+        }
+
+        if (FileBrowserTools.hasForbiddenSymbol(fileName)) {
+            return false;
+        }
+
+        if (Tools.isEmpty(uploadFileTypes) || "*".equals(uploadFileTypes)) return true;
+
+        fileName = fileName.toLowerCase();
+
+        String[] exts = Tools.getTokens(uploadFileTypes, ",", true);
+        for (String ext : exts)
+        {
+            if (fileName.endsWith("."+ext)) return true;
+        }
+
+        request.setAttribute("permissionDenied", "fileType");
+
+        return false;
+    }
+
+
+    /**
+     * Vrati ciarkou oddeleny zoznam pripon suborov, ktore pouzivatel moze na server nahrat
+     * @param user
+     * @param type - image, alebo file
+     * @return - gif,png,jpg,swf
+     */
+    public static String getUploadFileTypes(Identity user, String type)
+    {
+        if (user == null) return "aaaaa";
+
+        if (user.isEnabledItem("editor_unlimited_upload")) return "";
+
+        String uploadFileTypes = "";
+
+        String prefix = "Default";
+        if (user.isDisabledItem("editorMiniEdit")==false) prefix = "Basic";
+        //RZA: pri drag&drope obrazka v editore je type "ckeditor"
+        if ("image".equalsIgnoreCase(type) || "ckeditor".equalsIgnoreCase(type))
+        {
+            uploadFileTypes = Constants.getString("FCKConfig.UploadFileTypes["+prefix+"][image]");
+        }
+        else
+        {
+            uploadFileTypes = Constants.getString("FCKConfig.UploadFileTypes["+prefix+"][file]");
+        }
+
+        return uploadFileTypes;
+    }
+
+    /**
+     * Vrati limit na velkost suboru, ktory moze pouzivatel na server nahrat
+     * @param user
+     * @param type - image, alebo file
+     * @return - velkost suboru v B
+     */
+    public static int getUploadMaxSize(Identity user, String type)
+    {
+        if (user == null) return 0;
+
+        if (user.isEnabledItem("editor_unlimited_upload")) return 0;
+
+        int limit = 0;
+        String limitStr = "";
+
+        String prefix = "Default";
+        if (user.isDisabledItem("editorMiniEdit")==false) prefix = "Basic";
+        if ("image".equalsIgnoreCase(type))
+            limitStr = Constants.getString("FCKConfig.UploadMaxSize["+prefix+"][image]");
+        else
+            limitStr = Constants.getString("FCKConfig.UploadMaxSize["+prefix+"][file]");
+
+        if(Tools.isNotEmpty(limitStr))
+        {
+            //ak je zadana hodnota napr. 2*1024
+            if(limitStr.indexOf('*') != -1)
+            {
+                String[] limitStrArray = Tools.getTokens(limitStr, "*");
+                if(limitStrArray != null && limitStrArray.length > 0)
+                {
+                    limit = 1;
+                    for(String limitStrValue : limitStrArray)
+                        limit *= Tools.getIntValue(limitStrValue, 1);
+                }
+            }
+            else
+            {
+                limit = Tools.getIntValue(limitStr, 0);
+            }
+        }
+
+        return limit * 1024;
+    }
+
+    /**
+     * Vrati subadresar pre upload obrazkov / suborov pre zadanu stranku, napr. /sk/produkty/webjet8 to sa nasledne prida k /images alebo /files a pouzije sa pre uload k "Aktualna stranka"
+     * @param docId
+     * @param groupId
+     * @return
+     */
+    public static String getPageUploadSubDir(int docId, int groupId)
+    {
+        return getPageUploadSubDir(docId, groupId, null);
+    }
+}

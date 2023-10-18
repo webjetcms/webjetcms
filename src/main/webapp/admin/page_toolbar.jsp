@@ -1,0 +1,150 @@
+<%
+sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
+%><%@ page pageEncoding="utf-8" import="sk.iway.iwcm.Constants,sk.iway.iwcm.Identity"%>
+<%@ page import="sk.iway.iwcm.InitServlet" %>
+<%@ page import="sk.iway.iwcm.doc.DocDetails" %>
+<%@ page import="sk.iway.iwcm.doc.GroupDetails" %>
+<%@ page import="sk.iway.iwcm.doc.TemplateDetails" %>
+<%@ page import="sk.iway.iwcm.doc.TemplatesDB" %>
+<%@ page import="sk.iway.iwcm.doc.groups.GroupsController" %>
+<%@ taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm" %><%@
+taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %><iwcm:checkLogon admin="true"/>
+<script type="text/javascript">
+	function documentReady(f){
+	    if(document.readyState !== "complete"){
+	        setTimeout('documentReady('+f+')', 9);
+		} else{
+	        f();
+		}
+	}
+
+function webjetToolbarPopup(url, width, height)
+{
+   var options = "toolbar=no,scrollbars=yes,resizable=yes,width="+width+",height="+height+";";
+   popupWindow=window.open(url,"_blank",options);
+}
+function openWebJETEditor(docId)
+{
+   var url = "<iwcm:cp/>/admin/editor.do?docid="+docId+"&isPopup=true";
+   var options = "toolbar=no,scrollbars=yes,resizable=yes,width=1024,height=700;";
+   popupWindow=window.open(url,"_blank",options);   
+}
+function closeWebJETToolbar()
+{
+   if (document.getElementById)
+   {
+	   var el = document.getElementById("webjetToolbar");
+	   if (el!=null)
+	   {
+	      el.style.display="none";
+	   }
+   }
+}
+
+oldDocumentOnReady = document.onready;
+var scriptsMovedToHead = false;
+
+document.onready = function(){
+	if (scriptsMovedToHead)
+		return;
+	if (oldDocumentOnReady)
+		oldDocumentOnReady();
+
+	var body = document.getElementsByTagName('BODY')[0];
+	var head = document.getElementsByTagName('HEAD')[0];
+
+	var link = document.createElement("link");
+	// var script = document.createElement("script");
+
+	link.href = "<%=request.getContextPath()%>/admin/skins/webjet8/css/page_toolbar.css";
+	link.type = "text/css";
+	link.rel = "stylesheet";
+
+	//script.src = "<%=request.getContextPath()%>/admin/scripts/blackbird.js";
+	//script.type = "text/javascript";
+
+	//head.insertBefore(script, head.firstChild);
+
+	head.appendChild(link);
+	body.appendChild(document.getElementById("webjetToolbar"));
+	scriptsMovedToHead = true;
+};
+
+documentReady(function(){
+    document.onready();
+});
+
+//document.cookie = 'blackbird={pos:0,size:0,load:true};';
+//-->
+</script>
+
+<%
+Identity user = (Identity)session.getAttribute(Constants.USER_KEY);
+if (user == null || !user.isAdmin())
+{
+   return;
+}
+DocDetails doc = (DocDetails)request.getAttribute("docDetails");
+if (doc == null)
+{
+   return;
+}
+pageContext.setAttribute("doc", doc);
+%>
+<div class="webjetToolbar noprint" id="webjetToolbar">
+	<div class="webjetToolbarContent">
+		<table class="webjetToolbarTable">
+		   <tr>	   
+			   <td colspan="2" class="header">
+				   <img src="/admin/skins/webjet8/assets/global/img/wj/logo_<%=InitServlet.getBrandSuffix()%>.png" />
+			   	<a href="javascript:closeWebJETToolbar()" class="webjetToolbarClose">&nbsp;</a>
+			   </td>
+			</tr>
+			<tr>
+			   <td><strong>DocID:</strong></td>
+			   <td>    
+			      <a href="javascript:openWebJETEditor(<bean:write name="doc" property="docId"/>);"><bean:write name="doc" property="docId"/></a>
+			      &nbsp;<a href='javascript:webjetToolbarPopup("/admin/dochistory.jsp?docid=<bean:write name="doc" property="docId"/>", 500, 200);'><img src="/admin/skins/webjet6/images/icon/arrow-history.gif" style="text-align: center; border: 0px; margin-bottom: -3px;" title="<iwcm:text key="groupslist.show_history"/>" alt=""/></a>
+				</td>
+			</tr>
+			<%if(!doc.isAvailable() || "false".equals((String)request.getAttribute("is_available"))){%>
+			<tr>
+				<td colspan="2" class="warning">
+			      <img src="/admin/images/warning.gif" align="absmiddle" alt="" /> <strong><iwcm:text key="admin.page_toolbar.pozor_stranka_sa_verejne_nezobrazuje"/></strong>
+				</td>
+			</tr> 
+			<%}
+			GroupDetails group = (GroupDetails)request.getAttribute("pageGroupDetails");
+			if (group != null)
+			{%>
+			<tr>
+				<td><strong><iwcm:text key="stat.group_name"/>:</strong></td>
+				<td><a href='javascript:webjetToolbarPopup("<%=GroupsController.BASE_URL%><%=group.getGroupId()%>/?Edit=Edituj&singlePopup=true", 600, 500);'><%=group.getGroupName()%></a></td>
+			</tr>
+			<%
+			}
+			
+			TemplatesDB tempDB = TemplatesDB.getInstance();
+			TemplateDetails temp = tempDB.getTemplate(doc.getTempId());
+			if(temp != null){%>
+			<tr>
+				<td><strong><iwcm:text key="editor.template"/>:</strong></td>
+				<td><a href='javascript:webjetToolbarPopup("/admin/listtemps.do?tempid=<%=temp.getTempId()%>", 600, 500);'><%=temp.getTempName()%></a></td>
+			</tr>
+			<%}%>
+				
+			<tr>
+				<td><strong><iwcm:text key="history.changedBy"/>:</strong></td>
+				<td><a href="mailto:<bean:write name="doc" property="authorEmail"/>"><bean:write name="doc" property="authorName"/></a></td>
+			</tr>
+			<tr>
+				<td><strong><iwcm:text key="editor.date"/>:</strong></td>
+			   <td>
+			      <bean:write name="doc" property="dateCreatedString"/>
+					<bean:write name="doc" property="timeCreatedString"/>
+			   </td>
+			</tr>
+		</table>
+	</div>
+	<div class="webjetToolbarFooter">&nbsp;</div>
+</div>

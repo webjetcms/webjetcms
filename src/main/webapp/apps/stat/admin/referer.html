@@ -1,0 +1,130 @@
+<script data-th-inline="javascript">
+    let url = "/admin/rest/stat/referer";
+    let columns = /*[(${layout.getDataTableColumns("sk.iway.iwcm.stat.jpa.RefererDTO")})]*/ '';
+</script>
+<script>
+    var refererDataTable;
+
+    WJ.breadcrumb({
+        id: "referer",
+        tabs: [
+            {
+                url: '/apps/stat/admin/referer',
+                title: '[[#{stat_menu.referers}]]',
+                active: true
+            },
+            {
+                url: '#dateRange',
+                title: '{filter}',
+                active: false
+            }
+        ]
+    });
+
+    window.domReady.add(function () {
+        //presun filter do hlavicky
+        $("#pills-dateRange-tab").html("");
+        $("div#refererDataTable_extfilter").appendTo("#pills-dateRange-tab");
+        WJ.showLoader();
+
+        let pieChartVisits;
+
+        refererDataTable = WJ.DataTable({
+            url: url,
+            serverSide: false, //false lebo sa nevyužíva repositár
+            columns: columns,
+            id: "refererDataTable",
+            idAutoOpener: false,
+            defaultSearch: ChartTools.getSearchCriteria(),
+            autoHeight: false,
+            onPreXhr: function(TABLE, e, settings, data) {
+                data.fixed_searchChartType = ChartTools.ChartType.Not_Chart;
+                data.fixed_searchRootDir = $('#rootDir').val();
+            }
+        });
+
+        ChartTools.initGroupIdSelect();
+
+        refererDataTable.hideButton("import");
+        refererDataTable.hideButton("create");
+        refererDataTable.hideButton("edit");
+        refererDataTable.hideButton("duplicate");
+        refererDataTable.hideButton("celledit");
+        refererDataTable.hideButton("remove");
+
+        //Create and set amchart
+        createAmchart();
+
+        //Onchange events - update amcharts
+        $("#refererDataTable_extfilter").on("click", "button.filtrujem", function() {
+            getDataAndUpdateAmchart();
+        });
+
+        ChartTools.bindFilter(getDataAndUpdateAmchart);
+
+        async function createAmchart() {
+            window.initAmcharts().then(module => {
+
+                    $.ajax({url: getGraphUrl(), success: function(result) {
+                        pieChartVisits = new ChartTools.PieChartForm("visits", "serverName", '[[#{stat.referer.pieChart}]]', "referer-pieReferer", result['content']);
+                        ChartTools.createAmchart(pieChartVisits);
+
+                        //After load data
+                        WJ.hideLoader();
+                    }});
+
+            });
+        }
+
+        async function getDataAndUpdateAmchart() {
+            WJ.showLoader();
+
+            await $.ajax({url: getGraphUrl(), success: function(result){
+                pieChartVisits.chartData = result['content'];
+                ChartTools.updateChart(pieChartVisits);
+            }});
+
+            WJ.hideLoader();
+
+            //reload table values
+            refererDataTable.ajax.reload();
+        }
+
+        function getGraphUrl() {
+            let tmpDefURL = "";
+
+            let rootDir = $('#rootDir').val();
+
+            tmpDefURL += url + "/search/findByColumns?";
+            tmpDefURL += "searchdayDate=" + ChartTools.getDateRange(30);
+            tmpDefURL += "&searchRootDir=" + rootDir;
+
+            ChartTools.saveSearchCriteria(refererDataTable.DATA);
+
+            return tmpDefURL;
+        }
+    });
+</script>
+
+<style>
+    label[for=botFilterOut]::after {
+        content: "\f544" !important;
+    }
+</style>
+<div id="refererDataTable_extfilter">
+    <div class="row datatableInit">
+        <div class="col-auto dt-extfilter-title-dayDate" style="display: none;"></div>
+        <div class="col-auto dt-extfilter dt-extfilter-dayDate"></div>
+        <div class="col-auto" data-th-title="#{components.stat.filter.showOnlyFromGroup}" data-toggle="tooltip">
+            <input type="text" class="webjet-dte-jstree" id="rootDir" value="-1" data-th-data-text="#{components.stat.stats.root_dirs.all}" data-th-data-text-empty="#{components.stat.stats.root_dirs.all}"/>
+        </div>
+    </div>
+</div>
+
+<div id="graphsDiv" class="hide-while-loading">
+    <div id="referer-pieReferer" class="amcharts"></div>
+</div>
+
+<div id="tableDiv">
+    <table id="refererDataTable" class="datatableInit table"></table>
+</div>

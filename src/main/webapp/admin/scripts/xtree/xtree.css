@@ -1,0 +1,62 @@
+.webfx-tree-container {
+margin: 0px;
+padding: 0px;
+white-space: nowrap;
+clear: both;
+}
+#webfx-tree-object-4{ background: url(/admin/images/dtree/base.png) 5px 0px no-repeat; padding: 0px 0px 0px 22px;}
+#webfx-tree-object-4-cont{ padding: 0px 0px 0px 5px;}
+#webfx-tree-object-4-icon{ display: none; /*float: left; padding: 0px 0px 0px 3px;*/}
+#webfx-tree-object-4-anchor{ padding: 3px 0px 0px 0px; float: left;}
+    
+.webfx-tree-item {
+	padding: 0px;
+	margin: 0px;
+	font: icon;
+	color: WindowText;
+	white-space: nowrap;
+	height: 18px;
+   font-weight: normal;
+   clear: both;
+}
+
+.webfx-tree-item a, .webfx-tree-item a:active, .webfx-tree-item a:hover {
+	margin-left: 3px;
+	padding: 0px 2px 1px 2px;
+   font-weight: normal;
+}
+
+.webfx-tree-item a {
+	color: black;
+	text-decoration: none;
+   font-weight: normal;
+}
+
+.webfx-tree-item a:hover {
+	color: blue;
+	text-decoration: underline;
+}
+
+.webfx-tree-item a:active {
+	backgroun3d: highlight;
+	colo3r: highlighttext;
+	text-decoration: none;
+}
+
+.webfx-tree-item img {
+	vertical-align: middle;
+	border: 0px;
+}
+
+.webfx-tree-icon {
+	width2: 16px;
+	height2: 16px;
+}
+
+.webfx-tree-item em { color: #666; font-weight: normal; font-style: normal; }
+
+.webfx-tree-item a:hover { text-decoration: none; }
+a.webfx-menuLink, a.webfx-menuLink:hover { padding: 0px; margin: 0px; width: 44px; height: 18px; position: absolute; top:0px; display: inline-block; background-image:url(/admin/images/dtree/menu.png); background-repeat: no-repeat; background-position: 4px 0px; }
+a.webfx-menuLink:hover { background-image:url(/admin/images/dtree/menu_hover.png); }
+.webfx-tree-item a.webfx-menuLink { display: none; }
+.webfx-tree-item:hover a.webfx-menuLink { display: inline-block; }

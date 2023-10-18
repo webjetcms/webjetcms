@@ -1,0 +1,60 @@
+extends ../../partials/layout
+
+block content
+
+    +breadcrumb(
+        'users',
+        [
+            [ '#users', '[[\#{users.list}]]', true ]
+        ]
+    )
+
+    style.
+        #datatableInit_wrapper {
+            display: none;
+        }
+
+    script.
+        window.helpLink = "/admin/users/README";
+
+        var tabs = [
+            {id: "personalInfo", title: "[[\#{useredit.personal_info}]]", selected: true},
+            {id: "contactTab", title: "[[\#{components.users.contact}]]", selected: false}
+        ];
+
+        var usersDatatable = null;
+        let permGroups = [];
+
+        window.domReady.add(function () {
+
+            //do not allow to open this page directly
+            if (window.parent == window.self) {
+                window.location.href = "/admin";
+                return;
+            }
+
+            var columns = [(${layout.getDataTableColumns('sk.iway.iwcm.components.users.userdetail.UserDetailsSelfEntity')})];
+
+            usersDatatable = WJ.DataTable({
+                url: "/admin/rest/user-self",
+                columns: columns,
+                tabs: tabs,
+                fetchOnEdit: true,
+                fetchOnCreate: true,
+                serverSide: true
+            });
+
+            usersDatatable.EDITOR.on('open', function (e, type) {
+                $("div.modal.DTED > div.modal-dialog").addClass("modal-xl");
+            });
+
+            usersDatatable.hideButton("create");
+            usersDatatable.hideButton("duplicate");
+            usersDatatable.hideButton("remove");
+            usersDatatable.hideButton("export");
+            usersDatatable.hideButton("import");
+            usersDatatable.hideButton("select-cel");
+
+        });
+
+    <table class="datatableInit table"></table>

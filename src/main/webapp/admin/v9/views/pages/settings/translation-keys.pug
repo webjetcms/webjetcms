@@ -1,0 +1,45 @@
+extends ../../partials/layout
+
+block content
+
+    +breadcrumb(
+        'translation-keys',
+        [
+            [ '#translation-keys', '[[\#{admin.conf_editor.edit_text}]]', true ]
+        ]
+    )
+
+    style(type="text/css").
+        #import-settings {display: none;}
+
+    script.
+        var translationKeysTable;
+        window.domReady.add(function () {
+            var columns = [(${layout.getDataTableColumns('sk.iway.iwcm.components.translation_keys.jpa.TranslationKeyEntity')})];
+
+            translationKeysTable = WJ.DataTable({
+                url: "/admin/v9/settings/translation-keys",
+                columns: columns,
+                serverSide: true,
+                idAutoOpener: false,
+                customFieldsUpdateColumns: true,
+                customFieldsUpdateColumnsPreserveVisibility: true
+            });
+
+            translationKeysTable.button().add(4, {
+                extends: 'remove',
+                editor: translationKeysTable.EDITOR,
+                text: '<i class="fas fa-database"></i>',
+                action: function (e, dt, node) {
+                    translationKeysTable.executeAction("reload", true);
+                },
+                className: 'btn btn-outline-secondary buttons-divider',
+                attr: {
+                    'title': '[[\#{components.translation_key.action.reload}]]',
+                    'data-toggle': 'tooltip'
+                }
+            });
+
+        });
+
+    <table class="datatableInit table"></table>

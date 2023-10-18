@@ -1,0 +1,49 @@
+extends ../../partials/layout
+
+block content
+
+    +breadcrumb(
+        'audit-search',
+        [
+            [ '/admin/v9/apps/audit-search/', '[[#{components.adminlog.adminlog}]]', true]
+        ]
+    )
+
+    script.
+        var auditTable;
+        window.domReady.add(function () {
+            var url = "/admin/rest/audit/log";
+
+            var tabs = [
+                { id: 'description', title: '[[\#{components.audit_log.description}]]', selected: true, content: '<div></div>' },
+                { id: 'main', title: '[[\#{editor.tab.basic_info}]]' }
+            ];
+
+            var columns = [(${layout.getDataTableColumns("sk.iway.iwcm.system.audit.AuditLogEntity")})];
+            //console.log(columns);
+
+            var order = [];
+            order.push([0, 'desc']);
+
+            auditTable = WJ.DataTable({
+                url: url,
+                serverSide: true,
+                columns: columns,
+                tabs: tabs,
+                order: order
+            });
+            auditTable.hideButton("create");
+            auditTable.hideButton("edit");
+            auditTable.hideButton("remove");
+            auditTable.hideButton("celledit");
+            auditTable.hideButton("import");
+            auditTable.hideButton("duplicate");
+
+        });
+
+    style.
+        div.DTE_Footer button.btn-primary { display: none; }
+        div.DTE_Field_Name_description label { display: none; }
+        .textarea-code { font-size: 10px; }
+
+    <table class="datatableInit table"></table>

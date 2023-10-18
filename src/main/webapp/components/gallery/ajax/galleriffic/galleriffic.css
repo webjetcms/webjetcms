@@ -1,0 +1,42 @@
+div.galleryGalleriffic { padding: 20px 0 0; }
+div.galleryContent { display: none; float: right; width: 320px; }
+div.galleryContent a,div.navigation a { text-decoration: none; color: #777; }
+div.galleryContent a: focus,div.galleryContent a: hover,div.galleryContent a: active { text-decoration: underline; }
+div.controls { margin-top: 5px; height: 23px; }
+div.controls a { padding: 0; }
+div.ss-controls { float: left; }
+div.slideshow-container { position: relative; clear: both; height: 250px; }
+div.loader { position: absolute; top: 0; left: 0; background-image: url(loader.gif); background-repeat: no-repeat; background-position: center; width: 320px; height: 250px; }
+div.slideshow span.image-wrapper { display: block; position: absolute; top: 0; left: 0; }
+div.slideshow a.advance-link { display: block; width: 320px; height: 225px; line-height: 225px; text-align: center; }
+div.slideshow a.advance-link: hover,div.slideshow a.advance-link: active,div.slideshow a.advance-link: visited { text-decoration: none; }
+div.slideshow img { vertical-align: middle; border: 1px solid #ccc; }
+div.caption-container { position: relative; clear: left; height: 75px; }
+span.image-caption { display: block; position: absolute; width: 320px; top: 0; left: 0; background: #fff; }
+div.caption { padding: 12px; }
+div.image-title { font-weight: 700; font-size: 1.4em; }
+div.image-desc { line-height: 1.3em; padding-top: 12px; }
+body ul.thumbs { clear: both; margin: 0; padding: 0; }
+body ul.thumbs li { float: left; list-style: none; background: none!important; margin: 5px 15px 5px 0; padding: 0;width: 160px; }
+a.thumb { display: block; border: 1px solid #eee; padding: 2px; width: 160px; height: 120px; line-height: 118px; text-align: center; vertical-align: middle; }
+a:hover.thumb { border-color: #aaa; }
+/*ul.thumbs li.selected a.thumb { background: #000; }*/
+a.thumb: focus { outline: none; }
+body ul.thumbs li a { display:table-cell; }
+ul.thumbs img { border: none; vertical-align: middle;}
+div.pagination { clear: both; padding: 10px 0px 10px 0px; margin: 0px 0px 0px -10px; text-align: center; }
+
+div.pagination a,div.pagination span.current,div.pagination span.ellipsis { display: inline;  margin-right: 2px; border: 1px solid transparent; border-right: 1px solid #eee; border-left: 1px solid #eee; padding: 4px 7px 2px; }
+div.pagination a:hover { background-color: #eee; text-decoration: none; color: black; }
+div.pagination span.current { font-weight: 700; background-color: #eee; color: black;}
+div.pagination span.ellipsis { padding: 5px 0 3px 2px; }
+div.nav-controls,div.download { float: right; }
+.pagination:after { content: "."; display: block; clear: both; visibility: hidden; line-height: 0; height: 0; }
+.pagination { display: inline-block; }
+html[xmlns] .pagination { display: block; }
+* html .pagination { height: 1%; }
+div.pagination a:hover.prev, div.pagination a:hover.next { background-color: transparent; } 
+div.pagination a.prevDisabled, div.pagination a.nextDisabled { border: 0px none; color: #CCCCCC;}
+div.pagination a:hover.prevDisabled, div.pagination a:hover.nextDisabled { background-color: transparent; cursor: default; }
+div.pagination a.prev, div.pagination a.next { border: 0px none; }
+div.navigation { padding: 0px 0px 0px 10px; width: 525px;}

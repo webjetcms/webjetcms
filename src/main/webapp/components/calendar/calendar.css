@@ -1,0 +1,76 @@
+#datepicker { width: 210px; padding: 10px 0px 0px 0px; margin: 0px 0px 10px 0px; }
+#datepicker .ui-datepicker-header { width: 210px; height: 30px; }
+#datepicker .ui-datepicker-prev { display: block; width: 24px; height: 24px; margin: 0px 0px 0px 6px; float: left; text-indent: -5000px; background: url(/components/calendar/images/vyhody-zlavy-arrows.png) right top no-repeat; }
+#datepicker .ui-datepicker-next { display: block; width: 24px; height: 24px; margin: 0px 6px 0px 0px; float: right; text-indent: -5000px; background: url(/components/calendar/images/vyhody-zlavy-arrows.png) right bottom no-repeat; }
+#datepicker .ui-datepicker-title { width: 150px; height: 24px; line-height: 24px; float: left; text-align: center; font-size: 16px; color: #666666; }
+
+#datepicker table { width: 210px; border-collapse: collapse; border: 0px none; margin: 0px; clear: both; }
+#datepicker table tr th { width: 30px; height: 30px; line-height: 30px; text-align: center; vertical-align: middle; padding: 0px; color: #666666; }
+#datepicker table tr td { width: 30px; height: 24px; line-height: 24px; text-align: center; vertical-align: middle; padding: 0px; }
+#datepicker table tr td a { text-decoration: none; color: #666666; }
+#datepicker table tr td.ui-datepicker-current-day, #datepicker table tr td.ui-state-highlight { background: url(/components/calendar/images/kalendar-den.png) left bottom no-repeat; }
+#datepicker table tr td.ui-datepicker-current-day a, #datepicker table tr td.ui-state-highlight  a { color: #ffffff; }
+#datepicker table tr td.ui-datepicker-today { background: url(/components/calendar/images/kalendar-den.png) left top no-repeat; }
+#datepicker table tr td.ui-datepicker-today a { color: #ffffff; }
+
+div.kalendar p { padding: 0px 0px 15px 8px; }
+
+div.calendar
+{
+text-align: left;
+margin: 0px;
+padding: 0px;
+color: #000;
+}
+
+div.calendar label {
+  width: 50px;
+  display: block;
+  float: left;
+}
+
+div.calendar .akcia
+{
+text-align: left;
+margin: 10px 0px 0px 0px;
+padding: 0px;
+}
+
+td.cal_dn
+{
+background-color: #a1a5a8;
+text-align: center;
+font-weight: bold;
+padding: 6px 8px;
+}
+
+td.cal_day, td.cal_dayd, td.cal_dayd_weekend, td.cal_day_weekend
+{
+text-align: center;
+padding: 6px 8px;
+}
+
+td.cal_day
+{
+background-color: #dbe0e3;
+}
+
+td.cal_dayd
+{
+background-color: #edeff2;
+}
+
+td.cal_dayd_weekend
+{
+background-color: #edeff2;
+}
+
+td.cal_day_weekend
+{
+background-color: #cbcfd2;
+}
+
+select.cal_select
+{
+width: 150px;
+}

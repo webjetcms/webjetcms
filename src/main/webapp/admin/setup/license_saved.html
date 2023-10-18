@@ -1,0 +1,33 @@
+<div data-th-include="/admin/setup/layout_top.html" data-th-remove="tag"/>
+
+    <script data-th-inline="javascript">
+        /*<![CDATA[*/
+
+            function isLngSelectDisabled() {
+                //Hide button ok, doesnt make sense (User gonna use link referencing to admin section)
+                var btn = document.getElementById("btnOk");
+                if(btn != null) btn.style.display = "none";
+
+                var disableSelect = /*[[${disableLng}]]*/ false;
+                return disableSelect;
+            }
+    /*]]>*/
+    </script>
+
+    <p>
+        <p style="display: inline-block;">
+            [[#{setup.license.saved.text_1}]]
+        </p>
+        <a href="/admin/logon.jsp">
+            [[#{setup.license.saved.text_2}]]
+        </a>.
+    </p>
+
+    <p>
+        <p style="display: inline-block;">[[#{setup.saved.text_4}]]</p>
+        <a href="http://www.interway.sk/" target="_blank">
+            [[#{setup.saved.text_5}]]
+        </a>.
+    </p>
+
+<div data-th-include="/admin/setup/layout_bottom.html" data-th-remove="tag"/>

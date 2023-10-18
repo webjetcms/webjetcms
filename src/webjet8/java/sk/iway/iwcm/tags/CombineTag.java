@@ -1,0 +1,363 @@
+package sk.iway.iwcm.tags;
+
+import java.util.Date;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.jsp.JspException;
+import javax.servlet.jsp.PageContext;
+import javax.servlet.jsp.tagext.BodyContent;
+import javax.servlet.jsp.tagext.BodyTagSupport;
+
+import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.PageLng;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.i18n.Prop;
+
+
+/**
+ *  Trieda pre vygenerovanie linky na /admin/scripts/combine.jsp kde je ako verzia uvedeny timestamp startu servera (kvoli efektivite) a aktualny jazyk
+ *
+ *@Title        Interway Content Management
+ *@Company      Interway s.r.o. (www.interway.sk)
+ *@Copyright    Interway s.r.o. (c) 2001-2002
+ *@author       $Author: jeeff $
+ *@created      $Date: 2015/05/11 16:02:38 $
+ */
+
+public final class CombineTag extends BodyTagSupport
+{
+	private static Date VERSION_DATETIME = new Date();
+
+	private static final long serialVersionUID = -7352999434842740830L;
+
+	public static String FILES_ADMIN_JQUERY_JS = "/admin/skins/webjet8/assets/global/plugins/jquery-3.5.1.min.js,"+
+				"/admin/skins/webjet8/assets/global/plugins/jquery-migrate-3.3.0.min.js,"+
+				"/admin/skins/webjet8/assets/global/plugins/jquery.browser.min.js,"+
+				"/admin/skins/webjet8/assets/global/plugins/jquery-ui/jquery-ui.min.js,"+
+				"/components/_common/javascript/ajax_support.js";
+
+	public static String FILES_ADMIN_STANDARD_JS =
+				"/admin/skins/webjet8/assets/global/plugins/bootstrap/js/popper.min.js,"+
+				"/admin/skins/webjet8/assets/global/plugins/bootstrap/js/bootstrap.js,"+
+				"/admin/skins/webjet8/assets/global/plugins/bootstrap-hover-dropdown/bootstrap-hover-dropdown.min.js,"+
+				"/admin/skins/webjet8/assets/global/plugins/jquery-slimscroll/jquery.slimscroll.js,"+
+				"/admin/skins/webjet8/assets/global/plugins/jquery.blockui.min.js,"+
+				"/admin/skins/webjet8/assets/global/plugins/jquery.cokie.min.js,"+
+				"/admin/skins/webjet8/assets/global/plugins/uniform/jquery.uniform.min.js,"+
+				"/admin/skins/webjet8/assets/global/plugins/bootstrap-switch/js/bootstrap-switch.min.js,"+
+				"/admin/skins/webjet8/assets/global/plugins/jstree/dist/jstree.js,"+
+				"/admin/skins/webjet8/assets/global/plugins/bootstrap-modal/js/bootstrap-modalmanager.js,"+
+				"/admin/skins/webjet8/assets/global/plugins/bootstrap-modal/js/bootstrap-modal.js,"+
+				"/admin/skins/webjet8/assets/global/plugins/datatables/datatables.js,"+
+				"/admin/skins/webjet8/assets/global/plugins/select2/select2.min.js,"+
+				"/admin/skins/webjet8/assets/global/plugins/jquery-multi-select/js/jquery.multi-select.js,"+
+				"/admin/skins/webjet8/assets/global/plugins/bootstrap-select/bootstrap-select.min.js,"+
+				"/admin/skins/webjet8/assets/global/plugins/bootstrap-datepicker/js/bootstrap-datepicker.js,"+
+				"/admin/skins/webjet8/assets/global/plugins/bootstrap-datepicker/js/locales/bootstrap-datepicker.USERLANG.js,"+
+				"/admin/skins/webjet8/assets/global/plugins/bootstrap-timepicker/js/bootstrap-timepicker.min.js,"+
+				"/admin/skins/webjet8/assets/global/plugins/clockface/js/clockface.js,"+
+				"/admin/skins/webjet8/assets/global/plugins/bootstrap-daterangepicker/moment.min.js,"+
+				"/admin/skins/webjet8/assets/global/plugins/bootstrap-daterangepicker/daterangepicker.js,"+
+				"/components/_common/minicolors/jquery.minicolors.min.js,"+
+				"/admin/skins/webjet8/assets/global/plugins/bootstrap-datetimepicker/js/bootstrap-datetimepicker.min.js,"+
+				"/admin/skins/webjet8/assets/global/plugins/bootstrap-toastr/toastr.min.js,"+
+				"/admin/skins/webjet8/assets/global/scripts/metronic.js,"+
+				"/admin/skins/webjet8/assets/admin/layout/scripts/layout.js,"+
+				"/admin/skins/webjet8/assets/admin/pages/scripts/components-dropdowns.js";
+
+	public static String FILES_ADMIN_STANDARD_CSS = "/admin/skins/webjet8/assets/global/plugins/font-awesome/css/font-awesome.min.css,"+
+				"/admin/skins/webjet8/assets/global/plugins/bootstrap/css/bootstrap.min.css,"+
+				"/admin/skins/webjet8/assets/global/plugins/uniform/css/uniform.default.css,"+
+				"/admin/skins/webjet8/assets/global/plugins/bootstrap-switch/css/bootstrap-switch.min.css,"+
+				"/admin/skins/webjet8/assets/global/plugins/jstree/dist/themes/default/style.min.css,"+
+				"/admin/skins/webjet8/assets/global/plugins/simple-line-icons/simple-line-icons.min.css,"+
+				"/admin/skins/webjet8/assets/global/plugins/bootstrap-datepicker/css/datepicker3.css,"+
+				"/components/_common/minicolors/jquery.minicolors.css,"+
+				"/admin/skins/webjet8/assets/global/plugins/bootstrap-timepicker/css/bootstrap-timepicker.min.css,"+
+				"/admin/skins/webjet8/assets/global/plugins/bootstrap-toastr/toastr.min.css,"+
+				"/admin/skins/webjet8/assets/global/css/plugins.css,"+
+				"/admin/skins/webjet8/assets/global/css/components.css,"+
+				"/admin/skins/webjet8/assets/admin/pages/css/tasks.css,"+
+				"/admin/skins/webjet8/assets/admin/layout/css/layout.css,"+
+				"/admin/skins/webjet8/assets/admin/layout/css/themes/default.css,"+
+				"/admin/skins/webjet8/assets/admin/layout/css/custom.css,"+
+				"/admin/skins/webjet8/assets/global/plugins/jquery-multi-select/css/multi-select.css,"+
+				"/admin/skins/webjet8/assets/global/plugins/datatables/datatables.css,"+
+				"/admin/skins/webjet8/assets/global/css/custom.css,"+
+				"/admin/skins/webjet8/assets/global/css/chosen-style.css,"+
+				"/admin/skins/webjet8/assets/global/css/datatables-editor-style.css,"+
+				"/admin/skins/webjet8/assets/global/css/new-webjet-style.css";
+
+	public static String FILES_ADMIN_LOGON_JS =
+				"/admin/skins/webjet8/assets/js/zxcvbn/core/zxcvbn-ts.js,"+
+				"/admin/skins/webjet8/assets/js/zxcvbn/language-common/zxcvbn-ts.js,"+
+				"/admin/skins/webjet8/assets/js/zxcvbn/language-en/zxcvbn-ts.js";
+
+	//set oznacuje schovany zoznam suborov pre kombinovanie
+	private String set = null;
+	//typ kombinovaneho vystupu (js alebo css)
+	private String type = null;
+
+	private String combine = null;
+
+	@Override
+	public int doEndTag() throws JspException
+	{
+		HttpServletRequest request = (HttpServletRequest)pageContext.getRequest();
+
+		String lng = getLng(pageContext, request);
+
+		boolean combineEnabled = true;
+		if ("false".equals(request.getParameter("combineEnabled")))
+		{
+			combineEnabled = false;
+			request.getSession().setAttribute("combineEnabled", "false");
+		}
+		if ("true".equals(request.getParameter("combineEnabled")))
+		{
+			combineEnabled = true;
+			request.getSession().removeAttribute("combineEnabled");
+		}
+		if (request.getSession().getAttribute("combineEnabled")!=null) combineEnabled = false;
+
+		//moznost nastavit len pre jeden request
+		if ("false".equals(request.getParameter("combineEnabledRequest"))) combineEnabled = false;
+		if ("true".equals(request.getParameter("combineEnabledRequest"))) combineEnabled = true;
+		if ("false".equals(getCombine())) combineEnabled = false;
+
+		try
+		{
+			StringBuilder tag = new StringBuilder();
+			long v = getVersion();
+
+			String set = getSet();
+
+			if (Tools.isEmpty(set))
+			{
+				BodyContent bc = getBodyContent();
+				String body = bc.getString();
+				if (Tools.isNotEmpty(body))
+				{
+					set = body;
+				}
+			}
+
+			set = removeCrLf(set);
+
+			set = Tools.replace(set, "USERLANG", Tools.replace(lng, "cz", "cs"));
+
+			String baseCss = (String)request.getAttribute("base_css_link_nocombine");
+			String cssLink = (String)request.getAttribute("css_link_nocombine");
+
+			if (Tools.isNotEmpty(baseCss) || Tools.isNotEmpty(cssLink))
+			{
+				set = Tools.replace(set, "base_css_link", removeCrLf(baseCss));
+				set = Tools.replace(set, "css_link", removeCrLf(cssLink));
+			}
+
+			if (combineEnabled)
+			{
+
+
+				if (set.startsWith("admin"))
+				{
+					//zobrazenie v admin casti
+					if ("css".equals(getType()))
+					{
+						tag.append("<link href=\"/admin/scripts/combine.jsp?t=css&amp;set=").append(set).append("&amp;v=").append(v).append("&amp;lng=").append(lng).append("\" rel=\"stylesheet\" type=\"text/css\"/>");
+					}
+					else
+					{
+						//MBO: ak vlozi jQuery tak to setne aj do req aby sa uz znova nedal vlozit cez Tool.insertJquery
+						if (set!=null && set.startsWith("adminJqueryJs"))
+						{
+							Tools.insertJQuery(request);
+						}
+						tag.append("<script src=\"/admin/scripts/combine.jsp?t=js&amp;set=").append(set).append("&amp;v=").append(v).append("&amp;lng=").append(lng).append("\" type=\"text/javascript\"></script>");
+					}
+				}
+				else
+				{
+					//zobrazenie na beznej web stranke
+					if ("css".equals(getType()))
+					{
+						if ("tempCss".equals(set))
+						{
+							if (Tools.isNotEmpty(baseCss) || Tools.isNotEmpty(cssLink))
+							{
+								set = baseCss;
+								if (Tools.isEmpty(set)) set = cssLink;
+								else if (Tools.isNotEmpty(cssLink)) set = set + ","+cssLink;
+							}
+						}
+
+						tag.append("<link href=\"/components/_common/combine.jsp?t=css&amp;f=").append(set).append("&amp;v=").append(v).append("&amp;lng=").append(lng).append("\" rel=\"stylesheet\" type=\"text/css\"/>");
+					}
+					else
+					{
+						tag.append("<script src=\"/components/_common/combine.jsp?t=js&amp;f=").append(set).append("&amp;v=").append(v).append("&amp;lng=").append(lng).append("\" type=\"text/javascript\"></script>");
+					}
+				}
+			}
+			else
+			{
+				String files[] = Tools.getTokens( Tools.replace(getFiles(set), "USERLANG", Tools.replace(lng, "cz", "cs")), ",\n");
+				for (String file : files)
+				{
+					if ("css".equals(getType()))
+					{
+						tag.append("<link href=\"").append(file).append("?v=").append(v).append("&amp;lng=").append(lng).append("\" rel=\"stylesheet\" type=\"text/css\"/>\n");
+					}
+					else
+					{
+						tag.append("<script src=\"").append(file).append("?v=").append(v).append("&amp;lng=").append(lng).append("\" type=\"text/javascript\"></script>\n");
+					}
+				}
+			}
+
+			pageContext.getOut().write(tag.toString());
+		}
+		catch (Exception e)
+		{
+			sk.iway.iwcm.Logger.error(e);
+		}
+
+		return(EVAL_PAGE);
+	}
+
+	private String removeCrLf(String set)
+	{
+		String newSet = Tools.replace(set, "\n", ",");
+		newSet = Tools.replace(newSet, "\r", "");
+		newSet = Tools.replace(newSet, " ", "");
+		newSet = Tools.replace(newSet, "\t", "");
+		newSet = Tools.replace(newSet, ",,", ",");
+		//ked nie je pagefunctions na konci a je to vlozene cez EL tak sa spojja dve dokopy (odstrani sa enter) a vtedy sa to posaha
+		newSet = Tools.replace(newSet, "page_functions.js.jsp/", "page_functions.js.jsp,/");
+		return newSet;
+	}
+
+	public static String getFiles(String set)
+	{
+		String files = set;
+
+		if ("adminJqueryJs".equals(set))
+		{
+			files = CombineTag.FILES_ADMIN_JQUERY_JS;
+		}
+		else if ("adminJqueryJs2".equals(set))
+		{
+			files = CombineTag.FILES_ADMIN_JQUERY_JS;
+		}
+		else if ("adminStandardJs".equals(set))
+		{
+			files = CombineTag.FILES_ADMIN_STANDARD_JS;
+		}
+		else if ("adminLogonJs".equals(set))
+		{
+			files = CombineTag.FILES_ADMIN_LOGON_JS;
+		}
+		else if ("adminStandardCss".equals(set))
+		{
+			files = CombineTag.FILES_ADMIN_STANDARD_CSS;
+		}
+		else if ("adminStandardCssWj9".equals(set))
+		{
+			files = CombineTag.FILES_ADMIN_STANDARD_CSS;
+			files = Tools.replace(files, "/admin/skins/webjet8/assets/global/plugins/font-awesome/css/font-awesome.min.css,", "/admin/skins/webjet8/assets/global/plugins/font-awesome/css/fontawesome5.min.css,");
+		}
+		else
+		{
+			String constValue = Constants.getString("combine-"+set);
+			if (Tools.isNotEmpty(constValue)) files = constValue;
+		}
+
+		return files;
+	}
+
+
+	@Override
+	public void release()
+	{
+		super.release();
+		this.set = null;
+		this.type = null;
+		this.combine = null;
+	}
+
+	public String getSet()
+	{
+		return set;
+	}
+
+	public void setSet(String set)
+	{
+		this.set = set;
+	}
+
+	public String getType()
+	{
+		return type;
+	}
+
+	public void setType(String type)
+	{
+		this.type = type;
+	}
+
+	public String getCombine() {
+		return combine;
+	}
+
+	public void setCombine(String combine) {
+		this.combine = combine;
+	}
+
+	/**
+	 * Vrati jazyk aktualne prihlaseneho usera, aby sa spravne nacitali cachovane subory (sucast parametra)
+	 * @param pageContext
+	 * @param request
+	 * @return
+	 */
+	public static String getLng(PageContext pageContext, HttpServletRequest request)
+	{
+		String lng = Constants.getString("defaultLanguage");
+		if (pageContext.getAttribute("lng")!=null)
+		{
+			lng = (String)pageContext.getAttribute("lng");
+		}
+		else if (request.getAttribute("PageLng")!=null)
+		{
+			lng = (String)request.getAttribute("PageLng");
+		}
+		else
+		{
+			lng = (String)request.getSession().getAttribute(Prop.SESSION_I18N_PROP_LNG);
+			if (lng == null)
+			{
+				lng = PageLng.getUserLng(request); // sk.iway.iwcm.Constants.getString("defaultLanguage");
+			}
+		}
+		if (Tools.isEmpty(lng)) lng = "sk";
+		return lng;
+	}
+
+	/**
+	 * Vrati verziu aktualnych suborov, aby sa spravne cachovali subory
+	 * @return
+	 */
+	public static long getVersion()
+	{
+		return VERSION_DATETIME.getTime();
+	}
+
+	public static void setVersion(long version)
+	{
+		VERSION_DATETIME = new Date(version);
+	}
+
+	public static void resetVersion()
+	{
+		VERSION_DATETIME = new Date();
+	}
+}

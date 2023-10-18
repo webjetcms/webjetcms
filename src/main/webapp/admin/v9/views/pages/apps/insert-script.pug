@@ -1,0 +1,73 @@
+extends ../../partials/layout
+
+block content
+
+    +breadcrumb(
+        'insert-script',
+        [
+            [ '#insert-script', '[[\#{components.insert_script.list}]]', true ]
+        ]
+    )
+
+    script.
+        var insertScriptTable;
+        window.domReady.add(function () {
+
+            var tabs = [
+                { id: 'main', title: '[[\#{editor.tab.basic_info}]]', selected: true },
+                { id: 'scriptPerms', title: '[[\#{components.insert_script.perms}]]' },
+                { id: 'scriptBody', title: '[[\#{components.insert_script.body}]]', content: "<div></div>" }
+            ];
+
+            var columns = [(${layout.getDataTableColumns("sk.iway.iwcm.components.insertScript.InsertScriptBean")})];
+
+            insertScriptTable = WJ.DataTable({
+                id: 'insertScriptTable',
+                url: '/admin/rest/components/insert-script',
+                columns: columns,
+                tabs: tabs,
+                serverSide: false,
+                editorId: "id",
+                jsonField: {
+                    getItem: function(props, data) {
+                        var obj;
+                        if (props.click.indexOf("dt-tree-page")==0) {
+                            //web stranka - DocDetails objekt
+                            var doc = data.node.original.docDetails;
+                            //pre ziskanie fullPath potrebujeme aj parent GroupDetails objekt
+                            var group = data.parentNode.original.groupDetails;
+                            obj = {
+                                id: 0,
+                                docId: doc.docId,
+                                fullPath: group.fullPath + "/" + doc.title,
+                                insertScriptDocId: 0
+                            }
+                        }
+                        else {
+                            //zvoleny bol adresar - GroupDetails objekt
+                            var group = data.node.original.groupDetails;
+                            obj = {
+                                id: 0,
+                                groupId: group.groupId,
+                                domainId: 1,
+                                insertScriptGrId: 0,
+                                fullPath: group.fullPath
+                            }
+                        }
+
+                        return obj;
+                    },
+                    getKey: function(props, data) {
+                        var key;
+                        if (props.click.indexOf("dt-tree-page")==0) key = data.docId;
+                        else key = data.groupId;
+                        return key;
+                    }
+                }
+            });
+        });
+
+    style.
+        div.DTE_Field_Name_scriptBody label { display: none; }
+
+    <table id="insertScriptTable" class="datatableInit table"></table>

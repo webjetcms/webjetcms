@@ -1,0 +1,48 @@
+<section id="contact1" style="padding: 40px 0;">
+	<div class="container">
+		<h6 class="editContent" style="color: #e74c3c;text-transform: uppercase;text-align: center;">Contact us</h6>
+		<h3 class="editContent" style="text-transform: uppercase;text-align: center;margin-top: 15px;">Keep in touch</h3>
+		<div class="row mt40 mb40">
+			<div class="col-md-10">
+				<form action="/formmail.do?savedb=ContactForm" method="post" name="formMailForm">
+					<div class="col-md-6">
+						<input type="text" name="first-name" class="form-control" data-name="First Name" placeholder="First Name" style="background-color: #f5f5f5;border-radius: 2px;margin-bottom: 25px;border: 1px solid #ededed;color: #898989;">
+					</div>
+					<div class="col-md-6">
+						<input type="text" name="last-name" class="form-control" data-name="Last Name" placeholder="Last Name" style="background-color: #f5f5f5;border-radius: 2px;margin-bottom: 25px;border: 1px solid #ededed;color: #898989;">
+					</div>
+					<div class="col-md-6">
+						<input type="email" name="email" class="form-control required" data-name="Email" placeholder="Email" required style="background-color: #f5f5f5;border-radius: 2px;margin-bottom: 25px;border: 1px solid #ededed;color: #898989;">
+					</div>
+					<div class="col-md-6">
+						<input type="text" name="subject" class="form-control" data-name="Subject" placeholder="Subject" style="background-color: #f5f5f5;border-radius: 2px;margin-bottom: 25px;border: 1px solid #ededed;color: #898989;">
+					</div>
+					
+					<div class="col-md-12">
+						<textarea name="message" class="form-control textarea" data-name="Message" placeholder="Message" style="min-height: 100px;background-color: #f5f5f5;border-radius: 2px;margin-bottom: 25px;border: 1px solid #ededed;color: #898989;"></textarea>
+					</div>
+					
+					<div class="text-center mb20">
+						<input class="btn btn-default-orange" onclick="return invokeWJAjax('formMailForm', 'ajaxFormResultContainer', 'bSubmit', '/FormMailAjax.action');" type="submit" value="Send Message" />
+					</div>
+				</form>
+			</div>
+			
+			<div class="col-md-2">
+				<div class="box" style="text-align: center;">
+					<p class="editContent" style="margin: 0;text-transform: uppercase;font-size: 12px;">Address<p>
+					<h6 class="editContent" style="margin: 10px 0 25px 0;text-transform: none;font-weight: bold;font-size: 12px;color: #282828;">New York, City</h6>
+				</div>
+				<div class="box"  style="text-align: center;">
+					<p class="editContent" style="margin: 0;text-transform: uppercase;font-size: 12px;">Phone<p>
+					<h6 class="editContent" style="margin: 10px 0 25px 0;text-transform: none;font-weight: bold;font-size: 12px;color: #282828;">+55 555 555</h6>
+				</div>
+				<div class="box"  style="text-align: center;">
+					<p class="editContent" style="margin: 0;text-transform: uppercase;font-size: 12px;">Email<p>
+					<h6 class="editContent" style="margin: 10px 0 25px 0;text-transform: none;font-weight: bold;font-size: 12px;color: #282828;">email@eamil.com</h6>
+				</div>
+			</div>
+
+		</div>
+	</div>
+</section>

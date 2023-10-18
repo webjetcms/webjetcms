@@ -1,0 +1,142 @@
+<script data-th-inline="javascript">
+    let url = "/admin/rest/seo/bots";
+    let columns = /*[(${layout.getDataTableColumns("sk.iway.iwcm.components.seo.jpa.BotsDTO")})]*/ '';
+</script>
+
+<script>
+    var botsDataTable;
+    let pieChartVisits;
+    let lineChartVisits;
+
+    WJ.breadcrumb({
+        id: "bots",
+        tabs: [
+            {
+                url: '/apps/seo/admin/',
+                title: '[[#{components.seo.se_bots.list}]]',
+                active: true
+            },
+            {
+                url: '#dateRange',
+                title: '{filter}',
+                active: false
+            }
+        ]
+    });
+
+    window.getBotDetials = function (botId) {
+        window.location.href="/apps/seo/admin/bots-details?botId=" + botId + "&rootDir=" + $('#rootDir').val() + "&dayDate=" + ChartTools.getDateRange(30);
+    }
+
+    window.domReady.add(function () {
+        WJ.showLoader();
+
+        //presun filter do hlavicky
+        $("#pills-dateRange-tab").html("");
+        $("div#botsDataTable_extfilter").appendTo("#pills-dateRange-tab");
+
+        botsDataTable = WJ.DataTable({
+            url: url,
+            serverSide: false,
+            columns: columns,
+            id: "botsDataTable",
+            idAutoOpener: false,
+            defaultSearch: ChartTools.getSearchCriteria(),
+            autoHeight: false,
+            onPreXhr: function(TABLE, e, settings, data) {
+                data.fixed_searchRootDir = $('#rootDir').val();
+            }
+        });
+        botsDataTable.hideButtons(["create", "edit", "remove", "celledit", "import", "duplicate"]);
+
+        ChartTools.initGroupIdSelect();
+
+        //Create and set amcharts
+        createAmcharts();
+
+        //Onchange events - update amcharts
+        $("#botsDataTable_extfilter").on("click", "button.filtrujem", function() {
+            getDataAndUpdateAmcharts();
+        });
+
+        ChartTools.bindFilter(getDataAndUpdateAmcharts);
+
+        async function createAmcharts() { 
+            window.initAmcharts().then(module => { 
+
+                $.ajax({url: getGraphUrl(ChartTools.ChartType.Pie), success: function(result) {
+                    pieChartVisits = new ChartTools.PieChartForm("visits", "name", '[[#{components.seo.seBots}]]', "bots-pieVisits", result);
+                    ChartTools.createAmchart(pieChartVisits);
+                }});
+
+                $.ajax({url: getGraphUrl(ChartTools.ChartType.Line), success: function(result) {
+                    lineChartVisits = new ChartTools.LineChartForm(ChartTools.getLineChartYAxeNameObjs(["visits"], [undefined]), "dayDate", '[[#{seo.admin.bots_visits_chart_title}]]', "bots-lineVisits", ChartTools.convertDataForLineChart(result), ChartTools.DateType.Auto);
+                    ChartTools.createAmchart(lineChartVisits);
+
+                    //After last load data
+                    WJ.hideLoader();
+                }});
+            });
+        }
+
+        async function getDataAndUpdateAmcharts() {
+            WJ.showLoader();
+
+            await $.ajax({url: getGraphUrl(ChartTools.ChartType.Pie), success: function(result) {
+                pieChartVisits.chartData = result;
+                ChartTools.updateChart(pieChartVisits);
+            }});
+
+            await $.ajax({url: getGraphUrl(ChartTools.ChartType.Line), success: function(result) {
+                lineChartVisits.chartData = ChartTools.convertDataForLineChart(result);
+                ChartTools.updateChart(lineChartVisits);
+            }});
+
+            WJ.hideLoader();
+
+            //add table filter params
+            botsDataTable.ajax.url(WJ.urlAddParam(botsDataTable.ajax.url(), "searchRootDir", $('#rootDir').val()));
+
+            //reload table values
+            botsDataTable.ajax.reload();
+        }
+
+        function getGraphUrl(chartType) {
+            let tmpDefURL = "";
+
+            //Load values
+            let rootDir = $('#rootDir').val();
+            let searchDateValue = ChartTools.getDateRange(30);
+        
+            if(chartType == ChartTools.ChartType.Pie) {
+                tmpDefURL = url + "/pieChartData?dayDate=" + searchDateValue;
+                tmpDefURL += "&rootDir=" + rootDir;
+            } else if(chartType == ChartTools.ChartType.Line) {
+                tmpDefURL = url + "/lineChartData?dayDate=" + searchDateValue;
+                tmpDefURL += "&rootDir=" + rootDir;
+            }
+
+            ChartTools.saveSearchCriteria(botsDataTable.DATA);
+            return tmpDefURL;
+        }
+    });
+</script>
+
+<div id="graphsDiv" class="hide-while-loading">
+    <div id="bots-pieVisits" class="amcharts"></div>
+    <div id="bots-lineVisits" class="amcharts"></div>
+</div>
+
+<div id="botsDataTable_extfilter">
+    <div class="row datatableInit">
+        <div class="col-auto dt-extfilter-title-dayDate" style="display: none;"></div>
+        <div class="col-auto dt-extfilter dt-extfilter-dayDate"></div>
+        <div class="col-auto" data-th-title="#{components.stat.filter.showOnlyFromGroup}" data-toggle="tooltip">
+            <input type="text" class="webjet-dte-jstree" id="rootDir" value="-1" data-th-data-text="#{components.stat.stats.root_dirs.all}" data-th-data-text-empty="#{components.stat.stats.root_dirs.all}"/>
+        </div>
+    </div>
+</div>
+
+<div id="tableDiv">
+    <table id="botsDataTable" class="datatableInit table"></table>
+</div>

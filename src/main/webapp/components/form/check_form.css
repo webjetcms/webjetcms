@@ -1,0 +1,32 @@
+.required {
+	background: url(/components/form/required.gif) top right no-repeat;
+	background-color: white; 
+}
+
+.invalid {
+	background-color: #FFF2BF;	
+}
+
+.inputradio, .inputcheckbox {
+	border: 0px;
+}
+
+.requiredradio, .requiredcheckbox {
+	background-image: none !important;
+	background-color: transparent;
+}
+
+.invalidradio, .invalidcheckbox {
+	background-image: none !important;
+	background-color: #FFF2BF !important;
+}
+
+.requiredLabel { background-color: #FFF2BF; }
+.invalidLabel { color: red; }
+
+ul.formMailValidationErrors { font-weight: normal; }
+
+#ajaxFormResultContainer { border: 1px dashed #B72222; padding: 5px; }
+#ajaxFormResultContainer ul.messages { font-weight: bold; }
+#ajaxFormResultContainer div.ajaxError { color: #B72222; font-weight: bold; }
+#ajaxFormResultContainer div.ajaxError li { font-weight: normal; }

@@ -1,0 +1,35 @@
+extends ../../partials/layout
+
+block content
+
+    +breadcrumb(
+        'media-groups',
+        [
+            [ '/admin/v9/webpages/media-groups/', '[[\#{components.media.media_groups_page_name}]]', true]
+        ]
+    )
+
+    script.
+        var mediaGroupsTable;
+
+        window.domReady.add(function () {
+
+            window.helpLink = "/redactor/webpages/media?id=správa-média-skupín";
+
+            let order = [];
+            order.push([0, 'desc'])
+            let url = "/admin/rest/media-group";
+            let columns = [(${layout.getDataTableColumns("sk.iway.spirit.model.MediaGroupBean")})];;
+
+            mediaGroupsTable = WJ.DataTable({
+                url: url,
+                serverSide: true,
+                columns: columns,
+                id: "mediaGroupsTable",
+                order: order,
+                fetchOnEdit: true,
+                fetchOnCreate: true
+            });
+        })
+
+    <table id="mediaGroupsTable" class="datatableInit table"></table>

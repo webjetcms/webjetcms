@@ -1,0 +1,24 @@
+include ../pug/mixins
+
+div.navbar-brand
+    a(href="/admin/v9/")
+        img(src=require('../../../src/images/logo-cms.png') data-th-src="${'/admin/v9/dist/images/logo-' + layout.brand + '.png'}" alt='' data-toggle="tooltip" data-th-title="\#{admin.top.webjet_version} + ${' '+layout.version}")
+
+div.md-large-menu
+    div.md-large-menu__wrapper.clearfix
+        div(data-th-each="menuItem : ${layout.menu}" data-th-class="${menuItem.active} ? 'md-large-menu\\_\\_item md-large-menu\\_\\_item--open md-large-menu\\_\\_item--active' : 'md-large-menu__item'")
+            div.md-large-menu__item__headline(data-th-text="${menuItem.text}")
+            a.md-large-menu__item__link(data-th-href="${menuItem.href}" data-th-data-menu-id="${menuItem.group}")
+                i(data-th-class='${menuItem.icon}')
+
+div.menu-wrapper(data-scrollbar)
+
+    div(data-th-each="menuItem : ${layout.menu}" data-th-data-menu-id="${menuItem.group}" data-th-class="${menuItem.active} ? 'md-main-menu md-main-menu--open' : 'md-main-menu'")
+        div.md-main-menu__item(data-th-each="subMenuItem : ${menuItem.childrens}" data-th-class="${subMenuItem.active} ? 'md-main-menu\\_\\_item md-main-menu\\_\\_item--active' : 'md-main-menu\\_\\_item'" data-th-classappend="${!subMenuItem.childrens.empty} ? 'md-main-menu\\_\\_item--has-children'")
+            a.md-main-menu__item__link(data-th-href="${subMenuItem.href}")
+                i(data-th-class="${subMenuItem.icon}")
+                span(data-th-text="${subMenuItem.text}" data-th-remove="tag")
+                i(data-th-if="${!subMenuItem.childrens.empty}" class="fas fa-chevron-down")
+            div.md-main-menu__item__sub-menu(data-th-if="${!subMenuItem.childrens.empty}")
+                div.md-main-menu__item__sub-menu__item(data-th-each="thirdMenuItem : ${subMenuItem.childrens}" data-th-classappend="${thirdMenuItem.active} ? 'md-main-menu\\_\\_item\\_\\_sub-menu\\_\\_item--active'")
+                    a.md-main-menu__item__sub-menu__item__link(data-th-href="${thirdMenuItem.href}" data-th-text="${thirdMenuItem.text}")

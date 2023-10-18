@@ -1,0 +1,931 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+
+<taglib xmlns="http://java.sun.com/xml/ns/j2ee"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://java.sun.com/xml/ns/j2ee
+        http://java.sun.com/xml/ns/j2ee/web-jsptaglibrary_2_0.xsd"
+        version="2.0">
+
+  <description>IWCM Web Site Specific Tag, by Interway.sk (lubos.balat@interway.sk)</description>
+  <tlib-version>1.0</tlib-version>
+  <short-name>IWCM</short-name>
+  <uri>http://www.interway.sk/taglibs/iwcm.tld</uri>
+
+
+  <tag>
+      <description>
+        Print specified document
+        docId - document id [required]
+      </description>
+      <name>showdoc</name>
+      <tag-class>sk.iway.iwcm.tags.ShowDoc</tag-class>
+      <body-content>empty</body-content>
+      <attribute>
+        <name>docId</name>
+        <required>true</required>
+        <rtexprvalue>true</rtexprvalue>
+      </attribute>
+      <attribute>
+        <name>menuDocId</name>
+        <required>false</required>
+        <rtexprvalue>true</rtexprvalue>
+      </attribute>
+  </tag>
+
+  <tag>
+      <description>
+        vypise aktualnu context path
+      </description>
+      <name>cp</name>
+      <tag-class>sk.iway.iwcm.tags.ContextPathTag</tag-class>
+      <body-content>empty</body-content>
+  </tag>
+
+  <tag>
+      <description>
+        Validate that there is a currently logged on user, by checking for
+        the existence of a session-scope bean under the specified name.
+        If there is no such bean, forward control to the specified page,
+        which will typically be a logon form.
+        name - Name of the session-scope bean to check for [user]
+        page - Context-relative path to the logon page [/logon.jsp]
+      </description>
+      <name>checkLogon</name>
+      <tag-class>sk.iway.iwcm.tags.CheckLogonTag</tag-class>
+      <body-content>empty</body-content>
+      <attribute>
+        <name>name</name>
+        <required>false</required>
+        <rtexprvalue>true</rtexprvalue>
+      </attribute>
+      <attribute>
+        <name>page</name>
+        <required>false</required>
+        <rtexprvalue>true</rtexprvalue>
+      </attribute>
+      <attribute>
+        <name>admin</name>
+        <required>false</required>
+        <rtexprvalue>true</rtexprvalue>
+      </attribute>
+      <attribute>
+          <name>perms</name>
+          <required>false</required>
+          <rtexprvalue>true</rtexprvalue>
+      </attribute>
+  </tag>
+
+  <tag>
+        <description>
+          testuje ci ma dany user povolene dane menu
+        </description>
+        <name>menu</name>
+        <tag-class>sk.iway.iwcm.tags.MenuTag</tag-class>
+        <body-content>JSP</body-content>
+        <attribute>
+          <name>name</name>
+          <required>false</required>
+          <rtexprvalue>true</rtexprvalue>
+        </attribute>
+        <attribute>
+          <name>notName</name>
+          <required>false</required>
+          <rtexprvalue>true</rtexprvalue>
+        </attribute>
+        <attribute>
+          <name>menu</name>
+          <required>false</required>
+          <rtexprvalue>true</rtexprvalue>
+        </attribute>
+        <attribute>
+           <name>notMenu</name>
+           <required>false</required>
+           <rtexprvalue>true</rtexprvalue>
+        </attribute>
+  </tag>
+
+  <tag>
+     <description>
+     <![CDATA[
+       i18n tag for text value
+
+       supports pluralize
+       search for keys in this order:
+       Exact term,
+       key + * + .value + *
+       key + .X
+
+       Example:
+       key = components.ceptem.joboffer.requiredpractice
+
+       components.ceptem.joboffer.requiredpractice.0 = Prax nieje pozadovana
+       components.ceptem.joboffer.requiredpractice.1 = Jeden rok praxe
+       components.ceptem.joboffer.requiredpractice.2.3.4 = {1} roky praxe
+       components.ceptem.joboffer.requiredpractice.X = {1} rokov praxe
+
+       <iwcm:text key="components.ceptem.joboffer.requiredpractice" param1="${value} pluralize="true"/>
+     ]]>
+     </description>
+     <name>text</name>
+     <tag-class>sk.iway.iwcm.tags.TextTag</tag-class>
+     <body-content>empty</body-content>
+     <attribute>
+       <name>key</name>
+       <required>true</required>
+       <rtexprvalue>true</rtexprvalue>
+     </attribute>
+     <attribute>
+       <name>param1</name>
+       <required>false</required>
+       <rtexprvalue>true</rtexprvalue>
+     </attribute>
+     <attribute>
+       <name>param2</name>
+       <required>false</required>
+       <rtexprvalue>true</rtexprvalue>
+     </attribute>
+     <attribute>
+       <name>param3</name>
+       <required>false</required>
+       <rtexprvalue>true</rtexprvalue>
+     </attribute>
+     <attribute>
+       <name>defaultText</name>
+       <required>false</required>
+       <rtexprvalue>true</rtexprvalue>
+     </attribute>
+      <attribute>
+       <name>pluralize</name>
+       <required>false</required>
+       <rtexprvalue>false</rtexprvalue>
+       <type>java.lang.Boolean</type>
+     </attribute>
+     <attribute>
+       <name>lng</name>
+       <required>false</required>
+       <rtexprvalue>true</rtexprvalue>
+       <type>java.lang.String</type>
+     </attribute>
+      <attribute>
+          <name>jsEscape</name>
+          <required>false</required>
+          <rtexprvalue>true</rtexprvalue>
+          <type>java.lang.Boolean</type>
+      </attribute>
+  </tag>
+
+  <tag>
+        <description>
+          print toString() value of atribute from HTTP request object
+          name - name of attribute [required], also process directives
+          (e.g. include file)
+        </description>
+        <name>write</name>
+        <tag-class>sk.iway.iwcm.tags.WriteTag</tag-class>
+        <body-content>JSP</body-content>
+        <attribute>
+          <name>name</name>
+          <required>false</required>
+          <rtexprvalue>true</rtexprvalue>
+        </attribute>
+  </tag>
+
+  <tag>
+          <description>
+            Escapuje body tak, aby mohlo byt vlozene do JS
+          </description>
+          <name>jsEscape</name>
+          <tag-class>sk.iway.iwcm.tags.JSEscapeTag</tag-class>
+          <body-content>JSP</body-content>
+  </tag>
+
+  <tag>
+      <description>
+          nabuferuje cely vystup, aby bolo mozne robit redrect aj z include stranok
+      </description>
+      <name>buff</name>
+      <tag-class>sk.iway.iwcm.tags.BuffTag</tag-class>
+      <body-content>JSP</body-content>
+      <attribute>
+          <name>hideOut</name>
+          <required>false</required>
+          <rtexprvalue>true</rtexprvalue>
+      </attribute>
+      <attribute>
+          <name>attName</name>
+          <required>false</required>
+          <rtexprvalue>true</rtexprvalue>
+      </attribute>
+      <attribute>
+          <name>storeInRequest</name>
+          <required>false</required>
+          <rtexprvalue>true</rtexprvalue>
+      </attribute>
+  </tag>
+
+    <tag>
+        <description>
+            Cachuje obsah body a vykonava ho az ked je invalidnuty
+        </description>
+        <name>cache</name>
+        <tag-class>sk.iway.iwcm.tags.CacheTag</tag-class>
+        <body-content>JSP</body-content>
+        <attribute>
+            <name>name</name>
+            <required>true</required>
+            <rtexprvalue>true</rtexprvalue>
+        </attribute>
+        <attribute>
+            <name>minutes</name>
+            <required>false</required>
+            <rtexprvalue>true</rtexprvalue>
+        </attribute>
+        <attribute>
+            <name>storeInSession</name>
+            <required>false</required>
+            <rtexprvalue>true</rtexprvalue>
+        </attribute>
+        <attribute>
+            <name>disableCache</name>
+            <required>false</required>
+            <rtexprvalue>true</rtexprvalue>
+        </attribute>
+    </tag>
+
+	<tag>
+	   <name>select</name>
+	   <tag-class>sk.iway.iwcm.tags.SelectTag</tag-class>
+	   <body-content>JSP</body-content>
+	   <attribute>
+	      <name>alt</name>
+	      <required>false</required>
+	      <rtexprvalue>true</rtexprvalue>
+	   </attribute>
+	   <attribute>
+	      <name>altKey</name>
+	      <required>false</required>
+	      <rtexprvalue>true</rtexprvalue>
+	   </attribute>
+	   <attribute>
+	      <name>disabled</name>
+	      <required>false</required>
+	      <rtexprvalue>true</rtexprvalue>
+	   </attribute>
+	   <attribute>
+	      <name>indexed</name>
+	      <required>false</required>
+	      <rtexprvalue>true</rtexprvalue>
+	   </attribute>
+	   <attribute>
+	      <name>multiple</name>
+	      <required>false</required>
+	      <rtexprvalue>true</rtexprvalue>
+	   </attribute>
+	   <attribute>
+	      <name>name</name>
+	      <required>false</required>
+	      <rtexprvalue>true</rtexprvalue>
+	   </attribute>
+	   <attribute>
+	      <name>onblur</name>
+	      <required>false</required>
+	      <rtexprvalue>true</rtexprvalue>
+	   </attribute>
+	   <attribute>
+	      <name>onchange</name>
+	      <required>false</required>
+	      <rtexprvalue>true</rtexprvalue>
+	   </attribute>
+	   <attribute>
+	      <name>onclick</name>
+	      <required>false</required>
+	      <rtexprvalue>true</rtexprvalue>
+	   </attribute>
+	   <attribute>
+	      <name>ondblclick</name>
+	      <required>false</required>
+	      <rtexprvalue>true</rtexprvalue>
+	   </attribute>
+	   <attribute>
+	      <name>onfocus</name>
+	      <required>false</required>
+	      <rtexprvalue>true</rtexprvalue>
+	   </attribute>
+	   <attribute>
+	      <name>onkeydown</name>
+	      <required>false</required>
+	      <rtexprvalue>true</rtexprvalue>
+	   </attribute>
+	   <attribute>
+	      <name>onkeypress</name>
+	      <required>false</required>
+	      <rtexprvalue>true</rtexprvalue>
+	   </attribute>
+	   <attribute>
+	      <name>onkeyup</name>
+	      <required>false</required>
+	      <rtexprvalue>true</rtexprvalue>
+	   </attribute>
+	   <attribute>
+	      <name>onmousedown</name>
+	      <required>false</required>
+	      <rtexprvalue>true</rtexprvalue>
+	   </attribute>
+	   <attribute>
+	      <name>onmousemove</name>
+	      <required>false</required>
+	      <rtexprvalue>true</rtexprvalue>
+	   </attribute>
+	   <attribute>
+	      <name>onmouseout</name>
+	      <required>false</required>
+	      <rtexprvalue>true</rtexprvalue>
+	   </attribute>
+	   <attribute>
+	      <name>onmouseover</name>
+	      <required>false</required>
+	      <rtexprvalue>true</rtexprvalue>
+	   </attribute>
+	   <attribute>
+	      <name>onmouseup</name>
+	      <required>false</required>
+	      <rtexprvalue>true</rtexprvalue>
+	   </attribute>
+	   <attribute>
+	      <name>property</name>
+	      <required>true</required>
+	      <rtexprvalue>true</rtexprvalue>
+	   </attribute>
+	   <attribute>
+	      <name>style</name>
+	      <required>false</required>
+	      <rtexprvalue>true</rtexprvalue>
+	   </attribute>
+	   <attribute>
+	      <name>styleClass</name>
+	      <required>false</required>
+	      <rtexprvalue>true</rtexprvalue>
+	   </attribute>
+	   <attribute>
+	      <name>styleId</name>
+	      <required>false</required>
+	      <rtexprvalue>true</rtexprvalue>
+	   </attribute>
+	   <attribute>
+	      <name>tabindex</name>
+	      <required>false</required>
+	      <rtexprvalue>true</rtexprvalue>
+	   </attribute>
+	   <attribute>
+	      <name>size</name>
+	      <required>false</required>
+	      <rtexprvalue>true</rtexprvalue>
+	   </attribute>
+	   <attribute>
+	      <name>title</name>
+	      <required>false</required>
+	      <rtexprvalue>true</rtexprvalue>
+	   </attribute>
+	   <attribute>
+	      <name>titleKey</name>
+	      <required>false</required>
+	      <rtexprvalue>true</rtexprvalue>
+	   </attribute>
+	   <attribute>
+	      <name>value</name>
+	      <required>false</required>
+	      <rtexprvalue>true</rtexprvalue>
+	   </attribute>
+	   <attribute>
+	      <name>sqlQuery</name>
+	      <required>false</required>
+	      <rtexprvalue>true</rtexprvalue>
+	   </attribute>
+	   <attribute>
+	      <name>enableNewText</name>
+	      <required>false</required>
+	      <rtexprvalue>true</rtexprvalue>
+	   </attribute>
+	   <attribute>
+	      <name>enableNewTextKey</name>
+	      <required>false</required>
+	      <rtexprvalue>true</rtexprvalue>
+	   </attribute>
+	</tag>
+
+
+
+   <tag>
+        <description>
+            Stripes' HTML form tag. Provides a standard HTML form tag interface, but allows
+            other stripes input tags to re-populate their values.  Also includes a hidden field in
+            the form for the page name that the form is being rendered on (to allow forwarding to
+            the same page in the case of a validation error.
+        </description>
+        <display-name>form</display-name>
+        <name>stripForm</name>
+        <tag-class>sk.iway.iwcm.system.stripes.FormTag</tag-class>
+        <body-content>JSP</body-content>
+
+        <attribute>
+            <description>
+                The URL to which this form will post. Expected to be a web-app relative path - the
+                tag will prepend the context path to any action that begins with a slash and does
+                not already contain the context path. Should match a URL to which an ActionBean
+                has been bound.  Required unless 'beanclass' is provided.
+            </description>
+            <name>action</name><required>false</required><rtexprvalue>true</rtexprvalue>
+        </attribute>
+        <attribute>
+            <description>
+                The fully qualified name of an ActionBean class, or alternatively a Class instance
+                for an ActionBean class.  An alternative to the 'action' attribute, the 'beanclass'
+                attribute will generate an action appropriate for the ActionBean identified. Note
+                that if an "ActionBean" that does not yet exist is identified an exception will
+                be thrown!
+            </description>
+            <name>beanclass</name><required>false</required><rtexprvalue>true</rtexprvalue>
+            <type>java.lang.Object</type>
+        </attribute>
+        <attribute>
+            <description>
+                The name of the form field that should receive focus when the page is loaded. Two
+                special values are recognized, 'first' and the empty string; these values cause
+                the form to set focus on the first element in the form.  If any value is set,
+                and the form has validation errors, the behaviour is altered and the first field
+                with validation errors is focused instead.
+            </description>
+            <name>focus</name><required>false</required><rtexprvalue>true</rtexprvalue>
+            <type>java.lang.String</type>
+        </attribute>
+        <attribute>
+            <description>A comma separated list of content types that it is acceptable to submit through this form. (HTML Pass-through)</description>
+            <name>accept</name><required>false</required><rtexprvalue>true</rtexprvalue>
+        </attribute>
+        <attribute>
+            <description>A comma separated list of possible character sets for form data. Will be written to the page as accept-charset. (HTML Pass-through)</description>
+            <name>acceptcharset</name><required>false</required><rtexprvalue>true</rtexprvalue>
+        </attribute>
+        <attribute>
+            <description>
+                The mime type used to encode the content of this form. This value will be overridden if one or more Stripes
+                file input tags is used within the body of the form.
+            </description>
+            <name>enctype</name><required>false</required><rtexprvalue>true</rtexprvalue>
+        </attribute>
+        <attribute>
+            <description>The HTTP method used for sending data to the server. Options are GET and POST. Default is GET. (HTML Pass-through)</description>
+            <name>method</name><required>false</required><rtexprvalue>true</rtexprvalue>
+        </attribute>
+        <attribute>
+            <description>The unique name of the form. (HTML Pass-through)</description>
+            <name>name</name><required>false</required><rtexprvalue>true</rtexprvalue>
+        </attribute>
+        <attribute>
+            <description>Where the target URL is to be opened. One of _blank, _self, _parent and _top. (HTML Pass-through)</description>
+            <name>target</name><required>false</required><rtexprvalue>true</rtexprvalue>
+        </attribute>
+
+        <attribute>
+            <description>Scripting code run when the form is reset. (HTML Pass-through)</description>
+            <name>onreset</name><required>false</required><rtexprvalue>true</rtexprvalue>
+        </attribute>
+        <attribute>
+            <description>Scripting code run prior to the form being submitted to the server, (HTML Pass-through)</description>
+            <name>onsubmit</name><required>false</required><rtexprvalue>true</rtexprvalue>
+        </attribute>
+
+        <!-- Start: Standard HTML attributes -->
+        <attribute><description>@class@</description><name>class</name><required>false</required><rtexprvalue>true</rtexprvalue></attribute>
+        <attribute><description>@dir@</description><name>dir</name><required>false</required><rtexprvalue>true</rtexprvalue></attribute>
+        <attribute><description>@id@</description><name>id</name><required>false</required><rtexprvalue>true</rtexprvalue></attribute>
+        <attribute><description>@lang@</description><name>lang</name><required>false</required><rtexprvalue>true</rtexprvalue></attribute>
+        <attribute><description>@onclick@</description><name>onclick</name><required>false</required><rtexprvalue>true</rtexprvalue></attribute>
+        <attribute><description>@ondblclick@</description><name>ondblclick</name><required>false</required><rtexprvalue>true</rtexprvalue></attribute>
+        <attribute><description>@onkeydown@</description><name>onkeydown</name><required>false</required><rtexprvalue>true</rtexprvalue></attribute>
+        <attribute><description>@onkeypress@</description><name>onkeypress</name><required>false</required><rtexprvalue>true</rtexprvalue></attribute>
+        <attribute><description>@onkeyup@</description><name>onkeyup</name><required>false</required><rtexprvalue>true</rtexprvalue></attribute>
+        <attribute><description>@onmousedown@</description><name>onmousedown</name><required>false</required><rtexprvalue>true</rtexprvalue></attribute>
+        <attribute><description>@onmousemove@</description><name>onmousemove</name><required>false</required><rtexprvalue>true</rtexprvalue></attribute>
+        <attribute><description>@onmouseout@</description><name>onmouseout</name><required>false</required><rtexprvalue>true</rtexprvalue></attribute>
+        <attribute><description>@onmouseover@</description><name>onmouseover</name><required>false</required><rtexprvalue>true</rtexprvalue></attribute>
+        <attribute><description>@onmouseup@</description><name>onmouseup</name><required>false</required><rtexprvalue>true</rtexprvalue></attribute>
+        <attribute><description>@style@</description><name>style</name><required>false</required><rtexprvalue>true</rtexprvalue></attribute>
+        <attribute><description>@title@</description><name>title</name><required>false</required><rtexprvalue>true</rtexprvalue></attribute>
+    </tag>
+
+   <tag>
+	   <name>autocomplete</name>
+	   <tag-class>sk.iway.iwcm.tags.AutoCompleteTag</tag-class>
+	   <body-content>JSP</body-content>
+	   <attribute><description>The name of the form field.</description><name>name</name><required>true</required><rtexprvalue>true</rtexprvalue></attribute>
+	   <attribute><description>Placeholder of the form field.</description><name>placeholder</name><required>false</required><rtexprvalue>true</rtexprvalue></attribute>
+       <attribute><description>The size of the form field. (HTML Pass-through)</description><name>size</name><required>false</required><rtexprvalue>true</rtexprvalue></attribute>
+	   <attribute><description>Value of the form field. (HTML Pass-through)</description><name>value</name><required>false</required><rtexprvalue>true</rtexprvalue></attribute>
+	   <attribute><description>The maximum number of characters that can be entered in the field. (HTML Pass-through)</description><name>maxLength</name><required>false</required><rtexprvalue>true</rtexprvalue></attribute>
+	   <attribute><description>The minimum number of characters that can be entered in the field. (HTML Pass-through)</description><name>minLength</name><required>false</required><rtexprvalue>true</rtexprvalue></attribute>
+	   <attribute><description>Keyboard shortcut to access the element. (HTML Pass-through)</description><name>accesskey</name><required>false</required><rtexprvalue>true</rtexprvalue></attribute>
+        <attribute><description>The CSS class to be applied to the element. (HTML Pass-through)</description><name>class</name><required>false</required><rtexprvalue>true</rtexprvalue></attribute>
+        <attribute><description>Text direction. (HTML Pass-through)</description><name>dir</name><required>false</required><rtexprvalue>true</rtexprvalue></attribute>
+        <attribute><description>A unique identifier for the HTML tag on the page. (HTML Pass-through)</description><name>id</name><required>true</required><rtexprvalue>true</rtexprvalue></attribute>
+        <attribute><description>The language code of the element. (HTML Pass-through)</description><name>lang</name><required>false</required><rtexprvalue>true</rtexprvalue></attribute>
+        <attribute><description>Scripting code run when the element loses focus. (HTML Pass-through)</description><name>onblur</name><required>false</required><rtexprvalue>true</rtexprvalue></attribute>
+        <attribute><description>Scripting code run when the element changes. (HTML Pass-through)</description><name>onchange</name><required>false</required><rtexprvalue>true</rtexprvalue></attribute>
+        <attribute><description>Scripting code run on each mouse click. (HTML Pass-through)</description><name>onclick</name><required>false</required><rtexprvalue>true</rtexprvalue></attribute>
+        <attribute><description>Scripting code run on a double-click of the mouse. (HTML Pass-through)</description><name>ondblclick</name><required>false</required><rtexprvalue>true</rtexprvalue></attribute>
+        <attribute><description>Scripting code run when the element acquires focus. (HTML Pass-through)</description><name>onfocus</name><required>false</required><rtexprvalue>true</rtexprvalue></attribute>
+        <attribute><description>Scripting code run when a key is depressed. (HTML Pass-through)</description><name>onkeydown</name><required>false</required><rtexprvalue>true</rtexprvalue></attribute>
+        <attribute><description>Scripting code run when a key is pressed and released. (HTML Pass-through)</description><name>onkeypress</name><required>false</required><rtexprvalue>true</rtexprvalue></attribute>
+        <attribute><description>Scripting code run when a key is released. (HTML Pass-through)</description><name>onkeyup</name><required>false</required><rtexprvalue>true</rtexprvalue></attribute>
+        <attribute><description>Scripting code run when a mouse button is depressed. (HTML Pass-through)</description><name>onmousedown</name><required>false</required><rtexprvalue>true</rtexprvalue></attribute>
+        <attribute><description>Scripting code run when the mouse pointer is moved. (HTML Pass-through)</description><name>onmousemove</name><required>false</required><rtexprvalue>true</rtexprvalue></attribute>
+        <attribute><description>Scripting code run when the mouse pointer moves out of the element. (HTML Pass-through)</description><name>onmouseout</name><required>false</required><rtexprvalue>true</rtexprvalue></attribute>
+        <attribute><description>Scripting code run when the mouse pointer moves over the element. (HTML Pass-through)</description><name>onmouseover</name><required>false</required><rtexprvalue>true</rtexprvalue></attribute>
+        <attribute><description>Scripting code run when a mouse button is released. (HTML Pass-through)</description><name>onmouseup</name><required>false</required><rtexprvalue>true</rtexprvalue></attribute>
+        <attribute><description>Scripting code run when an element is selected. (HTML Pass-through)</description><name>onselect</name><required>false</required><rtexprvalue>true</rtexprvalue></attribute>
+        <attribute><description>Inline CSS style fragment that applies to the element (HTML Pass-through)</description><name>style</name><required>false</required><rtexprvalue>true</rtexprvalue></attribute>
+        <attribute><description>The tab order of the element. (HTML Pass-through)</description><name>tabindex</name><required>false</required><rtexprvalue>true</rtexprvalue></attribute>
+        <attribute><description>Tool-tip text for the element. (HTML Pass-through)</description><name>title</name><required>false</required><rtexprvalue>true</rtexprvalue></attribute>
+	   <attribute>
+	   	  <name>url</name>
+	      <required>true</required>
+	      <rtexprvalue>true</rtexprvalue>
+	   </attribute>
+	   <attribute>
+	   		<description>
+	   			JQuery selectors of input fields, which HTML values are appended to the query string.
+	   			Sample: "#anotherParam, #special". Do NOT use apostrophes.
+	   		</description>
+	   	  <name>urlParams</name>
+	      <required>false</required>
+	      <rtexprvalue>true</rtexprvalue>
+	   </attribute>
+	   <attribute>
+	   	<description>
+	   		Name of JS function called upon choosing an option from auto-complete popup. Do NOT use apostrophes.
+	   		Sample:
+	   		Assume we have a JS function:
+	   			function showIt (event, ui){
+	   				//ui.item.value => chosen value from auto complete
+					alert(ui.item.value)
+				}
+
+			If you want to call this function upon chosing an option, set:
+			onOptionSelect="showIt"
+	   	</description>
+	   	  <name>onOptionSelect</name>
+	      <required>false</required>
+	      <rtexprvalue>true</rtexprvalue>
+	   </attribute>
+	    <attribute>
+	    	<description>Maximum rows displayed in autocomplete popup</description>
+	   	  <name>maxRows</name>
+	      <required>false</required>
+	      <rtexprvalue>true</rtexprvalue>
+	   </attribute>
+	</tag>
+
+   <tag>
+		<description>
+		  Tag pre thumbservlet.
+		</description>
+		<name>thumb</name>
+		<tag-class>sk.iway.iwcm.tags.ThumbTag</tag-class>
+		<body-content>JSP</body-content>
+		<attribute>
+			<description>sirka obrazku</description>
+			<name>w</name>
+			<required>false</required>
+			<rtexprvalue>true</rtexprvalue>
+		</attribute>
+		<attribute>
+			<description>vyska obrazku</description>
+			<name>h</name>
+			<required>false</required>
+			<rtexprvalue>true</rtexprvalue>
+		</attribute>
+		<attribute>
+			<description>bod zaujmu</description>
+			<name>ip</name>
+			<required>false</required>
+			<rtexprvalue>true</rtexprvalue>
+		</attribute>
+		<attribute>
+			<description>kvalita pre ip > 0 v rozmedzi 11 - 100 vratane</description>
+			<name>q</name>
+			<required>false</required>
+			<rtexprvalue>true</rtexprvalue>
+		</attribute>
+		<attribute>
+			<description>farba pre ip = 2</description>
+			<name>c</name>
+			<required>false</required>
+			<rtexprvalue>true</rtexprvalue>
+		</attribute>
+  </tag>
+
+  <tag>
+     <description>
+       Combine tag pre admin cast
+     </description>
+     <name>combine</name>
+     <tag-class>sk.iway.iwcm.tags.CombineTag</tag-class>
+     <body-content>JSP</body-content>
+     <attribute>
+       <name>type</name>
+       <required>true</required>
+       <rtexprvalue>true</rtexprvalue>
+     </attribute>
+     <attribute>
+       <name>set</name>
+       <required>false</required>
+       <rtexprvalue>true</rtexprvalue>
+     </attribute>
+     <attribute>
+       <name>combine</name>
+       <required>false</required>
+       <rtexprvalue>true</rtexprvalue>
+     </attribute>
+  </tag>
+
+  <tag>
+    <description>
+	The basic iteration tag, accepting many different
+        collection types and supporting subsetting and other
+        functionality
+        MBO: TagExtrainfo - added type attribute
+    </description>
+    <name>forEach</name>
+    <tag-class>sk.iway.tags.BetterForEachTag</tag-class>
+    <tei-class>sk.iway.tags.BetterForEachTEI</tei-class>
+    <body-content>JSP</body-content>
+    <attribute>
+        <description>
+Collection of items to iterate over.
+        </description>
+	<name>items</name>
+	<required>false</required>
+	<rtexprvalue>true</rtexprvalue>
+	<type>java.lang.Object</type>
+    </attribute>
+    <attribute>
+        <description>
+If items specified:
+Iteration begins at the item located at the
+specified index. First item of the collection has
+index 0.
+If items not specified:
+Iteration begins with index set at the value
+specified.
+        </description>
+	<name>begin</name>
+	<required>false</required>
+	<rtexprvalue>true</rtexprvalue>
+	<type>int</type>
+    </attribute>
+    <attribute>
+        <description>
+If items specified:
+Iteration ends at the item located at the
+specified index (inclusive).
+If items not specified:
+Iteration ends when index reaches the value
+specified.
+        </description>
+	<name>end</name>
+	<required>false</required>
+	<rtexprvalue>true</rtexprvalue>
+	<type>int</type>
+    </attribute>
+    <attribute>
+        <description>
+Iteration will only process every step items of
+the collection, starting with the first one.
+        </description>
+	<name>step</name>
+	<required>false</required>
+	<rtexprvalue>true</rtexprvalue>
+	<type>int</type>
+    </attribute>
+    <attribute>
+        <description>
+Name of the exported scoped variable for the
+current item of the iteration. This scoped
+variable has nested visibility. Its type depends
+on the object of the underlying collection.
+        </description>
+	<name>var</name>
+	<required>false</required>
+	<rtexprvalue>false</rtexprvalue>
+    </attribute>
+    <attribute>
+        <description>
+Name of the exported scoped variable for the
+status of the iteration. Object exported is of type
+javax.servlet.jsp.jstl.core.LoopTagStatus. This scoped variable has nested
+visibility.
+        </description>
+	<name>varStatus</name>
+	<required>false</required>
+	<rtexprvalue>false</rtexprvalue>
+    </attribute>
+    <attribute>
+    	<description>
+    	Fully qualified Java class name of the element to be exposed through
+    	the JSP bean named from the 'var' attribute.  If not present, no type conversions
+    	will be performed.  NOTE:  The actual elements of the collection must be
+    	assignment-compatible with this class, or a request time ClassCastException will occur.
+    	</description>
+        <name>type</name>
+        <required>false</required>
+        <rtexprvalue>true</rtexprvalue>
+    </attribute>
+  </tag>
+   <tag><!--  -->
+  <description>
+          Vlozi script do web stranky (hlavicka, zaciatok body, koniec body, paticka)
+        </description>
+        <name>insertScript</name>
+        <tag-class>sk.iway.iwcm.tags.InsertScriptTag</tag-class>
+        <body-content>empty</body-content>
+        <attribute>
+          <name>position</name>
+          <required>true</required>
+          <rtexprvalue>true</rtexprvalue>
+        </attribute>
+  </tag>
+  <tag>
+  		<description>
+          Vlozi script do requestu a pri zavolani  <!-- <iwcm:srcipt flush="true"/> --> ho naraz vypise aj s ostatnymi.
+        </description>
+        <name>script</name>
+        <tag-class>sk.iway.iwcm.tags.ReadWriteScriptTag</tag-class>
+        <body-content>JSP</body-content>
+	        <attribute>
+	          <name>type</name>
+	          <required>false</required>
+	          <rtexprvalue>true</rtexprvalue>
+	        </attribute>
+	        <attribute>
+	          <name>src</name>
+	          <required>false</required>
+	          <rtexprvalue>true</rtexprvalue>
+	        </attribute>
+	        <attribute>
+	          <name>flush</name>
+	          <required>false</required>
+	          <rtexprvalue>true</rtexprvalue>
+	        </attribute>
+	        <attribute>
+	          <name>mode</name>
+	          <required>false</required>
+	          <rtexprvalue>true</rtexprvalue>
+	        </attribute>
+	        <attribute>
+	          <name>media</name>
+	          <required>false</required>
+	          <rtexprvalue>true</rtexprvalue>
+	        </attribute>
+	        <attribute>
+	          <name>charset</name>
+	          <required>false</required>
+	          <rtexprvalue>true</rtexprvalue>
+	        </attribute>
+	        <attribute>
+	          <name>id</name>
+	          <required>false</required>
+	          <rtexprvalue>true</rtexprvalue>
+	        </attribute>
+  </tag>
+  <tag>
+  		<description>
+          Vlozi styl do requestu a pri zavolani  <!-- <iwcm:style flush="true"/> --> ho naraz vypise aj s ostatnymi.
+        </description>
+        <name>style</name>
+        <tag-class>sk.iway.iwcm.tags.ReadWriteScriptTag</tag-class>
+        <body-content>JSP</body-content>
+	        <attribute>
+	          <name>type</name>
+	          <required>false</required>
+	          <rtexprvalue>true</rtexprvalue>
+	        </attribute>
+	        <attribute>
+	          <name>href</name>
+	          <required>false</required>
+	          <rtexprvalue>true</rtexprvalue>
+	        </attribute>
+	        <attribute>
+	          <name>rel</name>
+	          <required>false</required>
+	          <rtexprvalue>true</rtexprvalue>
+	        </attribute>
+	        <attribute>
+	          <name>flush</name>
+	          <required>false</required>
+	          <rtexprvalue>true</rtexprvalue>
+	        </attribute>
+	        <attribute>
+	          <name>mode</name>
+	          <required>false</required>
+	          <rtexprvalue>true</rtexprvalue>
+	        </attribute>
+	        <attribute>
+	          <name>media</name>
+	          <required>false</required>
+	          <rtexprvalue>true</rtexprvalue>
+	        </attribute>
+	        <attribute>
+	          <name>charset</name>
+	          <required>false</required>
+	          <rtexprvalue>true</rtexprvalue>
+	        </attribute>
+	        <attribute>
+	          <name>id</name>
+	          <required>false</required>
+	          <rtexprvalue>true</rtexprvalue>
+	        </attribute>
+  </tag>
+    <tag>
+  		<description>
+          Vlozi styl do requestu a pri zavolani  <!-- <iwcm:style flush="true"/> --> ho naraz vypise aj s ostatnymi.
+        </description>
+        <name>link</name>
+        <tag-class>sk.iway.iwcm.tags.ReadWriteScriptTag</tag-class>
+        <body-content>JSP</body-content>
+	        <attribute>
+	          <name>type</name>
+	          <required>false</required>
+	          <rtexprvalue>true</rtexprvalue>
+	        </attribute>
+	        <attribute>
+	          <name>href</name>
+	          <required>false</required>
+	          <rtexprvalue>true</rtexprvalue>
+	        </attribute>
+	        <attribute>
+	          <name>rel</name>
+	          <required>false</required>
+	          <rtexprvalue>true</rtexprvalue>
+	        </attribute>
+	        <attribute>
+	          <name>flush</name>
+	          <required>false</required>
+	          <rtexprvalue>true</rtexprvalue>
+	        </attribute>
+	        <attribute>
+	          <name>mode</name>
+	          <required>false</required>
+	          <rtexprvalue>true</rtexprvalue>
+	        </attribute>
+	        <attribute>
+	          <name>media</name>
+	          <required>false</required>
+	          <rtexprvalue>true</rtexprvalue>
+	        </attribute>
+	        <attribute>
+	          <name>charset</name>
+	          <required>false</required>
+	          <rtexprvalue>true</rtexprvalue>
+	        </attribute>
+	        <attribute>
+	          <name>id</name>
+	          <required>false</required>
+	          <rtexprvalue>true</rtexprvalue>
+	        </attribute>
+  </tag>
+
+    <tag>
+        <description>
+            Zobrazenie chyb v zozname
+        </description>
+        <name>springErrors</name>
+        <tag-class>sk.iway.iwcm.tags.SpringErrors</tag-class>
+        <body-content>empty</body-content>
+        <attribute>
+            <name>wrapper</name>
+            <required>false</required>
+        </attribute>
+        <attribute>
+            <name>listTag</name>
+            <required>false</required>
+        </attribute>
+        <attribute>
+            <name>itemTag</name>
+            <required>false</required>
+        </attribute>
+        <attribute>
+            <name>wrapperOptions</name>
+            <required>false</required>
+        </attribute>
+        <attribute>
+            <name>listTagOptions</name>
+            <required>false</required>
+        </attribute>
+        <attribute>
+            <name>itemTagOptions</name>
+            <required>false</required>
+        </attribute>
+    </tag>
+
+
+</taglib>

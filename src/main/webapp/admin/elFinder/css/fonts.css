@@ -1,0 +1,25 @@
+.elfinder-contextmenu .elfinder-contextmenu-item span { font-size:.72em; }
+
+.elfinder-cwd-view-icons .elfinder-cwd-filename { font-size:.7em; }
+.elfinder-cwd-view-list td { font-size:.7em; }
+
+.std42-dialog .ui-dialog-titlebar { font-size:13px; padding:10px; }
+.std42-dialog .ui-dialog-content { font-size:14px; }
+.std42-dialog .ui-dialog-buttonpane { font-size:.76em; }
+.elfinder-info-tb { font-size:.9em; }
+.elfinder-upload-dropbox { font-size:1.2em; }
+.elfinder-upload-dialog-or { font-size:1.2em; }
+.dialogelfinder .dialogelfinder-drag { font-size:.9em; }
+.elfinder .elfinder-navbar { font-size:.72em; }
+.elfinder-place-drag .elfinder-navbar-dir { font-size:.9em;}
+.elfinder-quicklook-title { font-size:.7em; }
+.elfinder-quicklook-info-data { font-size:.72em; }
+.elfinder-quicklook-preview-text-wrapper { font-size:.9em; }
+.elfinder-button-menu-item { font-size:.72em; }
+.elfinder-button-search input { font-size:.8em; }
+.elfinder-statusbar div { font-size:.7em; }
+.elfinder-drag-num { font-size:12px; }
+.elfinder-toast { font-size:.76em; }
+
+#finder .ui-widget-header.ui-dialog-titlebar:hover { background-color:#ccc; }
+#finder div.ui-dialog-buttonset button { font-size:12px !important; padding:6px 8px !important; }

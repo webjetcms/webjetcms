@@ -1,0 +1,423 @@
+<script data-th-inline="javascript">
+    let columns = /*[(${layout.getDataTableColumns("sk.iway.iwcm.components.reservation.jpa.ReservationEntity")})]*/ '';
+</script>
+<script type="text/javascript">
+    var reservationDataTable;
+
+    window.domReady.add(function () {
+
+        WJ.breadcrumb({
+            id: "reservationObject",
+            tabs: [
+                {
+                    url: '/apps/reservation/admin/',
+                    title: '[[#{components.reservation.reservation_list}]]',
+                    active: true
+                },
+                {
+                    url: '/apps/reservation/admin/reservation-objects/',
+                    title: '[[#{components.reservation.reservationObjectList}]]',
+                    active: false
+                }
+            ]
+        });
+
+        let innerTable = null;
+        let showReservationValidity = false;
+        let validReservationMsg = '[[#{reservation.reservations.valid_reservation}]]';
+        let url = "/admin/rest/reservation/reservations";
+
+        //Map where we store ids and names of reservation objects, that need password to delete
+        //So if 2 reseravations are above same reservation object (and object has set password), user must set password only once.
+        const objectIdsNedeedPassw = new Map();
+
+        var tabs = [
+            { id: 'basic', title: '[[#{datatable.tab.basic}]]', selected: true },
+            { id: 'personalInfo', title: '[[#{reservation.reservations.personal_info}]]', selected: false },
+            { id: 'acceptation', title: '[[#{reservation.reservations.acceptation}]]', selected: false },
+            { id: 'specialPrice', title: '[[#{components.reservation.reservation_object_reservation_price.extra_price}]]', selected: false }
+        ];
+
+        reservationDataTable = WJ.DataTable({
+            url: url,
+            serverSide: true,
+            columns: columns,
+            id: "reservationDataTable",
+            tabs: tabs,
+            fetchOnEdit: true,
+            fetchOnCreate: true
+        });
+
+        //Set loaded inner table into variable, so we can work we this table
+        window.addEventListener("WJ.DTE.innerTableInitialized", function(event) {
+            if(event.detail.conf.id == "DTE_Field_editorFields.objectPrices")
+                if(innerTable == null) innerTable = event.detail.conf.datatable;
+        });
+
+        var eventsBinded = false;
+        reservationDataTable.EDITOR.on('open', function (e, mode, action) {
+            reservationDataTable.EDITOR.field("editorFields.infoLabel1").disable();
+            reservationDataTable.EDITOR.field("editorFields.infoLabel2").disable();
+            reservationDataTable.EDITOR.field("editorFields.infoLabel1").hide();
+
+            if (eventsBinded===false) {
+                eventsBinded = true;
+
+                $("#DTE_Field_editorFields-acceptation_0").on("click", function(e) { changeReservationStatus(1, action) });
+                $("#DTE_Field_editorFields-acceptation_1").on("click", function(e) { changeReservationStatus(0, action) });
+                $("#DTE_Field_editorFields-acceptation_2").on("click", function(e) { changeReservationStatus(null, action) });
+
+                //After click to tab with inner table, reload table with actually selected reservationObjectId
+                $("#pills-dt-reservationDataTable-specialPrice-tab").on("click", function(e) {
+                    if(innerTable != null) {
+                        let objectId = reservationDataTable.EDITOR.field("reservationObjectId").val();
+                        innerTable.ajax.url(WJ.urlUpdateParam(innerTable.ajax.url(), "objectId", objectId));
+                        innerTable.ajax.reload();
+                    }
+                });
+
+                $("#DTE_Field_reservationObjectId").on("change", function(e) {
+                    getReservationObjectTimesInfo(action);
+                    if(showReservationValidity) validateReservation();
+                });
+
+                $("#DTE_Field_editorFields-showReservationValidity_0").on("change", function(e) {
+                    showReservationValidity = reservationDataTable.EDITOR.field("editorFields.showReservationValidity").val()[0];
+
+                    if(showReservationValidity) {
+                        reservationDataTable.EDITOR.field("editorFields.infoLabel2").show();
+                        validateReservation();
+                    } else {
+                        reservationDataTable.EDITOR.field("editorFields.infoLabel2").hide();
+                    }
+                });
+
+                $("#DTE_Field_dateFrom").on("change", function(e) {
+                    if(showReservationValidity) validateReservation();
+                });
+
+                $("#DTE_Field_dateTo").on("change", function(e) {
+                    if(showReservationValidity) validateReservation();
+                });
+
+                $("#DTE_Field_editorFields-reservationTimeFrom").on("change", function(e) {
+                    if(showReservationValidity) validateReservation();
+                });
+
+                $("#DTE_Field_editorFields-reservationTimeTo").on("change", function(e) {
+                    if(showReservationValidity) validateReservation();
+                });
+            }
+        });
+
+        function changeReservationStatus(statusCode, action) {
+            if(action !== "edit") return;
+
+            //check if row was allready selected
+            let wasSelected = false;
+            let editedReservationId = reservationDataTable.EDITOR.field("id").val();
+            let selectedRowsIds = reservationDataTable.rows({selected: true}).ids();
+
+            for(let i = 0; i < selectedRowsIds.length; i++) {
+                if(selectedRowsIds[i] == editedReservationId) {
+                    wasSelected = true;
+                    break;
+                }
+            }
+
+            //Its needed select row
+            if(!wasSelected) reservationDataTable.row('#' + editedReservationId).select();
+
+            if(statusCode == 1)
+                reservationDataTable.executeAction("approve", true, "[[#{reservation.reservations.accept}]]", "[[#{reservation.reservations.accept_areYouSure}]]");
+            else if(statusCode == 0)
+                reservationDataTable.executeAction("reject", true, "[[#{reservation.reservations.reject}]]", "[[#{reservation.reservations.reject_areYouSure}]]");
+            else if(statusCode == null)
+                reservationDataTable.executeAction("reset", true, "[[#{reservation.reservations.reset}]]", "[[#{reservation.reservations.reset_areYouSure}]]");
+
+            //Now delect row after executeAction
+            if(!wasSelected) reservationDataTable.row('#' + editedReservationId).deselect();
+        }
+
+        let validateReservationTimer;
+        function validateReservation() {
+            //to prevent call it multimple times by onchange events at open editor
+            clearTimeout(validateReservationTimer);
+            validateReservationTimer = setTimeout(function() {
+                let dateFrom = reservationDataTable.EDITOR.field("dateFrom").val();
+                let dateTo = reservationDataTable.EDITOR.field("dateTo").val();
+                let timeFrom = reservationDataTable.EDITOR.field("editorFields.reservationTimeFrom").val();
+                let timeTo = reservationDataTable.EDITOR.field("editorFields.reservationTimeTo").val();
+                //We dont set them, soo in case of null set 0
+                timeFrom = timeFrom == null ? 0 : timeFrom;
+                timeTo = timeTo == null ? 0 : timeTo;
+                let reservationObjectId = reservationDataTable.EDITOR.field("reservationObjectId").val();
+                let reservationId = reservationDataTable.EDITOR.field("id").val();
+                reservationId = reservationId == null ? -1 : reservationId;
+
+                let bonusUrl = "/checkReservationValidity?dateFrom=" + dateFrom;
+                bonusUrl += "&dateTo=" + dateTo + "&timeFrom=" + timeFrom;
+                bonusUrl += "&timeTo=" + timeTo + "&objectId=" + reservationObjectId + "&reservationId=" + reservationId;
+
+                if (dateFrom != "" && dateTo != "") {
+                    $.ajax({
+                        type: "POST",
+                        url: url + bonusUrl,
+                        success: function(response){
+                            //console.log("response=", response);
+                            if(response == null || response.length < 1) {
+                                //If reseponse IS null, it means there arent errors and reservation is VALID
+                                //Push valid reservation text into infoLabel2
+                                $("#DTE_Field_editorFields-infoLabel2").val(validReservationMsg);
+                                $("#DTE_Field_editorFields-infoLabel2").css("border-color", "green");
+                            } else {
+                                //If reseponse IS NOT null, it means some error text was returned, so reservation is INVALID
+                                //Push this error text into infoLabel2.
+                                //console.log("response=", response, " translated=", WJ.translate(response));
+                                $("#DTE_Field_editorFields-infoLabel2").val(WJ.translate(response));
+                                $("#DTE_Field_editorFields-infoLabel2").css("border-color", "red");
+                            }
+                        }
+                    });
+                } else {
+                    $("#DTE_Field_editorFields-infoLabel2").val("[[#{reservation.reservations.valid_reservation.invalid_dates}]]");
+                    $("#DTE_Field_editorFields-infoLabel2").css("border-color", "");
+                }
+            }, 100);
+        }
+
+        function getReservationObjectTimesInfo(action) {
+            let reservationObejctId = reservationDataTable.EDITOR.field("reservationObjectId").val();
+            $.ajax({
+                type: "POST",
+                url: url + "/reservation_object/" + reservationObejctId,
+                success: function(response){
+
+                    if(response != null) {
+
+                        setAcceptationTabVisibility(action, response['mustAccepted'], response['emailAccepter']);
+
+                        if(response['reservationForAllDay']) {
+                            reservationDataTable.EDITOR.field("editorFields.reservationTimeFrom").hide();
+                            reservationDataTable.EDITOR.field("editorFields.reservationTimeTo").hide();
+                            reservationDataTable.EDITOR.field("editorFields.infoLabel1").show();
+                        } else {
+                            reservationDataTable.EDITOR.field("editorFields.reservationTimeFrom").show();
+                            reservationDataTable.EDITOR.field("editorFields.reservationTimeTo").show();
+                            reservationDataTable.EDITOR.field("editorFields.infoLabel1").hide();
+                        }
+
+                        reservationDataTable.EDITOR.field("editorFields.reservationTimeRangeA").disable();
+                        reservationDataTable.EDITOR.field("editorFields.reservationTimeRangeB").disable();
+                        reservationDataTable.EDITOR.field("editorFields.reservationTimeRangeC").disable();
+                        reservationDataTable.EDITOR.field("editorFields.reservationTimeRangeD").disable();
+                        reservationDataTable.EDITOR.field("editorFields.reservationTimeRangeE").disable();
+                        reservationDataTable.EDITOR.field("editorFields.reservationTimeRangeF").disable();
+                        reservationDataTable.EDITOR.field("editorFields.reservationTimeRangeG").disable();
+
+                        let objectTimes = response['objectTimesInfo'];
+                        if(objectTimes != null) {
+                            $("#DTE_Field_editorFields-reservationTimeRangeA").val(objectTimes[1]);
+                            $("#DTE_Field_editorFields-reservationTimeRangeB").val(objectTimes[2]);
+                            $("#DTE_Field_editorFields-reservationTimeRangeC").val(objectTimes[3]);
+                            $("#DTE_Field_editorFields-reservationTimeRangeD").val(objectTimes[4]);
+                            $("#DTE_Field_editorFields-reservationTimeRangeE").val(objectTimes[5]);
+                            $("#DTE_Field_editorFields-reservationTimeRangeF").val(objectTimes[6]);
+                            $("#DTE_Field_editorFields-reservationTimeRangeG").val(objectTimes[7]);
+                        }
+                    }
+                }
+            });
+        }
+
+        //Show/Hide acceptation tab
+        function setAcceptationTabVisibility(editorAction, mustAccepted, emailAccepter) {
+            if(editorAction === "edit") {
+                //Now check if reservation object need acceptance
+                if(mustAccepted) {
+                    //Now chceck if email accepter is set
+                    if(emailAccepter !== null && emailAccepter.length > 0) {
+                        //Now check if we logged user can change accptation
+                        if(emailAccepter === window.currentUser['email']) {
+                            $("#pills-dt-reservationDataTable-acceptation-tab").show();
+                            return;
+                        }
+                    }
+                } else {
+                    //If object dont need acceptance show tab to everyone
+                    $("#pills-dt-reservationDataTable-acceptation-tab").show();
+                    return;
+                }
+            }
+
+            //Hide acceptation tab
+            $("#pills-dt-reservationDataTable-acceptation-tab").hide();
+        }
+
+        function getGroupsButton(cssClass) {
+            let buttons = reservationDataTable.buttons();
+            var button = $.grep(buttons, function(n) { return $(n.node).hasClass(cssClass); });
+
+            if(button.length > 0) return button[0].node;
+
+            return null;
+        }
+
+        async function deleteReservation() {
+            //Start by doing action (action gona prepare process of deleting)
+            reservationDataTable.executeAction("prepareVerify", false, null, null, null);
+
+            await fn1();
+
+            if(objectIdsNedeedPassw.size < 1) {
+                var button = getGroupsButton('buttons-remove');
+                if (button != null) $(button).click();
+                objectIdsNedeedPassw.clear();
+            } else await fn2();
+        }
+
+        //Find out how many passwords user must set before running delete and push them into map
+        //If map.size < 1, then show delete dialog ... else call fn2
+        async function fn1() {
+            //Get selected rows to delete
+            const selectedRowsIds = reservationDataTable.rows({selected: true}).ids();
+            const selectedRowsIdsArr = [];
+            //Convert to Number array of selected ids
+            for(let i = 0; i < selectedRowsIds.length; i++)
+                selectedRowsIdsArr[selectedRowsIdsArr.length] = Number(selectedRowsIds[i]);
+
+            let reservations = reservationDataTable.DATA.json;
+            for(let i = 0; i < reservations.length; i++) {
+                let reservationId = reservations[i]['id'];
+                if(selectedRowsIdsArr.includes(reservationId)) {
+                    let reservationObjectId = reservations[i]['reservationObjectId'];
+                    //Check if password is MUST
+                    if(reservations[i]['editorFields']['needPasswordToDelete'] == true) {
+                        //Chcek if reservation object password was allready set
+                        if(objectIdsNedeedPassw.get(reservationObjectId) == undefined) {
+                            //object id - object name
+                            objectIdsNedeedPassw.set(reservationObjectId, reservations[i]['editorFields']['selectedReservation']);
+                        }
+                    }
+                }
+            }
+        }
+
+        //Loop throu map of needed passwords and call fn3 to show dialog for adding password
+        async function fn2() {
+            const iterator = objectIdsNedeedPassw[Symbol.iterator]();
+            for (const item of iterator) {
+                let reservationObjectId = item[0];
+                let reservationObjectName = item[1];
+
+                var msg = WJ.translate("reservation.reservations.password_for_delete.msg_1.js") + " <b>" +
+                reservationObjectName + "</b> " + WJ.translate("reservation.reservations.password_for_delete.msg_2.js");
+
+                await fn3(msg, reservationObjectId);
+            }
+        }
+
+        //Show dialog for adding password
+        //Then after action remove password from map of password and if map.size < 1, show delete dialog
+        async function fn3(msg, reservationObjectId) {
+            WJ.prompt({
+                title: "[[#{reservation.reservations.password_for_delete.title}]]",
+                message: msg,
+                success: function(value) {
+                    var verifyUrl = "/admin/rest/reservation/reservations/verifyPassword?password=" + value;
+                    verifyUrl += "&reservationObejctId=" + reservationObjectId;
+
+                    let customData = "{\"password\":\"" + value + "\", \"reservationObjectId\":" + reservationObjectId + "}";
+                    reservationDataTable.executeAction("verify", true, null, null, customData);
+
+                    objectIdsNedeedPassw.delete(reservationObjectId);
+
+                    if(objectIdsNedeedPassw.size < 1) {
+                        var button = getGroupsButton('buttons-remove');
+                        if (button != null) $(button).click();
+                        objectIdsNedeedPassw.clear();
+                    }
+                },
+                cancel: function() {
+                    objectIdsNedeedPassw.delete(reservationObjectId);
+
+                    if(objectIdsNedeedPassw.size < 1) {
+                        var button = getGroupsButton('buttons-remove');
+                        if (button != null) $(button).click();
+                        objectIdsNedeedPassw.clear();
+                    }
+                }
+            });
+        }
+
+        let buttonCounter = 3;
+        reservationDataTable.button().add(buttonCounter++, {
+            text: '<i class="far fa-trash-alt"></i>',
+            action: function (e, dt, node) {
+                deleteReservation();
+            },
+            className: 'btn btn-danger',
+            attr: {
+                'title': '[[#{reservation.reservations.delete}]]',
+                'data-toggle': 'tooltip'
+            },
+            init: function ( dt, node, config ) {
+                $.fn.dataTable.Buttons.showIfRowSelected(this, dt);
+            }
+        });
+
+        reservationDataTable.button().add(buttonCounter++, {
+            text: '<i class="fa-solid fa-check"></i>',
+            action: function (e, dt, node) {
+                reservationDataTable.executeAction("approve", true, "[[#{reservation.reservations.accept}]]", "[[#{reservation.reservations.accept_areYouSure}]]");
+            },
+            className: 'btn btn-success',
+            attr: {
+                'title': '[[#{reservation.reservations.accept}]]',
+                'data-toggle': 'tooltip'
+            },
+            init: function ( dt, node, config ) {
+                $.fn.dataTable.Buttons.showIfRowSelected(this, dt);
+            }
+        });
+
+        reservationDataTable.button().add(buttonCounter++, {
+            text: '<i class="fa-solid fa-xmark" style="width: 14px;"></i>',
+            action: function (e, dt, node) {
+                reservationDataTable.executeAction("reject", true, "[[#{reservation.reservations.reject}]]", "[[#{reservation.reservations.reject_areYouSure}]]");
+            },
+            className: 'btn btn-danger',
+            attr: {
+                'title': '[[#{reservation.reservations.reject}]]',
+                'data-toggle': 'tooltip'
+            },
+            init: function ( dt, node, config ) {
+                $.fn.dataTable.Buttons.showIfRowSelected(this, dt);
+            }
+        });
+
+        reservationDataTable.button().add(buttonCounter++, {
+            text: '<i class="fa-solid fa-rotate-right"></i>',
+            action: function (e, dt, node) {
+                reservationDataTable.executeAction("reset", true, "[[#{reservation.reservations.reset}]]", "[[#{reservation.reservations.reset_areYouSure}]]");
+            },
+            className: "btn btn-primary buttons-divider",
+            attr: {
+                'title': '[[#{reservation.reservations.reset}]]',
+                'data-toggle': 'tooltip'
+            },
+            init: function ( dt, node, config ) {
+                $.fn.dataTable.Buttons.showIfRowSelected(this, dt);
+            }
+        });
+    });
+</script>
+
+<style type="text/css">
+    #reservationDataTable_wrapper > div.dt-header-row.clearfix > div > div.col-auto > div > button.btn.btn-sm.buttons-selected.buttons-remove.btn-danger.buttons-divider {
+        visibility: hidden;
+    }
+
+</style>
+
+<table id="reservationDataTable" class="datatableInit table"></table>

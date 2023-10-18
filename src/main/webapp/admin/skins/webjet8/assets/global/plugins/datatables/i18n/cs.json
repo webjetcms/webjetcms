@@ -1,0 +1,36 @@
+
+{
+  "buttons": {
+    "pageLength": {
+      "_": "<i class=\"fa fa-bars\" aria-hidden=\"true\"></i>%d záznamov",
+      "-1": "<i class=\"fa fa-bars\" aria-hidden=\"true\"></i>Všetky záznamy"
+    }
+  },
+	"sEmptyTable":     "Tabulka neobsahuje žádná data",
+	"sInfo":           "Záznamů: _TOTAL_",
+	"sInfoEmpty":      "Záznamů 0",
+	"sInfoFiltered":   "",
+	"sInfoPostFix":    "",
+	"sInfoThousands":  ",",
+	"sLengthMenu":     "Zobraz _MENU_ záznamů",
+	"sLoadingRecords": "Načítám...",
+	"sProcessing":     "Provádím...",
+	"sSearch":         "",
+	"sZeroRecords":    "Žádné záznamy nebyly nalezeny",
+    "sSearchPlaceholder": "Vyhledat",
+	"oPaginate": {
+        "previous": "Předchozí",
+        "next": "Další",
+		"sFirst":    "<i class=\"far fa-angle-double-left\"></i>",
+		"sLast":     "<i class=\"far fa-angle-double-right\"></i>",
+		"sNext":     "<i class=\"far fa-angle-right\"></i>",
+		"sPrevious": "<i class=\"far fa-angle-left\"></i>",
+		"page": "",
+      "pageOf": "<span>&nbsp;z&nbsp;</span>"
+	},
+    "lengthMenu": "Display _MENU_ records",
+	"oAria": {
+		"sSortAscending":  ": aktivujte pro řazení sloupce vzestupně",
+		"sSortDescending": ": aktivujte pro řazení sloupce sestupně"
+	}
+}

@@ -1,0 +1,202 @@
+<script type="text/javascript" data-th-inline="javascript">
+    var bannerDataTable;
+
+    window.domReady.add(function () {
+
+        window.helpLink = "/redactor/apps/banner/README";
+
+        WJ.breadcrumb({
+            id: "banner",
+            tabs: [
+                {
+                    url: '/apps/banner/admin/',
+                    title: /*[[#{components.banner.title}]]*/ '',
+                    active: true
+                }
+            ]
+        });
+
+        let url = "/admin/rest/banner";
+        let columns = /*[(${layout.getDataTableColumns("sk.iway.iwcm.components.banner.model.BannerBean")})]*/ [];
+
+        var tabs = [
+            { id: 'main', title: /*[[#{datatable.tab.basic}]]*/ '', selected: true},
+            { id: 'advanced', title: /*[[#{components.banner.tab.advanced}]]*/ '' },
+            { id: 'restrictions', title: /*[[#{components.banner.tab.restrictions}]]*/ '' },
+            { id: 'fields', title: /*[[#{editor.tab.fields}]]*/ '' },
+            { id: 'stat', title: /*[[\#{components.banner.stat}]]*/ '', hideOnCreate: true, content: '<div class="statContainer"><iframe id="statIframe" src="about:blank" width="100%" height="500"></iframe><div>' },
+        ];
+
+        bannerDataTable = WJ.DataTable({
+            url: url,
+            //lebo mame filter v editorFields
+            serverSide: false,
+            columns: columns,
+            tabs: tabs,
+            id: "bannerDataTable",
+            fetchOnEdit: true,
+            fetchOnCreate: true,
+            jsonField: {
+                getItem: function(props, data) {
+                    var obj;
+                    if (props.click.indexOf("dt-tree-page")==0) {
+                        //web stranka - DocDetails objektNbanner
+                        var doc = data.node.original.docDetails;
+                        //pre ziskanie fullPath potrebujeme aj parent GroupDetails objekt
+                        var group = data.parentNode.original.groupDetails;
+                        obj = {
+                            id: 0,
+                            docId: doc.docId,
+                            fullPath: group.fullPath + "/" + doc.title
+                        }
+                    }
+                    else {
+                        //zvoleny bol adresar - GroupDetails objekt
+                        var group = data.node.original.groupDetails;
+                        obj = {
+                            id: 0,
+                            groupId: group.groupId,
+                            fullPath: group.fullPath
+                        }
+                    }
+
+                    return obj;
+                },
+                getKey: function(props, data) {
+                    var key;
+                    if (props.click.indexOf("dt-tree-page")==0) key = data.docId;
+                    else key = data.groupId;
+                    return key;
+                }
+            }
+        });
+
+        let buttonCounter = 4;
+        bannerDataTable.button().add(buttonCounter++, {
+            text: '<i class="far fa-chart-simple"></i>',
+            action: function (e, dt, node) {
+                let selectedRows = dt.rows({ selected: true }).data();
+                if (selectedRows.length>0) {
+                    let row = selectedRows[0];
+                    let url = '/apps/banner/admin/banner-stat-detail/?bannerId=' + row.id + '&hideHeaderFooter=true';
+                    WJ.openIframeModal({
+                        url: url,
+                        width: 800,
+                        height: 600,
+                        closeButtonPosition: "close-button-over",
+                        buttonTitleKey: "button.cancel",
+                        okclick: function() {
+                            WJ.closeIframeModal();
+                        }
+                    });
+                }
+            },
+            init: function ( dt, node, config ) {
+                $.fn.dataTable.Buttons.showIfOneRowSelected(this, dt);
+            },
+            className: 'btn btn-outline-secondary buttons-show-stat buttons-divider',
+            attr: {
+                'title': /*[[\#{components.banner.stat}]]*/ '',
+                'data-toggle': 'tooltip'
+            }
+        });
+
+        let bannerLocationOnBannerTypeChange;
+        $(document).on('change', "#DTE_Field_bannerType", function() {
+            //console.log("On banneryType change");
+
+            let bannerType = $("#DTE_Field_bannerType").val();
+            // Hide all columns with class = contentBanner
+            columns.forEach(function (column) {
+                if(column.className != null && column.className.includes("banner-type")) {
+                    if (column.className.indexOf("banner-type-"+bannerType)!=-1) bannerDataTable.EDITOR.field(column.name).show();
+                    else bannerDataTable.EDITOR.field(column.name).hide();
+                }
+            });
+
+            let headlinesSelector = "#panel-body-dt-bannerDataTable-advanced .row-hr, #panel-body-dt-bannerDataTable-advanced .row-headline";
+            if ("4"==bannerType) {
+                $(headlinesSelector).show();
+                $("div.DTE_Field_Name_bannerLocation").addClass("obsahovy-banner")
+            } else {
+                $(headlinesSelector).hide();
+                $("div.DTE_Field_Name_bannerLocation").removeClass("obsahovy-banner")
+                $("#campaignTitleUrlShowcase").remove(); //vymas pridany span z ID campaignTitleUrlShowcase
+            }
+            bannerLocationOnBannerTypeChange = bannerDataTable.EDITOR.field("bannerLocation").get();
+        });
+
+        window.addEventListener('WJ.DTE.tabclick', function (e) {
+            //console.log("tabclick, id=", e.detail.id, " e=", e);
+            let id = e.detail.id;
+            //console.log("tab clicked, e=", e, "id=", id);
+            if ("bannerDataTable-stat"===id) {
+                let url = '/apps/banner/admin/banner-stat-detail/?bannerId=' + bannerDataTable.EDITOR.currentJson.id + '&hideHeaderFooter=true';
+                //console.log("url=", url);
+                $("#statIframe").attr("src", url);
+            }
+        });
+
+        //pri zmene hodnoty Kampanovy banner, Adresa umiestnenia bannera, zobraz URL pod ktoru je banner dostupny
+        function reloadCampaignTitleUrlShowcase() {
+            if ("4"==$("#DTE_Field_bannerType").val()) {
+                if ($('#campaignTitleUrlShowcase').length<1) {
+                    //pridam span element na vypis URL za Kampanovy banner
+                    var title = /*[[#{components.banner.campaignUrlShowcase}]]*/ '';
+                    $('<div id="campaignTitleUrlShowcase">'+title+': <br><span id="campaignTitleUrl"></span></div>').insertAfter("#DTE_Field_campaignTitle");
+                }
+
+                let bannerLocationValue = bannerDataTable.EDITOR.field("bannerLocation").get();
+                let campaignTitleValue = $("#DTE_Field_campaignTitle").val();
+                let params = {
+                    bannerLocation: !bannerLocationValue ? "" : bannerLocationValue,
+                    campaignTitle: !campaignTitleValue ? "" : campaignTitleValue
+                }
+
+                //ziskam vyskladanu absolutnu URL
+                $.get({
+                    url: "/admin/rest/banner/generate-url-for-campaign-title",
+                    data: params,
+                    success: function (data) {
+                        //console.log("data=", data);
+                        $("#campaignTitleUrl").html(data);
+
+                        if (data == '') {
+                            $("#campaignTitleUrlShowcase").hide();
+                        } else {
+                            $("#campaignTitleUrlShowcase").show();
+                        }
+
+                    }
+                });
+            }
+        }
+
+        //ak sa zmeni Kampanovy banner refreshni URL
+        $(document).on('change keyup', "#DTE_Field_campaignTitle", function() {
+            reloadCampaignTitleUrlShowcase();
+        });
+
+        //ak sa zmeni Adresa umiestnenia bannera refreshni URL
+        let bannerLocationEl = bannerDataTable.EDITOR.field("bannerLocation");
+        $(document).on('change', bannerLocationEl, function () {
+            //musi byt takato podmienka, pretoze pri pridani/editacii zaznamu baneru sa inicialne volala asi 10x
+            if(bannerLocationOnBannerTypeChange != bannerLocationEl.get()) {
+                reloadCampaignTitleUrlShowcase();
+                bannerLocationOnBannerTypeChange=bannerLocationEl.get();
+            }
+        });
+    });
+</script>
+
+<style type="text/css">
+    div.DTE_Field_Name_bannerLocation.obsahovy-banner div.input-group span.input-group-text {
+        display: none;
+    }
+    div.DTE_Field_Name_bannerLocation.obsahovy-banner div.input-group input.form-control {
+        border-top-left-radius: 6px !important;
+        border-bottom-left-radius: 6px !important;
+    }
+</style>
+
+<table id="bannerDataTable" class="datatableInit table"></table>

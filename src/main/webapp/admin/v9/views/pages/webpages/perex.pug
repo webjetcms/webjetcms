@@ -1,0 +1,32 @@
+extends ../../partials/layout
+
+block content
+
+    +breadcrumb(
+        'perex',
+        [
+            [ '/admin/v9/webpages/perex/', '[[#{editor.perex.group}]]', true]
+        ]
+    )
+
+    script.
+        var perexDataTable;
+
+        window.domReady.add(function () {
+
+            window.helpLink = "/redactor/webpages/perexgroups";
+
+            let url = "/admin/rest/prex_groups";
+            let columns = [(${layout.getDataTableColumns("sk.iway.iwcm.components.perex_groups.PerexGroupsEntity")})];;
+
+            perexDataTable = WJ.DataTable({
+                url: url,
+                serverSide: true,
+                columns: columns,
+                id: "perexDataTable",
+                fetchOnEdit: true,
+                fetchOnCreate: true
+            });
+        })
+
+    <table id="perexDataTable" class="datatableInit table"></table>

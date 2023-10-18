@@ -1,0 +1,196 @@
+{
+    "apps": [
+        {
+            "name": "Číselníky",
+            "category": "REST backend + DT",
+            "icon": "far fa-th-list",
+            "link": "/apps/enumeration/admin/"
+        },
+        {
+            "name": "Proxy",
+            "category": "REST backend + DT",
+            "icon": "far fa-dungeon",
+            "link": "/apps/proxy/admin/"
+        },
+        {
+            "name": "Anketa",
+            "category": "REST backend + DT",
+            "icon": "far fa-poll",
+            "link": "/apps/inquiry/admin/"
+        },
+        {
+            "name": "Atributy stránky",
+            "category": "Definování atributů",
+            "icon": "far fa-file-invoice",
+            "link": "/admin/v9/webpages/attributes/"
+        },
+        {
+            "name": "Kontrola odkazů",
+            "category": "+prázdných stránek",
+            "icon": "far fa-link-slash",
+            "link": "/admin/v9/webpages/web-pages-list/"
+        },
+        {
+            "name": "Statistika",
+            "category": "REST backend + DT + amcharts",
+            "icon": "far fa-chart-bar",
+            "link": "/apps/stat/admin/"
+        },
+        {
+            "name": "Rezervace",
+            "category": "REST backend + DT",
+            "icon": "far fa-calendar-check",
+            "link": "/apps/reservation/admin/"
+        },
+        {
+            "name": "Kalendář událostí/Seznam a typy",
+            "category": "REST backend + DT",
+            "icon": "far fa-calendar",
+            "link": "/apps/calendar/admin/"
+        },
+        {
+            "name": "Hromadný e-mail/Kampaně",
+            "category": "REST backend + DT",
+            "icon": "far fa-envelope",
+            "link": "/apps/dmail/admin/"
+        },
+        {
+            "name": "Formuláře/Regulární výrazy",
+            "category": "REST backend + DT",
+            "icon": "far fa-book",
+            "link": "/apps/form/admin/regexps/"
+        },
+        {
+            "name": "Hromadný email/Odhlášené e-maily",
+            "category": "DT + REST",
+            "icon": "far fa-envelope",
+            "link": "/apps/dmail/admin/unsubscribed/"
+        },
+        {
+            "name": "Bannerový systém",
+            "category": "DT + REST",
+            "icon": "far fa-ad",
+            "link": "/apps/banner/admin/"
+        },
+        {
+            "name": "Hromadný email/Doménové limity",
+            "category": "DT + REST",
+            "icon": "far fa-envelope",
+            "link": "/apps/dmail/admin/domain-limits/"
+        },
+        {
+            "name": "Export dat",
+            "category": "DT + REST",
+            "icon": "far fa-cloud-download",
+            "link": "/apps/export-dat/admin/"
+        },
+        {
+            "name": "Tooltip",
+            "category": "DT + REST + cleditor",
+            "icon": "far fa-question-circle",
+            "link": "/apps/tooltip/admin/"
+        },
+        {
+            "name": "Otázky a odpovědi",
+            "category": "DT + REST + cleditor + filtrování HTML kódu",
+            "icon": "far fa-question-circle",
+            "link": "/apps/qa/admin/"
+        },
+        {
+            "name": "GDPR",
+            "category": "DT + REST + Vue výběr adresáře a stránky",
+            "icon": "far fa-shield-alt",
+            "link": "/apps/gdpr/admin/"
+        },
+        {
+            "name": "Uživatelé",
+            "category": "DT + REST + Vue výběr adresáře a stránky",
+            "icon": "far fa-user-friends",
+            "link": "/admin/v9/users/user-list"
+        },
+        {
+            "name": "Značky (perex skupiny)",
+            "category": "DT + REST + Vue výběr adresáře",
+            "icon": "far fa-hashtag",
+            "link": "/admin/v9/webpages/perex/"
+        },
+        {
+            "name": "Média a média skupiny",
+            "category": "DT + REST + Vue výběr adresáře a stránky + elfinder",
+            "icon": "far fa-file-medical",
+            "link": "/admin/v9/webpages/media/"
+        },
+        {
+            "name": "Skripty",
+            "category": "DT + REST + Vue výběr adresáře a stránky",
+            "icon": "far fa-file-code",
+            "link": "/admin/v9/apps/insert-script"
+        },
+        {
+            "name": "Audit",
+            "category": "Vyhledávání a seznam notifikací",
+            "icon": "far fa-file-search",
+            "link": "/admin/v9/apps/audit-search"
+        },
+        {
+            "name": "Foto galerie",
+            "category": "REST backend + taby v DT + custom tlačítko + image editor + vue oblast zájmu",
+            "icon": "far fa-photo-video",
+            "link": "/admin/v9/apps/gallery"
+        },
+        {
+            "name": "Formuláře",
+            "category": "REST backend + DT + vue router",
+            "icon": "far fa-book",
+            "link": "/apps/form/admin/"
+        },
+        {
+            "name": "Konfigurace",
+            "category": "DT + REST",
+            "icon": "far fa-sliders-v-square",
+            "link": "/admin/v9/settings/configuration"
+        },
+        {
+            "name": "Automatizované úlohy",
+            "category": "Úlohy na pozadí - DT + REST",
+            "icon": "far fa-repeat",
+            "link": "/admin/v9/settings/cronjob"
+        },
+        {
+            "name": "Přesměrování + přesměrování domén",
+            "category": "DT + REST",
+            "icon": "far fa-file-upload",
+            "link": "/admin/v9/settings/redirect"
+        },
+        {
+            "name": "Čištění paměti",
+            "category": "Mazání dat, cache objekty, audit + DT + REST",
+            "icon": "far fa-database",
+            "link": "/admin/v9/settings/database-delete"
+        },
+        {
+            "name": "Překladové klíče",
+            "category": "Editace textů + DT + REST",
+            "icon": "far fa-key",
+            "link": "/admin/v9/settings/translation-keys"
+        },
+        {
+            "name": "Monitorování serveru",
+            "category": "Zaznamenané hodnoty + CPU monitor + DT + REST + grafy + vue",
+            "icon": "far fa-chart-line",
+            "link": "/admin/v9/settings/server-monitoring"
+        },
+        {
+            "name": "Šablony stránek",
+            "category": "Skupiny šablon + DT + REST",
+            "icon": "far fa-window-maximize",
+            "link": "/admin/v9/templates/temps-list"
+        },
+        {
+            "name": "Seznam web stránek",
+            "category": "Web stránky + jstree + DT + REST + ckeditor",
+            "icon": "far fa-file-alt",
+            "link": "/admin/v9/webpages/web-pages-list"
+        }
+    ]
+}

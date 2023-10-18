@@ -1,0 +1,1 @@
+﻿CKEDITOR.plugins.setLang("about","ro",{copy:"Copyright \x26copy; $1. Toate drepturile rezervate.",dlgTitle:"Despre CKEeditor 4",moreInfo:"Pentru informații despre licențiere, vă rugăm vizitați web site-ul nostru:"});

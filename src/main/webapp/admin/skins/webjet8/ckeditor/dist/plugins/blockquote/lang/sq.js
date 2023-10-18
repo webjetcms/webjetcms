@@ -1,0 +1,1 @@
+﻿CKEDITOR.plugins.setLang("blockquote","sq",{toolbar:"Thonjëzat"});

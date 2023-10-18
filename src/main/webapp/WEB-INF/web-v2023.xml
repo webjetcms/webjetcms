@@ -1,0 +1,167 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<web-app xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://java.sun.com/xml/ns/javaee" xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_3_0.xsd" id="WebApp_ID" version="3.0">
+
+  <filter>
+    <filter-name>Set Character Encoding</filter-name>
+    <filter-class>sk.iway.iwcm.SetCharacterEncodingFilter</filter-class>
+    <init-param>
+     <param-name>encoding</param-name>
+     <param-value>utf-8</param-value>
+    </init-param>
+  </filter>
+
+  <filter>
+    <filter-name>Virtual Path Filter</filter-name>
+    <filter-class>sk.iway.iwcm.PathFilter</filter-class>
+  </filter>
+
+  <filter>
+		<display-name>Stripes Filter</display-name>
+		<filter-name>StripesFilter</filter-name>
+		<filter-class>net.sourceforge.stripes.controller.StripesFilterIway</filter-class>
+	</filter>
+
+  <filter-mapping>
+     <filter-name>Set Character Encoding</filter-name>
+     <url-pattern>/*</url-pattern>
+  </filter-mapping>
+
+  <filter-mapping>
+		<filter-name>StripesFilter</filter-name>
+		<url-pattern>/*</url-pattern>
+		<dispatcher>REQUEST</dispatcher>
+	</filter-mapping>
+
+	<filter-mapping>
+		<filter-name>StripesFilter</filter-name>
+		<servlet-name>StripesDispatcher</servlet-name>
+		<dispatcher>REQUEST</dispatcher>
+	</filter-mapping>
+
+  <filter-mapping>
+     <filter-name>Virtual Path Filter</filter-name>
+     <url-pattern>/*</url-pattern>
+  </filter-mapping>
+
+  <listener><listener-class>sk.iway.iwcm.stat.SessionListener</listener-class></listener>
+
+  <servlet>
+      <servlet-name>GetProtectedFile</servlet-name>
+      <servlet-class>sk.iway.iwcm.doc.GetProtectedFileServlet</servlet-class>
+  </servlet>
+
+  <servlet>
+     <servlet-name>iwcminit</servlet-name>
+     <servlet-class>sk.iway.iwcm.InitServlet</servlet-class>
+     <load-on-startup>1</load-on-startup>
+
+  </servlet>
+
+  <!-- Standard Action Servlet Configuration (with debugging) -->
+  <servlet>
+    <servlet-name>action</servlet-name>
+    <servlet-class>org.apache.struts.action.ActionServlet</servlet-class>
+    <init-param>
+      <param-name>application</param-name>
+      <param-value>ApplicationResources</param-value>
+    </init-param>
+    <init-param>
+      <param-name>multipartClass</param-name>
+      <param-value>sk.iway.upload.DiskMultiPartRequestHandler</param-value>
+    </init-param>
+    <init-param>
+      <param-name>config</param-name>
+      <param-value>/WEB-INF/struts-config.xml</param-value>
+    </init-param>
+    <init-param>
+      <param-name>debug</param-name>
+      <param-value>0</param-value>
+    </init-param>
+    <init-param>
+      <param-name>detail</param-name>
+      <param-value>0</param-value>
+    </init-param>
+    <init-param>
+      <param-name>validate</param-name>
+      <param-value>true</param-value>
+    </init-param>
+    <init-param>
+      <param-name>nocache</param-name>
+      <param-value>true</param-value>
+    </init-param>
+    <load-on-startup>2</load-on-startup>
+  </servlet>
+
+  <servlet>
+		<servlet-name>StripesDispatcher</servlet-name>
+		<servlet-class>net.sourceforge.stripes.controller.DispatcherServlet</servlet-class>
+		<load-on-startup>1</load-on-startup>
+	</servlet>
+
+  <!-- Standard Action Servlet Mapping -->
+  <servlet-mapping>
+    <servlet-name>action</servlet-name>
+    <url-pattern>*.do</url-pattern>
+  </servlet-mapping>
+
+  <servlet-mapping>
+      <servlet-name>GetProtectedFile</servlet-name>
+      <url-pattern>/files/protected/*</url-pattern>
+  </servlet-mapping>
+
+  <servlet-mapping>
+		<servlet-name>StripesDispatcher</servlet-name>
+		<url-pattern>*.action</url-pattern>
+	</servlet-mapping>
+
+	<mime-mapping>
+     <extension>ics</extension>
+     <mime-type>text/calendar</mime-type>
+  </mime-mapping>
+
+  <mime-mapping>
+     <extension>msi</extension>
+     <mime-type>application/octet-stream</mime-type>
+  </mime-mapping>
+
+  <!-- The Usual Welcome File List -->
+  <welcome-file-list>
+    <welcome-file>index.jsp</welcome-file>
+  </welcome-file-list>
+
+  <error-page>
+    <error-code>400</error-code>
+    <location>/403.jsp</location>
+  </error-page>
+
+  <error-page>
+    <error-code>401</error-code>
+    <location>/403.jsp</location>
+  </error-page>
+
+  <error-page>
+    <error-code>403</error-code>
+    <location>/403.jsp</location>
+  </error-page>
+
+  <error-page>
+    <error-code>404</error-code>
+    <location>/404.jsp</location>
+  </error-page>
+
+  <error-page>
+    <error-code>405</error-code>
+    <location>/403.jsp</location>
+  </error-page>
+
+  <error-page>
+    <error-code>500</error-code>
+    <location>/500.jsp</location>
+  </error-page>
+
+  <mime-mapping>
+     <extension>mp4</extension>
+     <mime-type>video/mp4</mime-type>
+  </mime-mapping>
+
+</web-app>

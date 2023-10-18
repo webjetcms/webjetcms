@@ -1,0 +1,1 @@
+﻿CKEDITOR.plugins.setLang("about","fo",{copy:"Copyright \x26copy; $1. All rights reserved.",dlgTitle:"Um CKEditor 4",moreInfo:"Licens upplýsingar finnast á heimasíðu okkara:"});

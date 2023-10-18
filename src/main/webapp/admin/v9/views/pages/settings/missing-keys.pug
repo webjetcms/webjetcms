@@ -1,0 +1,48 @@
+extends ../../partials/layout
+
+block content
+
+    +breadcrumb(
+        'missing-keys',
+        [
+            [ '#missing-keys', '[[\#{admin.conf_editor.missing}]]', true ]
+        ]
+    )
+
+    script.
+        var missingKeysTable;
+        window.domReady.add(function () {
+            var columns = [(${layout.getDataTableColumns('sk.iway.iwcm.components.translation_keys.jpa.MissingKeysDto')})];
+
+            var order = [];
+            order.push([2, 'desc']);
+
+            missingKeysTable = WJ.DataTable({
+                url: "/admin/v9/settings/missing-keys",
+                columns: columns,
+                serverSide: false,
+                idAutoOpener: false,
+                order: order
+            });
+
+            missingKeysTable.hideButton("create");
+            missingKeysTable.hideButton("remove");
+            missingKeysTable.hideButton("import");
+            missingKeysTable.hideButton("duplicate");
+
+            missingKeysTable.button().add(2, {
+                extends: 'remove',
+                editor: missingKeysTable.EDITOR,
+                text: '<i class="fal fa-dumpster"></i>',
+                action: function (e, dt, node) {
+                    missingKeysTable.executeAction("deleteAllCacheObjects", true, "[[\#{missing-keys.deleteAll.confirm}]]");
+                },
+                className: 'btn btn-danger buttons-divider',
+                attr: {
+                    'title': '[[\#{missing-keys.deleteAll}]]',
+                    'data-toggle': 'tooltip'
+                }
+            });
+        });
+
+    <table class="datatableInit table"></table>

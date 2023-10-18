@@ -1,0 +1,61 @@
+/* INQUIRY LAYOUT */
+
+div.inquiry
+{
+    margin: 0px;
+    padding: 0px;
+    width: 240px;
+}
+div.inquiry div {
+    clear: both;
+}
+
+
+.inquiry dl
+{
+width: 100%;
+margin: 0px;
+float: left;
+padding: 5px 0px 5px 0px;
+}
+
+.inquiry dt
+{
+padding: 5px 0px 0px 0px;
+margin: 0px;
+clear: both;
+}
+
+.inquiry dd
+{
+padding: 5px 0px 0px 0px;
+margin: 0px;
+clear: both;
+}
+
+.inquiry span
+{
+float: right;
+}
+
+/* css nastavenie dlzky stlpca */
+
+.inquiry .bar_style
+{
+float:left;
+margin: 1px 0px 0px 0px; padding: 0px;
+width: 200px;
+}
+
+/* css nastavenie vzhladu stlpca */
+
+.inquiry .bar_fill
+{
+margin: 0px; padding: 0px;
+height: 8px;
+background-color: #fff;
+border: 1px solid #999;
+font-size: 1px;
+}
+
+/* ENDE INQUIRY LAYOUT */

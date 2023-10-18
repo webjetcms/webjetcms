@@ -1,0 +1,53 @@
+<script type="text/javascript">
+    window.domReady.add(function () {
+        WJ.breadcrumb({
+            id: "upload",
+            tabs: [
+                {
+                    url: '/apps/contact/admin/',
+                    title: '[[#{components.contact.title}]]',
+                    active: false
+                },
+                {
+                    url: '/apps/contact/admin/upload/',
+                    title: 'Spring MVC Excel import example',
+                    active: true
+                }
+            ]
+        });
+    });
+</script>
+<section class="my-3">
+    <div class="container">
+        <div class="row">
+            <div class="col-md-8 mx-auto">
+
+                <p data-th-text="${success}" data-th-if="${success ne null}" class="alert alert-success"></p>
+
+                <form method="post" data-th-action="@{/apps/contact/admin/excelimport/}" data-th-object="${form}" enctype="multipart/form-data">
+                    <div data-th-if="${#fields.hasErrors('*')}" class="alert alert-danger">
+                        <ul style="margin-bottom: 0;">
+                            <li data-th-each="error : ${#fields.errors('*')}" data-th-text="${error}">error</li>
+                        </ul>
+                    </div>
+
+                    <div class="form-group mb-3">
+                        <label for="p1" class="form-label">P1</label>
+                        <input type="text" data-th-field="*{p1}" id="p1" class="form-control">
+                    </div>
+                    <div class="form-group mb-3">
+                        <label for="p2" class="form-label">P2</label>
+                        <input type="text" data-th-field="*{p2}" id="p2" class="form-control">
+                    </div>
+                    <div class="form-group mb-3">
+                        <label for="document" class="form-label">Dokument</label>
+                        <input type="file" data-th-field="*{document}" id="document" class="form-control">
+                    </div>
+                    <div class="form-group mb-3 text-end">
+                        <button type="submit" class="btn btn-primary">[[#{button.submit}]]</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</section>

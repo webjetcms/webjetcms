@@ -1,0 +1,85 @@
+<script data-th-inline="javascript">
+    let url = "/admin/rest/stat/error";
+    let columns = /*[(${layout.getDataTableColumns("sk.iway.iwcm.stat.jpa.ErrorDTO")})]*/ '';
+</script>
+<script>
+     var errorDataTable;
+
+    WJ.breadcrumb({
+        id: "error",
+        tabs: [
+            {
+                url: '/apps/stat/admin/errors',
+                title: '[[#{stat_menu.invalidPages}]]',
+                active: true
+            },
+            {
+                url: '#dateRange',
+                title: '{filter}',
+                active: false
+            }
+        ]
+    });
+
+    window.domReady.add(function () {
+
+        //presun filter do hlavicky
+        $("#pills-dateRange-tab").html("");
+        $("div#errorDataTable_extfilter").appendTo("#pills-dateRange-tab");
+
+        errorDataTable = WJ.DataTable({
+            url: url,
+            serverSide: false, //false lebo sa nevyužíva repositár
+            columns: columns,
+            id: "errorDataTable",
+            idAutoOpener: false,
+            defaultSearch: ChartTools.getSearchCriteria(),
+            onPreXhr: function(TABLE, e, settings, data) {
+                //console.log('onPreXhr, url=', $('#searchUrl').val());
+                data.fixed_searchurl = $('#searchUrl').val();
+            }
+        });
+
+        errorDataTable.hideButton("import");
+        errorDataTable.hideButton("create");
+        errorDataTable.hideButton("edit");
+        errorDataTable.hideButton("duplicate");
+        errorDataTable.hideButton("celledit");
+        errorDataTable.hideButton("remove");
+
+        //Onchange events - update table
+        $("#errorDataTable_extfilter").on("click", "button.filtrujem", function() {
+            //reload table values
+            ChartTools.saveSearchCriteria(errorDataTable.DATA);
+            errorDataTable.ajax.reload();
+        });
+
+        dtWJ.fixTableSize(errorDataTable);
+    });
+</script>
+
+<style>
+    label[for=botFilterOut]::after {
+        content: "\f544" !important;
+    }
+</style>
+<div id="errorDataTable_extfilter">
+    <div class="row datatableInit">
+        <div class="col-auto dt-extfilter-title-dayDate" style="display: none;"></div>
+        <div class="col-auto dt-extfilter dt-extfilter-dayDate"></div>
+
+        <div class="col-auto dt-extfilter-title-url"></div>
+        <div style="width: 450px;" class="col-auto">
+            <div class="input-group">
+                <input type="text" id="searchUrl" class="form-control form-control-sm filter-input dt-search-url"/>
+                <button class="filtrujem btn btn-sm btn-outline-secondary dt-filtrujem-url" type="submit">
+                    <i class="far fa-search"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="tableDiv">
+    <table id="errorDataTable" class="datatableInit table"></table>
+</div>

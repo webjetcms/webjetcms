@@ -1,0 +1,22 @@
+@charset "UTF-8";
+
+//HELPERS
+@import "2-helpers/utils";
+@import "2-helpers/variables";
+@import "2-helpers/functions";
+@import "2-helpers/mixins";
+@import "2-helpers/placeholders";
+
+//BLIND FRIENDLY CODE
+body {
+    max-width: 1200px;
+    padding: 15px;
+    margin: 0 auto;
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+[id*="blindBlock-"] {
+    border: 1px solid black;
+    padding: 15px;
+    margin: 15px 0;
+}

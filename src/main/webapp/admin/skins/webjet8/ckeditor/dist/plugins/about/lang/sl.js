@@ -1,0 +1,1 @@
+﻿CKEDITOR.plugins.setLang("about","sl",{copy:"Copyright \x26copy; $1. Vse pravice pridržane.",dlgTitle:"O programu CKEditor 4",moreInfo:"Za informacije o licenciranju prosimo obiščite našo spletno stran:"});

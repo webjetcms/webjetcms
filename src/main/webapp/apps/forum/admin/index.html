@@ -1,0 +1,106 @@
+<script data-th-inline="javascript">
+    let columns = /*[(${layout.getDataTableColumns("sk.iway.iwcm.components.forum.jpa.DocForumEntity")})]*/ '';
+</script>
+<script type="text/javascript">
+    var forumDataTable;
+
+    window.undeleteEntity = function (forumId) {
+        forumDataTable.executeAction("undelete", false, null, null, null, forumId);
+    }
+
+    window.domReady.add(function () {
+
+        WJ.breadcrumb({
+            id: "forum",
+            tabs: [
+                {
+                    url: '/apps/forum/admin/',
+                    title: '[[#{components.forum.zoznam_diskusii}]]',
+                    active: true
+                }
+            ]
+        });
+
+        let url = "/admin/rest/forum";
+
+        forumDataTable = WJ.DataTable({
+            url: url,
+            serverSide: true,
+            columns: columns,
+            id: "forumDataTable",
+            fetchOnEdit: true,
+            fetchOnCreate: true,
+            order: [
+                [5, 'desc']
+            ]
+        });
+
+        forumDataTable.hideButton("create");
+        forumDataTable.hideButton("import");
+        forumDataTable.hideButton("duplicate");
+
+        var buttonCounter = 4;
+        forumDataTable.button().add(buttonCounter++, {
+            text: '<i class="far fa-eye"></i>',
+            action: function (e, dt, node) {
+                let selectedRows = dt.rows({ selected: true }).data();
+                for (let i=0; i<selectedRows.length; i++) {
+                    let row = selectedRows[i];
+
+                    //In case of message bord, add forum id to open it
+                    var link = row.docDetails.virtualPath;
+                    if(row.parentId!=null && row.parentId>0) link += "?pId=" + row.id
+
+                    window.open(link);
+                }
+            },
+            init: function ( dt, node, config ) {
+                $.fn.dataTable.Buttons.showIfRowSelected(this, dt);
+            },
+            className: 'btn btn-outline-secondary',
+            attr: {
+                'title': '[[#{app.forum.show_forum}]]',
+                'data-toggle': 'tooltip'
+            }
+        });
+
+        forumDataTable.button().add(buttonCounter++, {
+            text: '<i class="fa-regular fa-gear"></i>',
+            action: function (e, dt, node) {
+                let selectedRows = dt.rows({ selected: true }).data();
+                for (let i=0; i<selectedRows.length; i++) {
+                    let row = selectedRows[i];
+                    var docId = row.docDetails.docId;
+
+                    var options = "toolbar=no,scrollbars=no,resizable=yes,width=800,height=850;"
+	                window.open("/components/forum/admin_forum_open.jsp?docid=" + docId, 'forumSettings' + docId, options);
+                }
+            },
+            init: function ( dt, node, config ) {
+                $.fn.dataTable.Buttons.showIfRowSelected(this, dt);
+            },
+            className: 'btn btn-outline-secondary',
+            attr: {
+                'title': '[[#{apps.forum.show_administration}]]',
+                'data-toggle': 'tooltip'
+            }
+        });
+
+        forumDataTable.button().add(buttonCounter++, {
+            text: '<i class="fa-solid fa-trash-can-undo" style="color: #fabd00;"></i>',
+            action: function (e, dt, node) {
+                forumDataTable.executeAction("undelete", false);
+            },
+            init: function ( dt, node, config ) {
+                $.fn.dataTable.Buttons.showIfRowSelected(this, dt);
+            },
+            className: 'btn btn-outline-secondary',
+            attr: {
+                'title': '[[#{components.banner.recover}]]',
+                'data-toggle': 'tooltip'
+            }
+        });
+    });
+</script>
+
+<table id="forumDataTable" class="datatableInit table"></table>

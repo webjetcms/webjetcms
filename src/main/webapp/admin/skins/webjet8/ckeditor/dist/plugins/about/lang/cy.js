@@ -1,0 +1,1 @@
+﻿CKEDITOR.plugins.setLang("about","cy",{copy:"Hawlfraint \x26copy; $1. Cedwir pob hawl.",dlgTitle:"About CKEditor 4",moreInfo:"Am wybodaeth ynghylch trwyddedau, ewch i'n gwefan:"});

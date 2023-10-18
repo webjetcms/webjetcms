@@ -1,0 +1,91 @@
+.cke_dialog_contents {
+    .cke_dialog_ui_button, a.cke_dialog_ui_button, .cke_dialog_footer_buttons a.cke_dialog_ui_button {
+        font-family: "Asap",sans-serif;
+        font-size: 16px;
+        font-weight: 400;
+        padding: 6px 12px !important;
+        background-color: white;
+        border: 1px solid #868EA5;
+        border-radius: 6px !important;
+        transition: color 0.15s ease-in-out, background-color 0.15s ease-in-out, border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+        width: auto;
+        height: auto;
+        line-height: normal;
+        min-width: 56px;
+        box-shadow: none;
+        background-image: none;
+        span {
+            color: #13151B;
+            font-size: 16px;
+            padding: 0px !important;
+            background-color: transparent;
+            line-height: 1.5;
+            text-shadow: none;
+            border: 0px;
+        }
+        &:hover {
+            background-color: #13151b;
+            background-image: none;
+            span {
+                color: white;
+            }
+        }
+    }
+    a.cke_dialog_ui_button {
+        padding: 4px 4px !important;
+        span {
+            line-height: normal;
+        }
+    }
+    a.cke_dialog_ui_button_ok, .cke_dialog_footer_buttons a.cke_dialog_ui_button_ok {
+        background-color: #0063FB;
+        border: 1px solid #0063FB;
+        span {
+            color: white;
+        }
+        &:hover {
+            background-color: #0054d5;
+        }
+    }
+}
+table.cke_dialog {
+    div.cke_dialog_title {
+        background-image: none !important;
+        background-color: white;
+        color: #13151B;
+        border-bottom: 1px solid #dee2e6;
+        font-family: "Asap", sans-serif;
+    }
+    .cke_dialog_body {
+        background-color: white;
+    }
+    div.cke_dialog_tabs {
+        background-color: white;
+        margin-top: 10px;
+        height: 21px;
+    }
+    div.cke_dialog_tabs a {
+        font-family: "Asap", sans-serif;
+        font-weight: 700;
+        color: #646979;
+        padding: 0;
+        margin-right: 16px;
+        font-size: 15px;
+
+        &.cke_dialog_tab_selected {
+            background-color: white;
+            margin-top: 0px;
+            border-top-color: white;
+            color: #0063FB;
+        }
+        &:hover {
+            background-color: white;
+        }
+    }
+    table.cke_dialog_contents {
+        margin-top: 42px;
+    }
+}
+table.cke_dialog.cke_single_page table.cke_dialog_contents {
+    margin-top: 0px;
+}

@@ -1,0 +1,61 @@
+.#{$prefix}-notify {
+    display: none;
+    position: fixed;
+    top: 15px;
+    right: 15px;
+    width: 240px;
+    height: auto;
+    z-index: $notify-index;
+    background-color: #62697d;
+    background-image: linear-gradient(to right bottom, #62697d, #52586c, #42485c, #33394c, #252a3d);
+    border-radius: 4px;
+    overflow: hidden;
+    box-shadow: 0 0 0px 6px rgba(51, 50, 64, 0.2);
+
+    &__header {
+        padding: 15px;
+        font-size: 14px;
+        line-height: 14px;
+        font-weight: 300;
+        color: #9ba1b1;
+    }
+
+    &__content {
+        padding: 0 15px;
+        overflow: hidden;
+        color: white;
+
+        span {
+            font-weight: 500;
+            font-size: 16px;
+            display: block;
+        }
+    }
+
+    &__footer {
+        padding: 15px;
+        overflow: hidden;
+        text-align: right;
+
+        &__button {
+            display: inline-block;
+            width: auto;
+            height: 30px;
+            line-height: 30px;
+            padding: 0 16px;
+            font-size: 13px;
+            font-weight: 600;
+            opacity: 0.8;
+            text-align: center;
+            border-radius: 30px;
+            background-color: white;
+            transition: all 0.3s ease-in-out;
+        }
+    
+    }
+
+    .#{$prefix}-wrapper.#{$prefix}-is-notify-active & {
+        display: block;
+    }
+
+}

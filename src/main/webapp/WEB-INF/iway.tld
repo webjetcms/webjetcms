@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<!DOCTYPE taglib
+  PUBLIC "-//Sun Microsystems, Inc.//DTD JSP Tag Library 1.1//EN"
+  "http://java.sun.com/j2ee/dtds/web-jsptaglibrary_1_1.dtd">
+<taglib>
+  <tlibversion>1.0</tlibversion>
+  <jspversion>1.1</jspversion>
+  <shortname>Interway (www.interway.sk) Tag Library</shortname>
+  <uri>http://jakarta.apache.org/taglibs/struts-example-1.0</uri>
+  <info>
+    This is default Interway Tag Library (lubos.balat@interway.sk)
+  </info>
+
+  <tag>
+        <name>request</name>
+        <tagclass>sk.iway.tags.RequestAttributeTag</tagclass>
+        <bodycontent>empty</bodycontent>
+        <info>
+          print toString() value of atribute from HTTP request object
+          name - name of attribute [required]
+        </info>
+        <attribute>
+          <name>name</name>
+          <required>true</required>
+          <rtexprvalue>true</rtexprvalue>
+        </attribute>
+  </tag>
+  <tag>
+          <name>curr</name>
+          <tagclass>sk.iway.tags.CurrencyTag</tagclass>
+          <bodycontent>JSP</bodycontent>
+          <info>
+            format number (e.g. 123456.0) to currency (e.g. 123.456,00)
+          </info>
+          <attribute>
+	         <name>round</name>
+	         <required>false</required>
+	         <rtexprvalue>true</rtexprvalue>
+	       </attribute>
+	       <attribute>
+	         <name>format</name>
+	         <required>false</required>
+	         <rtexprvalue>true</rtexprvalue>
+	       </attribute>
+	       <attribute>
+	         <name>groupingSize</name>
+	         <required>false</required>
+	         <rtexprvalue>true</rtexprvalue>
+	       </attribute>
+	       <attribute>
+	         <name>currency</name>
+	         <required>false</required>
+	         <rtexprvalue>true</rtexprvalue>
+	       </attribute>
+	       
+  </tag>
+  
+  <tag>
+       <name>cardPay</name>
+       <tagclass>sk.iway.tags.CardPayTag</tagclass>
+       <bodycontent>empty</bodycontent>
+       <info>
+         platba cez TatraPay/CardPay
+       </info>
+       <attribute>
+         <name>mid</name>
+         <required>true</required>
+         <rtexprvalue>true</rtexprvalue>
+       </attribute>
+       <attribute>
+         <name>key</name>
+         <required>true</required>
+         <rtexprvalue>true</rtexprvalue>
+       </attribute>
+       <attribute>
+         <name>amount</name>
+         <required>true</required>
+         <rtexprvalue>true</rtexprvalue>
+       </attribute>
+       <attribute>
+         <name>vs</name>
+         <required>true</required>
+         <rtexprvalue>true</rtexprvalue>
+       </attribute>
+       <attribute>
+         <name>cs</name>
+         <required>true</required>
+         <rtexprvalue>true</rtexprvalue>
+       </attribute>
+       <attribute>
+         <name>rurl</name>
+         <required>true</required>
+         <rtexprvalue>true</rtexprvalue>
+       </attribute>
+       <attribute>
+         <name>name</name>
+         <required>true</required>
+         <rtexprvalue>true</rtexprvalue>
+       </attribute>
+       <attribute>
+         <name>rem</name>
+         <required>false</required>
+         <rtexprvalue>true</rtexprvalue>
+       </attribute>
+  </tag>
+</taglib>

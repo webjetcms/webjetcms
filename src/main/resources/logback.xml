@@ -1,0 +1,47 @@
+<configuration>
+    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>[%X{installName}][%c{1}][%p][%X{userId}] %d{yyyy-MM-dd HH:mm:ss} - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <appender name="IN_MEMORY" class="sk.iway.iwcm.system.logging.InMemoryLoggerAppender" />
+
+    <!--appender name="FILE" class="ch.qos.logback.core.FileAppender">
+        <file>./build/webjet.log</file>
+        <append>true</append>
+        <!- - set immediateFlush to false for much higher logging throughput - ->
+        <immediateFlush>true</immediateFlush>
+        <encoder>
+            <pattern>[%X{installName}][%c{1}][%p][%X{userId}] %d{yyyy-MM-dd HH:mm:ss} - %msg%n</pattern>
+        </encoder>
+    </appender-->
+
+    <root level="ERROR">
+        <appender-ref ref="STDOUT" />
+        <appender-ref ref="IN_MEMORY" />
+        <!--appender-ref ref="FILE" /-->
+    </root>
+
+    <logger level="INFO" name="sk.iway"/>
+
+    <!--
+    !!! Nastavovat priamo tu len ak je to nevyhnutne potrebne !!!
+    Odporucame nastavit logovacie levely v localconf.jsp cez konstantu:
+    Constants.setString("logLevels", "sk.iway=DEBUG,org.springframework=DEBUG");
+
+    # Spring logging
+    <logger level="DEBUG" name="org.springframework"/>
+
+    # SQL logging
+    <logger level="TRACE" name="org.eclipse.persistence"/>
+    <logger level="DEBUG" name="org.hibernate"/>
+    <logger level="TRACE" name="org.hibernate.type.descriptor.sql.BasicBinder"/>
+
+    # Hibernate logging options (INFO only shows startup messages)
+    <logger level="INFO" name="org.hibernate"/>
+
+    # Log JDBC bind parameter runtime arguments
+    <logger level="TRACE" name="org.hibernate.type"/>
+    -->
+</configuration>

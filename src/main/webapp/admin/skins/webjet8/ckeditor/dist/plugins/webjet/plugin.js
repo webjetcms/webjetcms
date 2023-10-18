@@ -1,0 +1,2 @@
+﻿(function(){var a=null;CKEDITOR.plugins.add("webjet",{requires:["iframedialog"],init:function(b){CKEDITOR.dialog.addIframe("wjimageDialog","Insert Image",this.path+"wj_image.jsp",580,445,function(){a=document.getElementById(this._.frameId);ckeditorFixIframeDialog(this.getElement().$)},{onOk:function(){window.alert("OkClick, wjImageIframe\x3d"+a);a.OkClick()}});b.addCommand("wjimage",new CKEDITOR.dialogCommand("wjimageDialog"));b.ui.addButton("wjimage",{label:"Insert Image or Movie",command:"wjimage",
+icon:this.path+"images/icon_wjimage.png"})}})})();
