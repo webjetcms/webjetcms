@@ -2,6 +2,8 @@
 
 Are you looking to power your business website, e-shop, or portal with a reliable content management system? Look no further! WebJET CMS offers a user-friendly and efficient solution to create and manage your online presence effortlessly. Save time, boost productivity, and ensure that your customers find what they're looking for, keeping them engaged longer.
 
+![](docs/redactor/webpages/recursive-list.png)
+
 ## Why Choose WebJET CMS?
 
 WebJET CMS comes with a host of benefits that make it the ideal choice for your content management needs. Here are seven compelling reasons to choose us:
@@ -14,6 +16,8 @@ WebJET CMS comes with a host of benefits that make it the ideal choice for your 
 6. **Integration with WebJET Family Products:** Seamlessly connect with other products in the WebJET family.
 7. **Open Source Community Version:** WebJET CMS is available in an open-source community version, offering flexibility and cost-effectiveness.
 
+![](docs/custom-apps/appstore/appstore.png)
+
 ## What You Gain with WebJET CMS
 
 By adopting WebJET CMS, you'll enjoy a range of benefits, including:
@@ -23,6 +27,8 @@ By adopting WebJET CMS, you'll enjoy a range of benefits, including:
 - **Total Control:** Maintain complete control over your website.
 - **Regular Updates and Exceptional Technical Support:** Benefit from the latest updates and top-notch technical support.
 - **Customization Options:** Tailor WebJET CMS to your specific requirements.
+
+![](docs/redactor/webpages/pagebuilder.png)
 
 ## Features and Functions
 
@@ -36,6 +42,8 @@ WebJET CMS simplifies, streamlines, and accelerates the content management proce
 - **Swift Deployment and Operation:** Get your website up and running quickly and effortlessly.
 
 WebJET CMS is the key to effortless, reliable, and speedy web content management. Take control of your company's online presence without the need for technical expertise. Thanks to its intuitive interface, you can manage your website efficiently and effectively.
+
+![](docs/redactor/apps/stat/stats-page.png)
 
 ## Technology Stack
 
