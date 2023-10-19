@@ -151,7 +151,7 @@ const initAmcharts = () => {
         window.WebjetTheme = module.WebjetTheme
 
         //Add licence
-        window.am5.addLicense('CH112792597');
+        window.am5.addLicense('*********');
 
         setTimeout(()=>{
             //Add event dispache
