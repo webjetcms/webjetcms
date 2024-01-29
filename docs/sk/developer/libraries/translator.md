@@ -34,7 +34,7 @@ Metóda [translate()](#translate) prevezme vstupný argument (prekladový kľú�
 
 ## Vytvorenie inštancie:
 
-**WebJET** inicializuje knižnicu v súbore [app.js](https://gitlab.web.iway.local/webjet/webjet8v9/-/blob/master/src/main/webapp/admin/v9/src/js/app.js)
+**WebJET** inicializuje knižnicu v súbore [app.js](https://github.com/webjetcms/webjetcms/blob/main/src/main/webapp/admin/v9/src/js/app.js)
 
 ```javascript
 /* webjetTranslationService */
@@ -43,7 +43,7 @@ import {Translator} from "./libs/translator/translator";
 window.webjetTranslationService = new Translator();
 ```
 
-následne ju implementuje v súbore [app-init.js](https://gitlab.web.iway.local/webjet/webjet8v9/-/blob/master/src/main/webapp/admin/v9/src/js/app-init.js),
+následne ju implementuje v súbore [app-init.js](https://github.com/webjetcms/webjetcms/blob/main/src/main/webapp/admin/v9/src/js/app-init.js),
 kde pomocou funkcie [load()](#load) načítame preklady zo servera ak ešte neexistujú lokálne alebo ak existuje update.
 
 Funkcia [load()](#load) si sama skontroluje aktuálnosť existujúcich prekladov a rozhodne sa, či má vykonať request na API.

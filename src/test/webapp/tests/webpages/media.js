@@ -393,7 +393,7 @@ Scenario('media domain filter test', async ({I, Document, DT}) => {
     var mirroring = searchText + " mirroring";
 
     //webjet9 domain test
-    //Document.switchDomain("webjet9.tau27.iway.sk");
+    //Document.switchDomain("demotest.webjetcms.sk");
     DT.filter("mediaTitleSk", searchText);
 
     I.see(webjet9);

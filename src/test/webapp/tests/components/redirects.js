@@ -34,7 +34,7 @@ Scenario('export import testovanie', ({ I, DT }) => {
 Scenario('Filter by actual doimain', ({ I, DT, Document }) => {
     I.amOnPage("/admin/v9/settings/redirect/");
 
-    //webjet9.tau27.iway.sk is selected by default
+    //demotest.webjetcms.sk is selected by default
 
     //No domain
     DT.filter("oldUrl", "/slovensky/");
@@ -44,7 +44,7 @@ Scenario('Filter by actual doimain', ({ I, DT, Document }) => {
     I.see("302");
 
     //Actual domain
-    DT.filter("domainName", "webjet9.tau27.iway.sk");
+    DT.filter("domainName", "demotest.webjetcms.sk");
     DT.filter("oldUrl", "/images/drag-drop-test/lighthouse.jpg");
     I.see("8387");
     I.see("/images/drag-drop-test/lighthouse.jpg");

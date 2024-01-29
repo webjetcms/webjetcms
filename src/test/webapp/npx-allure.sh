@@ -22,7 +22,7 @@ else
 fi
 
 if [[ -z "$2" ]]; then
-        CODECEPT_URL="http://webjet9.tau27.iway.sk"
+        CODECEPT_URL="http://demotest.webjetcms.sk"
 else
         CODECEPT_URL="$2"
 fi
@@ -64,7 +64,7 @@ ls -la ../../../build/test
 ls -la ../../../build/test/history
 
 #generovanie screenshotu
-#CODECEPT_URL="http://webjet9.tau27.iway.sk" CODECEPT_SHOW=false npx codeceptjs run tests/admin/datatables.js --grep 'Nastavenie tabulky'
+#CODECEPT_URL="http://demotest.webjetcms.sk" CODECEPT_SHOW=false npx codeceptjs run tests/admin/datatables.js --grep 'Nastavenie tabulky'
 
 CODECEPT_RESTART='session' CODECEPT_SHOW=false CODECEPT_BROWSER=$CODECEPT_BROWSER CODECEPT_URL=$CODECEPT_URL npx codeceptjs run --plugins allure --steps
 RET_CODE=$?

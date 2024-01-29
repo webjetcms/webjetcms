@@ -192,7 +192,7 @@ function addPagePermision(I, DT, DTE, elelentId) {
     I.wait(1);
 
     I.click(locate('.btn.btn-outline-secondary.btn-vue-jstree-add').withText('Pridať web stránku'));
-    I.click(locate('.jstree-node.jstree-closed').withText('webjet9.tau27.iway.sk').find('.jstree-icon.jstree-ocl'));
+    I.click(locate('.jstree-node.jstree-closed').withText('demotest.webjetcms.sk').find('.jstree-icon.jstree-ocl'));
     I.click(locate('.jstree-node.jstree-closed').withText('Aplikácie').find('.jstree-icon.jstree-ocl'));
     I.click(locate('.jstree-node.jstree-closed').withText('Diskusia').find('.jstree-icon.jstree-ocl'));
     I.clickCss("#" + elelentId);

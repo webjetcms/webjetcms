@@ -8,7 +8,7 @@ let password;
 let firstName = "firstName_";
 let lastName = "lastName_";
 
-var defaultPassword = "***REMOVED***";
+var defaultPassword = "*********";
 
 Before(({ I }) => {
     if (randomText == null) {

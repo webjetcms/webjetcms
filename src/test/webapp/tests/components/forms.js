@@ -229,7 +229,7 @@ Scenario("Overenie zoznamu podla prihlaseneho pouzivatela", ({ I, DT }) => {
     //aby sme vzdy v kazdom scenari mali prednastavenu velkost okna
     //odosli prihlasenie
     I.fillField("username", "tester2");
-    I.fillField("password", secret("***REMOVED***"));
+    I.fillField("password", secret("*********"));
     I.click("login-submit");
 
     I.wait(3);

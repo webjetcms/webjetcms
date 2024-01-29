@@ -50,8 +50,8 @@ Scenario('First login/password change /and others', ({I, DTE, Document}) => {
 
     I.waitForElement("#newPassword");
 
-    I.fillField("#newPassword", "***REMOVED***");
-    I.fillField("#retypeNewPassword", "***REMOVED***");
+    I.fillField("#newPassword", "*********");
+    I.fillField("#retypeNewPassword", "*********");
 
     Document.screenshot("/install/setup/change-password.png");
 

@@ -18,7 +18,7 @@ export class JsTreeDocumentOpener extends AbstractJsTreeOpener {}
 
 ---
 ## Vytvorenie inštancie:
-**WebJET** vytvára inštanciu v súbore [app.js](https://gitlab.web.iway.local/webjet/webjet8v9/-/blob/master/src/main/webapp/admin/v9/src/js/app.js)
+**WebJET** vytvára inštanciu v súbore [app.js](https://github.com/webjetcms/webjetcms/blob/main/src/main/webapp/admin/v9/src/js/app.js)
 ```javascript
 import JsTreeDocumentOpener from "./libs/js-tree-document-opener/js-tree-document-opener";
 
@@ -33,7 +33,7 @@ Inicializáciu vykonajme ideálne vždy, keď je inicializovaný jstree zavolan�
 window.jsTreeDocumentOpener.init();
 ```
 
-Wo **WebJET** prebieha inicializácia v súbore [app-init.js](https://gitlab.web.iway.local/webjet/webjet8v9/-/blob/master/src/main/webapp/admin/v9/src/js/app-init.js)
+Wo **WebJET** prebieha inicializácia v súbore [app-init.js](https://github.com/webjetcms/webjetcms/blob/main/src/main/webapp/admin/v9/src/js/app-init.js)
 ```javascript
 window.jstree = somStromcek.jstree({
     'core': {
@@ -64,7 +64,7 @@ Otváranie uzlov stromu sa vykonáva volaním metódy [next()](#next):
 window.jsTreeDocumentOpener.next();
 ```
 
-Wo **WebJET** prebieha volanie v súbore [app-init.js](https://gitlab.web.iway.local/webjet/webjet8v9/-/blob/master/src/main/webapp/admin/v9/src/js/app-init.js)
+Wo **WebJET** prebieha volanie v súbore [app-init.js](https://github.com/webjetcms/webjetcms/blob/main/src/main/webapp/admin/v9/src/js/app-init.js)
 1. Po vyrederovaní stromu `/listener: loaded.jstree`
 2. Po otvorení (_open node_) uzla `/listener: after_open.jstree`
 3. Po vybratí (_select node_) uzla `/listener: select_node.jstree`

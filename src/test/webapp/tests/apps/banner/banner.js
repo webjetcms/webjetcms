@@ -240,18 +240,18 @@ Scenario('kampanovy banner', ({I, DT, DTE}) => {
     I.amOnPage("/apps/banner/admin/?id=124");
     DTE.waitForEditor("bannerDataTable");
     I.click({css: "#pills-dt-bannerDataTable-advanced-tab"});
-    I.dontSee("http://webjet9.tau27.iway.sk/apps/bannerovy-system/?utm_campaign");
+    I.dontSee("http://demotest.webjetcms.sk/apps/bannerovy-system/?utm_campaign");
     I.fillField("#DTE_Field_campaignTitle", "test");
     I.pressKey('Tab');
     I.waitForElement("#campaignTitleUrlShowcase", 10);
-    I.waitForText("http://webjet9.tau27.iway.sk/apps/bannerovy-system/?utm_campaign=test", 10, "#campaignTitleUrlShowcase");
+    I.waitForText("http://demotest.webjetcms.sk/apps/bannerovy-system/?utm_campaign=test", 10, "#campaignTitleUrlShowcase");
 
     I.amOnPage("/apps/banner/admin/?id=3602");
     DT.waitForLoader();
     DTE.waitForEditor("bannerDataTable");
     I.click({css: "#pills-dt-bannerDataTable-advanced-tab"});
     I.waitForElement("#campaignTitleUrlShowcase", 10);
-    I.waitForText("http://webjet9.tau27.iway.sk/apps/bannerovy-system/?utm_campaign", 10, "#campaignTitleUrlShowcase");
+    I.waitForText("http://demotest.webjetcms.sk/apps/bannerovy-system/?utm_campaign", 10, "#campaignTitleUrlShowcase");
 });
 
 Scenario('Kontrola prava cmp_banner_seeall', ({I, DT}) => {

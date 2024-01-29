@@ -298,7 +298,44 @@ task docs {
     }
 }
 
-
+//CI-CD tasky
+task rsyncExplodedWar() {
+    doLast {
+        exec {
+            workingDir "./ant/"
+            commandLine "ant","finalwar"
+        }
+        exec {
+            commandLine "cp","src/main/resources/poolman.xml","build/updatezip/finalwar/WEB-INF/classes/"
+        }
+        exec {
+            commandLine "/usr/local/bin/wj-rsync.sh","webjet4.dev.iway.sk","build/updatezip/finalwar","/www/tomcat_au27/webapps/${rootProject.name}","tomcat_au27.service","tomcat_au27"
+        }
+        exec {
+            commandLine "cp","src/main/resources/poolman-pentest.xml","build/updatezip/finalwar/WEB-INF/classes/poolman.xml"
+        }
+        exec {
+            commandLine "/usr/local/bin/wj-rsync.sh","webjet2b.srv.iway.local","build/updatezip/finalwar","/www/tomcat_au20/webapps/webjet8v9_pentest","tomcat_au20","tomcat_au20"
+        }
+    }
+}
+task rsyncDocs() {
+    doLast {
+        exec {
+            workingDir 'docs'
+            project.ext."npmExe" = Os.isFamily(Os.FAMILY_WINDOWS) ? "npm.cmd" : "npm"
+            commandLine project.ext.'npmExe', 'install'
+        }
+        exec {
+            workingDir "docs"
+            project.ext."npmExe" = Os.isFamily(Os.FAMILY_WINDOWS) ? "npm.cmd" : "npm"
+            commandLine project.ext.'npmExe', 'run', 'sitemap'
+        }
+        exec {
+            commandLine "/usr/local/bin/wj-rsync.sh","webjet2b.srv.iway.local","docs","/www/tomcat_au20/webapps/docs.webjetcms.sk/latest/","tomcat_au20","tomcat_au20"
+        }
+    }
+}
 
 //testovanie
 task npminstalltest {

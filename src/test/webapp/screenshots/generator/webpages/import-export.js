@@ -4,7 +4,7 @@ var delete_folder_button = (locate('.col-auto').find('.btn.btn-sm.buttons-select
 let zipFileInput = "#form > input[type=file]:nth-child(3)";
 let excelFileInput = "#xlsImportForm > table > tbody > tr:nth-child(1) > td:nth-child(2) > input[type=file]";
 
-let zipFileLocation = "tests/webpages/webjet9.tau27.iway.sk-export.zip";
+let zipFileLocation = "tests/webpages/demotest.webjetcms.sk-export.zip";
 let excelFileLocation = "tests/webpages/import_struct.xls";
 
 Before(({ login }) => {

@@ -21,7 +21,7 @@ Scenario('zle zadane heslo @singlethread', ({ I }) => {
 function login(I, correctPassword=false, checkText=true) {
     I.wait(1);
     I.fillField("username", "tester");
-    if (correctPassword) I.fillField("password", secret("***REMOVED***"));
+    if (correctPassword) I.fillField("password", secret("*********"));
     else I.fillField("password", "tralala");
     I.click("#login-submit");
 
@@ -75,7 +75,7 @@ Scenario('uspesne prihlasenie @singlethread', ({ I }) => {
     I.amOnPage('/admin/');
     I.fillField("username", "tester");
 
-    I.fillField("password", secret("***REMOVED***"));
+    I.fillField("password", secret("*********"));
     I.click("login-submit");
     //konecne som prihlaseny, pockame na VUE load
     I.wait(5);
@@ -130,7 +130,7 @@ Scenario('Test prihlasenia uzivatela SHA512/BCrypto @singlethread', ({ I }) => {
 
     //musel som spravit takto skaredo, lebo login funkcia inak nesla
     I.fillField("username", "tester");
-    I.fillField("password", secret("***REMOVED***"));
+    I.fillField("password", secret("*********"));
     I.forceClick("Prihlásiť sa");
     I.waitForText("Tester Playwright", 60);
 

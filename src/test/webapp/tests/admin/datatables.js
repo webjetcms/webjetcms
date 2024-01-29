@@ -21,7 +21,7 @@ Scenario('Nastavenie tabulky', async ({ I, Browser, Document }) => {
         await Document.compareScreenshotElement("#insertScriptTable_wrapper", "autotest-insert-script-settings.png", 1280, 270, 5);
 
         //generate base on server:
-        //CODECEPT_URL='http://webjet9.tau27.iway.sk' CODECEPT_SHOW=false npx codeceptjs run --grep 'Nastavenie tabulky'
+        //CODECEPT_URL='http://demotest.webjetcms.sk' CODECEPT_SHOW=false npx codeceptjs run --grep 'Nastavenie tabulky'
     }
 });
 

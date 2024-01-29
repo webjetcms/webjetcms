@@ -9,7 +9,7 @@ Scenario("CZ verzia preklady", ({ I, DTE }) => {
     I.see("PŘIHLÁŠENÍ");
     I.see("Zapomenuté heslo");
     I.fillField("username", "tester");
-    I.fillField("password", secret("***REMOVED***"));
+    I.fillField("password", secret("*********"));
     I.click("login-submit");
 
     I.wait(3);
@@ -39,7 +39,7 @@ Scenario("EN verzia preklady", ({ I, DTE }) => {
     I.see("LOGIN");
     I.see("Lost password");
     I.fillField("username", "tester");
-    I.fillField("password", secret("***REMOVED***"));
+    I.fillField("password", secret("*********"));
     I.click("login-submit");
 
     I.wait(3);

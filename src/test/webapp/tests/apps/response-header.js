@@ -95,7 +95,7 @@ Scenario('test-odpovede', ({I, DT, DTE}) => {
     I.see("x-webjet-header: root-folder");
     I.dontSee("x-frame-options: sub-folder");
     I.dontSee("x-webjet-header: sub-folder");
-    I.see("x-macro-test: aceintegration-webjet9.tau27.iway.sk");
+    I.see("x-macro-test: aceintegration-demotest.webjetcms.sk");
     //^/apps/http-hlavicky/$
     I.see("x-webjet-equals: true");
     // /apps/http-hlavicky/*.html
@@ -107,7 +107,7 @@ Scenario('test-odpovede', ({I, DT, DTE}) => {
     I.dontSee("x-webjet-header: root-folder");
     I.see("x-frame-options: sub-folder");
     I.see("x-webjet-header: sub-folder");
-    I.see("x-macro-test: aceintegration-webjet9.tau27.iway.sk");
+    I.see("x-macro-test: aceintegration-demotest.webjetcms.sk");
     //^/apps/http-hlavicky/$
     I.dontSee("x-webjet-equals");
     // /apps/http-hlavicky/*.html
@@ -124,7 +124,7 @@ Scenario('test-odpovede', ({I, DT, DTE}) => {
     I.dontSee("x-webjet-header: root-folder");
     I.see("x-frame-options: sub-folder");
     I.see("x-webjet-header: sub-folder");
-    I.see("x-macro-test: aceintegration-webjet9.tau27.iway.sk");
+    I.see("x-macro-test: aceintegration-demotest.webjetcms.sk");
     //^/apps/http-hlavicky/$
     I.dontSee("x-webjet-equals");
     // /apps/http-hlavicky/*.html

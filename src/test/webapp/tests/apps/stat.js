@@ -132,7 +132,7 @@ Scenario("error", ({ I, DT }) => {
 
     checkDates(I, "01.05.2022", "31.05.2022");
 
-    DT.checkTableRow("errorDataTable", 2, ["2", "2 022", "22", "/templates/aceintegration/jet/assets/fonts/geomanist/geomanist", "referer: http://webjet9.tau27.iway.sk/components/_common/combine", "14"]);
+    DT.checkTableRow("errorDataTable", 2, ["2", "2 022", "22", "/templates/aceintegration/jet/assets/fonts/geomanist/geomanist", "referer: http://demotest.webjetcms.sk/components/_common/combine", "14"]);
 });
 
 Scenario("logon-user", ({ I, DT }) => {

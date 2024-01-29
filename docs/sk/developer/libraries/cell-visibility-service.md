@@ -17,7 +17,7 @@ Pri každom ďalšom redere tabuľky sa pomocou metódy [updateColumnConfig()](#
 Vyberieme uložené nastavenia z localStorage na základe ID a aktualizujeme konfiguračný objekt, ktorý sa následne nastaví ako východiskový.
 ---
 ## Vytvorenie inštancie:
-**WebJET** vytvára inštanciu v súbore [app.js](https://gitlab.web.iway.local/webjet/webjet8v9/-/blob/master/src/main/webapp/admin/v9/src/js/app.js)
+**WebJET** vytvára inštanciu v súbore [app.js](https://github.com/webjetcms/webjetcms/blob/main/src/main/webapp/admin/v9/src/js/app.js)
 ```javascript
 import {CellVisibilityService} from "./libs/data-tables-extends/";
 
@@ -26,7 +26,7 @@ window.dataTableCellVisibilityService = new CellVisibilityService();
 
 **Použitie:**
 
-**WebJET** používa triedu v súbore [.../webjetdatatables/index.js](https://gitlab.web.iway.local/webjet/webjet8v9/-/blob/master/src/main/webapp/admin/v9/npm_packages/webjetdatatables/index.js)
+**WebJET** používa triedu v súbore [.../webjetdatatables/index.js](https://github.com/webjetcms/webjetcms/blob/main/src/main/webapp/admin/v9/npm_packages/webjetdatatables/index.js)
 
 Zozbieranie a uloženie dát prebieha, pri stlačení tlačítka save v konfigurácii stĺpcov.
 ```javascript

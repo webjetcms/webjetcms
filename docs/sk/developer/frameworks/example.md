@@ -215,7 +215,7 @@ Ak potrebujete riešiť pokročilejšiu kontrolu práv (napr. na adresár pre up
 
 Metóda beforeDelete sa volá pred zmazaním entity, môžete v nej napr. zmazať príslušný súbor alebo vykonať inú akciu pred zmazaním dát z databázy (napr. presunúť dáta do archívu).
 
-Niekedy je potrebné prenášať číselníkové dáta (napr. možnosti do výberových/select polí). Podrobné informácie nájdete v [dokumentácii Číselníky pre select boxy](https://gitlab.web.iway.local/webjet/webjet8v9/-/blob/master/docs/datatables/restcontroller.md#%C4%8D%C3%ADseln%C3%ADky-pre-select-boxy), príkladom je ale trieda [AuditNotifyRestController](../../../src/main/java/sk/iway/iwcm/system/audit/AuditNotifyRestController.java) kde v metóde getAllItems je do response pridaný objekt adminlogType so zoznamom možností pre výberové pole:
+Niekedy je potrebné prenášať číselníkové dáta (napr. možnosti do výberových/select polí). Podrobné informácie nájdete v [dokumentácii Číselníky pre select boxy](https://github.com/webjetcms/webjetcms/blob/main/docs/datatables/restcontroller.md#%C4%8D%C3%ADseln%C3%ADky-pre-select-boxy), príkladom je ale trieda [AuditNotifyRestController](../../../src/main/java/sk/iway/iwcm/system/audit/AuditNotifyRestController.java) kde v metóde getAllItems je do response pridaný objekt adminlogType so zoznamom možností pre výberové pole:
 
 ```java
 package sk.iway.iwcm.system.audit;

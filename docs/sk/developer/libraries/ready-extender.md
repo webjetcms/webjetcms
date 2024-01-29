@@ -19,7 +19,7 @@ Môžeme si teda určiť, kedy sa má, ktorá funkcia spustiť a odpadá nám po
 a stačí nám iba jedna funkcia `document.ready` pre vykonanie [fire()](#fire)
 
 ## Vytvorenie inštancie:
-**WebJET** inicializuje knižnicu v súbore [app.js](https://gitlab.web.iway.local/webjet/webjet8v9/-/blob/master/src/main/webapp/admin/v9/src/js/app.js)
+**WebJET** inicializuje knižnicu v súbore [app.js](https://github.com/webjetcms/webjetcms/blob/main/src/main/webapp/admin/v9/src/js/app.js)
 ```javascript
 import Ready from './libs/ready-extender/ready-extender';
 

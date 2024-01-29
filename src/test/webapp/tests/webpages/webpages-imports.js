@@ -16,7 +16,7 @@ Before(({ I, login }) => {
 Scenario('Over importovanie web stránok zo zip súboru (XML)', async ({ I, DT, DTE }) => {
     importGroupName = "Zip-Import-autotest-" + randomNumber;
     let fileInput = "#form > input[type=file]:nth-child(3)";
-    let zipFileLocation = "tests/webpages/webjet9.tau27.iway.sk-export.zip";
+    let zipFileLocation = "tests/webpages/demotest.webjetcms.sk-export.zip";
 
     //Preparing folder phase
     I.amOnPage("/admin/v9/webpages/web-pages-list/?groupid=0");

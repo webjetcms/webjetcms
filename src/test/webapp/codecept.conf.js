@@ -73,7 +73,7 @@ exports.config = {
     REST: {
       endpoint: url,
       defaultHeaders: {
-        'x-auth-token': '***REMOVED***+Njg8'
+        'x-auth-token': '*********'
       },
     },
     JSONResponse: {},

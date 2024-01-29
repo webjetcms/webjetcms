@@ -80,7 +80,7 @@ module.exports = function () {
       //aby sme vzdy v kazdom scenari mali prednastavenu velkost okna
       //odosli prihlasenie
       this.fillField("username", user);
-      this.fillField("password", secret("***REMOVED***"));
+      this.fillField("password", secret("*********"));
       this.click("login-submit");
       this.waitForText("Pomocník", 10);
     },
