@@ -129,7 +129,7 @@ public class ImportUsersXLS extends ExcelImportJXL
 			admin = true;
 		}
 
-		user = (Identity)request.getSession().getAttribute(Constants.USER_KEY);
+		user = UsersDB.getCurrentUser(request);
 	}
 
 	@Override

@@ -227,6 +227,11 @@ Scenario('custom-fields', async({ I, DT, DTE, Document }) => {
         $('div.DTE_Action_Edit div.DTE_Field_Name_fieldK').css("padding-top", "10px");
         $('div.DTE_Action_Edit div.DTE_Field_Name_fieldK').css("padding-bottom", "10px");
 
+        $('div.DTE_Action_Edit div.DTE_Field_Name_fieldL').css("padding-top", "10px");
+        $('div.DTE_Action_Edit div.DTE_Field_Name_fieldL').css("padding-bottom", "10px");
+
+        $('div.DTE_Action_Edit div.DTE_Field_Name_fieldM').css("padding-top", "10px");
+        $('div.DTE_Action_Edit div.DTE_Field_Name_fieldM').css("padding-bottom", "10px");
 
     });
     Document.screenshotElement("div.DTE_Action_Edit div.DTE_Field_Name_fieldA", "/frontend/webpages/customfields/webpages-text.png");
@@ -263,6 +268,9 @@ Scenario('custom-fields', async({ I, DT, DTE, Document }) => {
 
     I.scrollTo("div.DTE_Action_Edit div.DTE_Field_Name_fieldK");
     Document.screenshotElement("div.DTE_Action_Edit div.DTE_Field_Name_fieldK", "/frontend/webpages/customfields/webpages-dir.png");
+
+    I.scrollTo("div.DTE_Action_Edit div.DTE_Field_Name_fieldM");
+    Document.screenshotElement("div.DTE_Action_Edit div.DTE_Field_Name_fieldM", "/frontend/webpages/customfields/webpages-uuid.png");
 
     I.amOnPage("/admin/v9/settings/translation-keys/");
     DT.waitForLoader();

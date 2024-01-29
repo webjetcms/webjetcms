@@ -26,6 +26,7 @@ import sk.iway.iwcm.Adminlog;
 import sk.iway.iwcm.Cache;
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.Identity;
+import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.components.translation_keys.jpa.TranslationKeyComparator;
 import sk.iway.iwcm.components.translation_keys.jpa.TranslationKeyEntity;
@@ -33,7 +34,6 @@ import sk.iway.iwcm.components.translation_keys.jpa.TranslationKeyRepository;
 import sk.iway.iwcm.i18n.IwayProperties;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.i18n.PropDB;
-import sk.iway.iwcm.system.ConstantsV9;
 import sk.iway.iwcm.system.datatable.DatatableRestControllerV2;
 import sk.iway.iwcm.users.UsersDB;
 import sk.iway.iwcm.utils.Pair;
@@ -71,7 +71,7 @@ public class TranslationKeyService {
     public Map<String, String> getLanguageFieldCombination() {
         Map<String, String> languageFieldCombination = new LinkedHashMap<>();
         //Set combination of  "language shortcut" and "field alphabet"
-        String[] lngArr = ConstantsV9.getArray("languages");
+        String[] lngArr = Constants.getArray("languages");
         for(int i = 0; i < lngArr.length; i++) {
             char fieldAlphabet = (char)(('A') + i);
 
@@ -249,7 +249,7 @@ public class TranslationKeyService {
      * @param entity entity representing translation key and his values in all supported languages
      * @return same entity that was entered
      */
-    public TranslationKeyEntity createOrEditTranslationKey(Identity user, TranslationKeyEntity entity, boolean isImport, Set<String> importedColumns) {
+    public TranslationKeyEntity createOrEditTranslationKey(Identity user, TranslationKeyEntity entity, boolean isImport, String importMode, Set<String> importedColumns) {
         if (PropDB.canEdit(user, entity.getKey()) == false)
             throw new IllegalArgumentException(Prop.getInstance().getText("components.translation_key.cantEditThisKey"));
 
@@ -276,6 +276,13 @@ public class TranslationKeyService {
             } else {
                 dbEntity = translationKeyRepository.findByKeyAndLng(key, lng);
             }
+
+            //if entity exist and we are importig ONLY NEW keys, skip
+            if (isImport && "onlyNew".equals(importMode) && dbEntity!=null) {
+                Logger.debug(getClass(), "createOrEditTranslationKey, skipping key="+key+" lng="+lng+" value="+value+" because of importMode=onlyNew");
+                continue;
+            }
+
             String oldValue = null;
             if (dbEntity == null) {
                 //ak kluc este nie je v DB a hodnota je prazdna preskoc

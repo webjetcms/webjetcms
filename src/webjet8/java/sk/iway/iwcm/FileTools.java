@@ -165,6 +165,55 @@ public class FileTools
 	}
 
 	/**
+	 * Copy InputStream to IwcmFile and close InputStream
+	 * @param is - InputStream
+	 * @param dest
+	 * @return
+	 */
+	public static boolean copyFile(InputStream is, IwcmFile dest)
+	{
+		boolean ret = false;
+		try
+		{
+			Logger.debug(FileTools.class,"copyFile: MultipartFile/InputStreamSource to " + dest.getAbsolutePath());
+			if (dest.getParentFile().exists()==false)
+			{
+				Logger.debug(FileTools.class,"   creating dir");
+				if(dest.getParentFile().mkdirs() == false) return false;
+			}
+			if (dest.exists()==false)
+			{
+				Logger.debug(FileTools.class,"   creating new file");
+				if(dest.createNewFile() == false) return false;
+			}
+
+			try
+			{
+				IwcmOutputStream os = new IwcmOutputStream(dest);
+				try
+				{
+					byte[] buff = new byte[8000];
+					int size;
+					while (true)
+					{
+						size = is.read(buff);
+						if (size < 1) break;
+						os.write(buff, 0, size);
+					}
+				}
+				finally { os.close(); }
+			}
+			finally { is.close(); }
+			ret = true;
+		}
+		catch (Exception e)
+		{
+			sk.iway.iwcm.Logger.error(e);
+		}
+		return(ret);
+	}
+
+	/**
 	 * Presunie subor z URL adresy orig na dest
 	 * @param origUrl
 	 * @param destUrl

@@ -300,7 +300,7 @@ function odoberGlobal(id)
 </script>
 
 
-<div class="tab-pane toggle_content " style="height:700px; overflow: auto; width:1150px;">
+<div class="tab-pane toggle_content tab-pane-fullheight">
 	<div class="tab-page" id="tabMenu1" style="display: block; padding: 15px;">
 		<form id="textFormId" name="textForm" style="margin: 0">
 

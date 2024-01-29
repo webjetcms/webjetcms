@@ -1869,7 +1869,7 @@ function fillFields(jsonEditorForm) {
 			template = autocompleteTemplate.replace(new RegExp('{pismeno}', 'g'), keyUpper).replace(new RegExp('{value}', 'g'), value);
 		}
 		else if (v.type == 'image') {
-			template += '<span class="input-group-addon btn green"><i onclick="openImageDialogWindow(\'editorForm\', \'field' + keyUpper + '\', \'\')" class="fa fa-picture-o"></i></span>';
+			template += '<span class="input-group-addon btn green"><i onclick="openImageDialogWindow(\'editorForm\', \'field' + keyUpper + '\', \'\')" class="fa fa-image"></i></span>';
 		}
 		else if (v.type == 'link') {
 			template += '<span class="input-group-addon btn green"><i onclick="openLinkDialogWindow(\'editorForm\', \'field' + keyUpper + '\')" class="fa fa-link"></i></span>';

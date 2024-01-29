@@ -77,6 +77,7 @@ public class ComponentsRestController {
             result.put("data", bean);
             result.put("columns", dataTableColumnsFactory.getColumns(null));
             result.put("tabs", dataTableColumnsFactory.getTabs());
+            result.put("title", dataTableColumnsFactory.getTitle());
         }
         catch (Exception e) {
             result.put("error", e.getMessage());
@@ -120,7 +121,7 @@ public class ComponentsRestController {
             }
             Method writeMethod = propertyDescriptor.getWriteMethod();
             try {
-                java.lang.reflect.Field field = targetClass.getDeclaredField(paramName);
+                java.lang.reflect.Field field = getDeclaredFiledRecursive(targetClass, paramName);
                 DataTableColumn annotation = null;
                 if (field.isAnnotationPresent(DataTableColumn.class)) {
                     annotation = field.getAnnotation(DataTableColumn.class);
@@ -132,6 +133,36 @@ public class ComponentsRestController {
                 sk.iway.iwcm.Logger.error(e);
             }
         }
+    }
+
+    /**
+     * Method will try get Field from class by given fieldName. If field is not found in class, method will try find field in super classes (and in the superClass of superClass ...).
+     * If we reach last superClass and field is not found, method will throw NoSuchFieldException.
+     *
+     * @param initialClass
+     * @param fieldName
+     * @return
+     * @throws IllegalAccessException
+     * @throws InvocationTargetException
+     * @throws NoSuchFieldException - if error is catch and there is still superClass do nothing, else return new NoSuchFieldException
+     */
+    private static java.lang.reflect.Field getDeclaredFiledRecursive(Class<?> initialClass, String fieldName) throws IllegalAccessException, InvocationTargetException, NoSuchFieldException {
+        java.lang.reflect.Field field = null;
+
+        int failsafe=0;
+        Class<?> targetClass = initialClass;
+        while (targetClass != null && failsafe++<15) {
+            try {
+                field = targetClass.getDeclaredField(fieldName);
+                if(field != null) return field;
+            } catch (NoSuchFieldException e) {
+
+            }
+            // Field not found in current class, continue to superclass
+            targetClass = targetClass.getSuperclass();
+        }
+
+       throw new NoSuchFieldException("Field " + fieldName + " not found in class " + initialClass.getName() + " or in super classes");
     }
 
     /**

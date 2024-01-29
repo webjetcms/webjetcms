@@ -81,7 +81,7 @@ public class GalleryActionBean extends WebJETActionBean
 		int docId = Tools.getIntValue(getRequest().getParameter("docId"), -1);
 		int groupId = Tools.getIntValue(getRequest().getParameter("groupId"), -1);
 
-		String uploadSubdir = UploadFileTools.getPageUploadSubDir(docId, groupId, "/images/gallery");
+		String uploadSubdir = UploadFileTools.getPageUploadSubDir(docId, groupId, null, "/images/gallery");
 		IwcmFile uploadDirFile = new IwcmFile(Tools.getRealPath(uploadSubdir));
 		if ("/images/gallery".equals(dir))
 		{

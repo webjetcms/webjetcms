@@ -67,7 +67,14 @@ public class InsertScriptDB extends JpaDB<InsertScriptBean>
 
 		List<Condition> conditions = new ArrayList<>();
 		conditions.add(JpaDB.filterSubstring("name", name));
-		conditions.add(JpaDB.filterSubstring("position", position));
+		if (position!=null) {
+			if (position.startsWith("^") && position.endsWith("$") && position.length()>2) {
+				conditions.add(JpaDB.filterEquals("position", position.substring(1, position.length()-1)));
+			} else {
+				conditions.add(JpaDB.filterSubstring("position", position));
+			}
+		}
+
 		conditions.add(JpaDB.filterSubstring("script_body", scriptBody));
 //		conditions.add(InsertScriptDB.filterBetween("valid_from", validFrom, null));
 //		conditions.add(InsertScriptDB.filterBetween("valid_to", null, validTo));

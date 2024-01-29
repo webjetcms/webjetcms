@@ -13,7 +13,7 @@ Before(({ I, login }) => {
     }
 });
 
-Scenario('zakladne testy', ({I, DTE}) => {
+Scenario('zakladne testy', ({I, DT, DTE}) => {
 
     I.click("button.buttons-create");
     DTE.waitForEditor('calendarTypesDataTable');
@@ -26,8 +26,7 @@ Scenario('zakladne testy', ({I, DTE}) => {
     I.click(locate('span').withText('WebJET Admin'));
     DTE.save();
 
-    I.fillField("input.dt-filter-name", entityName);
-    I.pressKey('Enter', "input.dt-filter-name");
+    DT.filter("name", entityName);
     I.click(entityName);
     DTE.waitForEditor('calendarTypesDataTable');
 
@@ -39,15 +38,16 @@ Scenario('zakladne testy', ({I, DTE}) => {
     I.click(locate('span').withText('WebJET Administrátor'));
     DTE.save();
 
-    I.fillField("input.dt-filter-name", entityName + ".changed");
-    I.pressKey('Enter', "input.dt-filter-name");
+    DT.filter("name", entityName + ".changed");
     I.see(entityName + ".changed");
     //I.see('WebJET Administrátor');
 
     /* DELETE TEST */
     I.click("td.dt-select-td.sorting_1");
     I.click("button.buttons-remove");
+    DTE.waitForEditor('calendarTypesDataTable');
     I.click("Zmazať", "div.DTE_Action_Remove");
+    DTE.waitForLoader();
 
     I.dontSee(entityName + ".changed")
 });

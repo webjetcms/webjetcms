@@ -41,6 +41,7 @@ export class VueTools {
     static setDefaultObjects(vm) {
         // aby som vo vue app mohol pristupit bez nutnosti importu
         vm.config.globalProperties.$WJ = window.WJ;
+        vm.config.globalProperties.$window = window;
         // direktiva na bootstrap tooltip do vue
         vm.directive('tooltip',
             {

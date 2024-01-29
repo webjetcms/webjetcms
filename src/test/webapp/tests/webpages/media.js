@@ -10,7 +10,7 @@ Before(({ I, login }) => {
     }
 });
 
-function mediaEditSteps(I, DTE, options, clickMediaAll) {
+function mediaEditSteps(I, DTE, options, isFromWebpage=false) {
     //over, ze ked zmazem hodnoty a nastavim linku, tak sa nastavi aj textova hodnota
     let mediaTitle = options.testingData[0];
 
@@ -26,12 +26,9 @@ function mediaEditSteps(I, DTE, options, clickMediaAll) {
         I.waitForInvisible("#WJLoaderDiv", 10);
         I.wait(1);
 
-        if (clickMediaAll) {
-            //Media vsetkych stranok
-            I.wait(5);
-            I.clickCss("#nav-iwcm_1_");
-            I.waitForInvisible("#WJLoaderDiv", 10);
-            I.wait(1);
+        if (isFromWebpage) {
+            //otvor Media vsetkych stranok
+            I.click("#nav-iwcm_1_");
         }
 
         //Obrazky
@@ -76,7 +73,7 @@ Scenario('media-zakladne testy', async ({I, DTE, DataTables}) => {
             I.click('test_final');
         },
         editSteps: function(I, options) {
-            mediaEditSteps(I, DTE, options, false);
+            mediaEditSteps(I, DTE, options);
         },
         editSearchSteps: function(I, options) {
         },
@@ -396,7 +393,7 @@ Scenario('media domain filter test', async ({I, Document, DT}) => {
     var mirroring = searchText + " mirroring";
 
     //webjet9 domain test
-    //Document.switchDomain("demotest.webjetcms.sk");
+    //Document.switchDomain("webjet9.tau27.iway.sk");
     DT.filter("mediaTitleSk", searchText);
 
     I.see(webjet9);

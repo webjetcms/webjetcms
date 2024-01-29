@@ -7,11 +7,13 @@ import java.util.Map;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
+import javax.servlet.http.HttpServletRequest;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.validation.Errors;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -20,12 +22,16 @@ import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.components.forum.jpa.DocForumEditorFields;
 import sk.iway.iwcm.components.forum.jpa.DocForumEntity;
 import sk.iway.iwcm.components.forum.jpa.DocForumRepository;
+import sk.iway.iwcm.database.SimpleQuery;
 import sk.iway.iwcm.system.datatable.Datatable;
 import sk.iway.iwcm.system.datatable.DatatablePageImpl;
+import sk.iway.iwcm.system.datatable.DatatableRequest;
 import sk.iway.iwcm.system.datatable.DatatableRestControllerV2;
 import sk.iway.iwcm.system.datatable.ProcessItemAction;
 import sk.iway.iwcm.system.datatable.SpecSearch;
 import sk.iway.iwcm.system.jpa.JpaTools;
+import sk.iway.iwcm.users.UserGroupDetails;
+import sk.iway.iwcm.users.UserGroupsDB;
 
 @RestController
 @RequestMapping("/admin/rest/forum")
@@ -33,12 +39,10 @@ import sk.iway.iwcm.system.jpa.JpaTools;
 @Datatable
 public class DocForumRestController extends DatatableRestControllerV2<DocForumEntity, Long> {
 
-    private final DocForumService service;
 
     @Autowired
-    public DocForumRestController(DocForumService service, DocForumRepository forumRepository) {
+    public DocForumRestController(DocForumRepository forumRepository) {
         super(forumRepository);
-        this.service = service;
     }
 
     @Override
@@ -46,7 +50,11 @@ public class DocForumRestController extends DatatableRestControllerV2<DocForumEn
         DatatablePageImpl<DocForumEntity> page = new DatatablePageImpl<>(getAllItemsIncludeSpecSearch(new DocForumEntity(), pageable));
 
         //Add list of icons
-        page.addOptions("editorFields.statusIcons", service.getStatusIconOptions(getProp()), "label", "value", false);
+        page.addOptions("editorFields.statusIcons", DocForumService.getStatusIconOptions(getProp()), "label", "value", false);
+
+        //Add user groups
+        page.addOptions("forumGroupEntity.addMessagePerms", UserGroupsDB.getInstance().getUserGroupsByTypeId(UserGroupDetails.TYPE_PERMS), "userGroupName", "userGroupId", false);
+        page.addOptions("forumGroupEntity.adminPerms", UserGroupsDB.getInstance().getUserGroupsByTypeId(UserGroupDetails.TYPE_PERMS), "userGroupName", "userGroupId", false);
 
         return page;
     }
@@ -55,9 +63,14 @@ public class DocForumRestController extends DatatableRestControllerV2<DocForumEn
     public DocForumEntity processFromEntity(DocForumEntity entity, ProcessItemAction action) {
         if(entity == null) return entity;
 
+        //Prepare nested ForumGroupEntity (aka DB forum table)
+        //!! MUST BE BEFORE editorFields (because editor fields can use values from forumGroup)
+        ForumGroupService.prepareForumGroup(entity);
+
         DocForumEditorFields fef = new DocForumEditorFields();
         fef.fromDocForum(entity, getRequest(), getProp());
         entity.setEditorFields(fef);
+
         return entity;
     }
 
@@ -65,21 +78,52 @@ public class DocForumRestController extends DatatableRestControllerV2<DocForumEn
     public void beforeSave(DocForumEntity entity) {
         //Set date of last change
         entity.setQuestionDate(new Date());
+
+        //If APPROVING is disabled, remove approving email
+        if(entity.getForumGroupEntity() != null && !entity.getForumGroupEntity().getMessageConfirmation())
+            entity.getForumGroupEntity().setApproveEmail("");
+
+        //If Active was changed, do it recursive for whole tree
+        if(entity.getId() != null && entity.getId() > 0) {
+            //When it's edit
+            Boolean oldValue = (new SimpleQuery()).forBoolean("SELECT active FROM document_forum WHERE forum_id=? AND domain_id=?", entity.getId(), entity.getDomainId());
+            //If active value (actual) is different than old value in DB
+            if(oldValue != null && (oldValue != entity.getActive())) {
+                if(entity.getActive()) DocForumService.docForumRecursiveAction(DocForumService.ActionType.UNLOCK, entity.getId().intValue(), entity.getDocId(), getUser());
+                else DocForumService.docForumRecursiveAction(DocForumService.ActionType.LOCK, entity.getId().intValue(), entity.getDocId(), getUser());
+            }
+        }
+    }
+
+    @Override
+    public void afterSave(DocForumEntity entity, DocForumEntity saved) {
+        //Save ForumGroupEntity too (it's forum DB table)
+        ForumGroupService.saveForum(entity.getForumGroupEntity());
     }
 
     @Override
     public boolean deleteItem(DocForumEntity entity, long id) {
         setForceReload(true);
-        return service.deleteDocForum(id);
+        return DocForumService.docForumRecursiveAction(DocForumService.ActionType.DELETE, (int) id, entity.getDocId(), getUser());
     }
 
     @Override
     public boolean processAction(DocForumEntity entity, String action) {
-        if ("undelete".equals(action)) {
+        if ("recoverForum".equals(action)) {
+            //Restore soft-deleted forum's
             setForceReload(true);
-            service.undeleteEntity(entity.getId());
-            return true;
+            return DocForumService.docForumRecursiveAction(DocForumService.ActionType.RECOVER, entity.getId().intValue(), entity.getDocId(), getUser());
+        } else if("approveForum".equals(action)) {
+            //Approve forum's
+            setForceReload(true);
+            return DocForumService.docForumRecursiveAction(DocForumService.ActionType.APPROVE, entity.getId().intValue(), entity.getDocId(), getUser());
+        } else if("rejectForum".equals(action)) {
+            //Reject forum's
+            setForceReload(true);
+            return DocForumService.docForumRecursiveAction(DocForumService.ActionType.REJECT, entity.getId().intValue(), entity.getDocId(), getUser());
         }
+
+        //Unknown action
         return false;
     }
 
@@ -99,5 +143,13 @@ public class DocForumRestController extends DatatableRestControllerV2<DocForumEn
         }
 
         super.addSpecSearch(params, predicates, root, builder);
+    }
+
+    @Override
+    public void validateEditor(HttpServletRequest request, DatatableRequest<Long, DocForumEntity> target, Identity currentUser, Errors errors, Long id, DocForumEntity entity) {
+        //Validate that if we choose approving via email, email must be set and must have valid form !!
+        if(entity.getForumGroupEntity() != null && Boolean.TRUE.equals(entity.getForumGroupEntity().getMessageConfirmation()))
+            if(!Tools.isEmail( entity.getForumGroupEntity().getApproveEmail() ))
+                errors.rejectValue("errorField.forumGroupEntity.approveEmail", null, getProp().getText("components.forum.message_confirmation.field_requested"));
     }
 }

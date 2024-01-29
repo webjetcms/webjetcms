@@ -27,7 +27,7 @@ import sk.iway.iwcm.SetCharacterEncodingFilter;
  */
 public aspect AspectException
 {
-	public pointcut scope(): within(sk.iway..*) && !within(sk.iway.iwcm.Constants) && !within(sk.iway.iwcm.update.UpdateAction);
+	public pointcut scope(): within(sk.iway..*) && !within(sk.iway.iwcm.Constants);
 
 	before(Exception e): handler(Exception+) && args(e) && scope()
 	{
@@ -37,7 +37,7 @@ public aspect AspectException
 	protected void logException(Exception e, StaticPart location, StaticPart enclosing)
 	{
 		if (InitServlet.isWebjetInitialized()==false) return;
-		
+
 		if (e instanceof SQLException)
 		{
 			if (e.toString().indexOf("adminlog_notify")!=-1) return;
@@ -51,20 +51,20 @@ public aspect AspectException
 			if (e.toString().indexOf("Cannot get a connection")!=-1) return;
 			if (e.toString().indexOf("Data too long for column 'description'")!=-1) return;
 			if (e.toString().indexOf("already has more than 'max_user_connections' active connections")!=-1) return;
-			
+
 			Signature signature = location.getSignature();
-         
+
          String source = signature.getDeclaringTypeName() + ":" + (enclosing.getSourceLocation().getLine());
-         
+
          Cache c = Cache.getInstance();
          String cacheKey = "aspectException_"+e+"-"+source;
          if (c.getObject(cacheKey)!=null) return;
-         
+
          StringWriter sw = new StringWriter();
       	e.printStackTrace(new PrintWriter(sw));
-      	
+
       	if (sw.toString().indexOf("at sk.iway.iwcm.Adminlog.add(")!=-1) return;
-         
+
 			System.out.println("--------------------- ASPECT zaciatok ---------- ");
 			System.out.println("(a) " + source + " - " + e.toString()+" t="+e);
 			System.out.println("signature="+signature);
@@ -76,11 +76,11 @@ public aspect AspectException
 			}
 			System.out.println("e="+e);
 			System.out.println("stackTrace="+sw.toString());
-			
+
 			Adminlog.add(Adminlog.TYPE_SQLERROR, "SQL ERROR:\nexception: "+e+"\nsource: "+source+"\nstackTrace:\n"+sw.toString(), -1, -1);
-			
+
 			System.out.println("--------------------- ASPECT koniec ---------- ");
-			
+
 			int auditExceptionTimeout = Constants.getInt("auditExceptionTimeout");
 			if (auditExceptionTimeout>0)
 			{

@@ -59,4 +59,12 @@ public interface DocHistoryRepository extends JpaRepository<DocHistory, Long>, J
 
     @Query(value = "SELECT max(history_id) AS max FROM documents_history WHERE doc_id=?", nativeQuery=true)
     public Integer findMaxHistoryId(int docId);
+
+    @Query(value = "SELECT group_id FROM documents_history WHERE history_id=?", nativeQuery=true)
+    public Optional<Integer> findGroupIdById(Long id);
+
+    @Query(value = "SELECT dh FROM DocHistory dh WHERE dh.docId IN :docIds AND dh.actual = 1")
+    public List<DocHistory> findByDocIdInActual(@Param("docIds")List<Integer> docIds);
+
+    public Optional<DocHistory> findTopByDocIdOrderBySaveDateDesc(Integer docId);
 }

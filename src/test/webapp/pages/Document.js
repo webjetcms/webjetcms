@@ -50,8 +50,9 @@ module.exports = {
       }
 
       I.switchTo('.cke_wysiwyg_frame.cke_reset');
+      I.switchTo("iframe.wj_component");
+      I.click("a.inlineComponentButton.cke_button");
 
-      I.clickCss("iframe.wj_component");
       I.wait(5);
 
       if (typeof callback == "function" && callback != null) {
@@ -93,7 +94,8 @@ module.exports = {
       I.wait(1);
       I.click(locate('.dropdown-item').withText(domain));
       I.waitForElement("#toast-container-webjet", 10);
-      I.clickCss(".toastr-buttons button.btn-primary");
+      I.waitForElement(".toastr-buttons button.btn-primary", 10);
+      I.forceClick({css: ".toastr-buttons button.btn-primary"});
   },
 
   /**

@@ -36,7 +36,7 @@ public class ForumBean extends ActiveRecord implements GdprModel {
 
     @Override
     public String getLink() {
-        return "/components/forum/admin_diskusia_zoznam.jsp";
+        return "/apps/forum/admin/";
     }
 
     @Override

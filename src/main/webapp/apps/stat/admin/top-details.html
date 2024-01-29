@@ -240,7 +240,7 @@
 
         function getGraphUrl(bVariant, percentual) {
             let tmpDefURL = "/admin/rest/stat/doc-new";
-            let searchDateValue = ChartTools.getDateRange(30);
+            let searchDateValue = ChartTools.getDateRange(null);
 
             if(!bVariant) {
                 tmpDefURL += "/search/findByColumns?";
@@ -259,7 +259,7 @@
         async function updateTablesAndCharts(isDateChanged) {
             WJ.showLoader();
 
-            let searchDateValue = ChartTools.getDateRange(30);
+            let searchDateValue = ChartTools.getDateRange(null);
 
             /*  If date is changed, datatable will change url by adding /find/searchByColumns but our url allready contain /all, so its not gonna work together.
                 For this reason we need change whole url. Isnt looking good but its necessary. The reason is becuase this pagse is open from another and

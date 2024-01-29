@@ -19,6 +19,7 @@ import javax.validation.ConstraintViolation;
 import javax.validation.Validator;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -69,8 +70,19 @@ public abstract class AbstractUploadListener<T> {
         }
 
         Set<ConstraintViolation<T>> violations = validator.validate(form);
+
+        //we dont know why, but validator for files returns same error two times
+        Set<String> duplicityCheck = new HashSet<>();
+
         for (ConstraintViolation<T> violation : violations) {
-            this.bindingResult.rejectValue(violation.getPropertyPath().toString(), "", violation.getMessage());
+            String message = violation.getMessage();
+            String path = violation.getPropertyPath().toString();
+            String key = path + "_" + message;
+            if (duplicityCheck.contains(key)) {
+                continue;
+            }
+            duplicityCheck.add(key);
+            this.bindingResult.rejectValue(path, "", message);
         }
 
         model.put(BindingResult.MODEL_KEY_PREFIX + "form", this.bindingResult);

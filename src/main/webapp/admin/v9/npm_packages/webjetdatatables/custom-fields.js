@@ -39,6 +39,34 @@ function isDateEmpty(dateValue) {
     else return false;
 }
 
+function generateUUID() {
+    let uuid = null;
+    try {
+        uuid = crypto.randomUUID();
+        //console.log("Generated uuid API: ", uuid);
+    } catch (e) {
+        //generator is not abailable, use fallback
+    }
+
+    if (uuid == null || uuid.length<3) {
+        var d = new Date().getTime();
+        var d2 = ((typeof performance !== 'undefined') && performance.now && (performance.now()*1000)) || 0;//Time in microseconds since page-load or 0 if unsupported
+        uuid = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+            var r = Math.random() * 16;//random number between 0 and 16
+            if(d > 0){//Use timestamp until depleted
+                r = (d + r)%16 | 0;
+                d = Math.floor(d/16);
+            } else {//Use microseconds since page-load if supported
+                r = (d2 + r)%16 | 0;
+                d2 = Math.floor(d2/16);
+            }
+            return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16);
+        });
+        //console.log("Generated uuid random: ", uuid);
+    }
+    return uuid;
+}
+
 export function update(EDITOR, action) {
 
     function fixNullData(data, click) {
@@ -90,8 +118,8 @@ export function update(EDITOR, action) {
     var labelTemplate = '<div class="input-group"> <span class="input-group-text noborders field-type-label">{value}</span> <input value="{value}" id="DTE_Field_{customPrefix}{identifier}" class="form-control" type="hidden"></div>';
     var numberTemplate = '<input id="DTE_Field_{customPrefix}{identifier}" type="number" value="{value}" {disabled} class="form-control">';
     var booleanTemplate = '<div><div class="custom-control form-switch"><input id="DTE_Field_{customPrefix}{identifier}" type="checkbox" {disabled} class="form-check-input"><label for="DTE_Field_{customPrefix}{identifier}" class="form-check-label">Áno</label></div></div>';
-
     var dateTemplate = '<input id="DTE_Field_{customPrefix}{identifier}" type="text" autocomplete="off" class="form-control">';
+    var uuidTemplate = '<input id="DTE_Field_{customPrefix}{identifier}" maxlength="255" value="{value}" class="form-control field-type-uuid" type="text">';
 
     //JICH - add
     var hiddenTemplate = '<input value="{value}" id="DTE_Field_field{identifier}" class="form-control" type="hidden"><div id="fieldDisplay{identifier}"></div>';
@@ -127,6 +155,14 @@ export function update(EDITOR, action) {
         let valueUnescaped = value;
         if(v.type !== "number" && v.type !== "boolean" && v.type !== "date" && v.type !== "none")
             value = value.replace(/"/gi, "&quot;");
+
+        if("uuid" === v.type) {
+            if(value == null || value.length<3) {
+                value = generateUUID();
+            }
+        }
+
+        //console.log("Custom-fields type=", v.type, "v=", v, "value=", value);
 
         //nastav label
         //console.log("#" + datatable.DATA.id + "_modal .DTE_Field_Name_" + customPrefix + identifier + " label");
@@ -168,6 +204,8 @@ export function update(EDITOR, action) {
             template = numberTemplate.replace(new RegExp('{customPrefix}', 'g'), customPrefix).replace(new RegExp('{identifier}', 'g'), identifier).replace(new RegExp('{value}', 'g'), getFieldValue(value, action, v.type)).replace(new RegExp('{disabled}', 'g'), disableField(v.disabled));
         } else if(v.type == 'boolean') {
             template = booleanTemplate.replace(new RegExp('{customPrefix}', 'g'), customPrefix).replace(new RegExp('{identifier}', 'g'), identifier).replace(new RegExp('{disabled}', 'g'), disableField(v.disabled));
+        } else if(v.type == 'uuid') {
+            template = uuidTemplate.replace(new RegExp('{customPrefix}', 'g'), customPrefix).replace(new RegExp('{identifier}', 'g'), identifier).replace(new RegExp('{value}', 'g'), getFieldValue(value, action, v.type)).replace(new RegExp('{disabled}', 'g'), disableField(v.disabled));
         } else if(v.type == 'date') {
             //console.log("DATE");
             template = dateTemplate.replace(new RegExp('{customPrefix}', 'g'), customPrefix).replace(new RegExp('{identifier}', 'g'), identifier);
@@ -357,6 +395,16 @@ export function update(EDITOR, action) {
 
             vm.component('webjet-dte-jstree', window.VueTools.getComponent('webjet-dte-jstree'));
             vm.mount(conf._el);
+        } else if ("uuid"==v.type) {
+            //console.log("inputBox=", inputBox);
+            var inputField = inputBox.find("input.field-type-uuid");
+            inputField = inputBox.find("input.field-type-uuid").on("blur", function() {
+                if (this.value=="") this.value=generateUUID();
+            });
+            setTimeout(() => {
+                //there was problem that new page overwrite value, so we generate new uuid
+                if (inputField.val()=="") inputField.val(generateUUID());
+            }, 1000);
         }
 
         //JICH - add

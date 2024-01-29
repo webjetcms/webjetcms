@@ -288,7 +288,7 @@ body.is-edit-mode div.wjInlineHighlighter.footerEditor span.wjInlineHighlighterH
 .cke_bottom { background: #e5eef9 !important; }
 
 #wjInlineCkEditorToolbarElement { width: 980px; z-index: 10009; /* pozor na zindex 10010 ma popup okno */ }
-div.cke_panel { z-index: 10009 !important; }
+div.cke_panel { z-index: 102003 !important; }
 
 
 #inlineEditorToolbarTop .nav-tabs { border-bottom: 2px solid #DDD; }
@@ -865,4 +865,13 @@ div.wj-control-line img.userImage {
 /* fix z-index on editor_component/ckeditor dialogs - above toolbar */
 .cke_dialog_container {
     z-index: 101004 !important;
+}
+
+@media (max-width: 577px) {
+    #wjInlineCkEditorToolbarElement {
+        width: auto !important;
+    }
+    #inlineEditorToolbarTop, #inlineEditorToolbarTopPlaceHolder {
+        height: 176px;
+    }
 }

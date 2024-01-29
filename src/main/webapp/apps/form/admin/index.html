@@ -50,10 +50,11 @@
         vueFormsApp.config.globalProperties.$tabUser = '[[#{components.forms.detail.tab.user}]]';
 
         //user
-        vueFormsApp.config.globalProperties.$userId = '[[#{userId}]]';
+        vueFormsApp.config.globalProperties.$userId = '[[#{components.users.groups_approve.user_id}]]';
         vueFormsApp.config.globalProperties.$userFirstName = '[[#{user.firstName}]]';
         vueFormsApp.config.globalProperties.$userLastName = '[[#{user.lastName}]]';
         vueFormsApp.config.globalProperties.$userLogin = '[[#{user.login}]]';
+        vueFormsApp.config.globalProperties.$userCompany = '[[#{user.company}]]';
         vueFormsApp.config.globalProperties.$userAdress = '[[#{user.address}]]';
         vueFormsApp.config.globalProperties.$userCity = '[[#{user.city}]]';
         vueFormsApp.config.globalProperties.$userZip = '[[#{user.ZIP}]]';

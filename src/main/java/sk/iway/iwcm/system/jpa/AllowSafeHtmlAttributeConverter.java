@@ -38,6 +38,7 @@ public class AllowSafeHtmlAttributeConverter implements AttributeConverter<Strin
             .allowCommonBlockElements()
             .allowStyling()
             .allowElements("a")
+            .allowElements("img")
             .allowUrlProtocols("http", "https", "data")
             .allowAttributes("href").onElements("a")
             .allowAttributes("src").onElements("img")

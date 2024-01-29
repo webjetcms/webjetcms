@@ -25,9 +25,11 @@
 
     int docId = Tools.getIntValue(Tools.getRequestParameter(request, "docId"), -1);
     int groupId = Tools.getIntValue(Tools.getRequestParameter(request, "groupId"), -1);
+    String title = Tools.getRequestParameter(request, "title");
     String rootDir = Constants.getString("imagesRootDir");
     if (url!=null && url.startsWith("/files")) rootDir = Constants.getString("filesRootDir");
-    String uploadSubDir = UploadFileTools.getPageUploadSubDir(docId, groupId, rootDir).replace("//", "/");
+    String uploadSubDir = UploadFileTools.getPageUploadSubDir(docId, groupId, title, rootDir).replace("//", "/");
+    String uploadSubDirGallery = UploadFileTools.getPageUploadSubDir(docId, groupId, title, "/images/gallery").replace("//", "/");
 
     //startsWith / preto, ze externe linky nam to vracia ako www.webjet.sk a podobne
     if (url!=null && (url.contains(":default") || url.startsWith("/")==false)) url = uploadSubDir+"/default";
@@ -50,7 +52,7 @@
     String hash = FsService.getHash(url);
     if (hashParent == null) hashParent =  FsService.getHash(url.substring(0, url.lastIndexOf("/")));
 
-    if (url.startsWith(uploadSubDir) && uploadSubDir.length()>5)
+    if ((url.startsWith(uploadSubDir) || url.startsWith(uploadSubDirGallery)) && uploadSubDir.length()>5)
     {
        //je to podadresar Media aktualnej stranky
         volume = "iwcm_fs_ap_volume_";

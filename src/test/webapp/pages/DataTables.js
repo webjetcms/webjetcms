@@ -130,6 +130,9 @@ module.exports = {
         if (containerModal!="") I.dontSeeElement(containerModal);
         else I.dontSeeElement('div.modal');
 
+        //because of possible force reload
+        DT.waitForLoader();
+
         if (typeof options.afterCreateSteps == "function") {
             I.say("Testovanie - afterCreateSteps");
             options.afterCreateSteps(I, options, requiredFields, DT, DTE);
@@ -171,6 +174,9 @@ module.exports = {
         //over, ze sa modal zatvoril
         if (containerModal!="") I.dontSeeElement(containerModal);
         else I.dontSeeElement('div.modal');
+
+        //because of possible force reload
+        DT.waitForLoader();
 
         /* Testovanie - vyhladanie upraveneho zaznamu */
         I.say("Testovanie - vyhladanie upraveneho zaznamu");

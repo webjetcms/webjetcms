@@ -6,35 +6,58 @@ export class DatatablesCkEditor {
 	datatable = null;
 	json = null;
 	options = null;
-	ckEditorAtLeastOneInitialized = false;
 	editorHeightLatest = 0;
 	//zoznam regexp moznosti pre typ pola
 	regexps = null;
 	editingMode = "";
 
-    constructor(options) {
-		//console.log("CkEditor inicializujem, options=", options, " CKEDITOR=",CKEDITOR);
+	//CKEDITOR object, referenced like this because of inline editing
+	ckEditorObject = null;
+	//window object
+	myWindow = null;
 
+    constructor(options) {
 		this.options = options;
 		this.datatable = options.datatable;
 
-		var configLink = '/admin/skins/webjet8/ckeditor/config.jsp';
+		this.myWindow = options.window ? options.window : window;
+		this.ckEditorObject = options.ckEditorObject ? options.ckEditorObject : this.myWindow.CKEDITOR;
+
+		var ckEditorConfig = options.ckEditorConfig ? options.ckEditorConfig : '/admin/skins/webjet8/ckeditor/config.jsp';
+		var ckEditorElementId = options.ckEditorElementId ? options.ckEditorElementId : "data";
+		var ckEditorInitFunction = options.ckEditorInitFunction ? options.ckEditorInitFunction : this.ckEditorObject.replace;
+
+		//console.log("CkEditor inicializujem, options=", options, " CKEDITOR=", CKEDITOR, "window=", this.myWindow.location.href);
+
 		this.customizeEditor(this.options);
-		this.initializeCkEditorImpl("data", CKEDITOR.replace, configLink, this.options)
+
+		//console.log("ckEditorElementId=", ckEditorElementId);
+
+		this.initializeCkEditorImpl(ckEditorElementId, ckEditorInitFunction, ckEditorConfig, this.options)
 		this.editorHeightLatest = 0;
 
 		let that = this;
-		//ziskaj regexps a potom inicializuj
-		$.ajax({
-			url: "/admin/rest/forms-list/regexps",
-            success: function (json) {
-                //console.log("regexps, json=", json);
-				that.regexps = json;
-				that.afterInit();
-            }
-		});
 
-		window.ckeditorFixIframeDialog = function(iframeElement) {
+		if (typeof window.ckeditorRegexps == "undefined") {
+			//ziskaj regexps a potom inicializuj
+			$.ajax({
+				url: "/admin/rest/forms-list/regexps",
+				success: function (json) {
+					window.ckeditorRegexps = json;
+					//console.log("regexps, json=", json);
+					that.regexps = json;
+					that.afterInit();
+				}
+			});
+		}
+		else {
+			setTimeout(() => {
+				that.regexps = window.ckeditorRegexps;
+				that.afterInit();
+			}, 100);
+		}
+
+		this.myWindow.ckeditorFixIframeDialog = function(iframeElement) {
 			//WJ8 funkcia volana z pluginov pre nastavenie velkosti iframe elementu
 			setTimeout(function() {
 				//console.log("iframeElement=", iframeElement, " tr height=", $(iframeElement).parent().parent().height());
@@ -51,23 +74,25 @@ export class DatatablesCkEditor {
 			}, 100);
 		}
 
-		window.resizeDialogCK = function(width, height)
+		this.myWindow.resizeDialogCK = function(width, height)
 		{
-			if (typeof CKEDITOR != 'undefined' && CKEDITOR.dialog.getCurrent() != null) {
-				CKEDITOR.dialog.getCurrent().resize(width, height);
+			console.log("resizeDialogCK, width=", width, " height=", height);
+			if (typeof that.ckEditorObject != 'undefined' && that.ckEditorObject.dialog.getCurrent() != null) {
+				ckEditorObject.dialog.getCurrent().resize(width, height);
 			}
 			else {
-				console.warn("Var CKEDITOR is undefined or CKEDITOR.dialog.getCurrent() is null");
+				console.warn("Var CKEDITOR is undefined or ckEditorObject.dialog.getCurrent() is null");
 			}
 		}
 	}
 
 	afterInit() {
+		var that = this;
 		this.ckEditorInstance.on('afterPaste', function(e) {
 			//console.log("After paste, e=", e);
-			if (typeof window.bootstrapVersion != "undefined" && window.bootstrapVersion.indexOf("3")!=0) {
+			if (typeof that.myWindow.bootstrapVersion != "undefined" && that.myWindow.bootstrapVersion.indexOf("3")!=0) {
 				//najdi tabulky a wrapni ich do table-responsive
-				$(CKEDITOR.currentInstance.document.$).find("table.tabulkaStandard").each(function() {
+				$(that.ckEditorInstance.document.$).find("table.tabulkaStandard").each(function() {
 					var $table = $(this);
 						if ($table.hasClass("tabulkaStandard")) {
 						//console.log("table=", this);
@@ -83,11 +108,11 @@ export class DatatablesCkEditor {
 			}
 		 });
 		 this.ckEditorInstance.on('afterCommandExec', function(e) {
-			if (typeof window.bootstrapVersion != "undefined" && window.bootstrapVersion.indexOf("3")!=0) {
+			if (typeof that.myWindow.bootstrapVersion != "undefined" && that.myWindow.bootstrapVersion.indexOf("3")!=0) {
 				//console.log("afterCommandExec, e=", e.data.name);
 				if ("tableDelete"==e.data.name || "deleteTable"==e.data.name) {
 					//odstran prazdne table-responsive div elementy
-					$(CKEDITOR.currentInstance.document.$).find("div.table-responsive:empty").remove();
+					$(that.ckEditorInstance.document.$).find("div.table-responsive:empty").remove();
 				}
 			}
 		 });
@@ -113,12 +138,12 @@ export class DatatablesCkEditor {
 		   	editable.attachListener( editable, "keydown", function(evt) {
 				//console.log("keydown, evt=", evt);
 				var keyEvent = evt.data.$;
-				if ((window.navigator.platform.match("Mac") ? keyEvent.metaKey : keyEvent.ctrlKey)  && keyEvent.key === 's') {
+				if ((that.myWindow.navigator.platform.match("Mac") ? keyEvent.metaKey : keyEvent.ctrlKey)  && keyEvent.key === 's') {
 					//console.log("IFRAME CTRL+S, evt=", evt);
 
 					keyEvent.preventDefault();
 					try {
-						window.top.WJ.dispatchEvent("WJ.DTE.save", {});
+						that.myWindow.top.WJ.dispatchEvent("WJ.DTE.save", {});
 					} catch (ex) {}
 				}
 			});
@@ -126,10 +151,10 @@ export class DatatablesCkEditor {
 	}
 
 	translate(key) {
-		//CKEDITOR.lang[ window.userLng ].webjetcomponents.forms.form
+		//that.ckEditorObject.lang[ that.myWindow.userLng ].webjetcomponents.forms.form
 		//console.log("translate, key=", key);
 		try {
-			return CKEDITOR.lang[ window.userLng ].webjetadmin[key];
+			return this.ckEditorObject.lang[ this.myWindow.userLng ].webjetadmin[key];
 		} catch (e) {
 			console.log(e);
 		}
@@ -139,14 +164,15 @@ export class DatatablesCkEditor {
 	customizeEditor(options) {
 		var that = this;
 
-		CKEDITOR.config.justifyClasses = [ 'text-left', 'text-center', 'text-right', 'text-justify' ];
+		that.ckEditorObject.config.justifyClasses = [ 'text-left', 'text-center', 'text-right', 'text-justify' ];
         var imageAlignClasses = ['pull-left image-left', 'pull-right image-right'];
 
-		//console.log("customizeEditor, initialized=", this.ckEditorAtLeastOneInitialized);
-
-		if (this.ckEditorAtLeastOneInitialized == false)
+		if (typeof that.ckEditorObject.ckEditorAtLeastOneInitialized == "undefined")
 		{
-			CKEDITOR.on( 'dialogDefinition', function( ev )
+			//console.log("customizeEditor, initializing=", that.ckEditorObject.ckEditorAtLeastOneInitialized, "CKEDITOR=", that.ckEditorObject);
+
+			that.ckEditorObject.aaa = "aaa";
+			that.ckEditorObject.on( 'dialogDefinition', function( ev )
 			{
 				var dialogName = ev.data.name;
 				var dialogDefinition = ev.data.definition;
@@ -169,7 +195,7 @@ export class DatatablesCkEditor {
 					infoTab.get('selHeaders')['default'] = 'row';
 					infoTab.get('txtWidth')['default'] = '100%';
 					var advancedTab = dialogDefinition.getContents('advanced');
-					if (typeof window.bootstrapVersion == "undefined" || window.bootstrapVersion.indexOf("3")==0) {
+					if (typeof that.myWindow.bootstrapVersion == "undefined" || that.myWindow.bootstrapVersion.indexOf("3")==0) {
 						advancedTab.get('advCSSClasses')['default'] = 'tabulkaStandard';
 					} else {
 						advancedTab.get('advCSSClasses')['default'] = 'table table-sm tabulkaStandard';
@@ -179,11 +205,11 @@ export class DatatablesCkEditor {
 						//this.getContentElement("info", "txtSummary");
 						//this.getContentElement("info", "txtSummary").getElement().hide();
 					});
-					dialogDefinition.onOk = CKEDITOR.tools.override(dialogDefinition.onOk, function(original) {
+					dialogDefinition.onOk = that.ckEditorObject.tools.override(dialogDefinition.onOk, function(original) {
 						return function()
 						{
 							var wrapTable = false;
-							if (typeof window.bootstrapVersion != "undefined" && window.bootstrapVersion.indexOf("3")!=0) wrapTable = true;
+							if (typeof that.myWindow.bootstrapVersion != "undefined" && that.myWindow.bootstrapVersion.indexOf("3")!=0) wrapTable = true;
 
 							var id = null;
 							var originalId = null;
@@ -198,7 +224,7 @@ export class DatatablesCkEditor {
 							original.call(this);
 
 							if (wrapTable) {
-								var table = CKEDITOR.currentInstance.document.$.getElementById(id);
+								var table = window.getCkEditorInstance().document.$.getElementById(id);
 								var $table = $(table);
 								var parent = $table.parent("div.table-responsive");
 
@@ -330,7 +356,7 @@ export class DatatablesCkEditor {
 						{
 							try
 							{
-								var wjImageIframe = CKEDITOR.document.getById( 'wjImageIframeElement' );
+								var wjImageIframe = that.ckEditorObject.document.getById( 'wjImageIframeElement' );
 								if (wjImageIframe && wjImageIframe.$)
 								{
 									//console.log("INITIALIZED: "+wjImageIframe.$.contentWindow.elFinderInitialized);
@@ -349,7 +375,7 @@ export class DatatablesCkEditor {
 
 					});
 
-					dialogDefinition.onOk = CKEDITOR.tools.override(dialogDefinition.onOk, function(original) {
+					dialogDefinition.onOk = that.ckEditorObject.tools.override(dialogDefinition.onOk, function(original) {
 						return function()
 						{
 							var video = ['.mp3', '.mp4', '.flv', 'youtube.com', 'youtu.be', 'vimeo.com', 'facebook.com/facebook/videos/'];
@@ -365,7 +391,7 @@ export class DatatablesCkEditor {
 							});
 
 							if (videoFile != "") {
-								var editor = CKEDITOR.currentInstance;
+								var editor = window.getCkEditorInstance().document;
 								editor.wjInsertUpdateComponent("!INCLUDE(/components/video/video_player.jsp, file="+videoFile+")!");
 								return;
 							}
@@ -450,7 +476,7 @@ export class DatatablesCkEditor {
 
 						if (document.getElementById("wjLinkIframe") == null)
 						{
-							var iframeElement = new CKEDITOR.dom.element("IFRAME");
+							var iframeElement = new that.ckEditorObject.dom.element("IFRAME");
 							iframeElement.setAttribute("src", "/admin/skins/webjet8/ckeditor/dist/plugins/webjet/wj_link.jsp");
 							iframeElement.setAttribute("id", "wjLinkIframe");
 							//iframeElement.setAttribute("width", 580);
@@ -474,7 +500,7 @@ export class DatatablesCkEditor {
 							{
 								//console.log("ON SHOW");
 
-								var wjLinkIframe = CKEDITOR.document.getById( 'wjLinkIframe' );
+								var wjLinkIframe = that.ckEditorObject.document.getById( 'wjLinkIframe' );
 								if (wjLinkIframe && wjLinkIframe.$)
 								{
 									//console.log("Idem updatnut");
@@ -495,7 +521,7 @@ export class DatatablesCkEditor {
 
 					});
 
-					dialogDefinition.onOk = CKEDITOR.tools.override(dialogDefinition.onOk, function(original) {
+					dialogDefinition.onOk = that.ckEditorObject.tools.override(dialogDefinition.onOk, function(original) {
 						return function()
 						{
 							//prepneme na URL typ inak nam to nesetne dobre z kotvy
@@ -697,7 +723,7 @@ export class DatatablesCkEditor {
 						//this.getContentElement("info", "txtName").getElement().hide();
 					});
 
-					dialogDefinition.onOk = CKEDITOR.tools.override(dialogDefinition.onOk, function(original) {
+					dialogDefinition.onOk = that.ckEditorObject.tools.override(dialogDefinition.onOk, function(original) {
 						return function()
 						{
 							var formName = this.getContentElement("info", "wjFormName").getValue();
@@ -820,7 +846,7 @@ export class DatatablesCkEditor {
 									element = data.$;
 								}
 
-								var dialog = CKEDITOR.dialog.getCurrent();
+								var dialog = that.ckEditorObject.dialog.getCurrent();
 								var required = this.getValue();
 								var requiredType = "";
 								try
@@ -946,7 +972,7 @@ export class DatatablesCkEditor {
 									var nameCleared = $this.getContentElement("info", "_cke_saved_name");
 									if (nameCleared != "")
 									{
-										var editor = CKEDITOR.instances.data;
+										var editor = that.ckEditorObject.instances.data;
 										//toto je element na ktory sa doubleclicklo (je selectnuty)
 										var element = editor.getSelection().getStartElement();
 
@@ -982,7 +1008,7 @@ export class DatatablesCkEditor {
 						});
 					}
 
-					dialogDefinition.onOk = CKEDITOR.tools.override(dialogDefinition.onOk, function(original) {
+					dialogDefinition.onOk = that.ckEditorObject.tools.override(dialogDefinition.onOk, function(original) {
 						return function()
 						{
 							var savedNameElement = this.getContentElement("info", "_cke_saved_name");
@@ -1024,7 +1050,7 @@ export class DatatablesCkEditor {
 							//----- zavolajme vytvorenie input pola ------
 							var result = original.call(this);
 
-							var editor = CKEDITOR.instances.data;
+							var editor = that.ckEditorObject.instances.data;
 							var startElement = editor.getSelection().getStartElement();
 
 							//console.log(startElement);
@@ -1077,10 +1103,10 @@ export class DatatablesCkEditor {
 					});
 
 					function bootstrapWrapField(element, text) {
-						if (typeof window.bootstrapVersion == "undefined" || window.bootstrapVersion.indexOf("3")==0) return;
+						if (typeof that.myWindow.bootstrapVersion == "undefined" || that.myWindow.bootstrapVersion.indexOf("3")==0) return;
 
 						//console.log("bootstrapWrapField, element=", element);
-						window.bsElement = element;
+						that.myWindow.bsElement = element;
 						var $el = $(element);
 						var id = element.prop('id');
 
@@ -1181,7 +1207,7 @@ export class DatatablesCkEditor {
 
 					function CreateElement(tag, atrs)
 					{
-						var element = CKEDITOR.document.createElement(tag);
+						var element = that.ckEditorObject.document.createElement(tag);
 
 						$.each(atrs, function(k,v){
 							if (k == "value") {
@@ -1240,7 +1266,7 @@ export class DatatablesCkEditor {
 					}
 					});
 
-					dialogDefinition.onOk = CKEDITOR.tools.override(dialogDefinition.onOk, function(original) {
+					dialogDefinition.onOk = that.ckEditorObject.tools.override(dialogDefinition.onOk, function(original) {
 						return function()
 						{
 							var value = this.getContentElement("info", "sendAjax").getValue();
@@ -1283,12 +1309,12 @@ export class DatatablesCkEditor {
 							element = this.button;
 							var isInsertMode = !element;
 
-							var fake = element ? CKEDITOR.htmlParser.fragment.fromHtml( element.getOuterHtml() ).children[ 0 ] : new CKEDITOR.htmlParser.element( 'input' );
+							var fake = element ? that.ckEditorObject.htmlParser.fragment.fromHtml( element.getOuterHtml() ).children[ 0 ] : new that.ckEditorObject.htmlParser.element( 'input' );
 							this.commitContent( fake );
 
-							var writer = new CKEDITOR.htmlParser.basicWriter();
+							var writer = new that.ckEditorObject.htmlParser.basicWriter();
 							fake.writeHtml( writer );
-							var newElement = CKEDITOR.dom.element.createFromHtml( writer.getHtml(), editor.document );
+							var newElement = that.ckEditorObject.dom.element.createFromHtml( writer.getHtml(), editor.document );
 
 							if ( isInsertMode )
 								editor.insertElement( newElement );
@@ -1308,7 +1334,7 @@ export class DatatablesCkEditor {
 				}
 				else if ( dialogName == 'bulletedListStyle')
 				{
-					dialogDefinition.onOk = CKEDITOR.tools.override(dialogDefinition.onOk, function(original) {
+					dialogDefinition.onOk = that.ckEditorObject.tools.override(dialogDefinition.onOk, function(original) {
 						return function()
 						{
 							//console.log("List style DONE");
@@ -1320,7 +1346,7 @@ export class DatatablesCkEditor {
 							try {
 								range = editor.getSelection().getRanges()[ 0 ];
 
-								range.shrink( CKEDITOR.SHRINK_TEXT );
+								range.shrink( that.ckEditorObject.SHRINK_TEXT );
 								element = editor.elementPath( range.getCommonAncestor() ).contains( 'ul', 1 );
 
 								element && this.commitContent( element );
@@ -1360,7 +1386,7 @@ export class DatatablesCkEditor {
 					});
 
 					if (typeof dialogDefinition.onOk != "undefined") {
-						dialogDefinition.onOk = CKEDITOR.tools.override(dialogDefinition.onOk, function(original) {
+						dialogDefinition.onOk = that.ckEditorObject.tools.override(dialogDefinition.onOk, function(original) {
 							return function(){
 								//console.log('onOk');
 								compressIframeOnHide();
@@ -1370,7 +1396,7 @@ export class DatatablesCkEditor {
 					}
 
 					if (typeof dialogDefinition.onHide != "undefined") {
-						dialogDefinition.onHide = CKEDITOR.tools.override(dialogDefinition.onHide, function(original) {
+						dialogDefinition.onHide = that.ckEditorObject.tools.override(dialogDefinition.onHide, function(original) {
 							return function(){
 								//console.log('onHide');
 								compressIframeOnHide();
@@ -1380,7 +1406,7 @@ export class DatatablesCkEditor {
 					}
 
 					if (typeof dialogDefinition.onCancel != "undefined") {
-						dialogDefinition.onCancel = CKEDITOR.tools.override(dialogDefinition.onCancel, function(original) {
+						dialogDefinition.onCancel = that.ckEditorObject.tools.override(dialogDefinition.onCancel, function(original) {
 							return function(){
 								//console.log('onCancel');
 								compressIframeOnHide();
@@ -1391,40 +1417,40 @@ export class DatatablesCkEditor {
 				*/
 			});
 		}
-		this.ckEditorAtLeastOneInitialized = true;
+		that.ckEditorObject.ckEditorAtLeastOneInitialized = true;
 	}
 
     initializeCkEditorImpl(ckEditorElementId, ckEditorInitFunction, configLink, options)
     {
+		var that = this;
 		//setneme len contents.css aby nam neloadlo defaultne /css/page.css,
 		//az ked sa loadne stranka sa natiahnu potrebne CSS podla sablony, pre init to nepotrebujeme
-		window.webjetContentsCss = [
+		that.myWindow.webjetContentsCss = [
 		   '/admin/skins/webjet8/ckeditor/dist/plugins/webjetcomponents/samples/contents.css'
 		];
 
 	    //var editorElem = document.getElementById("trEditor");
 
-        CKEDITOR.dtd.$removeEmpty['i'] = false;
-        CKEDITOR.dtd.$removeEmpty['span'] = false;
-        CKEDITOR.dtd.$removeEmpty['div'] = false;
-        CKEDITOR.dtd.$removeEmpty['section'] = false;
-        CKEDITOR.dtd.a.div = 1;
-        CKEDITOR.dtd.a.h1 = 1;
-        CKEDITOR.dtd.a.h2 = 1;
-        CKEDITOR.dtd.a.h3 = 1;
-        CKEDITOR.dtd.a.h4 = 1;
-        CKEDITOR.dtd.a.h5 = 1;
-        CKEDITOR.dtd.a.h6 = 1;
-        CKEDITOR.dtd.a.ul = 1;
+        that.ckEditorObject.dtd.$removeEmpty['i'] = false;
+        that.ckEditorObject.dtd.$removeEmpty['span'] = false;
+        that.ckEditorObject.dtd.$removeEmpty['div'] = false;
+        that.ckEditorObject.dtd.$removeEmpty['section'] = false;
+        that.ckEditorObject.dtd.a.div = 1;
+        that.ckEditorObject.dtd.a.h1 = 1;
+        that.ckEditorObject.dtd.a.h2 = 1;
+        that.ckEditorObject.dtd.a.h3 = 1;
+        that.ckEditorObject.dtd.a.h4 = 1;
+        that.ckEditorObject.dtd.a.h5 = 1;
+        that.ckEditorObject.dtd.a.h6 = 1;
+        that.ckEditorObject.dtd.a.ul = 1;
 
         //sem nam to nastavi editor.jsp pre popup okno
-        var webjetContentsCss = window.webjetContentsCss;
+        var webjetContentsCss = that.myWindow.webjetContentsCss;
         if (webjetContentsCss == undefined)
         {
             webjetContentsCss = ['/css/page.css', '/admin/skins/webjet8/ckeditor/dist/plugins/webjetcomponents/samples/contents.css']
         }
 
-		var that = this;
         this.ckEditorInstance = ckEditorInitFunction(ckEditorElementId, {
 
 			uploadUrl: '/admin/web-pages/upload/?__sfu=0',
@@ -1437,7 +1463,7 @@ export class DatatablesCkEditor {
 
 			customConfig: configLink,
 
-			language: window.userLng,
+			language: that.myWindow.userLng,
 
 			on:
 			{
@@ -1447,13 +1473,13 @@ export class DatatablesCkEditor {
 					//console.log("instanceReady");
 					//FCKeditor_OnComplete();
 					if (options.hasOwnProperty("onReady")) {
-					//console.log("instanceReady callback");
-					options.onReady();
+						//console.log("instanceReady callback");
+						options.onReady(that.ckEditorInstance);
 					}
 
 				//console.log("Setting resize interval, that=", that);
-				window.setTimeout(function() { that.resizeEditor(that); }, 100);
-				window.setInterval(function() { that.resizeEditor(that); }, 3000);
+				that.myWindow.setTimeout(function() { that.resizeEditor(that); }, 100);
+				that.myWindow.setInterval(function() { that.resizeEditor(that); }, 3000);
 				},
 
 				'getData' : function(e)
@@ -1486,27 +1512,34 @@ export class DatatablesCkEditor {
 				afterPasteFromWord: function( evt ) {
 					//POZOR: pri zmene uprav aj kod vo webpages-common.js.jsp, ktory sa pouziva v PB
 
-					var filter = new CKEDITOR.filter({
+					var filter = new that.ckEditorObject.filter({
 						$1: {
 							// Use the ability to specify elements as an object.
-							elements: CKEDITOR.dtd,
+							elements: that.ckEditorObject.dtd,
 							attributes: true,
 							styles: false,
 							classes: true
 						}
 					}),
-					fragment = CKEDITOR.htmlParser.fragment.fromHtml( evt.data.dataValue ),
-					writer = new CKEDITOR.htmlParser.basicWriter();
+					fragment = that.ckEditorObject.htmlParser.fragment.fromHtml( evt.data.dataValue ),
+					writer = new that.ckEditorObject.htmlParser.basicWriter();
 
 					//console.log("html1=", evt.data.dataValue);
 					//console.log("fragment 2: ", fragment);
 
 					//filter.allow("*{*}");
 
+					try {
+						//disable colgroup on tables
+						filter.allowedContent[0].elements.table.colgroup = 0;
+					} catch (e) {}
+
 					filter.disallow( 'table[width]' );
 					filter.disallow( 'table[height]' );
 					filter.disallow( 'table[border]' );
+					filter.disallow( 'td(*)' ); //all class on TD
 					filter.disallow( 'span' );
+					filter.disallow( 'col[width]' );
 					filter.disabled = false;
 
 					filter.addTransformations([
@@ -1546,11 +1579,11 @@ export class DatatablesCkEditor {
 		});
 
 		var instance = this.ckEditorInstance;
-		window.getCkEditorInstance = function() {
+		that.myWindow.getCkEditorInstance = function() {
 			//this.console.log("getCkEditorInstance, instance=", instance);
 			return instance;
 		}
-		window.ckEditorInstance = instance;
+		that.myWindow.ckEditorInstance = instance;
 	}
 
 	setJson(json) {
@@ -1561,7 +1594,7 @@ export class DatatablesCkEditor {
 			this.setFormData();
 			this.setData(json.data);
 			this.showEditorNote();
-			this.setStyleComboList();
+			this.setStyleComboList(this.json.editorFields.styleComboList);
 
 			//toto musi byt posledne, inak sa zle nacitaval obsah stranky
 			this.setEditingMode(json);
@@ -1652,6 +1685,7 @@ export class DatatablesCkEditor {
 	}
 
 	setEditingMode(json) {
+		var that = this;
 		//console.log("setEditingMode, json=", json);
 		this.editingMode = json?.editorFields?.editingMode;
 
@@ -1665,13 +1699,12 @@ export class DatatablesCkEditor {
 		if ("pageBuilder"===this.editingMode) {
 			isPageBuilder = true;
 			pageBuilderIframe.attr("src", json.editorFields.editingModeLink);
-			editorTypeSelector.show();
 
 			var editorTypeForced = WJ.getAdminSetting("editorTypeForced");
-			if (typeof editorTypeForced != "undefined") window.editorTypeForced = editorTypeForced;
-			if (typeof window.editorTypeForced != "undefined") {
+			if (typeof editorTypeForced != "undefined") that.myWindow.top.editorTypeForced = editorTypeForced;
+			if (typeof that.myWindow.top.editorTypeForced != "undefined") {
 				//uz si user raz zmenil editor type, tak ho zachovajme
-				this.editingMode = window.editorTypeForced;
+				this.editingMode = that.myWindow.top.editorTypeForced;
 			}
 
 			editorTypeSelector.find("select").val(this.editingMode);
@@ -1679,22 +1712,27 @@ export class DatatablesCkEditor {
 
 			//console.log("SomPB init, mode=", this.editingMode);
 
-			//ak je prepnute na normal editor zobraz selector
-			if ("pageBuilder"!=this.editingMode) {
-				editorTypeSelector.show();
-			}
+		} else if ("html"===this.editingMode) {
+			pageBuilderIframe.attr("src", "about:blank");
 		} else {
 			pageBuilderIframe.attr("src", "about:blank");
-			editorTypeSelector.hide();
 		}
-		this.switchEditingMode(this.editingMode);
 
-		if ("pageBuilder"!=this.editingMode) {
-			editorTypeSelector.hide();
+		//console.log("editingMode=", this.editingMode, "isPageBuilder=", isPageBuilder);
+		var pbOption = editorTypeSelector.find("select option[value='pageBuilder']");
+		if (isPageBuilder) {
+			if (typeof pbOption.attr("disabled")!="undefined") {
+				pbOption.removeAttr("disabled");
+				editorTypeSelector.find("select").selectpicker('refresh');
+			}
+		} else {
+			if (typeof pbOption.attr("disabled")=="undefined") {
+				pbOption.attr("disabled", "disabled");
+				editorTypeSelector.find("select").selectpicker('refresh');
+			}
 		}
-		if (isPageBuilder && "pageBuilder"!=this.editingMode) {
-			editorTypeSelector.show();
-		}
+
+		this.switchEditingMode(this.editingMode);
 	}
 
 	switchEditingMode(newEditingMode) {
@@ -1712,19 +1750,28 @@ export class DatatablesCkEditor {
 			//prevencia pred zbytocnym loadingom HTML objektov
 			this.ckEditorInstance.setMode('source');
 
-			//musime ho zobrazit v PB iframe, lebo inak koliduje
-			editorTypeSelector.hide();
 			//nastav select na korektnu hodnotu
 			if (pageBuilderElement.find("iframe").length>0 && pageBuilderElement.find("iframe")[0].contentWindow && pageBuilderElement.find("iframe")[0].contentWindow.$) {
 				pageBuilderElement.find("iframe")[0].contentWindow.$("div.exit-inline-editor select").val('pageBuilder');
 			}
+		} else if ("html"===this.editingMode) {
+			ckEditorElement.show();
+			pageBuilderElement.hide();
+			var data = this.ckEditorInstance.getData();
+			var ck = this.ckEditorInstance;
+			setTimeout(()=>{
+				//this fix problems with codemirror line gutter
+				if (ckEditorInstance.mode!=="source") ck.setMode('source');
+				ck.setData(data);
+			}, 500);
+
+			//nastav select na korektnu hodnotu
+			editorTypeSelector.find("select").selectpicker("val", "html");
 		} else {
 			ckEditorElement.show();
 			pageBuilderElement.hide();
 			this.ckEditorInstance.setMode('wysiwyg');
 
-			//musime ho zobrazit v PB iframe, lebo inak koliduje
-			editorTypeSelector.show();
 			//nastav select na korektnu hodnotu
 			editorTypeSelector.find("select").selectpicker("val", "");
 		}
@@ -1733,12 +1780,14 @@ export class DatatablesCkEditor {
 		this.resizeEditor(this);
 	}
 
-	setStyleComboList() {
+	setStyleComboList(sessionCssParsed) {
+
+		//console.log("setStyleComboList, sessionCssParsed=", sessionCssParsed, "instance=", instance);
 		//nastav vyberove pole stylov
 		try
 		{
-			var sessionCssParsed = this.json.editorFields.styleComboList;
-			var ckEditorInstance = this.ckEditorInstance;
+			var instance = this.ckEditorInstance;
+			//console.log("instance=", instance);
 
 			// elementy podla dokumentacia ckeditora: 'address', 'div', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'p', 'pre', 'a', 'embed', 'hr', 'img', 'li', 'object', 'ol', 'table', 'td', 'tr', 'ul'
 			var allElements = ['a', 'b', 'i', 'u', 'blockquote', 'dd', 'div', 'dl', 'dt', 'hr', 'img', 'input', 'select', 'textarea', 'label', 'ul', 'ol', 'li', 'table', 'th', 'td', 'p', 'span', 'strong', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6'];
@@ -1777,22 +1826,22 @@ export class DatatablesCkEditor {
 				cssData.push(result);
 			});
 
-			//console.log(JSON.stringify(ckEditorInstance.config.stylesSet) + " vs " + JSON.stringify(cssData));
+			//console.log(JSON.stringify(instance.config.stylesSet) + " vs " + JSON.stringify(cssData));
 			//console.log(cssData);
 
-			if (JSON.stringify(ckEditorInstance.config.stylesSet) != JSON.stringify(cssData)) {
-				ckEditorInstance.ui.get("Styles").reset();
-				ckEditorInstance.config.stylesSet = cssData;
-				ckEditorInstance._.stylesDefinitions = null;
+			if (JSON.stringify(instance.config.stylesSet) != JSON.stringify(cssData)) {
+				instance.ui.get("Styles").reset();
+				instance.config.stylesCombo_stylesSet = cssData;
+				instance.config.stylesSet = cssData;
+				instance._.stylesDefinitions = cssData;
+				instance.fire('stylesSet', {styles: cssData});
 
-				ckEditorInstance.getStylesSet( function( styles ) {
-					ckEditorInstance.fire('stylesSet', {styles: styles});
-				});
+				//console.log("instance.config.stylesSet=", instance.config.stylesSet);
 
 				try
 				{
-					ckEditorInstance.ui.get("Styles").__proto__.showAll()
-					ckEditorInstance.ui.get("Styles")._.panel = null;
+					instance.ui.get("Styles").__proto__.showAll()
+					instance.ui.get("Styles")._.panel = null;
 				} catch (e) {}
 			}
 
@@ -1804,10 +1853,12 @@ export class DatatablesCkEditor {
 	 * Z vysky okna odpocita margin z hora a dola a vysku hlavicky a paticky a zvysok vyuzije pre editor
 	 */
 	resizeEditor(datatablesCkEditor) {
-		//console.log("this=", this, "datatablesCkEditor=", datatablesCkEditor);
-		if (typeof datatablesCkEditor == "undefined" || typeof datatablesCkEditor.datatable == "undefined") return;
+		var that = this;
 
-		var windowInnerHeight = window.innerHeight;
+		//console.log("this=", this, "datatablesCkEditor=", datatablesCkEditor);
+		if (typeof datatablesCkEditor == "undefined" || typeof datatablesCkEditor.datatable == "undefined" || datatablesCkEditor.datatable == null) return;
+
+		var windowInnerHeight = that.myWindow.innerHeight;
 		var dialogMarginTop = parseInt($("#"+datatablesCkEditor.datatable.DATA.id+"_modal > div.modal-dialog").css("margin-top"));
 		var dialogMarginBottom = parseInt($("#"+datatablesCkEditor.datatable.DATA.id+"_modal > div.modal-dialog").css("margin-bottom"));
 		var headerHeight = parseInt($("#"+datatablesCkEditor.datatable.DATA.id+"_modal div.DTE_Header").css("height"));
@@ -1830,7 +1881,7 @@ export class DatatablesCkEditor {
 
 			var pageBuilderElement = $(`#${datatablesCkEditor.options.fieldid}-pageBuilderIframe`);
 			//console.log("pageBuilderElement=", pageBuilderElement, "id=", `#${datatablesCkEditor.options.fieldid}-pageBuilderIframe`);
-			window.pageBuilderElement = pageBuilderElement;
+			that.myWindow.pageBuilderElement = pageBuilderElement;
 			pageBuilderElement.css("height", (editorHeight)+"px");
 		}
 	}

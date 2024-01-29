@@ -1,5 +1,6 @@
 package sk.iway.iwcm.components.translation_keys.rest;
 
+import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -50,14 +51,14 @@ public class TranslationKeyController extends DatatableRestControllerV2<Translat
 
     @Override
     public TranslationKeyEntity insertItem(TranslationKeyEntity translationKeyEntity) {
-        TranslationKeyEntity saved = translationKeyService.createOrEditTranslationKey(getUser(), translationKeyEntity, isImporting(), getImportedColumns());
+        TranslationKeyEntity saved = translationKeyService.createOrEditTranslationKey(getUser(), translationKeyEntity, isImporting(), getImportMode(), getImportedColumns());
         setForceReload(true);
         return saved;
     }
 
     @Override
     public TranslationKeyEntity editItem(TranslationKeyEntity translationKeyEntity, long id) {
-        TranslationKeyEntity saved = translationKeyService.createOrEditTranslationKey(getUser(), translationKeyEntity, isImporting(), getImportedColumns());
+        TranslationKeyEntity saved = translationKeyService.createOrEditTranslationKey(getUser(), translationKeyEntity, isImporting(), getImportMode(), getImportedColumns());
         setForceReload(true);
         return saved;
     }
@@ -156,4 +157,15 @@ public class TranslationKeyController extends DatatableRestControllerV2<Translat
         Adminlog.add(Adminlog.TYPE_PROP_UPDATE, "Importing keys, chunk="+(chunk+1)+"/"+totalChunks, -1, -1);
         if (chunk+1>=totalChunks) Prop.getInstance(true);
     }
+
+    @Override
+    public List<TranslationKeyEntity> findItemBy(String propertyName, TranslationKeyEntity original)
+            throws IllegalAccessException, NoSuchMethodException, InvocationTargetException, InstantiationException {
+
+        //always return empty list, because test for existence is done in TranslationKeyService for every lng column
+        List<TranslationKeyEntity> list = new ArrayList<>();
+        return list;
+    }
+
+
 }

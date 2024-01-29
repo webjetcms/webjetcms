@@ -2,7 +2,7 @@
 <%@page import="sk.iway.iwcm.users.UsersDB"%>
 <%
 sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
-%><%@ page pageEncoding="utf-8" import="sk.iway.iwcm.forum.*,java.util.*,sk.iway.iwcm.*,sk.iway.iwcm.doc.*" %>
+%><%@ page pageEncoding="utf-8" import="sk.iway.iwcm.forum.*,sk.iway.iwcm.components.forum.jpa.*,java.util.*,sk.iway.iwcm.*,sk.iway.iwcm.doc.*" %>
 <%@ taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm" %>
 <%@ taglib uri="/WEB-INF/iway.tld" prefix="iway" %>
 <%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
@@ -58,49 +58,16 @@ pageContext.setAttribute("data", forum);
 request.setAttribute("data", forum);
 
 boolean isAdmin = false;
+boolean canPostNewTopic = true;
+ForumGroupEntity forumGroupBean = ForumDB.getForum(docId); //Never is null
+if (active==false) {
+	canPostNewTopic = false;
+	pageContext.setAttribute("forumClosed", "");
+}
 
-if (user!=null && user.isAdmin())
-{
-	//otestuj, ci ma pravo na tento adresar
-	int group_id = Tools.getIntValue((String)request.getAttribute("group_id"), -1);
-	//System.out.println("group_id="+group_id);
-	GroupsDB groupsDB = GroupsDB.getInstance();
-	String accessible_groups = "";
-	if (user.getEditableGroups() != null && user.getEditableGroups().length() > 0)
-	{
-		//testni ci sa v ceste nachadza aktualna grupa
-		String parentGroups = "," + groupsDB.getParents(group_id)+",";
-		//iteruj cez moje povolene grupy a skus ich hladat
-		StringTokenizer st = new StringTokenizer(user.getEditableGroups(), ",");
-		String id;
-		int i_id;
-		while (st.hasMoreTokens())
-		{
-			id = st.nextToken().trim();
-			try
-			{
-				i_id = Integer.parseInt(id);
-				//ziskaj navbar a pridaj ho
-				accessible_groups = accessible_groups+groupsDB.getNavbarNoHref(i_id)+"<br>";
-				if (id.length() > 0)
-				{
-					//skus ho najst v parent grupach
-					if (parentGroups.indexOf("," + id + ",") != -1)
-					{
-						//hura, ma pristup
-						isAdmin = true;
-					}
-				}
-			}
-			catch (Exception ex)
-			{
-			}
-		}
-	}
-	else
-	{
-		isAdmin = true;
-	}
+if (forumGroupBean.isAdmin(user)) {
+	canPostNewTopic = true;
+	isAdmin = true;
 }
 
 	/**
@@ -178,12 +145,20 @@ if(!isAjaxCall)
 }
 %>
 <h3><iwcm:text key="forum.title"/></h3>
+
+<logic:present name="forumClosed">
+	<p><span class="forumClosed"><iwcm:text key="components.forum.forum_closed"/>!</span></p>
+</logic:present>
+
 <div class="row">
 	<div class="col-xs-12 col-sm-12 col-md-12">
-		<a href="javascript:openWJDialog('forum', '/components/forum/new.jsp?parent=0&type=open&docid=<%=docId%>&pageParams=<%=base64encoded %>&pageNum=<%=pageNumber %>',600,'<iwcm:text key="forum.new"/>');" class="btn btn-success"><iwcm:text key="forum.new"/></a>
+		<% if (canPostNewTopic) { %>
+			<a href="javascript:openWJDialog('forum', '/components/forum/new.jsp?parent=0&type=open&docid=<%=docId%>&pageParams=<%=base64encoded %>&pageNum=<%=pageNumber %>',600,'<iwcm:text key="forum.new"/>');" class="btn btn-success"><iwcm:text key="forum.new"/></a>
+		<% } %>
 	</div>
 </div>
-<logic:iterate name="data" id="field" type="sk.iway.iwcm.forum.ForumBean" indexId="index">
+
+<logic:iterate name="data" id="field" type="DocForumEntity" indexId="index">
 <div class="media">
   <div class="media-left">
   	<%
@@ -200,9 +175,6 @@ if(!isAjaxCall)
   </div>
   <div class="media-body">
 
-
-				<% if (field.isDeleted()) out.print(" class='trDeleted'"); %>
-
                 <% if (field.getLevel() > 0) { %>
 
                 	<div class="media">
@@ -213,11 +185,11 @@ if(!isAjaxCall)
                       </div>
                       <div class="media-body">
                               <iwcm:text key="forum.author"/>:
-                              <logic:notEmpty name="field" property="autorEmail">
-                                  <a href="mailto:<bean:write name="field" property="autorEmail"/>"><bean:write name="field" property="autorFullName"/></a>
+                              <logic:notEmpty name="field" property="authorEmail">
+                                  <a href="mailto:<bean:write name="field" property="authorEmail"/>"><bean:write name="field" property="authorName"/></a>
                               </logic:notEmpty>
-                              <logic:empty name="field" property="autorEmail">
-                                  <bean:write name="field" property="autorFullName"/>
+                              <logic:empty name="field" property="authorEmail">
+                                  <bean:write name="field" property="authorName"/>
                               </logic:empty>
                               <div class="row">
                                   <div class="col-xs-12 col-sm-12 col-md-12">
@@ -228,17 +200,22 @@ if(!isAjaxCall)
                     </div>
 				<%}else{%>
 
-							<h4 class="media-heading"><bean:write name="field" property="subject"/></h4>
+							<h4 class="media-heading"><bean:write name="field" property="subject"/>
+								<%if (!active || !field.getActive()) {%>
+									<img src="/components/forum/images/folder_locked_big.gif" style="border:0px;" align="absbottom"/>
+								<%}%>
+							</h4>
+						
 							<iwcm:text key="forum.author"/>:
-							<logic:notEmpty name="field" property="autorEmail">
-								<a href="mailto:<bean:write name="field" property="autorEmail"/>"><bean:write name="field" property="autorFullName"/></a>
+							<logic:notEmpty name="field" property="authorEmail">
+								<a href="mailto:<bean:write name="field" property="authorEmail"/>"><bean:write name="field" property="authorName"/></a>
 							</logic:notEmpty>
-							<logic:empty name="field" property="autorEmail">
-								<bean:write name="field" property="autorFullName"/>
+							<logic:empty name="field" property="authorEmail">
+								<bean:write name="field" property="authorName"/>
 							</logic:empty>
 <%--
 							<bean:write name="field" property="questionDateDisplayDate"/> <bean:write name="field" property="questionDateDisplayTime"/>--%>
-						 <%if (active) {%>
+						 <%if (field.canPost(forumGroupBean, user)) {%>
 							<a href="javascript:openWJDialog('forum', '/components/forum/new.jsp?parent=<bean:write name="field" property="forumId"/>&type=open&docid=<%=docId%>&pageParams=<%=base64encoded %>&pageNum=<%=pageNumber %>');">[<iwcm:text key="forum.reply"/>]</a>
 						 <%}%>
 
@@ -281,16 +258,16 @@ if(!isAjaxCall)
 	<% } else { %>
 		<table border="0" cellspacing="0" cellpadding="0" class="forumOpenTable">
 
-			<logic:iterate name="data" id="field" type="sk.iway.iwcm.forum.ForumBean" indexId="index">
+			<logic:iterate name="data" id="field" type="DocForumEntity" indexId="index">
 				<tr<% if (field.isDeleted()) out.print(" class='trDeleted'"); %>>
 					<td style="padding-left:<%=(20 * field.getLevel())%>px;" class="forumOpenTableHeader">
 							<b><bean:write name="field" property="subject"/></b><br />
 							<iwcm:text key="forum.author"/>:
-							<logic:notEmpty name="field" property="autorEmail">
-								<a href="mailto:<bean:write name="field" property="autorEmail"/>"><bean:write name="field" property="autorFullName"/></a>
+							<logic:notEmpty name="field" property="authorEmail">
+								<a href="mailto:<bean:write name="field" property="authorEmail"/>"><bean:write name="field" property="authorName"/></a>
 							</logic:notEmpty>
-							<logic:empty name="field" property="autorEmail">
-								<bean:write name="field" property="autorFullName"/>
+							<logic:empty name="field" property="authorEmail">
+								<bean:write name="field" property="authorName"/>
 							</logic:empty>
 					</td>
 					<td align="right" class="forumOpenTableHeader">

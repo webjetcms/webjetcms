@@ -1110,7 +1110,7 @@
         };
         inst.loadThumbnail = function (src, index) {
             var imgLoader = new Image;
-            $(imgLoader).load(function () {
+            $(imgLoader).on("load", function () {
                 var style;
                 if (this.width / this.height <= inst.options.thumbwidth / inst.options.thumbheight) style = "width:100%;"; else style = "height:100%;";
                 $(".html5-nav-thumb").eq(index).html("<img style='" +
@@ -1223,7 +1223,7 @@
             switch (elem[ELEM_TYPE]) {
                 case 0:
                     var imgLoader = new Image;
-                    $(imgLoader).load(function () {
+                    $(imgLoader).on("load", function () {
                         inst.showImage(elem, imgLoader.width, imgLoader.height)
                     });
                     $(imgLoader).error(function () {
@@ -4047,7 +4047,7 @@ var ASPlatforms = {
                                     break
                             }
                             var imgLoader = new Image;
-                            $(imgLoader).load(function () {
+                            $(imgLoader).on("load", function () {
                                 var style;
                                 if (this.width / this.height <= instance.options.navpreviewwidth / instance.options.navpreviewheight) style = "width:" + instance.options.navpreviewwidth + "px;max-width:" + instance.options.navpreviewwidth + "px;height:auto;margin-top:-" +
                                     Math.floor(this.height / this.width * instance.options.navpreviewwidth / 2 - instance.options.navpreviewheight / 2) + "px;"; else style = "width:auto;max-width:none;height:" + instance.options.navpreviewheight + "px;margin-left:-" + Math.floor(this.width / this.height * instance.options.navpreviewheight / 2 - instance.options.navpreviewwidth / 2) + "px;";
@@ -4152,7 +4152,7 @@ var ASPlatforms = {
                         });
                         var imgLoader = new Image;
                         var instance = this;
-                        $(imgLoader).load(function () {
+                        $(imgLoader).on("load", function () {
                             $bullet.data("originalthumbwidth", this.width);
                             $bullet.data("originalthumbheight", this.height);
                             if (instance.options.navthumbstyle != "textonly") {
@@ -4322,7 +4322,7 @@ var ASPlatforms = {
                 showImage: function (slideDirection, transEffect) {
                     var instance = this;
                     var imgLoader = new Image;
-                    $(imgLoader).load(function () {
+                    $(imgLoader).on("load", function () {
                         var $box = $(".amazingslider-img-box-" + instance.id, instance.container);
                         var $imgPrev = $(".amazingslider-img-" + instance.id, instance.container);
                         var imgCurCodes = "<div class='amazingslider-img-" + instance.id + "' style='display:block;position:absolute;left:0px;top:0px;width:100%;height:100%;overflow:hidden;'>";

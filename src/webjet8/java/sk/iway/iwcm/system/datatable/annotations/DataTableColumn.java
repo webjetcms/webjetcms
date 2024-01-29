@@ -34,4 +34,7 @@ public @interface DataTableColumn {
     boolean[] orderable() default {};
     //skratka na nastavenie default hodnoty do editora
     String defaultValue() default "";
+
+    //if true property is always copied from old object to new object on edit
+    boolean[] alwaysCopyProperties() default {};
 }

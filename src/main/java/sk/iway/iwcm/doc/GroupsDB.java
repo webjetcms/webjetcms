@@ -1550,7 +1550,7 @@ public class GroupsDB extends DB
 
 		if (Constants.getBoolean("multiDomainEnableNested")) domain = domainOnFirstGroup;
 
-		retData[0] = path.toString();
+		retData[0] = Tools.replace(path.toString(), "//", "/");
 		retData[1] = domain;
 		return(retData);
 	}
@@ -2688,6 +2688,9 @@ public class GroupsDB extends DB
 		return deleteGroup(groupId, includeParent, permanentlyDelete, true);
 	}
 
+	private static void deleteGroupsApprove(String groups) {
+		(new SimpleQuery()).execute("DELETE FROM groups_approve WHERE group_id IN (?)", groups);
+	}
 
 	/**
 	 * Vymazanie adresara
@@ -2736,7 +2739,7 @@ public class GroupsDB extends DB
 
       	if (permanentlyDelete || trashGroupDetails==null || DB.internationalToEnglish(navbarNoHref.toLowerCase()).startsWith(DB.internationalToEnglish(groupsDB.getURLPath(trashGroupDetails.getGroupId())).toLowerCase()) ||
 				trashGroupDetails.getGroupId()==groupId || trashDirName.equals(groupsDB.getURLPath(groupId)))
-         {
+        {
       		//TODO: kontrola prav na mazanie stranok v adresari
 
       		// ziskaj zoznam groups (tejto a podskupin)
@@ -2757,7 +2760,7 @@ public class GroupsDB extends DB
 
 				if(Tools.isNotEmpty(groups))	//ak nezaratam rodicovsky adresa, moze byt groups prazdne v pripade, ak rodicovsky adresar nemal ziadne podadresare
 				{
-//					vymaz stranky
+					//vymaz stranky
 					String sql = "DELETE FROM documents WHERE group_id IN ("+groups+")";
 					ps = db_conn.prepareStatement(sql);
 					ps.executeUpdate();
@@ -2771,10 +2774,12 @@ public class GroupsDB extends DB
 					ps.close();
 					ps = null;
 
+					//Vymaz approve
+					deleteGroupsApprove(groups.toString());
 				}
 
 				Adminlog.add(Adminlog.TYPE_GROUP, "Delete group: " + navbarNoHref, groupId, -1);
-			}
+		}
       	else
       	{
       		// presun adresar do trashu

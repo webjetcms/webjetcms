@@ -473,8 +473,8 @@ function updateTextareas() {
 	</ul>
 </div>
 
-<div class="tab-pane toggle_content" style="max-height: 400px; width: 780px;">
-	<div class="tab-page" id="tabMenu1" style="display: block;  width: 780px; height:400px">
+<div class="tab-pane toggle_content tab-pane-fullheight">
+	<div class="tab-page" id="tabMenu1" style="display: block;">
 
 		<p>
 			<iwcm:text key="components.formsimple.desc"/>

@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.springframework.stereotype.Service;
@@ -14,6 +15,7 @@ import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.RequestBean;
 import sk.iway.iwcm.SetCharacterEncodingFilter;
+import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.components.response_header.jpa.ResponseHeaderEntity;
 import sk.iway.iwcm.components.response_header.jpa.ResponseHeaderRepository;
@@ -24,7 +26,7 @@ public class ResponseHeaderService {
     private static final String CACHE_KEY = "apps.response-header.headersList-";
     private static final Integer cacheInMinutes = 1440; //24 hours
 
-    public Map<String, ResponseHeaderEntity> getResponseHeaders(String path) {
+    public Map<String, ResponseHeaderEntity> getResponseHeaders(String url) {
         int domainId = CloudToolsForCore.getDomainId();
 
         //FIRST step, check Cache for values, in specific domain
@@ -49,10 +51,10 @@ public class ResponseHeaderService {
             Cache.getInstance().setObject(CACHE_KEY + domainId, headersList, cacheInMinutes);
         }
 
-        return  this.filterRequestHeadersByPath(headersList, path);
+        return  this.filterRequestHeadersByUrl(headersList, url);
     }
 
-    private Map<String, ResponseHeaderEntity> filterRequestHeadersByPath(List<ResponseHeaderEntity> headersInput, String path) {
+    private Map<String, ResponseHeaderEntity> filterRequestHeadersByUrl(List<ResponseHeaderEntity> headersInput, String url) {
         //Empty list
         if(headersInput.size() < 1) return null;
 
@@ -61,7 +63,7 @@ public class ResponseHeaderService {
 
         //Now filter headers using path
         for(ResponseHeaderEntity header : headersInput) {
-            if(path.startsWith(header.getUrl())) {
+            if(isPathCorrect(header.getUrl(), url)) {
                 //be smart, try to find headers with best match (longest) URL address
                 String key = header.getHeaderName();
                 ResponseHeaderEntity current = headersMap.get(key);
@@ -87,17 +89,88 @@ public class ResponseHeaderService {
     /**
      * Set HTTP headers for path
      */
-    public static void setResponseHeaders(String path, HttpServletResponse response) {
+    public static void setResponseHeaders(String path, HttpServletRequest request, HttpServletResponse response) {
         try {
             ResponseHeaderService pes = new ResponseHeaderService();
             Map<String, ResponseHeaderEntity> headersMap = pes.getResponseHeaders(path);
             if (headersMap!=null) {
                 for(ResponseHeaderEntity header : headersMap.values()) {
-                    response.setHeader(Constants.executeMacro(header.getHeaderName()), Constants.executeMacro(header.getHeaderValue()));
+                    String name = Constants.executeMacro(header.getHeaderName());
+                    String value = Constants.executeMacro(header.getHeaderValue());
+
+                    if (name.equalsIgnoreCase("content-language")) {
+                        setContentLanguageHeader(value, true, request, response);
+                    } else {
+                        response.setHeader(name, value);
+                    }
                 }
             }
         } catch (Exception ex) {
             Logger.error(ResponseHeaderService.class, ex);
         }
+    }
+
+    /**
+     * Set Content-Language header, also set response.setLocale
+     * @param lngContryPair - pair eg sk-SK, cs-CZ, en-GB
+     * @param forceSet - set to true to owerwrite previously set value
+     * @param request
+     * @param response
+     */
+    public static void setContentLanguageHeader(String lngContryPair, boolean forceSet, HttpServletRequest request, HttpServletResponse response) {
+        if (request.getAttribute("contentLanguageHeaderSet")==null || forceSet) {
+            response.setHeader("Content-Language", lngContryPair);
+            response.setLocale(org.springframework.util.StringUtils.parseLocaleString(lngContryPair.replaceAll("-", "_")));
+            request.setAttribute("contentLanguageHeaderSet", Boolean.TRUE);
+        }
+    }
+
+    /**
+     * Check if path is correct for URL, it accepts path in format
+     * - /path/subpath/ - use startsWith
+     * - /path/subpath/*.pdf - use startsWith for /path/subpath/ and endsWith for *.pdf
+     * - /path/subpath/*.pdf,*.jpg - use startsWith for /path/subpath/ and endsWith for *.pdf or *.jpg
+     * - ^/path/subpath/$ - use equals
+     * @param path - path to test
+     * @param url - URL address to test
+     * @return
+     */
+    public static boolean isPathCorrect(String path, String url) {
+
+        // check if path is null
+        if (path == null || url == null) {
+            return false;
+        }
+
+        // check if path is in format ^/path/subpath/$
+        if (path.startsWith("^") && path.endsWith("$") && path.length() > 2) {
+            return path.substring(1, path.length() - 1).equals(url);
+        }
+        int pos = path.indexOf("*");
+        if (pos == -1) {
+            // check if path is in format /path/subpath/
+            return url.startsWith(path);
+        } else if (pos == path.length()-1) {
+            // check if path is in format /path/subpath/*
+            return url.startsWith(path.substring(0, pos));
+        } else {
+            // check if path is in format /path/subpath/*.pdf
+            String pathStart = path.substring(0, pos);
+            String pathEnd = path.substring(pos);
+            if (pathEnd.indexOf(",") == -1 && pathEnd.length() > 1) {
+                // check if path is in format /path/subpath/*.pdf
+                return url.startsWith(pathStart) && url.endsWith(pathEnd.substring(1));
+            } else {
+                // check if path is in format /path/subpath/*.pdf,*.jpg
+                String[] pathEnds = Tools.getTokens(pathEnd, ",", true);
+                for (String pathEndItem : pathEnds) {
+                    if (url.startsWith(pathStart) && pathEndItem.length()>1 && url.endsWith(pathEndItem.substring(1))) {
+                        return true;
+                    }
+                }
+            }
+        }
+
+        return false;
     }
 }

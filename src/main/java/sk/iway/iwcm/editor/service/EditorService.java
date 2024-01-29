@@ -8,11 +8,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.StringTokenizer;
+import java.util.stream.Collectors;
 
 import javax.servlet.http.HttpServletRequest;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 import org.springframework.web.context.annotation.RequestScope;
 
 import sk.iway.iwcm.Adminlog;
@@ -1475,8 +1477,29 @@ public class EditorService {
                     }
                     //Set for ApproveDelAction (proof of succesfull delete)
                     if (request!=null) request.setAttribute("deleteSuccess", "yes");
+
+					//delete doc from multigroup mapping
+					MultigroupMappingDB.deleteSlaveDocFromMapping(delDocId);
+
                     //14.8.2012 pridany Admin log stranka bola vymazana uplne (z kosa)
                     Adminlog.add(Adminlog.TYPE_PAGE_DELETE, "(DocID: "+delDocId+"): Stranka bola uplne zmazana (z kosa)", delDocId, 0);
+
+					List<MultigroupMapping> slaveMappingList = MultigroupMappingDB.getSlaveMappings(delDocId);
+					if(slaveMappingList != null && slaveMappingList.isEmpty()==false) {
+						List<Long> slaveIds = slaveMappingList.stream().map(x->Long.valueOf(x.getDocId())).collect(Collectors.toList());
+
+						//Delete all connections from multigroup table
+						MultigroupMappingDB.deleteSlaves(delDocId);
+
+						//Perform HARD (permanent) delete of slave pages
+						docRepo.deleteByDocIdIn(slaveIds);
+
+						for (Long slaveId : slaveIds) {
+							DocDB.getInstance().updateInternalCaches(slaveId.intValue());
+						}
+
+						Adminlog.add(Adminlog.TYPE_PAGE_DELETE, "(DocID's : " + StringUtils.collectionToDelimitedString(slaveIds, ",") + "): Slave stranky boli uplne zmazane (hard delete)", delDocId, 0);
+					}
             } else {
                 //failsafe na zle zmazane polozky (take co v kosi boli volakedy a zle sa zmazali)
 
@@ -1598,5 +1621,72 @@ public class EditorService {
 		docHistory.setAwaitingApprove("," + approveService.getApproveUserIds() + ",");
 
 		return docHistory;
+	}
+
+	/**
+	 * Recover webpage from trash folder:
+	 * - set groupId from history (latest where actual=1 or latest)
+	 * - set available from history (latest where actual=1 or latest)
+	 * @param recoverDocId
+	 */
+	public void recoverWebpageFromTrash(int recoverDocId) {
+		if(recoverDocId <1) throw new RuntimeException("recoverDocId is not valid");
+
+		//Try get DocDetails object by id, if not present return error message
+		Optional<DocDetails> docDetailsOpt = docRepo.findById(Long.valueOf(recoverDocId));
+		if(!docDetailsOpt.isPresent()) throw new RuntimeException("DocDetails doesn't exists.");
+		DocDetails docDetailsToRecover = docDetailsOpt.get();
+
+		//To check perms and approve for this action
+		checkPermissions(currentUser, docDetailsToRecover, true);
+
+		//Find last actual (if posible) history id (so we know wehre to recover page)
+		Integer historyId = null;
+		Optional<Integer> historyIdOpt = historyRepo.findMaxHistoryId(recoverDocId, true); //(actual history id)
+		if(historyIdOpt.isPresent())
+			historyId = historyIdOpt.get();
+		else historyId = historyRepo.findMaxHistoryId(recoverDocId); //(any history id)
+
+		if(historyId == null) {
+			//There is no history
+			NotifyBean info = new NotifyBean(prop.getText("editor.recover.notifyTitle"), prop.getText("editor.recover.notify.no_history"), NotifyBean.NotifyType.WARNING, 60000);
+            addNotify(info);
+			return;
+		} else {
+			Optional<Integer> destGroupId = historyRepo.findGroupIdById(Long.valueOf(historyId));
+			if(!destGroupId.isPresent()) {
+				NotifyBean info = new NotifyBean(prop.getText("editor.recover.notifyTitle"), prop.getText("editor.recover.notify.no_history"), NotifyBean.NotifyType.WARNING, 60000);
+            	addNotify(info);
+				return;
+			}
+			GroupDetails destGroup = groupsDB.getGroup(destGroupId.get());
+			if(destGroup == null) {
+				NotifyBean info = new NotifyBean(prop.getText("editor.recover.notifyTitle"), prop.getText("editor.recover.notify.no_history"), NotifyBean.NotifyType.WARNING, 60000);
+            	addNotify(info);
+				return;
+			}
+
+			//Check perms
+			approveService.loadApproveTables(destGroup.getGroupId());
+			if(approveService.needApprove() == false || approveService.isSelfApproved()) {
+				//Have right
+				docDetailsToRecover.setGroupId(destGroup.getGroupId());
+				docDetailsToRecover.setAvailable(true);
+				docRepo.save(docDetailsToRecover);
+			} else {
+				//No right
+				NotifyBean info = new NotifyBean(prop.getText("editor.recover.notifyTitle"), prop.getText("editor.recover.notify.no_right"), NotifyBean.NotifyType.WARNING, 60000);
+				addNotify(info);
+				return;
+			}
+		}
+
+		//Refresh
+		DocDB.getInstance(true);
+		GroupsDB.getInstance(true);
+
+		//Success
+		NotifyBean info = new NotifyBean(prop.getText("editor.recover.notify_title.success_page"), prop.getText("editor.recover.notify_body.success_page", docDetailsToRecover.getTitle(), docDetailsToRecover.getFullPath()), NotifyBean.NotifyType.SUCCESS, 60000);
+		addNotify(info);
 	}
 }

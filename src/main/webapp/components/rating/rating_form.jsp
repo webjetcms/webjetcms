@@ -8,8 +8,8 @@ taglib prefix="html" uri="/WEB-INF/struts-html.tld" %><%@
 taglib prefix="logic" uri="/WEB-INF/struts-logic.tld" %><%@ 
 taglib prefix="display" uri="/WEB-INF/displaytag.tld" %><%@ 
 taglib prefix="stripes" uri="http://stripes.sourceforge.net/stripes.tld"%><%@
-page import="sk.iway.iwcm.components.rating.RatingBean"%><%@
-page import="sk.iway.iwcm.components.rating.RatingDB"%><%@ 
+page import="sk.iway.iwcm.components.rating.jpa.RatingEntity"%><%@
+page import="sk.iway.iwcm.components.rating.RatingService"%><%@ 
 taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %><%
 
 String lng = PageLng.getUserLng(request);
@@ -36,12 +36,12 @@ if (ratingDocId < 1) ratingDocId = Tools.getDocId(request);
 
 System.out.println("request.getRemoteAddr(): "+request.getRemoteAddr());
 Identity user = (Identity)session.getAttribute(Constants.USER_KEY);
-RatingBean ratingByDoc = RatingDB.getDocIdRating(ratingDocId);
-RatingBean rBeanUserVoted = null;
+RatingEntity ratingByDoc = RatingService.getDocIdRating(ratingDocId);
+RatingEntity rBeanUserVoted = null;
 
-if (user != null) rBeanUserVoted = RatingDB.getRatingByUserByDoc(user.getUserId(), ratingDocId);
+if (user != null) rBeanUserVoted = RatingService.getRatingByUserByDoc(user.getUserId(), ratingDocId);
 else if (checkLogon==false){
-	rBeanUserVoted = RatingDB.getRatingByUserByDoc(- (int)StatDB.getBrowserId(request, response) , ratingDocId);
+	rBeanUserVoted = RatingService.getRatingByUserByDoc(- (int)StatDB.getBrowserId(request, response) , ratingDocId);
 }
 
 if (rBeanUserVoted != null) 
@@ -102,7 +102,7 @@ else
 	    if(ratingByDoc != null)
 	    {
 	    	%>
-	    	<iwcm:text key="components.rating.hodnotenie" param1='<%=""+ratingByDoc.getRatingValue()%>' param2='<%=""+range%>'/><br/>
+	    	<iwcm:text key="components.rating.hodnotenie" param1='<%=""+ratingByDoc.getRatingValueDouble()%>' param2='<%=""+range%>'/><br/>
 		 	<iwcm:text key="components.rating.hlasovalo" param1='<%=""+ratingByDoc.getTotalUsers()%>'/><br/>
 	    	<%
 	    }
@@ -128,7 +128,7 @@ else
 	    for (int i=0; i<range; i++)
 		 {%>
 		   <input type='radio' name='ratingForm<%=ratingDocId%>ratingValue' class="ratingForm<%=ratingDocId%>auto-submit-star" value='<%=(i+1)%>'<%
-		   if (rBeanUserVoted!=null && rBeanUserVoted.getRatingValue()==i) out.print(" checked='checked'");
+		   if (rBeanUserVoted!=null && rBeanUserVoted.getRatingValue()>i) out.print(" checked='checked'");
 		   %>/>
 	    <%
 	    }

@@ -9,6 +9,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import sk.iway.iwcm.Cache;
 import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.components.calendar.jpa.CalendarTypesEntity;
 import sk.iway.iwcm.components.calendar.jpa.CalendarTypesRepository;
@@ -70,4 +71,13 @@ public class CalendarTypesRestController extends DatatableRestControllerV2<Calen
         if(entity.getId() == null || entity.getId() == -1)
             entity.setDomainId(CloudToolsForCore.getDomainId());
 	}
+
+    @Override
+    public void afterSave(CalendarTypesEntity entity, CalendarTypesEntity saved) {
+        Cache c = Cache.getInstance();
+        String cacheKey = "sk.iway.iwcm.calendar.EventTypeDB.domain=" + CloudToolsForCore.getDomainId();
+        c.removeObject(cacheKey);
+    }
+
+
 }

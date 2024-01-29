@@ -109,7 +109,7 @@ export function getDateRange(defaultRangeDaysValue) {
 
     if(from == '' && to == '') {
         //If set default date range is invalid, set ra nge to 30 days
-        if(defaultRangeDaysValue == undefined || defaultRangeDaysValue == null || isNaN(defaultRangeDaysValue) || defaultRangeDaysValue < 1) defaultRangeDaysValue = 30;
+        if(defaultRangeDaysValue == undefined || defaultRangeDaysValue == null || isNaN(defaultRangeDaysValue) || defaultRangeDaysValue < 1) return ""; //Default range only if user want -> BE has own default range and protection
 
         //Use default values
         let defaultEndDate = new Date().getTime();
@@ -134,6 +134,7 @@ export function getDateRange(defaultRangeDaysValue) {
  */
 export function saveSearchCriteria(DATA) {
     var inputs = [".dt-filter-from-dayDate", ".dt-filter-to-dayDate", "#rootDir", "#botFilterOut", "#searchUrl", ".dt-filter-lastLogon", "#searchEngineSelect", "#webPageSelect"];
+    var specialInputs = ["#searchEngineSelect", "#webPageSelect"]; //Resetting the value of this field is handed specialy
     var defaultSearch = {};
     var isWebPageValueValid = true;
     var isSearchEngineValueValid = true;
@@ -142,13 +143,24 @@ export function saveSearchCriteria(DATA) {
     let oldDefaultSearch = JSON.parse( window.sessionStorage.getItem("webjet.apps.stat.filter") );
     if(oldDefaultSearch == null) oldDefaultSearch = {};
 
+    var inputNotIncludedinCurrentPage = [];
     for (const name of inputs) {
         var $input = $("#"+DATA.id+"_extfilter "+name);
+
+        //! very importatnt we need to know, what input's are not included in this page
+        //If input is not included in this page, we dont want to work with it
+        if(!($input.length > 0)) {
+            inputNotIncludedinCurrentPage[inputNotIncludedinCurrentPage.length] = name;
+            continue;
+        }
+
         var value = $input.val();
+
         //console.log("name=", name, "value=", value, "input=", $input);
         if ("true"===value) {
             //it's checkbox
             value = $("#"+DATA.id+"_extfilter "+name).is(":checked");
+            //console.log("CHECKBOX value=", value, "name=", name);
         }
         if ("#rootDir"===name) {
             if (value == null) {
@@ -177,7 +189,7 @@ export function saveSearchCriteria(DATA) {
 
         if("#searchEngineSelect" === name) {
             var $input = $(name);
-            if($input.length>0) {
+            if($input.length > 0) {
                 let val = $input.find(":selected").val();
                 let text = $input.find(":selected").text();
                 //Both value and key must be valid
@@ -191,21 +203,30 @@ export function saveSearchCriteria(DATA) {
         }
 
         //console.log("saveSearchForm, name=", name, "value=", value);
+
+        //This value means that input wasnt set OR user remove value from input aka turn it OFF
+        //Inputs that we wont put inside of defaultSearch will not be set
         if (value != null && value != "" && value != "-1" && value != "false") {
             defaultSearch[name] = value;
         }
     }
 
-    //Inicialize
+    //Inicialize oldDefaultSearch
     if(oldDefaultSearch == undefined || oldDefaultSearch == null) oldDefaultSearch = {};
-    //Merge old object with new
+    //Merge old object with new one
     let mergeDefaultSearch = Object.assign(oldDefaultSearch, defaultSearch);
 
-    //We need manualy remove property (because merge will leave it there)
-    if(!defaultSearch.hasOwnProperty("#rootDir") && mergeDefaultSearch.hasOwnProperty("#rootDir"))
-        delete mergeDefaultSearch["#rootDir"];
+    //Loop all inputs, if input is NOT in defaultSearch, but is in mergeDefaultSearch, remove it from mergeDefaultSearch (because merge will leave it there)
+    //This can be empty values like ""/null/undefined,false etc.
+    for (const name of inputs) {
+        if(specialInputs.includes(name)) continue; //Dont do this for special inputs, this inputs must be handled special way webPageSelect/searchEngineSelect
+        if(inputNotIncludedinCurrentPage.includes(name)) continue; //Dont touch input's not ibcluded in this page
 
-    //
+        if(!defaultSearch.hasOwnProperty(name) && mergeDefaultSearch.hasOwnProperty(name))
+            delete mergeDefaultSearch[name];
+    }
+
+    //Handle special input webPageSelect
     if(!isWebPageValueValid) {
         if(mergeDefaultSearch.hasOwnProperty("#webPageSelect"))
             delete mergeDefaultSearch["#webPageSelect"];
@@ -213,7 +234,7 @@ export function saveSearchCriteria(DATA) {
             delete mergeDefaultSearch["#webPageSelect-text"];
     }
 
-    //
+    //Handle special input searchEngineSelect
     if(!isSearchEngineValueValid) {
         if(mergeDefaultSearch.hasOwnProperty("#searchEngineSelect"))
             delete mergeDefaultSearch["#searchEngineSelect"];
@@ -881,7 +902,8 @@ function generateChartData(type) {
             //cpuAmchart chart contain only 1 series
             chartData.push({
                 serverActualTime: newDate.getTime(),
-                cpuUsage: 0
+                cpuUsage: 0,
+                cpuUsageProcess: 0
             });
         }
     }
@@ -935,13 +957,17 @@ export async function addData(allSeries, xAxis, data, type) {
                 memTotal: Math.round(data.memTotal / 1000000)
             })
         } else if(type == "cpuAmchart") {
-            newValue = data.cpuUsage;
+            if(seriesName == WJ.translate("components.monitoring.cpu_usage.js"))
+                newValue = data.cpuUsage;
+            else if(seriesName == WJ.translate("components.monitoring.process_usage.js"))
+                newValue = data.cpuUsageProcess;
 
-            //cpuAmchart chart got only 1 param = 1 series
+            //cpuAmchart chart has 2 param = 2 series
             series.data.removeIndex(0);
             series.data.push({
                 serverActualTime: data.serverActualTime,
-                cpuUsage: newValue
+                cpuUsage: data.cpuUsage,
+                cpuUsageProcess: data.cpuUsageProcess
             })
         }
 
@@ -989,7 +1015,7 @@ async function setSeries(seriesName, chart, root, data, xAxis, yAxis, yField, ty
     //Create series
     var series = chart.series.push(
         am5xy.LineSeries.new(root, {
-            name: type == "memoryAmchart" ? WJ.translate(seriesName) : "cpuSeries", //memoryAmchart series names need to bz translate from keys
+            name: WJ.translate(seriesName),
             xAxis: xAxis,
             yAxis: yAxis,
             valueYField: yField,
@@ -1084,7 +1110,21 @@ export async function createServerMonitoringChart(rootName, type) {
 
     } else if(type == "cpuAmchart") {
         // Add series
-        setSeries("Series_1", chart, root, data, xAxis, yAxis, "cpuUsage", type);
+        setSeries("components.monitoring.cpu_usage.js", chart, root, data, xAxis, yAxis, "cpuUsage", type);
+        setSeries("components.monitoring.process_usage.js", chart, root, data, xAxis, yAxis, "cpuUsageProcess", type);
+
+        // Add legend
+        var legend = chart.children.push(
+            am5.Legend.new(root, {
+                centerX: am5.percent(50),
+                y: am5.percent(100),
+                x: am5.percent(50),
+                layout: root.horizontalLayout,
+                useDefaultMarker: true
+            })
+        );
+        // It's is important to set legend data after all the events are set on template, otherwise events won't be copied
+        legend.data.setAll(chart.series.values);
     }
 
     //Create cursor
@@ -1108,17 +1148,35 @@ export async function createServerMonitoringChart(rootName, type) {
 /* SUPPORT LOGIC, like methods that work with ext filters etc. */
 
 export async function initGroupIdSelect() {
-    $("input.webjet-dte-jstree").each(function(index) {
+    await $("input.webjet-dte-jstree").each(async function(index) {
         var $element = $(this);
         //console.log("html=", $element[0].outerHTML, "val=", $element.val(), "text=", $element.data("text"));
         var id = $element.attr("id");
         var htmlCode = $('<div class="vueComponent" id="editorApp'+id+'"><webjet-dte-jstree :data-table-name="dataTableName" :data-table="dataTable" :click="click" :id-key="idKey" :data="data" :attr="attr" @remove-item="onRemoveItem"></webjet-dte-jstree></div>');
         htmlCode.insertAfter($element);
 
-        const conf = {
+        let groupId = $element.val();
+        let fullPath = $element.data("text");
+
+        await $.ajax({url: "/admin/rest/groups/tree/defaultValue?groupId=" + groupId, success: function(inputData) {
+            if(inputData != null) {
+                //console.log("inputData=", inputData);
+                if(inputData["groupId"] != groupId) {
+                    //console.log("Inside");
+                    groupId = inputData["groupId"];
+
+                    //console.log(groupId);
+
+                    //-1 group does not have name, soo use default set name (in other cases use real group name)
+                    if(groupId != -1) fullPath = inputData["groupName"];
+                }
+            }
+        }});
+
+        let conf = {
             jsonData: [{
-                "groupId": $element.val(),
-                "fullPath": $element.data("text")
+                "groupId": groupId,
+                "fullPath": fullPath
             }],
             className: "dt-tree-groupid-root",
             _id: id

@@ -20,7 +20,7 @@
                 >
                     <a :href="item.link" :title="item.title" target="_blank" class="overview__news__content__link">
                         <span class="title" v-text="item.title"></span>
-                        <span class="perex" v-text="item.perex"></span>
+                        <span class="perex" v-html="processMarkdown(item.perex)"></span>
                     </a>
                 </li>
             </ul>
@@ -51,6 +51,11 @@
                     self.news = data.news;
                 }
             });
+        },
+        methods: {
+            processMarkdown: function(perex) {
+                return WJ.parseMarkdown(perex);
+            }
         }
     }
 </script>

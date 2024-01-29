@@ -48,25 +48,27 @@ Scenario('zakladne testy', async ({I, DataTables, DTE}) => {
 
 Scenario('from struts to Spring', async ({I, DataTables, DTE}) => {
     I.amOnPage("/apps/otazky-odpovede/");
+    I.wait(1);
+    I.waitForElement("#fromName1");
 
     var name = "Feri_Baci_" + randomNumber;
-    I.click("#fromName1");
+    I.clickCss("#fromName1");
     I.fillField("#fromName1", name);
 
     var email  = "neviem@nepoviem.sk";
-    I.click("#fromEmail1");
+    I.clickCss("#fromEmail1");
     I.fillField("#fromEmail1", email);
 
     var question  = "Kde by som kupil borovicku_?_" + randomNumber;
-    I.click("#question1");
+    I.clickCss("#question1");
     I.fillField("#question1", question);
 
-    I.click("#allowPublishOnWeb1");
+    I.clickCss("#allowPublishOnWeb1");
 
     //Send form with new question
-    I.click("#qaForm > fieldset > div:nth-child(7) > input.btn.btn-primary");
+    I.clickCss("#qaForm input.btn.btn-primary");
 
-    I.wait(2);
+    I.wait(1);
 
     //Go check save question
     I.amOnPage("/apps/qa/admin/");
@@ -80,7 +82,7 @@ Scenario('from struts to Spring', async ({I, DataTables, DTE}) => {
     I.see(name);
 
     //Check set email and checked allowPublishOnWeb
-    I.click(question);
+    I.click(locate(".dt-row-edit").withText(question));
 
     DTE.waitForEditor("qaDataTable");
 
@@ -88,7 +90,7 @@ Scenario('from struts to Spring', async ({I, DataTables, DTE}) => {
     let thisEmail = await I.grabValueFrom("#DTE_Field_fromEmail");
     I.assertEqual(thisEmail, email);
 
-    I.click("#pills-dt-qaDataTable-answer-tab");
+    I.clickCss("#pills-dt-qaDataTable-answer-tab");
 
     I.seeCheckboxIsChecked("#DTE_Field_allowPublishOnWeb_0");
 
@@ -96,8 +98,9 @@ Scenario('from struts to Spring', async ({I, DataTables, DTE}) => {
     DTE.cancel();
 
     //Delete question
-    I.click("td.dt-select-td.sorting_1");
-    I.click("button.buttons-remove");
+    I.clickCss("td.dt-select-td.sorting_1");
+    I.clickCss("button.buttons-remove");
     I.click("Zmazať", "div.DTE_Action_Remove");
+    I.see(question, "div.DTE_Action_Remove");
     I.see("Nenašli sa žiadne vyhovujúce záznamy");
 });

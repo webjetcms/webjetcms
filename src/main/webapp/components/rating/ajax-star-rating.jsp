@@ -6,8 +6,8 @@ sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
 %><%@ page pageEncoding="utf-8" buffer="100kb" autoFlush="false"%><%@page 
 import="sk.iway.iwcm.Tools"%><%@ 
 taglib prefix="iwcm" uri="/WEB-INF/iwcm.tld" %><%@
-page import="sk.iway.iwcm.components.rating.RatingDB"%><%@
-page import="sk.iway.iwcm.components.rating.RatingBean"%><%@
+page import="sk.iway.iwcm.components.rating.RatingService"%><%@
+page import="sk.iway.iwcm.components.rating.jpa.RatingEntity"%><%@
 page import="sk.iway.iwcm.*"%><%@
 page import="sk.iway.iwcm.stat.StatDB"%><%
 	String range = (String)session.getAttribute("range");
@@ -23,7 +23,7 @@ page import="sk.iway.iwcm.stat.StatDB"%><%
     
     if(ratingValue != -1 && ratingDocId != -1)
     {
-	    RatingBean ratingByDoc = RatingDB.getDocIdRating(ratingDocId);
+	    RatingEntity ratingByDoc = RatingService.getDocIdRating(ratingDocId);
 	    if(checklogon && userId <= 0)	//ak je checklogon true, skontrolujem, ci je pouzivatel prihlaseny
 	    {
 	    	%>
@@ -34,13 +34,13 @@ page import="sk.iway.iwcm.stat.StatDB"%><%
 			-->
 		   </script>
 		   
-		   <iwcm:text key="components.rating.hodnotenie" param1="<%=""+ratingByDoc.getRatingValue()%>" param2="<%=""+range%>"/><br/>
-		   <iwcm:text key="components.rating.hlasovalo" param1="<%=""+ratingByDoc.getTotalUsers()%>"/><br/>
+		   <iwcm:text key="components.rating.hodnotenie" param1='<%=""+ratingByDoc.getRatingValue()%>' param2='<%=""+range%>'/><br/>
+		   <iwcm:text key="components.rating.hlasovalo" param1='<%=""+ratingByDoc.getTotalUsers()%>'/><br/>
 		   <%
 	    }
 	    else
 	    {
-		    RatingBean rBean2 = RatingDB.getRatingByUserByDoc(userId, ratingDocId);
+		    RatingEntity rBean2 = RatingService.getRatingByUserByDoc(userId, ratingDocId);
 		    
 		   if (rBean2 != null && userId != -1) 	//ak pouzivatel este nehlasoval, rBean2 je null
 			{
@@ -51,18 +51,18 @@ page import="sk.iway.iwcm.stat.StatDB"%><%
 				-->
 			    </script>
 			    
-			    <iwcm:text key="components.rating.hodnotenie" param1="<%=""+ratingByDoc.getRatingValue()%>" param2="<%=""+range%>"/><br/>
-		 		<iwcm:text key="components.rating.hlasovalo" param1="<%=""+ratingByDoc.getTotalUsers()%>"/><br/>
+			    <iwcm:text key="components.rating.hodnotenie" param1='<%=""+ratingByDoc.getRatingValueDouble()%>' param2='<%=""+range%>'/><br/>
+		 		<iwcm:text key="components.rating.hlasovalo" param1='<%=""+ratingByDoc.getTotalUsers()%>'/><br/>
 			    <%
 			}
 		   else
 		   {
-			    RatingBean rBean = new RatingBean();
+			    RatingEntity rBean = new RatingEntity();
 			    rBean.setDocId(ratingDocId);
 			    rBean.setUserId(userId);
 			    rBean.setRatingValue(ratingValue);
-			    RatingDB.saveRating(rBean);
-			    ratingByDoc = RatingDB.getDocIdRating(ratingDocId);
+			    RatingService.saveRating(rBean, request);
+			    ratingByDoc = RatingService.getDocIdRating(ratingDocId);
 			   
 			    //Custom pre Plusku/Cloud update documents.forum_count
 			    //ziskam si raiting podla DocID 
@@ -72,8 +72,8 @@ page import="sk.iway.iwcm.stat.StatDB"%><%
 				 //	ForumDB.setForumCountForDocIds(ratingDocId, docIdRating);
 			    //}
 			    %>
-			    <iwcm:text key="components.rating.hodnotenie" param1="<%=""+ratingByDoc.getRatingValue()%>" param2="<%=""+range%>"/><br/>
-		 		<iwcm:text key="components.rating.hlasovalo" param1="<%=""+ratingByDoc.getTotalUsers()%>"/><br/>
+			    <iwcm:text key="components.rating.hodnotenie" param1='<%=""+ratingByDoc.getRatingValueDouble()%>' param2='<%=""+range%>'/><br/>
+		 		<iwcm:text key="components.rating.hlasovalo" param1='<%=""+ratingByDoc.getTotalUsers()%>'/><br/>
 		   		<%
 			}
 	    }

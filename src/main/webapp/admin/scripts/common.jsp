@@ -283,7 +283,7 @@ function openElFinderDialogWindow(form, elementName, requestedImageDir, volume="
         } catch (e) { console.log(e); }
 	}
 	//window.alert(navigator.userAgent);
-   WJDialog.OpenDialog( 'WJDialog_Image' , "Image", url, 800, 604);
+   WJDialog.OpenDialog( 'WJDialog_Image' , "Image", url, 820, 604);
 }
 
 function openImageDialogWindow(formName, fieldName, requestedImageDir)
@@ -615,6 +615,11 @@ function showHideTab(id)
 	});
 
 	$("#tabLink" +id).addClass("activeTab");
+
+	//Check if there is common advanced settings - we need to hide it manualy, because id ends with string, not  a number
+	if($("div#tabMenucommonAdvancedSettings").length>0) {
+		$("div#tabMenucommonAdvancedSettings").hide();
+	}
 
 	$("div.toggle_content div").each(function(i){
 		++i;
@@ -1612,7 +1617,7 @@ var WJ = (function(){
         {
             $.ajax({
                 type: "POST",
-                url: "/admin/conf_editor.jsp",
+                url: "/admin/rest/settings/configuration/restart",
                 data: "act=restart&name=",
                 success: function(msg)
                 {
@@ -1795,13 +1800,16 @@ function callRefresher()
 		}
 	});
 }
-//ak nie sme inline editor v admine, tak inicializuj refresher
-if (window.location.href.indexOf("inlineEditorAdmin=true")==-1) {
+//ak nie sme inline editor v admine/vnorene okno, tak inicializuj refresher
+var whref = window.location.href;
+if (whref.indexOf("inlineEditorAdmin=true")==-1 && whref.indexOf("webjetcomponet.jsp")==-1 && whref.indexOf("editor_component.jsp")==-1) {
 	window.setInterval(function() {
 		callRefresher();
 	}, 60000);
-	//spusti to aj hned na zaciatku
-	$(document).ready(function() { callRefresher(); } );
+	$(document).ready(function() {
+		//spusti to aj na zaciatku
+		setTimeout(function() { callRefresher(); }, 15000);
+	} );
 }
 
 <%

@@ -322,13 +322,10 @@ function getIncludeText()
 	</ul>
 </div>
 
-<div class="tab-pane toggle_content"
-	style="height: 640px; overflow: auto; width: 780px;">
-	<div class="tab-page" id="tabMenu1" style="display: block;  width: 780px; height:475px">
-		<br>
-			<html:form action="/admin/editor.do" onsubmit="return false"
-							name="textForm" type="sk.iway.iwcm.editor.EditorForm">
-		<table class="hidden">
+<div class="tab-pane toggle_content tab-pane-fullheight">
+	<div class="tab-page" id="tabMenu1" style="display: block;">
+			<form onsubmit="return false" name="textForm">
+			<table class="hidden">
 			<tr>
 				<td valign="top" style="padding-left: 20px;"><strong><iwcm:text
 							key="components.forum.admin.settingsTab" />:</strong>
@@ -393,44 +390,44 @@ function getIncludeText()
 							</div>
 							</div>
 
-<div class="row">
+							<div class="row">
 
-<div class="col-sm-6">
+							<div class="col-sm-6">
 
-				<div class="form-group clearfix">
-					<div class="col-sm-12"><strong><iwcm:text key="components.app-slit_slider.admin.textHeadingSettings" /></strong></div>
-				</div>
-						<div class="form-group clearfix">
-								<div class="col-sm-4 text-right"><iwcm:text key="components.app-slit_slider.admin.fontAlign" />:</div>
-								<div class="col-sm-8">
-<label style="display:inline-block; width:29px; height:29px; background-image:url(/components/_common/custom_styles/images/icon_align_left.png)" for="textAlignLeft1"></label>
-<input style="display:none" type="radio" onclick="changeAlign(1)" id="textAlignLeft1" name="customTextAlign1" value="left" <% if(pageParams.getValue("headingAlign", "left").equals("left")){%>checked="checked"<%}%>>
-<label style="display:inline-block; width:29px; height:29px; background-image:url(/components/_common/custom_styles/images/icon_align_center.png)" for="textAlignCenter1"></label>
-<input style="display:none" type="radio" onclick="changeAlign(1)" id="textAlignCenter1" name="customTextAlign1" value="center" <% if(pageParams.getValue("headingAlign", "left").equals("center")){%>checked="checked"<%}%> >
-<label style="display:inline-block; width:29px; height:29px; background-image:url(/components/_common/custom_styles/images/icon_align_right.png)" for="textAlignRight1"></label>
-<input style="display:none" type="radio" onclick="changeAlign(1)" id="textAlignRight1" name="customTextAlign1" value="right" <% if(pageParams.getValue("headingAlign", "left").equals("right")){%>checked="checked"<%}%>>
+								<div class="form-group clearfix">
+									<div class="col-sm-12"><strong><iwcm:text key="components.app-slit_slider.admin.textHeadingSettings" /></strong></div>
 								</div>
-				</div>
-
-
-
-					<div class="form-group clearfix">
-								<div class="col-sm-4 text-right"><iwcm:text key="components.app-slit_slider.admin.fontSize" />:</div>
-								<div class="col-sm-8">
-									<input type="text"  name="headingSize" size="5" maxlength="5" value="<%=pageParams.getIntValue("headingSize", 70)%>">
-									<iwcm:text key="components.forms.file_restrictions.points" />
+										<div class="form-group clearfix">
+												<div class="col-sm-4 text-right"><iwcm:text key="components.app-slit_slider.admin.fontAlign" />:</div>
+												<div class="col-sm-8">
+													<label style="display:inline-block; width:29px; height:29px; background-image:url(/components/_common/custom_styles/images/icon_align_left.png)" for="textAlignLeft1"></label>
+													<input style="display:none" type="radio" onclick="changeAlign(1)" id="textAlignLeft1" name="customTextAlign1" value="left" <% if(pageParams.getValue("headingAlign", "left").equals("left")){%>checked="checked"<%}%>>
+													<label style="display:inline-block; width:29px; height:29px; background-image:url(/components/_common/custom_styles/images/icon_align_center.png)" for="textAlignCenter1"></label>
+													<input style="display:none" type="radio" onclick="changeAlign(1)" id="textAlignCenter1" name="customTextAlign1" value="center" <% if(pageParams.getValue("headingAlign", "left").equals("center")){%>checked="checked"<%}%> >
+													<label style="display:inline-block; width:29px; height:29px; background-image:url(/components/_common/custom_styles/images/icon_align_right.png)" for="textAlignRight1"></label>
+													<input style="display:none" type="radio" onclick="changeAlign(1)" id="textAlignRight1" name="customTextAlign1" value="right" <% if(pageParams.getValue("headingAlign", "left").equals("right")){%>checked="checked"<%}%>>
+												</div>
 								</div>
-				</div>	<div class="form-group clearfix">
-								<div class="col-sm-4 text-right"><iwcm:text key="components.app-slit_slider.admin.fontMarginTop" />:</div>
-								<div class="col-sm-8">
-									<input type="text"  name="headingMargin" size="5" maxlength="5" value="<%=pageParams.getIntValue("headingMargin", 0)%>">
-									<iwcm:text key="components.forms.file_restrictions.points" />
-								</div>
-				</div>
 
-</div>
 
-<div class="col-sm-6">
+
+								<div class="form-group clearfix">
+											<div class="col-sm-4 text-right"><iwcm:text key="components.app-slit_slider.admin.fontSize" />:</div>
+											<div class="col-sm-8">
+												<input type="text"  name="headingSize" size="5" maxlength="5" value="<%=pageParams.getIntValue("headingSize", 70)%>">
+												<iwcm:text key="components.forms.file_restrictions.points" />
+											</div>
+								</div>	<div class="form-group clearfix">
+											<div class="col-sm-4 text-right"><iwcm:text key="components.app-slit_slider.admin.fontMarginTop" />:</div>
+											<div class="col-sm-8">
+												<input type="text"  name="headingMargin" size="5" maxlength="5" value="<%=pageParams.getIntValue("headingMargin", 0)%>">
+												<iwcm:text key="components.forms.file_restrictions.points" />
+											</div>
+							</div>
+
+					</div>
+
+					<div class="col-sm-6">
 
 						<div class="form-group clearfix">
 					<div class="col-sm-12"><strong><iwcm:text key="components.app-slit_slider.admin.textSubHeadingSettings" /></strong></div>
@@ -438,12 +435,12 @@ function getIncludeText()
 				<div class="form-group clearfix">
 								<div class="col-sm-4 text-right"><iwcm:text key="components.app-slit_slider.admin.fontAlign" />:</div>
 								<div class="col-sm-8">
-<label style="display:inline-block; width:29px; height:29px; background-image:url(/components/_common/custom_styles/images/icon_align_left.png)" for="textAlignLeft2"></label>
-<input style="display:none" type="radio" onclick="changeAlign(2)" id="textAlignLeft2" name="customTextAlign2" value="left" <% if(pageParams.getValue("subHeadingAlign", "left").equals("left")){%>checked="checked"<%}%>>
-<label style="display:inline-block; width:29px; height:29px; background-image:url(/components/_common/custom_styles/images/icon_align_center.png)" for="textAlignCenter2"></label>
-<input style="display:none" type="radio" onclick="changeAlign(2)" id="textAlignCenter2" name="customTextAlign2" value="center" <% if(pageParams.getValue("subHeadingAlign", "left").equals("center")){%>checked="checked"<%}%> >
-<label style="display:inline-block; width:29px; height:29px; background-image:url(/components/_common/custom_styles/images/icon_align_right.png)" for="textAlignRight2"></label>
-<input style="display:none" type="radio" onclick="changeAlign(2)" id="textAlignRight2" name="customTextAlign2" value="right" <% if(pageParams.getValue("subHeadingAlign", "left").equals("right")){%>checked="checked"<%}%>>
+									<label style="display:inline-block; width:29px; height:29px; background-image:url(/components/_common/custom_styles/images/icon_align_left.png)" for="textAlignLeft2"></label>
+									<input style="display:none" type="radio" onclick="changeAlign(2)" id="textAlignLeft2" name="customTextAlign2" value="left" <% if(pageParams.getValue("subHeadingAlign", "left").equals("left")){%>checked="checked"<%}%>>
+									<label style="display:inline-block; width:29px; height:29px; background-image:url(/components/_common/custom_styles/images/icon_align_center.png)" for="textAlignCenter2"></label>
+									<input style="display:none" type="radio" onclick="changeAlign(2)" id="textAlignCenter2" name="customTextAlign2" value="center" <% if(pageParams.getValue("subHeadingAlign", "left").equals("center")){%>checked="checked"<%}%> >
+									<label style="display:inline-block; width:29px; height:29px; background-image:url(/components/_common/custom_styles/images/icon_align_right.png)" for="textAlignRight2"></label>
+									<input style="display:none" type="radio" onclick="changeAlign(2)" id="textAlignRight2" name="customTextAlign2" value="right" <% if(pageParams.getValue("subHeadingAlign", "left").equals("right")){%>checked="checked"<%}%>>
 								</div>
 				</div>
 
@@ -461,16 +458,16 @@ function getIncludeText()
 								</div>
 				</div>
 				</div></div>
-								</html:form>
+		</form>
 
 	</div>
-	<div class="tab-page" id="tabMenu2" style="min-height:780px">
+	<div class="tab-page" id="tabMenu2">
 
 
-	<div id="editorWrapper" class="editorWrapper collapsable"
-			data-collapse="<iwcm:text key="components.json_editor.collapse" />"
-			data-expand="<iwcm:text key="components.json_editor.expand" />">
-	</div>
+		<div id="editorWrapper" class="editorWrapper collapsable"
+				data-collapse="<iwcm:text key="components.json_editor.collapse" />"
+				data-expand="<iwcm:text key="components.json_editor.expand" />">
+		</div>
 
 		<input type="button" id="addItem" class="button50 button50grey"
 			value="<iwcm:text key="components.slider.addItem"/>">

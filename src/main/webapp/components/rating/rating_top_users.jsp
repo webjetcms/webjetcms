@@ -20,7 +20,7 @@ if (Constants.getBoolean("editorEnableXHTML")) pageContext.setAttribute(org.apac
 PageParams pageParams = new PageParams(request);
 
 int usersLength = pageParams.getIntValue("usersLength", 10);
-List topUsers = RatingDB.getUsersTopList(usersLength);	
+List topUsers = RatingService.getUsersTopList(usersLength);	
 if (topUsers.size() > 0)
 {		
 	request.setAttribute("usersTopList", topUsers);
@@ -28,7 +28,7 @@ if (topUsers.size() > 0)
 %>
 
 <%@page import="java.util.ArrayList"%>
-<%@page import="sk.iway.iwcm.components.rating.RatingDB"%>
+<%@page import="sk.iway.iwcm.components.rating.RatingService"%>
 <%@page import="sk.iway.iwcm.users.UserDetails"%>
 <%@page import="sk.iway.iwcm.users.UsersDB"%>
 <div class="rating">
@@ -44,7 +44,7 @@ if (topUsers.size() > 0)
 			   </tr>
 			 </thead>
 			 <tbody>
-				 <logic:iterate name="usersTopList" id="u" type="sk.iway.iwcm.components.rating.RatingBean" indexId="index" >
+				 <logic:iterate name="usersTopList" id="u" type="sk.iway.iwcm.components.rating.jpa.RatingEntity" indexId="index" >
 							<% UserDetails userDet = UsersDB.getUser(u.getUserId());
 								 if (userDet != null)
 								 {%>	

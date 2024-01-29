@@ -309,6 +309,10 @@ public class DocEditorFields extends BaseEditorFields {
      */
     private void setEditingMode(DocBasic doc, TemplateDetails temp, TemplatesGroupBean tgb, GroupDetails group, DocDB docDB) {
         editingMode = tgb.getInlineEditingMode();
+        if (Tools.isNotEmpty(temp.getInlineEditingMode())) {
+            editingMode = temp.getInlineEditingMode();
+            if ("default".equals(editingMode)) editingMode = "";
+        }
 
         baseCssLink = "/templates/"+tgb.getDirectory();
 

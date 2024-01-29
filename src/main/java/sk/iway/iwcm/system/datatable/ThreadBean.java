@@ -35,6 +35,12 @@ public class ThreadBean {
     //set of columns in excel import (filled in export-import.js during xlsx parsing)
     private Set<String> importedColumns = null;
 
+    //column name which is used to update the row with import
+    private String updateByColumn;
+
+    //mode of import (append, update, onlyNew)
+    private String importMode;
+
     public void clear() {
         Logger.debug(ThreadBean.class, "clearing data, thread="+Thread.currentThread().getId());
         forceReload = false;
@@ -43,6 +49,8 @@ public class ThreadBean {
         notify = null;
         lastImportedRow = null;
         importedColumns = null;
+        updateByColumn = null;
+        importMode = null;
     }
 
     public void addNotify(NotifyBean notify) {

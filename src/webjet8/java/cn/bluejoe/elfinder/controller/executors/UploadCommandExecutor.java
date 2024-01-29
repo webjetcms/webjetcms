@@ -502,14 +502,17 @@ public class UploadCommandExecutor extends AbstractJsonCommandExecutor
 				}
 
 				if (FileTools.isImage(newFileIwcm.getName())) {
-					if (GalleryDB.isGalleryFolder(dir.getPath()+directory))
-					{
+					if (GalleryDB.isGalleryFolder(dir.getPath()+directory)) {
+						//we must replace o_ file because it will be used in resize process instead of new file
+						IwcmFile orig = new IwcmFile(Tools.getRealPath(dir.getPath()+directory+"/o_"+fileName));
+						if (orig.exists()) {
+							FileTools.copyFile(newFileIwcm, orig);
+						}
+
 						GalleryDB.resizePicture(newFileIwcm.getAbsolutePath(), dir.getPath()+directory);
 						added.add(new FsItemEx(dir, "s_"+fileName));
 						added.add(new FsItemEx(dir, "o_"+fileName));
-					}
-					else if (Constants.getBoolean("imageAlwaysCreateGalleryBean"))
-					{
+					} else if (Constants.getBoolean("imageAlwaysCreateGalleryBean")) {
 						GalleryDB.setImage(dir.getPath()+directory, fileName);
 					}
 

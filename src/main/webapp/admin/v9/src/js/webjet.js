@@ -27,7 +27,7 @@ const WJ = (() => {
     }
 
     function showHelpWindow() {
-        var url = "http://docs.webjetcms.sk/v2023/#";
+        var url = "http://docs.webjetcms.sk/latest/"+window.userLng;
         if (typeof window.helpLink != "undefined") url += window.helpLink;
         else url += "/";
         window.open(url, '_blank');
@@ -200,6 +200,8 @@ const WJ = (() => {
             return false
         }
 
+        if (title === '') title = "&nbsp;";
+
         const options = {
             closeButton: true,
             timeOut: timeOut,
@@ -330,6 +332,7 @@ const WJ = (() => {
         if (pathAppend === null || '' === pathAppend) return url;
         const split = url.split('?');
         let newUrl = split[0] + pathAppend;
+        newUrl = newUrl.replaceAll('//', '/');
         if (split.length > 1) {
             newUrl += '?' + split[1];
         }
@@ -783,20 +786,80 @@ const WJ = (() => {
         htmlText = htmlText.replace(/</gi, "&amp;lt;")
             .replace(/>/gi, "&amp;gt;");
 
+        //console.log(htmlText);
+
+        //For us is very inportant to end file with \n\n -> in case of embedded tree, using "-"
+        if(! htmlText.endsWith("\n\n")) {
+            if(! htmlText.endsWith("\n")) htmlText += "\n";
+            else htmlText += "\n\n";
+        }
+
         htmlText = htmlText.replace(/^### (.*$)/gim, '<h3>$1</h3>')
+
+            //headings
             .replace(/^## (.*$)/gim, '<h2>$1</h2>')
             .replace(/^# (.*$)/gim, '<h1>$1</h1>')
-            .replace(/^\> (.*$)/gim, '<blockquote>$1</blockquote>')
+
+            //blockquote
+            .replace(/\n&amp;gt;\s*(.+?\.)(\n)/gm, '<blockquote>$1</blockquote>$2')
+
+            //UL LI
+            .replace(/\n+\s{0,1}-\s(.*)/gm, '<li>$1</li>')
+            .replace(/(<\/li>)\n\s{2}-([\S\s]*?)(<li>)/gm, ' </li> <ul>\n  -  $2 </ul> <li>')
+            .replace(/<\/li>\n\s{2}-([\S\s]*?)\n\n/gm, '</li> <ul>\n  - $1 </ul> \n\n')
+            .replace(/\n\s+-(.*)/gm, '<li>$1</li>')
+            .replace(/(<li>[\S\s]*?)(<\/li>|<\/ul>)\n\n/gm, '<ul> $1 $2 </ul>')
+
+            //code block
+            .replace(/\n\s*\`\`\`\n*([\S\s]*?)\`\`\`/gim, '<div class="code">$1</div>')
+            .replace(/\`\`\`\n*([^\`]*?)\`\`\`/gi, '<span class="code">$1</span>')
+            .replace(/\`([^\`]*?)\`/gi, '<span class="code-inline">$1</span>')
+
+            //replace escaped \* with entity value
+            .replace(/\\\*/gim, '&#42;')
+
+            //formatting
             .replace(/\*\*(.*?)\*\*/gim, '<b>$1</b>')
             .replace(/\*(.*?)\*/gim, '<i>$1</i>')
-            .replace(/!\[(.*?)\]\((.*?)\)/gim, "<img alt='$1' src='$2' />")
             .replace(/\n/gim, '<br />')
+
+            //fix h1 or h2 tag followed by br tag including whitespace (possible 2 br tags)
+            .replace(/(<h[1-6]>)(.*?)(<\/h[1-6]>)\s*<br \/>/gim, '$1$2$3')
+            .replace(/(<h[1-6]>)(.*?)(<\/h[1-6]>)\s*<br \/>/gim, '$1$2$3')
+
+            //fix 2 br tags after blocquote
+            .replace(/<\/blockquote><br \/><br \/>/gim, '</blockquote>')
+
+            //fix BR tag before H1-H6 tag
+            .replace(/<br \/><h([1-6])>/gim, '<h$1>')
+            .replace(/<br \/><h([1-6])>/gim, '<h$1>')
+
+            ;
+
 
         if (typeof options != "undefined") {
             if (true === options.link) {
-                htmlText = htmlText.replace(/\[(.*?)\]\((.*?)\)/gim, "<a href='$2'>$1</a>")
+                htmlText = htmlText.replace(/\[(.*?)\]\((.*?)\)/gim, "<a href='$2' target='_blank'>$1</a>")
+            }
+
+            //badge span
+            if (true === options.badge) {
+                htmlText = htmlText.replace(/<li>\s*([^`\n<]{1,20})-/gm, '<li> <span class="badge bg-secondary">$1</span>');
+            }
+
+            //img and href prefix
+            if(null !== options.imgSrcPrefix) {
+                htmlText = htmlText.replace(/!\[(.*?)\]\((.*?)\)/gim, "<img alt='$1' src='" + options.imgSrcPrefix + "$2' class='img-fluid' loading='lazy'/>")
+                                   .replace(/(\[([^\]]+)])\(([^:)]+)\)/g, "<a href='" + options.imgSrcPrefix + "#/$3' target='_blank'>$2</a>")
             }
         }
+
+        //This is for cases where [](link) link isn't for our documentatio but for some web page (so do it without our prefix)
+        //OR in case that options are not set at all
+        htmlText = htmlText.replace(/!\[(.*?)\]\((.*?)\)/gim, "<img alt='$1' src='$2' class='img-fluid' loading='lazy'/>")
+                            .replace(/(\[([^\]]+)])\(([^)]+)\)/g, '<a href="$3"> $2 </a>')
+
+        //console.log(htmlText);
 
         return htmlText.trim()
     }
@@ -1103,7 +1166,7 @@ const WJ = (() => {
             {
                 $.ajax({
                     type: "POST",
-                    url: "/admin/conf_editor.jsp",
+                    url: "/admin/rest/settings/configuration/restart",
                     data: "act=restart&name=",
                     success: function(msg)
                     {

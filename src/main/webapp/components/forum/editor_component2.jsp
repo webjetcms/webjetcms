@@ -1,7 +1,7 @@
 <%@page import="java.util.List"%><%@page import="sk.iway.iwcm.forum.ForumSortBy"%>
 <%
 sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
-%><%@ page pageEncoding="utf-8" import="sk.iway.iwcm.*,sk.iway.iwcm.doc.*,java.io.*,sk.iway.iwcm.editor.*,java.util.*"%>
+%><%@ page pageEncoding="utf-8" import="sk.iway.iwcm.*,sk.iway.iwcm.doc.*,java.io.*,sk.iway.iwcm.editor.*,java.util.*,sk.iway.iwcm.users.UsersDB"%>
 <%@ taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm" %>
 <%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %>
 <%
@@ -154,7 +154,7 @@ public void ulozStrankuSekcie(HttpServletRequest request, JspWriter out, GroupDe
 {
 
 
-   Identity user = (Identity)request.getSession().getAttribute(Constants.USER_KEY);
+   Identity user = UsersDB.getCurrentUser(request);
 
    EditorForm editorForm = EditorDB.getEditorForm(request, -1, -1, group.getGroupId());
    editorForm.setAuthorId(user.getUserId());

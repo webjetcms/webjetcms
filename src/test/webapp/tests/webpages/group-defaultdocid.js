@@ -1,7 +1,7 @@
 Feature('webpages.group-defaultdocid');
 
 var auto_name, auto_folder, auto_webPage, auto_todo;
-var add_button = (locate('.col-md-4.tree-col').find('.btn.btn-sm.buttons-create.btn-success.buttons-divider'));
+var add_button = (locate('.tree-col').find('.btn.btn-sm.buttons-create.btn-success.buttons-divider'));
 var add_webButton = (locate('#datatableInit_wrapper').find('.btn.btn-sm.buttons-create.btn-success.buttons-divider'));
 
 Before(({ I, login }) => {
@@ -55,9 +55,9 @@ Scenario('Hlavna stranka priecinka', ({ I, DT, DTE }) => {
      DTE.waitForEditor();
      I.wait(2);
      // pridanie obsahu
-     I.click("#pills-dt-datatableInit-content-tab");
+     I.clickCss("#pills-dt-datatableInit-content-tab");
      I.waitForElement('#cke_data', 10);
-     I.click('#cke_data');
+     I.clickCss('#cke_data');
      I.fillField('#cke_data', 'This is an autotest');
      // pridanie nazvu web stranky a polozky v menu
      I.click(locate('#pills-dt-datatableInit-basic-tab').withText('Základné'));
@@ -117,7 +117,7 @@ Scenario('Hlavna stranka priecinka', ({ I, DT, DTE }) => {
      I.wait(4);
      I.click(locate('.jstree-anchor').withText(auto_folder));
      I.wait(2);
-     I.click('div.tree-col .btn.btn-sm.buttons-selected.buttons-remove.btn-danger.buttons-divider');
+     I.clickCss('div.tree-col .btn.btn-sm.buttons-selected.buttons-remove.btn-danger.buttons-divider');
      I.wait(1);
      I.click('Zmazať', "#groups-datatable_modal");
      DTE.waitForLoader();
@@ -129,7 +129,7 @@ Scenario('Hlavna stranka priecinka', ({ I, DT, DTE }) => {
      // zmazanie name-autotest
      I.click(locate('.jstree-anchor').withText(auto_name));
      DT.waitForLoader();
-     I.click('div.tree-col .btn.btn-sm.buttons-selected.buttons-remove.btn-danger.buttons-divider');
+     I.clickCss('div.tree-col .btn.btn-sm.buttons-selected.buttons-remove.btn-danger.buttons-divider');
      I.wait(1);
      I.click('Zmazať', "#groups-datatable_modal");
      I.wait(1);
@@ -154,12 +154,12 @@ Scenario('Ulozenie prazdnej stranky', ({ I, DT, DTE }) => {
 
      //zmaz vytvorenu web stranku
      DT.filter("title", "Nová web stránka");
-     I.click("div.dataTables_scrollHeadInner button.dt-filter-id");
-     I.click("#datatableInit_wrapper button.buttons-remove");
+     I.clickCss("div.dataTables_scrollHeadInner button.dt-filter-id");
+     I.clickCss("#datatableInit_wrapper button.buttons-remove");
      //polozku/y preto len polozk
      I.waitForText("Naozaj chcete zmazať položk", 10);
      I.wait(1);
-     I.click("#datatableInit_modal div.DTE_Form_Buttons button.btn-danger");
+     I.clickCss("#datatableInit_modal div.DTE_Form_Buttons button.btn-danger");
      DTE.waitForLoader();
 });
 
@@ -171,6 +171,7 @@ Scenario('Chybne texty', ({ I, DTE }) => {
      I.wait(1);
      I.click(add_webButton);
      DTE.waitForEditor();
+     I.waitForElement(locate('#pills-dt-datatableInit-basic-tab.active'), 10);
 
      I.click('#pills-dt-datatableInit-template-tab');
      I.dontSee('Nothing selected');

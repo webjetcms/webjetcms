@@ -117,7 +117,7 @@ request.setAttribute("adminJqueryVersion", "adminJqueryJs");
 				uploadOverwrite: true,
 				overwriteUploadConfirm: true,
 				url : '<iwcm:cp/>/admin/elfinder-connector/',
-            enableByMouseOver: false,
+            	enableByMouseOver: false,
 				width: '100%',
 				height: elFinderHeight,
 				rememberLastDir: <%=rememberLastDir%>,
@@ -160,13 +160,13 @@ request.setAttribute("adminJqueryVersion", "adminJqueryJs");
 							.done(function() { elfinderInstance.exec('edit'); })
 							.fail(function() { elfinderInstance.exec('open'); });
 					},
-               select : function(event, elfinderInstance) {
+               		select : function(event, elfinderInstance) {
                         var selected = event.data.selected;
 
 						if (selected.length) {
 							// console.log(elfinderInstance.file(selected[0]))
 						}
-               },
+               		},
 					add : function(event, elfinderInstance) {
 						processEventReload(event, elfinderInstance);
 					},
@@ -176,7 +176,7 @@ request.setAttribute("adminJqueryVersion", "adminJqueryJs");
 					change : function(event, elfinderInstance) {
 						processEventReload(event, elfinderInstance);
 					}
-            },
+            	},
 				// onlyMimes : ['image', 'text/plain']
 				// sync : 20000,
 				lang : '<%=sk.iway.iwcm.i18n.Prop.getLngForJavascript(request)%>',
@@ -188,12 +188,12 @@ request.setAttribute("adminJqueryVersion", "adminJqueryJs");
 				commands : [
                     'fileopen', 'dirprops', 'fileprops', 'open', 'reload', 'home', 'up', 'back', 'forward', 'getfile', 'quicklook',
                     'download', 'rm', 'duplicate', 'rename', 'mkdir', 'mkfile', 'upload', 'copy',
-                    'cut', 'paste', 'wjedit', 'extract', 'archive', 'search', 'info', 'view', 'help', 'resize', 'sort', 'netmount', 'fileupdate', 'wjfilearchive'
+                    'cut', 'paste', 'wjedit', 'extract', 'archive', 'search', 'info', 'view', 'help', 'resize', 'sort', 'netmount', 'fileupdate', 'wjfilearchive', 'wjsearch'
                     <% if (Constants.getBoolean("elfinderMetadataEnabled")) { %>,'wjmetadata'<% } %>
-            ],
-            contextmenu : {
-             	files  : ['wjedit', 'fileopen', 'fileupdate', '|', 'quicklook', '|', 'download', '|', 'copy', 'cut', 'paste', 'duplicate', '|', 'rm', '|', 'rename', 'resize', '|', 'archive', 'extract', '|', 'info', 'fileprops', 'dirprops'<% if (Constants.getBoolean("elfinderMetadataEnabled")) { %>, 'wjmetadata'<% } %>]
-            },
+				],
+				contextmenu : {
+					files  : ['wjedit', 'fileopen', 'fileupdate', '|', 'quicklook', '|', 'download', '|', 'copy', 'cut', 'paste', 'duplicate', '|', 'rm', '|', 'rename', 'resize', '|', 'archive', 'extract', '|', 'info', 'fileprops', 'dirprops'<% if (Constants.getBoolean("elfinderMetadataEnabled")) { %>, 'wjmetadata'<% } %>]
+				},
 				commandsOptions : {
                     wjedit : {
 						//mimes : ['text/plain', 'text/html', 'text/javascript', 'text/jsp', 'text/css', 'text/xml', 'text/x-js'],
@@ -276,7 +276,8 @@ request.setAttribute("adminJqueryVersion", "adminJqueryJs");
 			           ['rm'],
 			           ['duplicate', 'rename', 'edit' /*, 'resize' - nefunguje */],
 			           ['extract', 'archive'],
-						['wjfilearchive']
+						['wjfilearchive'],
+						['wjsearch']
 			           /*['search'],*/
 
 			           /*['help']*/

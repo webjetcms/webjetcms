@@ -1,6 +1,18 @@
 #!/bin/bash
 #Build CKEditor dist folder from WebJET github version
 WJ_PATH=$PWD
+
+echo "System JAVA version:"
+java -version
+
+source "$HOME/.sdkman/bin/sdkman-init.sh"
+
+#NASTAV NA ZACIATKU:
+sdk use java 11.0.16.1-tem
+
+echo "Switched to JAVA version:"
+java -version
+
 cd ../../../../../../../../github.com_webjetcms/libs-ckeditor4/dev/builder
 build.sh
 
@@ -37,4 +49,5 @@ rm -f $WJ_PATH/styles.js
 #nakopiruj aktualne subory
 cp -R -p release/ckeditor/ $WJ_PATH/dist
 cp -R -p ../../plugins/webjetcomponents/samples $WJ_PATH/dist/plugins/webjetcomponents
-
+cp -R -p ../../plugins/webjetcomponents/icons $WJ_PATH/dist/plugins/webjetcomponents
+cp -R -p ../../plugins/webjettooltip/icons $WJ_PATH/dist/plugins/webjettooltip

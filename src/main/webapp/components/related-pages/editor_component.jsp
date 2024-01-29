@@ -185,9 +185,9 @@ function checkRootGroup()
 			<input type="hidden" name="pageParams" value="<%=Tools.getRequestParameterUnsafe(request, "pageParams") %>">
 		</form>
 		<form method=get name=textForm>
-			<div class="col-sm-10">
+			<div class="container">
 				<div class="formMainGroup">
-					<div class="formGroup col-sm-12">
+					<div class="formGroup row">
 						<div class="col-sm-4 leftCol">
 							<iwcm:text key="components.news.groupids"/>
 						</div>
@@ -196,7 +196,7 @@ function checkRootGroup()
 							<input type="button" name="groupSelect" class="btn green" value="<iwcm:text key="editor.spell.add"/>" onClick='popupFromDialog("<iwcm:cp/>/admin/grouptree.jsp", 500, 500),checkRootGroup();' />
 						</div>
 					</div>
-					<div class="formGroup col-sm-12">
+					<div class="formGroup row">
 						<div class="col-sm-4"></div>
 						<div class="col-sm-8">
 							<input type="checkbox" name="rGroupsRecursive" <%if (pageParams.getBooleanValue("rGroupsRecursive", false)) out.print("checked='checked'");%> /><iwcm:text key="components.user.root_group_recursive"/>
@@ -204,7 +204,7 @@ function checkRootGroup()
 					</div>
 				</div>
 				<div class="formMainGroup">
-					<div class="formGroup col-sm-12">
+					<div class="formGroup row">
 						<div class="col-sm-4 leftCol">
 							<iwcm:text key="components.user.title_name"/>
 						</div>
@@ -228,7 +228,7 @@ function checkRootGroup()
 					</div>
 				</div>
 				<div class="formMainGroup">
-					<div class="formGroup col-sm-12">
+					<div class="formGroup row">
 						<div class="col-sm-4 leftCol">
 							<iwcm:text key="components.user.perex_groups"/>
 						</div>
@@ -244,7 +244,7 @@ function checkRootGroup()
 							<input type="button" name="groupSelect"class="btn green" value="<iwcm:text key="editor.spell.add"/>" onClick="addGroup();" />
 						</div>
 					</div>
-					<div class="formGroup col-sm-12">
+					<div class="formGroup row">
 						<div class="col-sm-4 leftCol">
 							<iwcm:text key="components.user.perex_group_id"/>
 						</div>
@@ -254,7 +254,7 @@ function checkRootGroup()
 					</div>
 				</div>
 				<div class="formMainGroup">
-					<div class="formGroup col-sm-12">
+					<div class="formGroup row">
 						<div class="col-sm-4 leftCol">
 							<iwcm:text key="components.related-pages.results_per_group"/>
 						</div>

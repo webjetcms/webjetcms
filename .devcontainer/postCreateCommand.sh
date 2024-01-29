@@ -10,5 +10,5 @@ sudo -- sh -c "ln -snf /usr/share/zoneinfo/$TZ /etc/localtime"
 sudo -- sh -c "echo $TZ > /etc/timezone"
 
 #playwright setup
-#npx playwright install
-#npx playwright install-deps
+npx playwright install
+npx playwright install-deps

@@ -5,13 +5,14 @@ import="sk.iway.iwcm.i18n.*,sk.iway.iwcm.*" %>
 <%@ taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm" %>
 <%@ taglib uri="/WEB-INF/iway.tld" prefix="iway" %>
 <%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
-<%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
+<%@ taglib prefix="form" uri="http://www.springframework.org/tags/form" %>
 <%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %>
 <%
 Prop prop = Prop.getInstance(sk.iway.iwcm.Constants.getServletContext(), request);
 request.setAttribute("iconLink", "");
 request.setAttribute("dialogTitle", prop.getText("components.import_web_pages.xls.dialogTitle"));
 request.setAttribute("dialogDesc", prop.getText("components.import_web_pages.xls.dialogDesc"));
+request.setAttribute("xlsImportForm", new sk.iway.iwcm.xls.ImportXLSForm());
 
 int groupId = Constants.getInt("rootGroupId");
 try
@@ -86,29 +87,25 @@ catch (Exception ex)
 	</logic:present>
 
 
-	<html:form action="/admin/importxls.do" name="xlsImportForm" type="sk.iway.iwcm.xls.ImportXLSForm" enctype="multipart/form-data">
+	<form:form method="post" modelAttribute="xlsImportForm" action="/admin/import/excel/" name="xlsImportForm" enctype="multipart/form-data">
 	<table>
 		<tr>
 			<td>
 				<b><iwcm:text key="components.import_web_pages.xls.xls_file"/>:</b>&nbsp;
 			</td>
 			<td colspan="2" >
-				<input type="File" name="file" size="30">
+				<input type="file" name="file" size="30">
 			</td>
 		</tr>
 		<tr>
 			<td><b><iwcm:text key="components.import_web_pages.parent_group_id"/>:</b>&nbsp;</td>
 			<td><input type="text" name="parentGroupIdString" size="5" value="<%=groupId%>" />&nbsp;
-				<input type="button" name="selGroup" value="<iwcm:text key="components.import_web_pages.select_group"/>" onclick="Javascript: openPopup();" />&nbsp;
+				<input type="button" name="selGroup" value='<iwcm:text key="components.import_web_pages.select_group"/>' class="btn btn-green" onclick="Javascript: openPopup();" />
 			</td>
 		</tr>
 		<tr>
 			<td><b><iwcm:text key="components.import_web_pages.xls.level_as_priority"/>:</b>&nbsp;</td>
 			<td><input type="checkbox" name="levelAsPriority" checked value="true"/>&nbsp;</td>
-		</tr>
-		<tr>
-			<td><b><iwcm:text key="components.import_web_pages.xls.create_empty_pages"/>:</b>&nbsp;</td>
-			<td><input type="checkbox" name="createPages" checked value="yes"/>&nbsp;</td>
 		</tr>
 		<tr>
 			<td><b><iwcm:text key="components.import_web_pages.xls.download_from_server"/>:</b>&nbsp;</td>
@@ -124,7 +121,7 @@ catch (Exception ex)
 		</tr>
 	</table>
 	<input type="hidden" name="type" value="sk.iway.iwcm.components.importWebPages.ImportStructureExcel">
-	</html:form>
+	</form:form>
 </div>
 
 

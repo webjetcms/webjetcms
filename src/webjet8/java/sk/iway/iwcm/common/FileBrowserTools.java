@@ -13,13 +13,13 @@ import sk.iway.iwcm.io.IwcmFsDB;
 import sk.iway.iwcm.system.metadata.MetadataCleaner;
 
 public class FileBrowserTools {
-    public static List<String> forbiddenSymbols = null; //NOSONAR
+    private static List<String> forbiddenSymbols = null; //NOSONAR
     static
     {
         //forbiddenSymbols = new Hashtable();
         forbiddenSymbols = new ArrayList<>();
 
-        //forbiddenSymbols.put(":", "");
+        // hardcoded forbidden symbols
         forbiddenSymbols.add(":");
         forbiddenSymbols.add("..");
         forbiddenSymbols.add("^");
@@ -29,20 +29,20 @@ public class FileBrowserTools {
         forbiddenSymbols.add("&");
         forbiddenSymbols.add("%");
         forbiddenSymbols.add("$");
-        forbiddenSymbols.add("#");
-        forbiddenSymbols.add("@");
         forbiddenSymbols.add("!");
         forbiddenSymbols.add("|");
         forbiddenSymbols.add("\"");
         forbiddenSymbols.add(";");
         forbiddenSymbols.add(",");
-        forbiddenSymbols.add("|");
-        forbiddenSymbols.add("{");
-        forbiddenSymbols.add("}");
-        forbiddenSymbols.add("+");
-        forbiddenSymbols.add("=");
-        forbiddenSymbols.add("(");
-        forbiddenSymbols.add(")");
+        forbiddenSymbols.add("?");
+        forbiddenSymbols.add("*");
+        forbiddenSymbols.add(">");
+        forbiddenSymbols.add("<");
+
+        // configured forbidden symbols
+        addForbidenSymbolsFromConfig();
+
+        // hardcoded forbidden strings
         forbiddenSymbols.add(".java");
         forbiddenSymbols.add(".lib");
         forbiddenSymbols.add("cvs");
@@ -100,6 +100,20 @@ public class FileBrowserTools {
             }
         }
         return null;
+    }
+
+    /**
+     * Prida zakazane znaky z konfiguracie do zoznamu zakazanych znakov
+     * Znaky cita z konfiguracnej premennje FileBrowserTools.forbiddenSymbols, ktora je zoznam oddeleny ciarkou
+     */
+    private static void addForbidenSymbolsFromConfig() {
+        String[] configuredForbiddenSymbols = Constants.getArray("FileBrowserTools.forbiddenSymbols");
+        if(configuredForbiddenSymbols != null && configuredForbiddenSymbols.length > 0) {
+            for (String configuredForbiddenSymbol : configuredForbiddenSymbols)
+            {
+                forbiddenSymbols.add(configuredForbiddenSymbol);
+            }
+        }
     }
 
 }

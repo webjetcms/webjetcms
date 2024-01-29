@@ -70,8 +70,6 @@ block content
                         "array" : false
                     });
 
-                    //console.log("componentColumns=", componentColumns);
-
                     componentDatatable = WJ.DataTable({
                         id: 'component-datatable',
                         url: componentInitialUrl,
@@ -84,12 +82,43 @@ block content
                         tabs: response.tabs
                         //hideTable:true
                     });
+                    componentDatatable.EDITOR.on('open', function (e, mode, action) {
+                        $("#"+componentDatatable.DATA.id+"_modal div.DTE_Header_Content h5.modal-title").text(response.title);
+                    });
 
                     response.data['id'] = 1;
-                    componentDatatable.row.add(response.data).draw();
+                    var multidata = convertMultichoiseData(componentColumns, response.data);
+                    //console.log("multidata=", multidata);
+                    componentDatatable.row.add( multidata ).draw();
                 }
             });
         });
+
+        /**
+         * Convert multichoise data from string to array
+         * @param componentColumns
+         * @param data
+         * @returns {*}
+         */
+        function convertMultichoiseData(componentColumns, data) {
+            for(let i = 0; i < componentColumns.length; i++) {;
+                let fieldValue = data[componentColumns[i].data];
+
+                if("checkbox" == componentColumns[i].editor.type && typeof fieldValue === "string") {
+                    //It's multichoise (checkbox multichoise), convert to array
+                    if(fieldValue === null || fieldValue === undefined) fieldValue = [];
+                    else data[componentColumns[i].data] = fieldValue.split("+");
+                }
+
+                if("select" == componentColumns[i].editor.type && true === componentColumns[i].editor.multiple) {
+                    //It's multichoise (select multichoise), convert to array
+                    if(fieldValue === null || fieldValue === undefined) fieldValue = [];
+                    else data[componentColumns[i].data] = fieldValue.split("+");
+                }
+            }
+
+            return data;
+        }
 
         function getParamValue(paramName) {
             var url = window.location.search.substring(1); //get rid of "?" in querystring
@@ -161,7 +190,11 @@ block content
                     }
                 }
 
-                value = Array.isArray(value) ? value[0] : value;
+                //For multichoise (checkbox multichoise, select multichoise) join values using "+"
+                if(Array.isArray(value)) {
+                    value = value.join("+");
+                }
+
                 if (typeof value === "string") {
                     value = value.replace(/\"/gi, "&amp;quot;");
                     value = value.replace(/, /gi, ",&nbsp;");

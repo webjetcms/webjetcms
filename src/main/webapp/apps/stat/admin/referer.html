@@ -96,7 +96,7 @@
             let rootDir = $('#rootDir').val();
 
             tmpDefURL += url + "/search/findByColumns?";
-            tmpDefURL += "searchdayDate=" + ChartTools.getDateRange(30);
+            tmpDefURL += "searchDayDate=" + ChartTools.getDateRange(null);
             tmpDefURL += "&searchRootDir=" + rootDir;
 
             ChartTools.saveSearchCriteria(refererDataTable.DATA);

@@ -104,14 +104,14 @@ taglib
 
 
 
-<div class="tab-pane toggle_content" style="height:440px !important; overflow: auto; width:990px; padding:10px">
-<form name="textForm" style="padding: 10px; margin: 0px;">
-
-<label for="inserted_code_name"><iwcm:text
-		key="components.app-htmlembed.editor_components.vloz_html_kod" />:</label>
-</br>
-<textarea name="inserted_code_name" class="required" id="inserted_code"
-	rows="12" cols="72" style="width:100%"><%=ResponseUtils.filter(htmlCode)%></textarea>
-	</table></form></div>
+<div class="tab-pane toggle_content tab-pane-fullheight">
+	<form name="textForm" style="padding: 10px; margin: 0px;">
+		<label for="inserted_code_name"><iwcm:text
+				key="components.app-htmlembed.editor_components.vloz_html_kod" />:</label>
+		<br/>
+		<textarea name="inserted_code_name" class="required" id="inserted_code"
+			style="max-width: none; width:100%; min-height: 250px;"><%=ResponseUtils.filter(htmlCode)%></textarea>
+	</form>
+</div>
 
 <jsp:include page="/components/bottom.jsp" />

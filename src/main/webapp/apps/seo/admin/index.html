@@ -25,7 +25,7 @@
     });
 
     window.getBotDetials = function (botId) {
-        window.location.href="/apps/seo/admin/bots-details?botId=" + botId + "&rootDir=" + $('#rootDir').val() + "&dayDate=" + ChartTools.getDateRange(30);
+        window.location.href="/apps/seo/admin/bots-details?botId=" + botId + "&rootDir=" + $('#rootDir').val() + "&dayDate=" + ChartTools.getDateRange(null);
     }
 
     window.domReady.add(function () {
@@ -106,7 +106,7 @@
 
             //Load values
             let rootDir = $('#rootDir').val();
-            let searchDateValue = ChartTools.getDateRange(30);
+            let searchDateValue = ChartTools.getDateRange(null);
         
             if(chartType == ChartTools.ChartType.Pie) {
                 tmpDefURL = url + "/pieChartData?dayDate=" + searchDateValue;

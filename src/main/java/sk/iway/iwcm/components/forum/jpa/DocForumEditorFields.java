@@ -44,11 +44,18 @@ public class DocForumEditorFields extends BaseEditorFields {
         }
 
         //Add icon about active status
-        if(!entity.getActive()) iconsHtml.append("<i class=\"fa-solid fa-lock\" style=\"color: #000000;width: 1.25em;\"></i>");
+        if(!entity.getActive()) 
+            //active = false in document_forum table, this one forum is locked
+            iconsHtml.append("<i class=\"fa-solid fa-lock\" style=\"color: #000000;width: 1.25em;\"></i>");
+        else if(entity.getForumGroupEntity() != null)
+                if(!entity.getForumGroupEntity().getActive())
+                    //active = false in forum tabel, mean all forum's under specific DocId are locked
+                    //!! BEWARE, is whole forum group is locked (active = false), it doesn't necesary mean that forum is set as locked and can have active = true  
+                    iconsHtml.append("<i class=\"fa-solid fa-lock\" style=\"color: #000000;width: 1.25em;\"></i>");
 
         //If page is soft deleted, add icon to recover page
         if(entity.getDeleted()) {
-            link = "javascript:undeleteEntity(" + entity.getId() + ");";
+            link = "javascript:recoverForum(" + entity.getId() + ");";
             iconsHtml.append("<a href=\"" + link + "\" title=\"" + prop.getText("components.banner.recover") + "\"><i class=\"fa-regular fa-trash-can-undo\" style=\"color: #fabd00;width: 1.25em;\"></i></a> ");
         }
 

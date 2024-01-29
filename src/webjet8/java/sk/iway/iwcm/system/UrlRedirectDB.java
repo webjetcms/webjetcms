@@ -245,7 +245,7 @@ public class UrlRedirectDB
 					}
 				}
 			} catch(Exception e) {
-				Adminlog.add(Adminlog.TYPE_CRON, "deleteOldRedirects urlRedirectId[" + redirect.getId() + "], idsToRemove[" + Tools.join(idsToRemove) + "]", redirect.getId().intValue(), -1);
+				Adminlog.add(Adminlog.TYPE_REDIRECT_UPDATE, "CRON: deleteOldRedirects urlRedirectId[" + redirect.getId() + "], idsToRemove[" + Tools.join(idsToRemove) + "]", redirect.getId().intValue(), -1);
 			}
 
 		}
@@ -267,7 +267,7 @@ public class UrlRedirectDB
 			}
 		} catch(Exception e) {
 			Logger.error(UrlRedirectDB.class, "reloadCache failed", e);
-			Adminlog.add(Adminlog.TYPE_CRON, "deleteOldRedirects - reloadCache failed.", -1, -1);
+			Adminlog.add(Adminlog.TYPE_REDIRECT_UPDATE, "CRON: deleteOldRedirects - reloadCache failed.", -1, -1);
 		}
 
 		// return count of affected urls
@@ -549,7 +549,6 @@ public class UrlRedirectDB
 		JpaEntityManager em = JpaTools.getEclipseLinkEntityManager();
 		UrlRedirectBean urlRedirect = em.getReference(UrlRedirectBean.class, id);
 		removeRedirectFromCache(id);
-		Adminlog.add(Adminlog.TYPE_REDIRECT_DELETE, "Zmazane presmerovanie: "+urlRedirect, urlRedirect.getUrlRedirectId().intValue(), -1);
 
 		if (InitServlet.isTypeCloud() && CloudToolsForCore.getDomainName().equals(urlRedirect.getDomainName())==false) return;
 
@@ -577,14 +576,12 @@ public class UrlRedirectDB
 		if(urlRedirect.getUrlRedirectId()==null || urlRedirect.getUrlRedirectId()<1)
 		{
 			urlRedirect.setInsertDate(new Date());
-			Adminlog.add(Adminlog.TYPE_REDIRECT_CREATE, "Vytvorene presmerovanie: "+urlRedirect, -1, -1);
 		}
 		else
 		{
 			em.detach(urlRedirect);
 			UrlRedirectBean oldRedirect = getById(urlRedirect.getUrlRedirectId());
 			removeRedirectFromCache(oldRedirect);
-			Adminlog.add(Adminlog.TYPE_REDIRECT_UPDATE, "Zmenene presmerovanie: "+urlRedirect, urlRedirect.getUrlRedirectId().intValue(), -1);
 		}
 
 		try{

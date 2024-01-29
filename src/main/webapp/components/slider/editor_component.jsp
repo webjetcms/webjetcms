@@ -374,6 +374,8 @@ td.main {
 			<li class="first openFirst"><a href="#"
 				onclick="showHideTab('1');" id="tabLink1"><iwcm:text
 						key="components.slider.settings" /></a></li>
+			<li class=""><a href="#" onclick="showHideTab('4');"
+				id="tabLink4"><iwcm:text key="datatable.tab.advanced" /></a></li>
 			<li class=""><a href="#" onclick="showHideTab('2');"
 				id="tabLink2"><iwcm:text key="components.slider.transitions" /></a></li>
 			<li class="last"><a href="#" onclick="showHideTab('3');"
@@ -405,11 +407,9 @@ input[type="number"] {
 		ease-in-out 0s;
 }
 </style>
-<div class="tab-pane toggle_content"
-	style="height: 500px !important; overflow: auto; width: 990px; padding: 10px">
+<div class="tab-pane toggle_content tab-pane-fullheight">
 	<form name=textForm>
-		<div class="tab-page" id="tabMenu1"
-			style="display: block; width: 790px;">
+		<div class="tab-page" id="tabMenu1" style="display: block;">
 			<div class="col-xs-12 form-group">
 				<div class="col-xs-4 paddingTop4 text-right">
 					<iwcm:text key="components.slider.skin" />
@@ -460,6 +460,8 @@ input[type="number"] {
 					</div>
 				</div>
 			</div>
+		</div>
+		<div class="tab-page" id="tabMenu4" style="display: none;">
 			<div class="col-xs-12 form-group custom-prop-check">
 				<div class="col-xs-4 text-right" style="padding-top: 0px;">
 					<input type="checkbox" name="custom_properties"
@@ -732,7 +734,7 @@ input[type="number"] {
 			}
 		</style>
 		<div class="tab-page" id="tabMenu2"
-			style="display: none; width: 790px;">
+			style="display: none;">
 			<div class="col-xs-6">
 				<div class="col-xs-12 form-group">
 					<div class="col-xs-8 text-right paddingTop4">
@@ -1009,7 +1011,7 @@ input[type="number"] {
 	</form>
 
 	<div class="tab-page" id="tabMenu3"
-		style="display: none; width: 790px;">
+		style="display: none;">
 		<div id="editorWrapper" class="editorWrapper"></div>
 
 		<input type="button" id="addItem" class="button50 button50grey"

@@ -105,6 +105,7 @@
 		var lastDocId = -1;
 		var lastGroupId = -1;
         var lastVirtualPath = "";
+		var lastTitle = "";
         var elFinderInstance;
 
 		function checkSelectionText()
@@ -151,11 +152,13 @@
             lastDocId = docId;
             lastGroupId = groupId;
             lastVirtualPath = virtualPath;
+			lastTitle = getPageNavbar();
 
             var customData = {
                 volumes : "link",
                 docId: docId,
-                groupId: groupId
+                groupId: groupId,
+				title: getPageNavbar()
             }
 
             var file = $('#txtUrl').val();
@@ -171,7 +174,7 @@
 
 				// url : 'php/connector.php',
 				url : '<iwcm:cp/>/admin/elfinder-connector/',
-            enableByMouseOver: false,
+            	enableByMouseOver: false,
 				width: '100%',
 				height: 430,
 				resizable: false,
@@ -234,22 +237,24 @@
 				commands : [
 		                    'fileopen', 'dirprops', 'fileprops', 'open', 'reload', 'home', 'up', 'back', 'forward', 'getfile', 'quicklook',
 		                    'download', 'rm', 'duplicate', 'rename', 'mkdir', 'mkfile', 'upload', 'copy',
-		                    'cut', 'paste', 'edit', 'extract', 'archive', 'search', 'info', 'view', 'help', 'resize', 'sort', 'netmount', 'fileupdate'
+		                    'cut', 'paste', 'edit', 'extract', 'archive', 'search', 'info', 'view', 'help', 'resize', 'sort', 'netmount', 'fileupdate', 'wjsearch'
 		                    <% if (Constants.getBoolean("elfinderMetadataEnabled")) { %>,'wjmetadata'<% } %>
 		                ],
-            contextmenu : {
-            	files  : ['edit', 'fileopen', 'fileupdate', '|', 'quicklook', '|', 'download', '|', 'copy', 'cut', 'paste', 'duplicate', '|', 'rm', '|', 'rename', 'resize', '|', 'archive', 'extract', '|', 'info', 'fileprops', 'dirprops'<% if (Constants.getBoolean("elfinderMetadataEnabled")) { %>, 'wjmetadata'<% } %>]
-            },
+				contextmenu : {
+					files  : ['edit', 'fileopen', 'fileupdate', '|', 'quicklook', '|', 'download', '|', 'copy', 'cut', 'paste', 'duplicate', '|', 'rm', '|', 'rename', 'resize', '|', 'archive', 'extract', '|', 'info', 'fileprops', 'dirprops'<% if (Constants.getBoolean("elfinderMetadataEnabled")) { %>, 'wjmetadata'<% } %>]
+				},
 
 				ui: ['toolbar', /*'places',*/ 'tree', 'path', 'stat'],
 
 				uiOptions : {
 					toolbar : [
-		           ['back', 'forward'],
-		           ['paste', 'cut', 'copy'],
-		           ['upload', 'mkdir', 'reload' /*'mkfile', */],
+						['back', 'forward'],
+						['paste', 'cut', 'copy'],
+						['upload', 'mkdir', 'reload' /*'mkfile', */],
 
-		           ['view', 'sort']
+						['view', 'sort'],
+
+						['wjsearch']
 					]
 				}
 			}).elfinder('instance');
@@ -383,7 +388,8 @@
             var customData = {
                 volumes : "link",
                 docId: docId,
-                groupId: groupId
+                groupId: groupId,
+				title: getPageNavbar()
             }
 
             var file = $('#txtUrl').val();
@@ -399,12 +405,12 @@
 			//console.log("elFinder custom data: docId="+docId+" groupId="+groupId);
             var openTimeout = 100;
             var reload = false
-            if (lastDocId != docId || lastGroupId != groupId || virtualPath != lastVirtualPath)
+            if (lastDocId != docId || lastGroupId != groupId || virtualPath != lastVirtualPath || lastTitle != getPageNavbar())
             {
                 reload = true;
                 openTimeout = 500;
             }
-            if (reload || file == "")
+            if (reload)
             {
                 openDefaultImageFolder(reload);
             }
@@ -412,6 +418,7 @@
             lastDocId = docId;
             lastGroupId = groupId;
             lastVirtualPath = virtualPath;
+			lastTitle = getPageNavbar();
 
             if (file != "")
             {
@@ -452,7 +459,7 @@
 		<table class="urlFormTable">
 			<tr>
 				<td style="width: 80px;" title="<iwcm:text key="elfinder.image.urlTitle"/>"><iwcm:text key="components.groupEdit.url_info"/>:</td>
-				<td><input id="txtUrl" style="width: 100%; outline: none !important;" type="text" onkeyup="txtUrlOnChange(this);" /></td>
+				<td><input id="txtUrl" style="width: 100%; outline: none !important; border: 1px solid; height: 22px;" type="text" onkeyup="txtUrlOnChange(this);" /></td>
 			</tr>
 		</table>
 	</div>

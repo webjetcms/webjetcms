@@ -50,7 +50,7 @@ public class SearchEnginesDetailsRestController extends DatatableRestControllerV
 
     private List<SearchEnginesDetailsDTO> convertColumnsIntoItems() {
 
-        FilterHeaderDto filter = StatService.processRequestToStatFilter(getRequest(), "searchdayDate");
+        FilterHeaderDto filter = StatService.processRequestToStatFilter(getRequest(), null);
         List<Column> columns = StatTableDB.getQueries(filter.getDateFrom(), filter.getDateTo(), filter.getUrl());
 
         List<SearchEnginesDetailsDTO> items = new ArrayList<>();

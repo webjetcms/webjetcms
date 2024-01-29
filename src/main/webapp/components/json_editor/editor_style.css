@@ -13,7 +13,7 @@
 	width: 100px;
 	height: 100px;
 	background-image:
-		url(/components/news/admin_imgplaceholder.png?w=100&h=100&ip=5);
+		url(/components/json_editor/admin_imgplaceholder.png?w=100&h=100&ip=5);
 	cursor: pointer;
 }
 

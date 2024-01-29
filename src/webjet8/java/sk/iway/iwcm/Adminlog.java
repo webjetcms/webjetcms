@@ -142,6 +142,7 @@ public class Adminlog
 	public static final int TYPE_RESERVATION_TIMES = 308;
 	public static final int TYPE_DOC_ATTRIBUTES = 309;
 	public static final int TYPE_SEO = 310;
+	public static final int TYPE_RESTAURANT_MENU = 311;
 
 	/*
 	public static final int TYPE_HEAT_MAP_CLEAN = 940;

@@ -63,7 +63,7 @@ function wj9CreateMirroringSubfolder(I, DTE, randomNumber) {
      var auto_folder_sk = 'sk-mir-autotest-' + randomNumber;
      var auto_subfolder1_sk = 'sk-mir-subfolder1-' + randomNumber;
      var auto_subfolder2_sk = 'sk-mir-subfolder2-' + randomNumber;
-     var add_button = (locate('.col-md-4.tree-col').find('.btn.btn-sm.buttons-create.btn-success.buttons-divider'));
+     var add_button = (locate('.tree-col').find('.btn.btn-sm.buttons-create.btn-success.buttons-divider'));
      // vytvorenie 1. podadresar v sk strukture
      I.say('Vytvaram prvy podpriecinok pre sk adresar');
      I.jstreeClick(auto_folder_sk);
@@ -258,21 +258,19 @@ Scenario('reset nastavenej domeny', ({ I }) => {
 
 Scenario('Zrkadlenie webstranok wj9', async ({ I, DT, DTE }) => {
      // vytvorenie mirroring hlavneho priecinka
-     I.wj9CreateMirroringFolder(randomNumber);
+     I.wj9CreateMirroringFolder(randomNumber, false);
 
      // nastavenie structureMirroringConfig
      // zober ID priecinkov sk a en
      I.say('Kopirujem ID priecinkov');
      I.jstreeClick(auto_folder_sk);
-     I.wait(2);
+     I.wait(1);
      const skID = await I.grabValueFrom('#tree-folder-id');
      I.say('ID sk priecinka je: ' + skID);
-     I.wait(1);
      I.jstreeClick(auto_folder_en);
-     I.wait(2);
+     I.wait(1);
      const enID = await I.grabValueFrom('#tree-folder-id');
      I.say('ID en priecinka je: ' + enID);
-     I.wait(1);
      // nastavenie konfiguracnej premennej
      I.say('Nastavujem createMirroringStructure');
      I.amOnPage('/admin/v9/settings/configuration/');

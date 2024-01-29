@@ -271,7 +271,7 @@ public class RegUserAction extends WebJETActionBean
 
 				//aby sa v info maili neposlala info o schvaleni
 				if (isNewUser && requireEmailVerification) usr.setAuthorized(true);
-				if (isNewUser && Tools.isEmail(infoemail) && !requireAuthorizationAfterVerification) sendInfoEmail(infoemail);
+				if (isNewUser && Tools.isEmail(infoemail) && !requireAuthorizationAfterVerification) sendEmailToAdmin(infoemail);
 				if (isNewUser && requireEmailVerification) usr.setAuthorized(false);
 
 				//updatni usera v session
@@ -281,6 +281,7 @@ public class RegUserAction extends WebJETActionBean
 				if (pageParams.hasParameter("loginNewUser")) doNotLoginUser = !pageParams.getBooleanValue("loginNewUser", true);
 				//existing users are allready logged
 				if (isNewUser == false) doNotLoginUser = true;
+				boolean sendUserWelcomeEmail = false;
 				if (usr.isAuthorized())
 				{
 					if (isNewUser) {
@@ -289,8 +290,7 @@ public class RegUserAction extends WebJETActionBean
 							Identity user = (Identity)getSession().getAttribute(Constants.USER_KEY);
 							if (user == null) LogonTools.logonUser(getRequest(), usr.getLogin(), oldPassword);
 						}
-						//posli email
-						AuthorizeAction.sendInfoEmail(usr.getUserId(), oldPassword, null, getRequest());
+						sendUserWelcomeEmail = true;
 
 						if (doNotLoginUser==false)
 						{
@@ -389,11 +389,17 @@ public class RegUserAction extends WebJETActionBean
 							UsersDB.saveUser(usr);
 							updateLoggedUser();
 						}
+						if (interceptor.shouldSendUserWelcomeEmail()!=null) sendUserWelcomeEmail = interceptor.shouldSendUserWelcomeEmail().booleanValue();
 					}
 					catch (Exception e)
 					{
 						sk.iway.iwcm.Logger.error(e);
 					}
+				}
+
+				if (sendUserWelcomeEmail) {
+					//posli email
+					AuthorizeAction.sendInfoEmail(usr.getUserId(), oldPassword, null, getRequest());
 				}
 			}
 			else
@@ -405,7 +411,7 @@ public class RegUserAction extends WebJETActionBean
 		return (new ForwardResolution("/components/maybeError.jsp"));
 	}
 
-	private void sendInfoEmail(String infoemail)
+	private void sendEmailToAdmin(String infoemail)
 	{
 		//id a heslo schvalovatela
 		int uid = -1;
@@ -467,7 +473,7 @@ public class RegUserAction extends WebJETActionBean
 				if (usr.getUserId() > 0 && uid > 0)
 				{
 					message += prop.getText("reguser.clink_on_link") + ":<br/>";
-					String authUrl = url + "/v9/users/user-list/#dt-filter-id=" + usr.getUserId();
+					String authUrl = url + "/v9/users/user-list/#dt-filter-id=" + usr.getUserId() + "&dt-select=true";
 					message += "<a href='"+authUrl+"'>"+authUrl+"</a><br/><br/>";
 				}
 				else

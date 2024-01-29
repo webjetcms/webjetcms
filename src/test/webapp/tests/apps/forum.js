@@ -48,6 +48,11 @@ Scenario('Test soft delete and then recover of entity', async ({I, DT, DTE}) => 
 
     //See the forum but dont see button, to recover deleted forum (recover from soft delete)
     I.see(subject + "_1");
+
+    //if test fail it can be soft deleted, undelete it
+    await I.clickIfVisible(locate('//*[@id="391"]/td[2]/div/a[2]/i'));
+    DT.waitForLoader();
+
     I.dontSeeElement(locate('//*[@id="391"]/td[2]/div/a[2]/i'));
 
     //Delete forum (soft delete)
@@ -90,7 +95,7 @@ Scenario('Test soft delete and then recover of entity', async ({I, DT, DTE}) => 
 
         //Use other recover button
         I.clickCss(".buttons-select-all");
-        I.clickCss("#forumDataTable_wrapper > div.dt-header-row.clearfix > div > div.col-auto > div > button:nth-child(7)");
+        I.clickCss("#forumDataTable_wrapper > div.dt-header-row.clearfix > div > div.col-auto > div > button:nth-child(6)");
         I.wait(1);
 
         I.see(subject + "_2");
@@ -99,7 +104,7 @@ Scenario('Test soft delete and then recover of entity', async ({I, DT, DTE}) => 
     I.logout();
 });
 
-Scenario('Test of forum editor', async ({I, DT, DTE}) => {
+Scenario('Test of forum editor', ({I, DT, DTE}) => {
     I.relogin('tester_forum');
 
     I.amOnPage("/apps/forum/admin/");
@@ -187,10 +192,81 @@ function addPagePermision(I, DT, DTE, elelentId) {
     I.wait(1);
 
     I.click(locate('.btn.btn-outline-secondary.btn-vue-jstree-add').withText('Pridať web stránku'));
-    I.click(locate('.jstree-node.jstree-closed').withText('demotest.webjetcms.sk').find('.jstree-icon.jstree-ocl'));
+    I.click(locate('.jstree-node.jstree-closed').withText('webjet9.tau27.iway.sk').find('.jstree-icon.jstree-ocl'));
     I.click(locate('.jstree-node.jstree-closed').withText('Aplikácie').find('.jstree-icon.jstree-ocl'));
     I.click(locate('.jstree-node.jstree-closed').withText('Diskusia').find('.jstree-icon.jstree-ocl'));
     I.clickCss("#" + elelentId);
 
     DTE.save();
 }
+
+Scenario('Message board', async ({I, DT, DTE}) => {
+    let subject = "messageBoard_autotest_" + randomNumber;
+    let body = "this_is_nice_body_" + randomNumber;
+
+    I.relogin('admin');
+    I.amOnPage("/apps/message-board/skupina2/podskupina3.html");
+
+    //Add new theme
+    I.click("#forumContentDiv a.btn-primary");
+
+    I.waitForElement("#forumForm");
+    I.switchTo("#forumForm");
+
+    I.fillField("#subject", subject);
+    DTE.fillCleditor("#forum", body);
+    I.switchTo();
+    I.click("button.btn-primary");
+
+    //Check that theme was created
+    I.waitForElement( locate("#forumContentDiv a").withText(subject), 10);
+
+    //Open
+    I.click(subject);
+    I.waitForElement("#forumContentDiv");
+    I.see(body);
+
+    //Answer
+    I.click( locate("div.btn-group > span > a.btn-info") );
+    I.waitForElement("#forumForm");
+    I.switchTo("#forumForm");
+    DTE.fillCleditor("#forum", body + "_ANSWER");
+
+    //SPAM LIMIT WAIT 30 seconds
+    I.wait(30);
+
+    I.click("button.btn-primary");
+    I.switchTo();
+
+    I.waitForElement("#forumContentDiv div.row2.even");
+    I.see(body);
+
+    //Check delete
+    I.wait(3);
+    I.click( locate("div.btn-group > span.deleteMessage > a.btn-danger") );
+
+    I.amOnPage("/apps/forum/admin/");
+    DT.filter("subject", subject);
+    I.see(body);
+    I.see(body + "_ANSWER");
+
+    I.click("div.filter-input > button");
+    I.click("a.dropdown-item > span > i.fa-trash-can-undo");
+
+    I.click({ css: "div.dataTables_scrollHeadInner button.dt-filtrujem-" + "editorFields\\.statusIcons" });
+
+    I.see(body);
+    I.see(body + "_ANSWER");
+});
+
+Scenario("basic table tests", async ({I, DT, DTE}) => {
+    I.relogin('admin');
+    I.amOnPage("/apps/forum/admin/");
+    DT.waitForLoader();
+    I.see("/Aplikácie/Diskusia/Diskusia", "#forumDataTable td.dt-tree-page a");
+    I.see("/Aplikácie/Message Board/Skupina2/podskupina3", "#forumDataTable td.dt-tree-page a");
+
+    DT.filter("docDetails", "podskupina3");
+    I.dontSee("/Aplikácie/Diskusia/Diskusia", "#forumDataTable td.dt-tree-page a");
+    I.see("/Aplikácie/Message Board/Skupina2/podskupina3", "#forumDataTable td.dt-tree-page a");
+});

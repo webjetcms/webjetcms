@@ -963,9 +963,6 @@ public class Constants {
 		setBoolean("adminLogonShowSimpleErrorMessage", true, MOD_SECURITY,
 				"Ak je nastavene na true nezobrazuje pri prihlasovani v admin casti podrobnu informaciu o tom, ci je zle zadane meno, alebo heslo a neponuka moznost poslat heslo na email");
 
-		setBoolean("cpuMonitoringEnabled", false, "server_monitoring;performance",
-				"Ak je nastavene na true server monitoring zaznamenava vyuzitie CPU a vyuzitie CPU len procesom webjetu");
-
 		setBoolean("googleDocsEnabled", false, "Googel Docs",
 				"Ak je nastavene na true, spristupni sa upload a otvorenie prilohy v ticketoch cez Google Docs.");
 		setString("googleDocsConsumerKey", "", "Googel Docs",
@@ -1586,7 +1583,7 @@ public class Constants {
 		setBoolean("SpringRequiresSecure", false, MOD_CONFIG,
 				"Ak je nastavene na true, vyzaduje httpS pripojenie pre Spring volania");
 
-		setString("appstorePromo", "news,gallery,map,video", MOD_EDITOR, "zoznam klucov promo aplikacii v appstore");
+		setString("appstorePromo", "news,gallery,banner,video", MOD_EDITOR, "zoznam klucov promo aplikacii v appstore");
 
 		setBoolean("elfinderMetadataEnabled", false, mods(MOD_SECURITY, "files"),
 				"Ak je nastavene na true, tak sa povoli metadata plugin pre elfinder (nastavenie opravneni na subory)");
@@ -1958,7 +1955,7 @@ public class Constants {
 				"Predvolene sa pri autorizacii pouzivatela generuje nove heslo, nastavenim na false sa nove heslo nebude generovat ale zarovne v autorizacnom maile nemoze byt posielane heslo, kedze WebJET ho nevie zistit.");
 
 		setString("XMLDecoderAllowedClasses",
-				"java.beans.XMLDecoder, sk.iway.iwcm.sync.export.Content, java.util.ArrayList, java.util.List, java.lang.String, sk.iway.iwcm.doc.DocDetails, sk.iway.iwcm.doc.GroupDetails, sk.iway.spirit.model.Media, java.util.Vector, java.util.Date, org.eclipse.persistence.indirection.IndirectList, sk.iway.spirit.model.MediaGroupBean, sk.iway.iwcm.editor.DocNoteBean, sk.iway.iwcm.doc.TemplateDetails, sk.iway.iwcm.users.UserGroupDetails, sk.iway.iwcm.system.UpdateDBBean, sk.iway.iwcm.system.ConfDetails, sk.iway.iwcm.update.VersionBean, java.util.Hashtable, java.util.Map, sk.iway.iwcm.doc.PerexGroupBean, sk.iway.iwcm.components.monitoring.jpa.ExecutionEntry, sk.iway.iwcm.components.banner.model.BannerBean, java.lang.Integer, sk.iway.iwcm.gallery.GalleryBean, java.sql.Timestamp, java.util.HashMap, sk.iway.iwcm.inquiry.InquiryBean, sk.iway.iwcm.gallery.GalleryDimension, java.awt.Dimension, sk.iway.iwcm.inquiry.AnswerForm",
+				"java.beans.XMLDecoder, sk.iway.iwcm.sync.export.Content, java.util.ArrayList, java.util.List, java.lang.String, sk.iway.iwcm.doc.DocDetails, sk.iway.iwcm.doc.GroupDetails, sk.iway.spirit.model.Media, java.util.Vector, java.util.Date, org.eclipse.persistence.indirection.IndirectList, sk.iway.spirit.model.MediaGroupBean, sk.iway.iwcm.editor.DocNoteBean, sk.iway.iwcm.doc.TemplateDetails, sk.iway.iwcm.users.UserGroupDetails, sk.iway.iwcm.system.UpdateDBBean, sk.iway.iwcm.system.ConfDetails, sk.iway.iwcm.update.VersionBean, java.util.Hashtable, java.util.Map, sk.iway.iwcm.doc.PerexGroupBean, sk.iway.iwcm.components.monitoring.jpa.ExecutionEntry, sk.iway.iwcm.components.banner.model.BannerBean, java.lang.Integer, sk.iway.iwcm.gallery.GalleryBean, java.sql.Timestamp, java.util.HashMap, sk.iway.iwcm.inquiry.InquiryBean, sk.iway.iwcm.gallery.GalleryDimension, java.awt.Dimension, sk.iway.iwcm.inquiry.AnswerForm, sk.iway.iwcm.doc.TemplateDetailEditorFields, sk.iway.iwcm.doc.DocEditorFields",
 				MOD_CONFIG, "Povolene triedy pre XMLDecoder");
 
 		setBoolean("swaggerEnabled", false, MOD_SECURITY, "Povolenie zobrazovania swagger API dokumentacie");
@@ -2189,7 +2186,7 @@ public class Constants {
 						return (0);
 					}
 				}
-				Logger.println(Constants.class, "Constants.getInt NOT FOUND (" + constName + ") = -1");
+				Logger.debug(Constants.class, "Constants.getInt NOT FOUND (" + constName + ") = -1");
 			}
 		} catch (Exception ex) {
 			Logger.println(Constants.class, "Constants.getInt FAILED (" + constName + ") = -1");
@@ -2246,7 +2243,7 @@ public class Constants {
 						return (0);
 					}
 				}
-				Logger.println(Constants.class, "Constants.getLong NOT FOUND (" + constName + ") = -1");
+				Logger.debug(Constants.class, "Constants.getLong NOT FOUND (" + constName + ") = -1");
 			}
 		} catch (Exception ex) {
 			Logger.println(Constants.class, "Constants.getLong FAILED (" + constName + ") = -1");
@@ -2368,6 +2365,16 @@ public class Constants {
 	}
 
 	/**
+	 * Returns coma separated value as Array
+	 * @param name - configuration name
+	 * @return
+	 */
+	public static String[] getArray(String name) {
+		String[] arr = Tools.getTokens(Constants.getString(name), ",");
+		return arr;
+	}
+
+	/**
 	 * Sets the string attribute of the Constants class
 	 *
 	 * @param constName The new string value
@@ -2409,7 +2416,7 @@ public class Constants {
 						Logger.println(Constants.class, constName + " HODNOTA NIE JE BOOLEAN");
 					}
 				}
-				if ("loggingInMemoryEnabled".equals(constName)==false) Logger.println(Constants.class, "Constants.getBoolean NOT FOUND (" + constName + ") = DEFAULT_VALUE (false)");
+				if ("loggingInMemoryEnabled".equals(constName)==false) Logger.debug(Constants.class, "Constants.getBoolean NOT FOUND (" + constName + ") = DEFAULT_VALUE (false)");
 			}
 			// Logger.println(this,"Constants.getBoolean(" + dbName + ", " + constName + ")
 			// = DEFAULT_VALUE (" + DEFAULT_VALUE + ")");

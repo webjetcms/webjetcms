@@ -586,7 +586,7 @@ public class SeoManager
 		List<String> seoKeywords = new ArrayList<>();
 		String sql;
 
-		sql ="SELECT DISTINCT name FROM seo_keywords";
+		sql ="SELECT DISTINCT name FROM seo_keywords ORDER BY name ASC";
 
 		try
 		{

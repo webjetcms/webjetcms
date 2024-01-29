@@ -43,7 +43,8 @@ public class UserDetailsBasic {
         inputType = DataTableColumnType.OPEN_EDITOR,
         title = "[[#{components.user.login}]]",
         hiddenEditor = true,
-        sortAfter = "id"
+        sortAfter = "id",
+        tab = "personalInfo"
     )
     //pre DT editor mame specialne pole editorFields.login tak, aby bolo hned za menom a priezviskom
     private String login;

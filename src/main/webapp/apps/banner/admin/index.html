@@ -173,7 +173,7 @@
         }
 
         //ak sa zmeni Kampanovy banner refreshni URL
-        $(document).on('change keyup', "#DTE_Field_campaignTitle", function() {
+        $(document).on('change keyup blur', "#DTE_Field_campaignTitle", function() {
             reloadCampaignTitleUrlShowcase();
         });
 

@@ -105,46 +105,50 @@ function showHelp(select)
 
 
 
-<div class="tab-pane toggle_content" style="height:440px !important; overflow: auto; width:990px; padding:10px">
-<form name="textForm" style="padding: 10px; margin: 0px;">
-<div class="row">
+<div class="tab-pane toggle_content tab-pane-fullheight">
+	<div class="tab-page" id="tabMenu1" style="display: block; width: 940px;">
+		<form name="textForm" style="padding: 10px; margin: 0px;">
+		<div class="form-group clearfix">
+			<div class="col-xs-4"><iwcm:text key="components.cloud.apps.insertToYourSite"/>:</div>
+			<div class="col-xs-8">
+				<select name="field" onchange="showHelp(this);">
+					<option value="meniny"><iwcm:text key="components.app-date.meniny"/></option>
+					<option value="last_update"><iwcm:text key="components.date.last_update"/></option>
+					<option value="!DATUM!"><iwcm:text key="components.date.datum"/> (<%=ShowDoc.updateCodes(null, "!DATUM!", -1, request, sk.iway.iwcm.Constants.getServletContext())%>)</option>
+					<option value="!DATE!"><iwcm:text key="components.date.date"/> (<%=ShowDoc.updateCodes(null, "!DATE!", -1, request, sk.iway.iwcm.Constants.getServletContext())%>)</option>
+					<option value="!DEN_DATUM!"><iwcm:text key="components.date.den_datum"/> (<%=ShowDoc.updateCodes(null, "!DEN_DATUM!", -1, request, sk.iway.iwcm.Constants.getServletContext())%>)</option>
+					<option value="!DEN_DATUM_CZ!"><iwcm:text key="components.date.den_datum_cz"/> (<%=ShowDoc.updateCodes(null, "!DEN_DATUM_CZ!", -1, request, sk.iway.iwcm.Constants.getServletContext())%>)</option>
+					<option value="!DAY_DATE!"><iwcm:text key="components.date.day_date"/> (<%=ShowDoc.updateCodes(null, "!DAY_DATE!", -1, request, sk.iway.iwcm.Constants.getServletContext())%>)</option>
+					<option value="!TIME!"><iwcm:text key="components.date.time"/> (<%=ShowDoc.updateCodes(null, "!TIME!", -1, request, sk.iway.iwcm.Constants.getServletContext())%>)</option>
+					<option value="!YEAR!"><iwcm:text key="components.date.year"/> (<%=ShowDoc.updateCodes(null, "!YEAR!", -1, request, sk.iway.iwcm.Constants.getServletContext())%>)</option>
+				</select>
+			</div>
+		</div>
+		</form>
+		<div id="options" class="form-group clearfix" style="display:none">
+			<div class="col-xs-4"></div>
+			<div class="col-xs-8">
+				<form name="checkForm">
+						<input type="checkbox" name="datum" <% if (pageParams.getBooleanValue("datum", true)) out.print("checked"); %> value="yes">&nbsp;<iwcm:text key="components.date.display_date"/>&nbsp;&nbsp;
+						<input type="checkbox" name="cas" <% if (pageParams.getBooleanValue("cas", true)) out.print("checked"); %> value="yes">&nbsp;<iwcm:text key="components.date.display_time"/>
+				</form>
+			</div>
+		</div>
+		<div id="optionsMeniny">
+			<div class="col-xs-4"></div>
+			<div class="col-xs-8">
+				<form name="checkFormMeniny">
+						<input type="checkbox" name="datum" <% if ("long".equals(pageParams.getValue("format", "long"))) out.print("checked"); %> value="yes">&nbsp;<iwcm:text key="components.date.display_date"/>&nbsp;&nbsp;
+				</form>
+			</div>
+		</div>
 
-   <div class="form-group clearfix">
-      <div class="col-xs-3"><iwcm:text key="components.cloud.apps.insertToYourSite"/>:</div>
-	   <div class="col-xs-9">
-	      <select name="field" onchange="showHelp(this);">
-	      	<option value="meniny"><iwcm:text key="components.app-date.meniny"/></option>
-	      	<option value="last_update"><iwcm:text key="components.date.last_update"/></option>
-            <option value="!DATUM!"><iwcm:text key="components.date.datum"/> (<%=ShowDoc.updateCodes(null, "!DATUM!", -1, request, sk.iway.iwcm.Constants.getServletContext())%>)</option>
-            <option value="!DATE!"><iwcm:text key="components.date.date"/> (<%=ShowDoc.updateCodes(null, "!DATE!", -1, request, sk.iway.iwcm.Constants.getServletContext())%>)</option>
-            <option value="!DEN_DATUM!"><iwcm:text key="components.date.den_datum"/> (<%=ShowDoc.updateCodes(null, "!DEN_DATUM!", -1, request, sk.iway.iwcm.Constants.getServletContext())%>)</option>
-            <option value="!DEN_DATUM_CZ!"><iwcm:text key="components.date.den_datum_cz"/> (<%=ShowDoc.updateCodes(null, "!DEN_DATUM_CZ!", -1, request, sk.iway.iwcm.Constants.getServletContext())%>)</option>
-            <option value="!DAY_DATE!"><iwcm:text key="components.date.day_date"/> (<%=ShowDoc.updateCodes(null, "!DAY_DATE!", -1, request, sk.iway.iwcm.Constants.getServletContext())%>)</option>
-            <option value="!TIME!"><iwcm:text key="components.date.time"/> (<%=ShowDoc.updateCodes(null, "!TIME!", -1, request, sk.iway.iwcm.Constants.getServletContext())%>)</option>
-            <option value="!YEAR!"><iwcm:text key="components.date.year"/> (<%=ShowDoc.updateCodes(null, "!YEAR!", -1, request, sk.iway.iwcm.Constants.getServletContext())%>)</option>
-         </select>
-      </div>
-   </div>
-   </div>
-
-</form>
-<div id="options" class="form-group clearfix" style="display:none">
-   <form name="checkForm">
-  		<input type="checkbox" name="datum" <% if (pageParams.getBooleanValue("datum", true)) out.print("checked"); %> value="yes">&nbsp;<iwcm:text key="components.date.display_date"/>&nbsp;&nbsp;
-  		<input type="checkbox" name="cas" <% if (pageParams.getBooleanValue("cas", true)) out.print("checked"); %> value="yes">&nbsp;<iwcm:text key="components.date.display_time"/>
-   </form>
-</div>
-<div id="optionsMeniny">
-   <form name="checkFormMeniny">
-  		<input type="checkbox" name="datum" <% if ("long".equals(pageParams.getValue("format", "long"))) out.print("checked"); %> value="yes">&nbsp;<iwcm:text key="components.date.display_date"/>&nbsp;&nbsp;
-   </form>
-</div>
-
-<%if (jspFileName!=null && jspFileName.indexOf("last_update.jsp")!=-1) { %>
-<script type="text/javascript">
-	document.textForm.field.value="last_update";
-	showHelp(document.textForm.field);
-</script>
-<% } %>
+		<%if (jspFileName!=null && jspFileName.indexOf("last_update.jsp")!=-1) { %>
+		<script type="text/javascript">
+			document.textForm.field.value="last_update";
+			showHelp(document.textForm.field);
+		</script>
+		<% } %>
+	</div>
 </div>
 <jsp:include page="/components/bottom.jsp"/>

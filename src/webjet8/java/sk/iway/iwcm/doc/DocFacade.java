@@ -18,10 +18,10 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.math.IntRange;
 import org.apache.commons.lang.math.Range;
 
-import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.DBPool;
 import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.users.UsersDB;
 
 /**
  *  DocFacade.java
@@ -47,7 +47,7 @@ public class DocFacade
 
 	public List<DocDetails> news (Map<String, Object> options, HttpServletRequest request)
 	{
-		user = (Identity)request.getSession().getAttribute(Constants.USER_KEY);
+		user = UsersDB.getCurrentUser(request);
 		recursive = Boolean.TRUE.equals(options.get("recursive"));
 		pageSize = Integer.parseInt(options.get("per_page").toString());
 		currentPage = 0;

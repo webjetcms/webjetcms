@@ -2333,10 +2333,12 @@
 
             content += me.build_input_group(sizes,'07');
 
-            var visibility = me.build_checkbox('visibility-xs','<iwcm:text key="pagebuilder.modal.visibility.xs"/>');
+            var visibility = "";
+
+            //visibility += me.build_checkbox('visibility-xs','<iwcm:text key="pagebuilder.modal.visibility.xs"/>');
             visibility += me.build_checkbox('visibility-sm','<iwcm:text key="pagebuilder.modal.visibility.sm"/>');
             visibility += me.build_checkbox('visibility-md','<iwcm:text key="pagebuilder.modal.visibility.md"/>');
-            visibility += me.build_checkbox('visibility-lg','<iwcm:text key="pagebuilder.modal.visibility.lg"/>');
+            //visibility += me.build_checkbox('visibility-lg','<iwcm:text key="pagebuilder.modal.visibility.lg"/>');
             visibility += me.build_checkbox('visibility-xl','<iwcm:text key="pagebuilder.modal.visibility.xl"/>');
             content += me.build_input_group(visibility,'08');
 
@@ -2455,6 +2457,9 @@
                     else{       $parent.removeClass('third-fourth'); }
                     $parent.find(me.tagc.style_input_group_four_in_row_fourth+' input').prop('disabled',disVal);
                 }
+                //always allow first input
+                //console.log("change1=", $dis, "disVal=", disVal, "parent=", $parent);
+                $parent.find(me.tagc.style_input_group_four_in_row_first).find('input').prop('disabled',false);
             });
             me.$wrapper.on('change', me.tagc.style_input_group_four_in_row+' .pb-style-input-wrapper input', function() {
                 var $dis = $(this),
@@ -2474,8 +2479,9 @@
                         }
                     }
                 }
-
-
+                //always allow first input
+                //console.log("change2=", $dis, "disVal=", disVal, "parent=", $parent);
+                $parent.find(me.tagc.style_input_group_four_in_row_first).find('input').prop('disabled',false);
 
             });
         },

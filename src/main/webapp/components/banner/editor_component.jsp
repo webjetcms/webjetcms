@@ -72,6 +72,10 @@ function Ok()
 	group = document.textForm.bannerGroup.value;
 	bannerIndex = document.textForm.bannerIndex.value;
 
+	videoWrapperClass = document.textForm.videoWrapperClass.value;
+	jumbotronVideoClass = document.textForm.jumbotronVideoClass.value;
+
+
 	for (var i = 0; i < document.textForm.displayMode.length; i++)
 	{
 			if (document.textForm.displayMode[i].checked)
@@ -79,7 +83,7 @@ function Ok()
 					displayMode = document.textForm.displayMode[i].value;
 			}
 	}
-	oEditor.FCK.InsertHtml("!INCLUDE(/components/banner/banner.jsp, group=\""+group+"\", status="+status+", displayMode="+displayMode+", refreshRate="+refreshRate+", bannerIndex=\""+bannerIndex+"\", showInIframe="+showInIframe+", iframeWidth="+iframeWidth+", iframeHeight="+iframeHeight+")!");
+	oEditor.FCK.InsertHtml("!INCLUDE(/components/banner/banner.jsp, group=\""+group+"\", status="+status+", displayMode="+displayMode+", refreshRate="+refreshRate+", bannerIndex=\""+bannerIndex+"\", showInIframe="+showInIframe+", iframeWidth="+iframeWidth+", iframeHeight="+iframeHeight+", videoWrapperClass=\""+videoWrapperClass+"\", jumbotronVideoClass=\""+jumbotronVideoClass+"\"" + getCommonAdvancedParameters() + ")!");
 
 	return true ;
 } // End function
@@ -104,9 +108,11 @@ function loadStatsIframe()
 	 $("#componentIframeWindowTabStats").attr("src", url);
 }
 
+//Add advanced settings tab (for banner choose device)
+$(document).ready(function() { addAdvancedSettingsTab(); });
 </script>
 
-<iwcm:menu name="menuBasket">
+<iwcm:menu name="menuBanner">
 	<link type="text/css" rel="stylesheet" media="screen" href="/admin/css/tabpane-luna.css" />
 	<style type="text/css">
 		ul.tab_menu { padding: 2px 0 0 10px; }
@@ -144,9 +150,9 @@ function loadStatsIframe()
 	<div class="tab-page" id="tabMenu1" style="display: block; width: 940px;">
 
 		<form method="get" name="textForm" style="margin: 0px;">
-			<div class="col-sm-10">
+			<div class="wrapper">
 				<logic:present name="bannerGroupNames">
-					<div class="col-sm-12">
+					<div class="row">
 						<div class="col-sm-4 leftCol">
 							<iwcm:text key="components.banner.select_group"/>:
 						</div>
@@ -165,7 +171,7 @@ function loadStatsIframe()
 						</div>
 					</div>
 				</logic:present>
-				<div class="col-sm-12">
+				<div class="row">
 					<div class="col-sm-4 leftCol">
 						<iwcm:text key="components.banner.group"/>:
 					</div>
@@ -173,7 +179,7 @@ function loadStatsIframe()
 						<input type="text" name="bannerGroup"  class="form-control" size=20 maxlength="128" value="<%=ResponseUtils.filter(pageParams.getValue("group", ""))%>">
 					</div>
 				</div>
-				<div class="col-sm-12">
+				<div class="row">
 					<div class="col-sm-4 leftCol">
 						<iwcm:text key="components.banner.active"/>:
 					</div>
@@ -181,18 +187,7 @@ function loadStatsIframe()
 						<input type="checkbox" name="status" checked>
 					</div>
 				</div>
-				<%--<div class="col-sm-12">--%>
-					<%--<div class="col-sm-4 leftCol">--%>
-						<%--Typ zobrazenia banneru:--%>
-					<%--</div>--%>
-					<%--<div class="col-sm-8">--%>
-						<%--<select name="viewType" id="viewType" onchange="showViewType()">--%>
-							<%--<option value="1">Základné zobrazenie</option>--%>
-							<%--<option value="2">Zobrazenie obsahových bannerov</option>--%>
-						<%--</select>--%>
-					<%--</div>--%>
-				<%--</div>--%>
-				<div class="col-sm-12">
+				<div class="row">
 					<div class="col-sm-4 leftCol">
 						<iwcm:text key="components.banner.display_mode"/>:
 					</div>
@@ -204,7 +199,7 @@ function loadStatsIframe()
 		  				<label><input type="radio" name="displayMode" value="5" id="radio5" onclick="showConditionalFields()" <%if (displayMode == 5) out.print("checked='checked'");%>><iwcm:text key="components.banner.display_mode_5"/></label>
 		  			</div>
 				</div>
-				<div class="col-sm-12 onlyMode1">
+				<div class="row onlyMode1">
 					<div class="col-sm-4 leftCol">
 						<iwcm:text key="components.banner.banner_index"/>:
 					</div>
@@ -213,7 +208,17 @@ function loadStatsIframe()
 						<iwcm:text key="components.banner.jedinecny_index"/>
 					</div>
 				</div>
-				<div class="col-sm-12">
+
+				<div class="row">
+					<div class="col-sm-4 leftCol">
+						<strong><iwcm:text key="datatable.tab.advanced"/></strong>
+					</div>
+					<div class="col-sm-8">
+						&nbsp;
+					</div>
+				</div>
+
+				<div class="row">
 					<div class="col-sm-4 leftCol">
 						<iwcm:text key="components.banner.show_in_iframe"/>:
 					</div>
@@ -221,7 +226,7 @@ function loadStatsIframe()
 						<input type="checkbox" name="showInIframe" id="showInIframe" onclick="showConditionalFields()" <%if (pageParams.getBooleanValue("showInIframe", false)) out.print("checked='checked'");%>>
 					</div>
 				</div>
-				<div class="col-sm-12 onlyForIframe">
+				<div class="row onlyForIframe">
 					<div class="col-sm-4 leftCol">
 						<iwcm:text key="components.banner.refresh_rate"/> (sec.) :
 					</div>
@@ -230,7 +235,7 @@ function loadStatsIframe()
 						 - <iwcm:text key="components.banner.refresh_rate_desc"/>
 					</div>
 				</div>
-				<div class="col-sm-12 onlyForIframe">
+				<div class="row onlyForIframe">
 					<div class="col-sm-4 leftCol">
 						<iwcm:text key="components.banner.iframe_width"/>:
 					</div>
@@ -238,12 +243,28 @@ function loadStatsIframe()
 						<input type="text" class="form-control" name="iframeWidth" size=5 maxlength="5" value="<%=ResponseUtils.filter(pageParams.getValue("iframeWidth", ""))%>">
 					</div>
 				</div>
-				<div class="col-sm-12 onlyForIframe">
+				<div class="row onlyForIframe">
 					<div class="col-sm-4 leftCol">
 						<iwcm:text key="components.banner.iframe_height"/>:
 					</div>
 					<div class="col-sm-8">
 						<input type="text" class="form-control" name="iframeHeight" size=5 maxlength="5" value="<%=ResponseUtils.filter(pageParams.getValue("iframeHeight", ""))%>">
+					</div>
+				</div>
+				<div class="row">
+					<div class="col-sm-4 leftCol">
+						<iwcm:text key="components.banner.videoWrapperClass"/>:
+					</div>
+					<div class="col-sm-8">
+						<input type="text" class="form-control" name="videoWrapperClass" size="20" maxlength="255" value="<%=ResponseUtils.filter(pageParams.getValue("videoWrapperClass", ""))%>">
+					</div>
+				</div>
+				<div class="row">
+					<div class="col-sm-4 leftCol">
+						<iwcm:text key="components.banner.jumbotronVideoClass"/>:
+					</div>
+					<div class="col-sm-8">
+						<input type="text" class="form-control" name="jumbotronVideoClass" size="20" maxlength="255" value="<%=ResponseUtils.filter(pageParams.getValue("jumbotronVideoClass", ""))%>">
 					</div>
 				</div>
 			</div>

@@ -22,21 +22,6 @@
 	 <form-bean      name="editorForm"
 						  type="sk.iway.iwcm.editor.EditorForm"/>
 
-	 <form-bean      name="forumForm"
-						  type="sk.iway.iwcm.forum.ForumForm" />
-
-	 <form-bean      name="forumGroupForm"
-						  type="sk.iway.iwcm.forum.ForumGroupBean" />
-
-	 <form-bean		name="xlsImportForm"
-						  type="sk.iway.iwcm.xls.ImportXLSForm"/>
-
-	 <form-bean		name="ratingForm"
-						  type="sk.iway.iwcm.components.rating.RatingBean"/>
-
-	<form-bean		name="importWebPagesForm"
-						  type="sk.iway.iwcm.components.importWebPages.ImportZipFileForm"/>
-
   </form-beans>
 
   <!-- ========== Global Forward Definitions ============================== -->
@@ -61,59 +46,6 @@
   <action-mappings>
 
 	 <action path="/unknown" type="sk.iway.iwcm.system.struts.UnknownAction" unknown="true" />
-
-	 <action    path="/addforum"
-					type="sk.iway.iwcm.forum.ForumAction"
-					name="forumForm"
-				  scope="request">
-		  <forward name="success" path="/components/forum/new.jsp"/>
-	 </action>
-
-	 <action    path="/saveforum"
-					type="sk.iway.iwcm.forum.ForumSaveAction"
-					name="forumForm"
-				  scope="request">
-		  <forward name="success" path="/components/forum/saveok.jsp"/>
-	 </action>
-
-	  <action    path="/admin.forum"
-				  type="sk.iway.iwcm.forum.ForumGroupAction"
-				  name="forumGroupForm"
-				  scope="request">
-	 </action>
-
-	 <action    path="/admin/importxls"
-					type="sk.iway.iwcm.xls.ImportXLSAction"
-					name="xlsImportForm">
-	 </action>
-
-	 <action    path="/rating"
-					type="sk.iway.iwcm.components.rating.RatingAction"
-					name="ratingForm"
-					scope="request">
-	 </action>
-
-	 <action    path="/admin/clone"
-					type="sk.iway.iwcm.doc.CloneAction">
-	 </action>
-
-	 <action    path="/admin/forumApprove"
-					type="sk.iway.iwcm.forum.ForumApproveAction">
-		<forward name="success" path="/components/forum/forum_approved.jsp"/>
-	 </action>
-
-	  <action    path="/components/importWebPages"
-					type="sk.iway.iwcm.components.importWebPages.ImportZipFileAction"
-					name="importWebPagesForm"
-					scope="request">
-	 </action>
-
-	 <action    path="/admin/update/update"
-					type="sk.iway.iwcm.update.UpdateAction"
-					name="xlsImportForm">
-		<forward name="success" path="/admin/update/update.jsp"/>
-		<forward name="refresh" path="/admin/update/update_refresher.jsp"/>
-	 </action>
 
 
   </action-mappings>

@@ -43,7 +43,7 @@ var EditorItemFieldRenderer = (function () {
                 case 'textAreaWysiwyg'  : return '<textarea id="'+this.name+this.id+'" cols="40" rows="4" class="wysiwyg editorItemValue" name="' + this.name + '">' + this.value + '</textarea>';
                 case 'textArea'         : return '<textarea id="'+this.name+this.id+'" cols="40" rows="4" class="editorItemValue" name="' + this.name + '">' + this.value + '</textarea>';
 
-                case 'image'            : return '<div class="imageDiv"><img style="max-width:100px; max-height:100px;" src="' + (this.escapeHtml(this.value) ? this.escapeHtml(this.value) : '/components/news/admin_imgbg.png') + '"/></div>' +
+                case 'image'            : return '<div class="imageDiv"><img style="max-width:100px; max-height:100px;" src="' + (this.escapeHtml(this.value) ? "/thumb"+this.escapeHtml(this.value)+"?w=100&h=100&ip=5" : '/components/json_editor/admin_imgbg.png') + '"/></div>' +
                                                  '<input class="editorItemValue" type="hidden" name="' + this.name + '" value="' + this.escapeHtml(this.value) + '" id="' + this.getWrapperId() + 'image">';
 
                 case 'conditionalText'  : return '<input class="editorItemCheckbox" type="checkbox" id="' + this.name + 'Checkbox' + this.id + '">' +

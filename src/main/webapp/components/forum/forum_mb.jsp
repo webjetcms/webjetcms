@@ -1,6 +1,6 @@
 <%@page import="java.util.List"%><%
 sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
-%><%@ page pageEncoding="utf-8" import="sk.iway.iwcm.doc.*,sk.iway.iwcm.forum.*,java.util.*,sk.iway.iwcm.*, sk.iway.iwcm.users.*" %>
+%><%@ page pageEncoding="utf-8" import="sk.iway.iwcm.doc.*,sk.iway.iwcm.forum.*,sk.iway.iwcm.components.forum.jpa.*,java.util.*,sk.iway.iwcm.*, sk.iway.iwcm.users.*" %>
 <%@ page import="sk.iway.iwcm.doc.GroupsDB" %>
 <%@ taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm" %>
 <%@ taglib uri="/WEB-INF/iway.tld" prefix="iway" %>
@@ -8,7 +8,7 @@ sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
 <%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
 <%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %><%!
 
-public boolean isAdmin(Identity user, ForumGroupBean fgb)
+public boolean isAdmin(Identity user, ForumGroupEntity fgb)
 {
 	if (user == null) return false;
 	if (user.isAdmin()) return true;
@@ -33,7 +33,7 @@ String lng = PageLng.getUserLng(request);
 pageContext.setAttribute("lng", lng);
 DocDB docDB = DocDB.getInstance();
 
-List<ForumBean> topics = Collections.emptyList();
+List<DocForumEntity> topics = Collections.emptyList();
 
 PageParams pageParams = new PageParams(request);
 
@@ -108,8 +108,6 @@ boolean advertisementType = false;
 int parentId = Tools.getIntValue(request.getParameter("pId"), -1);
 Identity user = (Identity) session.getAttribute(Constants.USER_KEY);
 
-
-
 if(request.getParameter("words")!=null)
 {
 	pageContext.include("forum_mb_search.jsp");
@@ -139,10 +137,10 @@ if("delete".equals(action) && request.getParameter("forumId") != null && user !=
 	int forumId = Tools.getIntValue(request.getParameter("forumId"), -1);
 	if (forumId > 0)
 	{
-		ForumGroupBean forumGroupBean = ForumDB.getForum(docId);
+		ForumGroupEntity forumGroupBean = ForumDB.getForum(docId);
 		if (useDelTimeLimit && forumGroupBean.isAdmin(user)==false)
 		{
-			ForumBean fb = ForumDB.getForumBean(request, forumId, sortAscending);
+			DocForumEntity fb = ForumDB.getForumBean(request, forumId, sortAscending);
 			//porovnam cas. hranicu pre moznost vymazania prispevku a aktualny cas,
 			//cas pridania prispevku + pocet min pre povolenie vymazania(prehodeny na milisec.)
 			if(fb!=null && fb.getQuestionDate()!=null)
@@ -164,7 +162,7 @@ if("delete".equals(action) && request.getParameter("forumId") != null && user !=
 String offset = "0";
 String end = ""+(pageSize);
 
-ForumGroupBean forumGroupBean = null;
+ForumGroupEntity forumGroupBean = null;
 
 if (docId > 0 && parentId > 0)
 {
@@ -176,16 +174,16 @@ else if (docId > 0)
 {
 	forumGroupBean = ForumDB.getForum(docId);
 	advertisementType = forumGroupBean.isAdvertisementType();
-	if (user != null && advertisementType && isAdmin(user, forumGroupBean)) advertisementType = false;
+	if (advertisementType && forumGroupBean.isAdmin(user)) advertisementType = false;
 
-	if(user != null && user.isAdmin())
+	if(forumGroupBean.isAdmin(user))
 		topics = ForumDB.getForumTopics(docId, false, true);
 	else
 		topics = ForumDB.getForumTopics(docId, true, false);
 	if (topics.size() > 0)
 		request.setAttribute("topics", topics);
 
-	ForumBean fb = ForumDB.getForumStat(docId);
+	DocForumEntity fb = ForumDB.getForumStat(docId);
 	if (fb != null)
 	{
 		//out.println("<strong>FORUM STAT - last post:</strong> " +fb.getLastPost()+ "&nbsp;&nbsp;&nbsp;<strong>total messages:</strong> " +fb.getStatReplies()+ "<br><br>");
@@ -300,7 +298,7 @@ if(!isAjaxCall)
 				for(int j=0;j<docs.size();j++)
 				{
 					DocDetails dd = (DocDetails)docs.get(j);
-					ForumGroupBean fgb = ForumDB.getForum(dd.getDocId());
+					ForumGroupEntity fgb = ForumDB.getForum(dd.getDocId());
 					String[] last = ForumDB.getForumLastPostDate(dd.getDocId());
 					String icon = "folder_big.gif";
 					if (fgb.isActive()==false) icon = "folder_locked_big.gif";
@@ -383,6 +381,14 @@ if(!isAjaxCall)
 			</div>
 		<%}%>
 
+		<% if(topics != null && topics.size() > 0)
+			{
+				request.setAttribute("pagingList", topics);
+				request.setAttribute("pagingListKey", "components.forum.number_of_topics");
+				pageContext.include("/components/forum/paging_component.jsp");
+			}
+		%>
+
 	</div>
 
 <logic:present name="topics">
@@ -405,7 +411,7 @@ if(!isAjaxCall)
 			<th class="thCornerR lastpost"><iwcm:text key="components.forum.last_post"/></th>
 		</tr>
 		</thead>
-		<logic:iterate offset="<%= offset%>" length="<%= end%>" name="topics" id="t" type="sk.iway.iwcm.forum.ForumBean" indexId="index">
+		<logic:iterate offset="<%= offset%>" length="<%= end%>" name="topics" id="t" type="DocForumEntity" indexId="index">
 
 			<% if ((iMod % 2) == 0) {
 				  out.println("<tr class='even'>");
@@ -425,20 +431,22 @@ if(!isAjaxCall)
 					String flag = ForumDB.getForumBean(request, t.getForumId()).getFlag();
 					%>
 
-
+					<% if(!t.getDeleted() && t.getForumGroupEntity().getActive() && t.getConfirmed()) { %> <img src="/components/forum/images/folder_big.gif" style="border:0px;" align="absbottom"/> <% } %>
+					<% if(t.getDeleted() || !t.getConfirmed()) { %> <img src="/components/forum/images/icon_del.gif" style="border:0px;" align="absbottom"/> <% } %>
+					<% if(!t.getForumGroupEntity().getActive()) { %> <img src="/components/forum/images/folder_locked_big.gif" style="border:0px;" align="absbottom"/> <% } %>
 			      <%	if (t.canDelete(user, delMinutes)) { %><a href="javascript:delMessage('<%=t.getForumId()%>');"><img src="/components/forum/images/icon_trash.gif" style="border:0px;" align="absbottom" title='<iwcm:text key="components.forum.delete_message"/>'></a>&nbsp;<%	} %>
   			      <span class="topictitle"><%
 			        if("O".equals(flag)) {%><b><iwcm:text key="components.forum.announcement"/>: </b><%}
 					  else if("D".equals(flag)) {	%><b><iwcm:text key="components.forum.sticky"/>: </b><%}
-					%><a href='<%=Tools.addParametersToUrl(docDB.getDocLink(Tools.getIntValue(request.getParameter("docid"), -1)), "pId="+t.getForumId())%>' ><%if(t != null && t.isDeleted()) out.print("<span style=\"color: red;\">");%><bean:write name="t" property="subject"/><%if(t != null && t.isDeleted()) out.print("</span>");%></a></span>
+					%><a href='<%=Tools.addParametersToUrl(docDB.getDocLink(Tools.getIntValue(request.getParameter("docid"), -1)), "pId="+t.getForumId())%>' ><%if(t != null && (t.isDeleted() || !t.getForumGroupEntity().getActive() || !t.isConfirmed())) out.print("<span style=\"color: red;\">");%><bean:write name="t" property="subject"/><%if(t != null && (t.isDeleted() || !t.getForumGroupEntity().getActive() || !t.isConfirmed())) out.print("</span>");%></a></span>
             </td>
 			   <td class="row2 posts"><span class="postdetails badge"><bean:write name="t" property="statReplies"/></span></td>
 			   <td class="row3 autor">
 			      <span class="name">
 			      <% if (t.getUserId()>0) { %>
-				   <a href="<%=Tools.addParameterToUrl(docDB.getDocLink(t.getDocId()),"uId",String.valueOf(t.getUserId()))%>&amp;type=view_profile"><bean:write name="t" property="autorFullName"/></a>
+				   <a href="<%=Tools.addParameterToUrl(docDB.getDocLink(t.getDocId()),"uId",String.valueOf(t.getUserId()))%>&amp;type=view_profile"><bean:write name="t" property="authorName"/></a>
 				   <% } else { %>
-				   <bean:write name="t" property="autorFullName"/>
+				   <bean:write name="t" property="authorName"/>
 				   <% } %>
 			      </span>
 			   </td>

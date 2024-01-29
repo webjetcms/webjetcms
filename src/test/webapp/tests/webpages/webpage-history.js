@@ -279,3 +279,16 @@ Scenario('history from multigroup mapping', ({ I, DT, DTE }) => {
      I.see("Toto je testovacia stranka");
      I.dontSee("Druhy odstavec");
 });
+
+Scenario('open webpage history from URL', ({ I, DTE }) => {
+     I.amOnPage('/admin/v9/webpages/web-pages-list/?docid=143&historyid=687');
+     DTE.waitForEditor();
+
+     I.switchTo(".cke_wysiwyg_frame");
+     I.see("Toto je testovacia stranka");
+     I.dontSee("Druhy odstavec");
+
+     I.switchTo();
+     DTE.cancel();
+     I.dontSeeInCurrentUrl("history=687");
+});

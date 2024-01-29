@@ -250,12 +250,21 @@ table.datatableInit {
         }
         tr.is-not-public td {
             color: $danger;
+            a {
+                color: $danger;
+            }
         }
         tr.is-disabled td {
             color: $danger;
+            a {
+                color: $danger;
+            }
         }
         tr.is-disapproved td {
             color: $danger;
+            a {
+                color: $danger;
+            }
         }
     }
 
@@ -307,6 +316,11 @@ table.datatableInit {
             td {
                 display: none;
                 border-top-width: 0px;
+            }
+
+            td.dataTables_empty {
+                display: block;
+                width: auto !important;
             }
 
             td.dt-select-td {

@@ -104,7 +104,7 @@ else
 		padding-top: 5px;
 	}
 	#tabMenu1 {
-		margin-top: 15px;
+		padding-top: 15px;
 	}
 	#separMenu1 {
 		visibility:hidden;
@@ -113,12 +113,12 @@ else
 	}
 </style>
 <div class="tab-pane toggle_content tab-pane-fullheight">
-	<div class="tab-page" id="tabMenu1" style="display: block; width:800px; ">
+	<div class="tab-page" id="tabMenu1" style="display: block;">
 
 
 		<form method="get" name="textForm">
 			<div class="col-sm-10 col-sm-offset-1">
-				<div class="col-sm-12 form-group">
+				<div class="row form-group">
 					<div class="col-sm-6 leftCol">
 						<iwcm:text key="components.news.groupids"/>
 					</div>
@@ -127,7 +127,7 @@ else
 						<input type="button" class="btn green" name="groupSelect" value="<iwcm:text key="components.news.addgroup"/>" onClick='popupFromDialog("<iwcm:cp/>/admin/grouptree.jsp", 500, 500);' />
 					</div>
 				</div>
-				<div class="col-sm-12 form-group">
+				<div class="row form-group">
 					<div class="col-sm-6 leftCol">
 						<iwcm:text key="components.search.results_per_page"/>
 					</div>
@@ -135,7 +135,7 @@ else
 						<input type="text" name="perpage" size="2" value="<%=pageParams.getIntValue("perpage", 10)%>"/>
 					</div>
 				</div>
-				<div class="col-sm-12 form-group">
+				<div class="row form-group">
 					<div class="col-sm-6 leftCol">
 						<iwcm:text key="components.search.check_duplicty"/>
 					</div>
@@ -143,7 +143,7 @@ else
 						<input type="checkbox" id="checkDuplicity" name="checkDuplicity" value="true" <%if (pageParams.getBooleanValue("checkDuplicity", false)) out.print("checked='checked'");%> onclick="alertDuplicity(this);" />
 					</div>
 				</div>
-				<div class="col-sm-12 form-group">
+				<div class="row form-group">
 					<div class="col-sm-6 leftCol">
 						<iwcm:text key="components.search.order_by"/>
 					</div>
@@ -155,38 +155,44 @@ else
 						</select>
 					</div>
 				</div>
-				<div class="col-sm-12 form-group">
-					<div class="col-sm-6 col-sm-offset-6">
-						<input type="radio" name="order" value="asc" <%if ("asc".equals(pageParams.getValue("order", "asc")))
+				<div class="row form-group">
+					<div class="col-sm-6 leftCol"></div>
+					<div class="col-sm-6">
+						<label><input type="radio" name="order" value="asc" <%if ("asc".equals(pageParams.getValue("order", "asc")))
 						out.print("checked='checked'");%> />
-						<iwcm:text key="components.inquiry.orderAsc"/><br>
-						<input type="radio" name="order" value="desc" <%if ("desc".equals(pageParams.getValue("order", "asc")))
+						<iwcm:text key="components.inquiry.orderAsc"/>
+						</label>
+						<br>
+						<label><input type="radio" name="order" value="desc" <%if ("desc".equals(pageParams.getValue("order", "asc")))
 						out.print("checked='checked'");%>/>
 						<iwcm:text key="components.inquiry.orderDesc"/>
+						</label>
 					</div>
 				</div>
-				<div class="col-sm-8 col-sm-offset-2 form-group">
-						<iwcm:text key="components.search.search_type"/>
-				</div>
-				<div class="col-sm-12 form-group">
+				<div class="row form-group">
 					<div class="col-sm-6 leftCol">
 						<iwcm:text key="editor.paste"/>
 					</div>
 					<div class="col-sm-6">
-						<input type="radio" id="radio1" name="sForm" size="textField" value="form" onclick="disableDocIdField();" />
+						<label><input type="radio" id="radio1" name="sForm" size="textField" value="form" onclick="disableDocIdField();" />
 						<iwcm:text key="components.search.text_field"/><br>
-						<input type="radio" id="radio2" name="sForm" size="result" value="results" onclick="disableDocIdField();" />
+						</label>
+						<br/>
+						<label><input type="radio" id="radio2" name="sForm" size="result" value="results" onclick="disableDocIdField();" />
 						<iwcm:text key="components.search.results"/><br>
-						<input type="radio" id="radio3" name="sForm" size="result" value="complete" onclick="disableDocIdField();" />
+						</label>
+						<br/>
+						<label><input type="radio" id="radio3" name="sForm" size="result" value="complete" onclick="disableDocIdField();" />
 						<iwcm:text key="components.search.search_complete"/>
+						</label>
 					</div>
 				</div>
-				<div id="separMenu1" class="col-sm-12 form-group">
+				<div id="separMenu1" class="row form-group">
 					<div class="col-sm-6 leftCol">
 						<iwcm:text key="components.search.results_docid"/>
 					</div>
 					<div class="col-sm-6">
-						<input type="text" name="resultsDocId" size="5" value="<%=ResponseUtils.filter(pageParams.getValue("resultsDocId", ""))%>"/>
+						<input type="text" name="resultsDocId" size="10" value="<%=ResponseUtils.filter(pageParams.getValue("resultsDocId", ""))%>"/>
 						<input type="button" value="<iwcm:text key="groupedit.select"/>" name="bSelDoc" onClick='popupFromDialog("/admin/user_adddoc.jsp", 450, 340);' class="button50" />
 					</div>
 				</div>

@@ -438,6 +438,34 @@ export default class AbstractJsTreeOpener {
     }
 
     /**
+     * Edit webpage with fetch, handle historyid in parameter (load version from history)
+     * @param {number} docId
+     */
+    wjEditFetchHistory(docId) {
+        var datatableUrl = this.dataTable.ajax.url();
+        var datatableUrlBeforeLoad = datatableUrl;
+
+        //get historyId parameter from URL
+        const url = window.location.href;
+        const urlParams = new URLSearchParams(url);
+        const historyId = urlParams.get('historyid');
+        if (historyId) {
+            //console.log("mam historyId=", historyId);
+            datatableUrlBeforeLoad = window.WJ.urlAddParam(datatableUrl, "historyId", historyId);
+
+            this.dataTable.ajax.url(datatableUrlBeforeLoad);
+            this.dataTable.wjEditFetch($('.datatableInit tr[id=' + docId + ']'));
+            this.dataTable.ajax.url(datatableUrl);
+
+            //remove historyId from URL parameter
+            Tools.updateUrlQuery("docid", docId, ["historyid", "docid"]);
+        } else {
+            this.dataTable.wjEditFetch($('.datatableInit tr[id=' + docId + ']'));
+        }
+
+    }
+
+    /**
      * @description Otvorí dokument v dataTable na základe jeho ID a v prípade potreby skočí na podstránku kde sa nachádza.
      * @param {number} id
      * @returns {void}
@@ -456,7 +484,7 @@ export default class AbstractJsTreeOpener {
         //console.log("webpageRow=", webpageRow);
         if (webpageRow.length>0) {
             //console.log("Opening webpage, id=", this._currentId);
-            this.dataTable.wjEditFetch($('.datatableInit tr[id=' + this._currentId + ']'));
+            this.wjEditFetchHistory(this._currentId);
             return;
         }
 
@@ -519,7 +547,7 @@ export default class AbstractJsTreeOpener {
                  self.dataTable.off('draw.dt');
 
                  /** @description Otvoríme dokument */
-                 self.dataTable.wjEditFetch($('.datatableInit tr[id=' + id + ']'));
+                 self.wjEditFetchHistory(id);
              } else if (idIndex >= 0) {
                  Tools.log('info', self.selfName(), `Document with id: ${id} was found on page ${pageNumber + 1}`);
                  /**

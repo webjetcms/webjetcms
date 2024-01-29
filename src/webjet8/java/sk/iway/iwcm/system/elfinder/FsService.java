@@ -2,9 +2,12 @@ package sk.iway.iwcm.system.elfinder;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.commons.codec.binary.Base64;
 
@@ -20,6 +23,7 @@ import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.RequestBean;
 import sk.iway.iwcm.SetCharacterEncodingFilter;
 import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.common.FileBrowserTools;
 import sk.iway.iwcm.common.UploadFileTools;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.io.IwcmFile;
@@ -227,16 +231,16 @@ public class FsService implements cn.bluejoe.elfinder.service.FsService //NOSONA
 		RequestBean rb = SetCharacterEncodingFilter.getCurrentRequestBean();
 		int docId = Tools.getIntValue(rb.getRequest().getParameter("docId"), 1);
 		int groupId = Tools.getIntValue(rb.getRequest().getParameter("groupId"), -1);
+		String title = rb.getRequest().getParameter("title");
 
 		if (groupId > 0)
 		{
-
 			StringBuilder rootDirs = new StringBuilder();
 
 			String[] prefixes = {"/images", "/files", "/images/gallery"};
 			for (String prefix : prefixes)
 			{
-				String dir = UploadFileTools.getPageUploadSubDir(docId, groupId, prefix);
+				String dir = UploadFileTools.getPageUploadSubDir(docId, groupId, title, prefix);
 				//Logger.debug(FsService.class, "uploadSubdir: docId="+docId+", groupId="+groupId+", dir="+dir);
 				IwcmFile dirFile = new IwcmFile(Tools.getRealPath(dir));
 
@@ -307,6 +311,10 @@ public class FsService implements cn.bluejoe.elfinder.service.FsService //NOSONA
 
 					//JEEFF String relativePath = new String(Base64.decodeBase64(localHash));
 					String relativePath = new String(Base64.decodeBase64(localHash.getBytes()));
+
+					//bad hackers CVE-2022-26960
+					if (hash.startsWith("iwcm_doc_group_volume")==false && FileBrowserTools.hasForbiddenSymbol(relativePath)) return null;
+
 					return v.fromPath(relativePath);
 				}
 			}
@@ -384,20 +392,38 @@ public class FsService implements cn.bluejoe.elfinder.service.FsService //NOSONA
 	}
 
 	@Override
-    public FsItemEx[] find(FsItemFilter filter)
+    public FsItemEx[] find(FsItemFilter filter, FsItemEx target, boolean recursive)
     {
         List<FsItemEx> listFsItemsEx = new ArrayList<>();
         if(getVolumes() != null && getVolumes().length >0)
         {
             for(FsVolume volume:getVolumes())
             {
-                for(FsItem item: volume.listChildren(volume.getRoot()))
-                {
-                    if(item instanceof IwcmArchivItem)
-                    {
-                        listFsFiles(item,volume,listFsItemsEx,filter,this);
-                    }
-                }
+				if (target.getVolume().equals(volume) == false) continue;
+
+				if (volume instanceof IwcmFsVolume) {
+					try {
+						FsItem root = ((IwcmFsVolume)volume).fromPath(target.getPath());
+						listFsItemsEx.addAll(findRecursively(filter, root, recursive, new HashSet<>()));
+					} catch (Exception ex) {
+						Logger.error(ex);
+					}
+				} else if (volume instanceof IwcmDocGroupFsVolume) {
+					try {
+						FsItem root = ((IwcmDocGroupFsVolume)volume).fromPath(target.getPath());
+						listFsItemsEx.addAll(findRecursively(filter, root, recursive, new HashSet<>()));
+					} catch (Exception ex) {
+						Logger.error(ex);
+					}
+				} else {
+					for(FsItem item: volume.listChildren(volume.getRoot()))
+					{
+						if(item instanceof IwcmArchivItem)
+						{
+							listFsFiles(item,volume,listFsItemsEx,filter,this);
+						}
+					}
+				}
             }
         }
         //Logger.debug(this,"listFsItemsEx.size() "+listFsItemsEx.size());
@@ -412,11 +438,56 @@ public class FsService implements cn.bluejoe.elfinder.service.FsService //NOSONA
         {
             if (!volume.isFolder(file) && filter.accepts(new FsItemEx(file, fsService)))
             {
-                FsItemEx fix = new FsItemEx((IwcmArchivItem)file, fsService); //NOSONAR
-                listFsItemsEx.add(fix);
+                FsItemEx fsx = null;
+				if (file instanceof IwcmArchivItem) {
+					fsx = new FsItemEx((IwcmArchivItem)file, fsService); //NOSONAR
+				} else if (file instanceof IwcmFsItem) {
+					fsx = new FsItemEx((IwcmFsItem)file, fsService); //NOSONAR
+				}
+                if (fsx != null) listFsItemsEx.add(fsx);
             }
         }
 
         return listFsItemsEx;
     }
+
+	/**
+	 * find files recursively in specific folder
+	 *
+	 * @param filter
+	 *            The filter to apply to select files.
+	 * @param root
+	 *            The location in the hierarchy to search from.
+	 * @return A collection of files that match the filter and have the root as
+	 *         a parent.
+	 */
+	private Collection<FsItemEx> findRecursively(FsItemFilter filter, FsItem root, boolean recursive, Set<String> duplicityCheck)
+	{
+		List<FsItemEx> results = new ArrayList<FsItemEx>();
+		FsVolume vol = root.getVolume();
+		FsItem[] childrens = vol.listChildren(root);
+		for (int i=0; i<childrens.length; i++) {
+			FsItem child = childrens[i];
+			FsItemEx item = new FsItemEx(child, this);
+			try {
+				if (vol.isFolder(child)) {
+					if (recursive && duplicityCheck.contains(item.getPath())==false) {
+						Collection<FsItemEx> sublist = findRecursively(filter, child, recursive, duplicityCheck);
+						if (sublist.isEmpty()==false) {
+							results.addAll(sublist);
+							duplicityCheck.add(item.getPath());
+						}
+					}
+				} else {
+					if (filter.accepts(item)) {
+						results.add(item);
+					}
+				}
+			} catch (Exception ex) {
+				Logger.error(ex);
+			}
+		}
+
+		return results;
+	}
 }

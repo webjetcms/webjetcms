@@ -17,6 +17,7 @@ import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.admin.layout.MenuService;
 import sk.iway.iwcm.common.UserTools;
 import sk.iway.iwcm.components.users.groups_approve.GroupsApproveEntity;
+import sk.iway.iwcm.components.users.groups_approve.GroupsApproveRepository;
 import sk.iway.iwcm.doc.DocDB;
 import sk.iway.iwcm.doc.DocDetails;
 import sk.iway.iwcm.doc.GroupDetails;
@@ -52,7 +53,7 @@ public class UserDetailsEditorFields extends BaseEditorFields {
     private Integer[] permisions;
 
     //Signalize, if we want send email to user, about adding him into new userGroup
-    @DataTableColumn(inputType = DataTableColumnType.CHECKBOX, title = "users.send_all_user_groups_emails", sortAfter = "", tab = "groupsTab", visible = false)
+    @DataTableColumn(inputType = DataTableColumnType.CHECKBOX, title = "users.send_all_user_groups_emails", sortAfter = "", tab = "groupsTab", hidden = true)
     private boolean sendAllUserGroupsEmails;
 
     //there will be saved userGroupIds before save (old values) to compare and find newly added groups
@@ -64,14 +65,14 @@ public class UserDetailsEditorFields extends BaseEditorFields {
             @DataTableColumnEditorAttr(key = "unselectedValue", value = "") }) })
     private Integer[] emails;
 
-    @DataTableColumn(inputType = DataTableColumnType.JSON, title="user.editableGroups.label", tab = "rightsTab", hidden = true, className = "dt-tree-group-array-alldomains", editor = {
+    @DataTableColumn(inputType = DataTableColumnType.JSON, title="user.editableGroups.label", tab = "rightsTab", visible=false, filter=false, orderable=false, className = "dt-tree-group-array-alldomains", editor = {
         @DataTableColumnEditor(attr = {
             @DataTableColumnEditorAttr(key = "data-dt-field-headline", value = "user.group.rights"),
             @DataTableColumnEditorAttr(key = "data-dt-json-addbutton", value = "editor.json.addGroup") })
     })
     private List<GroupDetails> editableGroups;
 
-    @DataTableColumn(inputType = DataTableColumnType.JSON, title="user.editablePages.label", tab = "rightsTab", hidden = true, className = "dt-tree-page-array-alldomains", editor = {
+    @DataTableColumn(inputType = DataTableColumnType.JSON, title="user.editablePages.label", tab = "rightsTab", visible=false, filter=false, orderable=false, className = "dt-tree-page-array-alldomains", editor = {
         @DataTableColumnEditor(attr = {
             @DataTableColumnEditorAttr(key = "data-dt-json-addbutton", value = "editor.json.addPage") })
     })
@@ -98,11 +99,14 @@ public class UserDetailsEditorFields extends BaseEditorFields {
     })
     private List<DirTreeItem> writableFolders;
 
-    @DataTableColumn(inputType = DataTableColumnType.CHECKBOX, title = "users.perm_groups.label", tab = "rightsTab", hidden = true,
+    @DataTableColumn(inputType = DataTableColumnType.CHECKBOX, title = "users.perm_groups", tab = "rightsTab", renderFormat = "dt-format-select", visible = false, orderable = false,
     editor = {
         @DataTableColumnEditor(attr = {
             @DataTableColumnEditorAttr(key = "unselectedValue", value = ""),
-            @DataTableColumnEditorAttr(key = "data-dt-field-headline", value = "users.perm_groups") }) }
+            @DataTableColumnEditorAttr(key = "data-dt-field-headline", value = "users.perm_groups") },
+            label = "users.perm_groups.label"
+        )
+        }
     )
     private Integer[] permGroups;
 
@@ -140,7 +144,34 @@ public class UserDetailsEditorFields extends BaseEditorFields {
     //List of free fields
     public List<Field> fieldsDefinition;
 
-    public void fromUserDetailsEntity(UserDetailsEntity userDetailsOriginal, boolean loadSubQueries, HttpServletRequest request) {
+    //Show groupsApprove As combination of approve mode and group full path
+    @DataTableColumn(inputType = DataTableColumnType.TEXTAREA, title = "components.users.approving",
+        className = "allow-html",
+        visible = false,
+        hiddenEditor = true,
+        orderable = false,
+        filter = false,
+        tab = "approvingTab")
+    private String groupsApproveShow;
+
+    private void getModeText(int approveMode, StringBuilder sb, Prop prop) {
+        switch (approveMode) {
+            case 0:
+                sb.append("[").append(prop.getText("useredit.approveMode.approve")).append("]");
+                break;
+            case 1:
+                sb.append("[").append(prop.getText("useredit.approveMode.notify")).append("]");
+                break;
+            case 2:
+                sb.append("[").append(prop.getText("useredit.approveMode.none")).append("]");
+                break;
+            case 3:
+                sb.append("[").append(prop.getText("useredit.approveMode.level2")).append("]");
+                break;
+        }
+    }
+
+    public void fromUserDetailsEntity(UserDetailsEntity userDetailsOriginal, boolean loadSubQueries, HttpServletRequest request, GroupsApproveRepository groupsApproveRepository) {
 
         //Get list of free fields
         fieldsDefinition = getFields(userDetailsOriginal, "user", 'E');
@@ -151,38 +182,68 @@ public class UserDetailsEditorFields extends BaseEditorFields {
         permisions = splitPermsEmails.get(0);
         emails = splitPermsEmails.get(1);
 
-        if (loadSubQueries && userDetailsOriginal.getId()!=null && userDetailsOriginal.getId().intValue()>0) {
-            //Set editable groups Ids into List editableGroups
-            editableGroups = new ArrayList<>();
-            int[] editableGroupsIds = Tools.getTokensInt(userDetailsOriginal.getEditableGroups(), ",");
-            if(editableGroupsIds.length > 0) {
-                GroupsDB groupsDB = GroupsDB.getInstance();
+        int userId = -1;
+        if (userDetailsOriginal.getId() != null && userDetailsOriginal.getId().intValue() > 0) {
+            userId = userDetailsOriginal.getId().intValue();
 
-                for(int editableGroupId : editableGroupsIds) {
-                    GroupDetails tmp = groupsDB.getGroup(editableGroupId);
-                    if (tmp != null) editableGroups.add(tmp);
+            //Allready set permGroups so we can see them in table (dont wait or loadSubQueries)
+
+            //Set permission groups
+            List<PermissionGroupBean> userPermGroups = UserGroupsDB.getPermissionGroupsFor(userId); //Get actual user perm groups
+
+            //If group size is bigger than 0, push them into permGroup field (this group will be checked in the list of all group)
+            if(userPermGroups.size() > 0) {
+                permGroups = new Integer[userPermGroups.size()];
+
+                int userPermGroupsCount = 0;
+                for(PermissionGroupBean userPermGroup : userPermGroups) {
+
+                    permGroups[userPermGroupsCount] = userPermGroup.getUserPermGroupId();
+                    userPermGroupsCount++;
                 }
             }
+        }
 
-            //Set editable pages Ids into List editablePages
-            editablePages = new ArrayList<>();
-            int[] editablePagesIds =  Tools.getTokensInt(userDetailsOriginal.getEditablePages(), ",");
-            if(editablePagesIds.length > 0) {
-                DocDB pagesDB = DocDB.getInstance();
-                GroupsDB groupsDB = GroupsDB.getInstance();
+        Prop prop = Prop.getInstance(Constants.getServletContext(), request);
+        if(userId > 0) {
+            List<GroupsApproveEntity> groups = groupsApproveRepository.findByUserId(userId);
+            StringBuilder sb = new StringBuilder("");
+            for(GroupsApproveEntity group : groups) {
+                getModeText(group.getApproveMode(), sb, prop);
+                sb.append(" ").append(group.getGroup().getFullPath()).append("<br />");
+            }
+            groupsApproveShow = sb.toString();
+        }
 
-                for(int editablePageId : editablePagesIds) {
-                    DocDetails tmp = pagesDB.getDoc(editablePageId, -1, false);
-                    if (tmp != null) {
-                        tmp.setFullPath(GroupsTreeService.addDomainPrefixToFullPath(tmp, groupsDB));
-                        editablePages.add(tmp);
-                    }
+        //Set editable groups Ids into List editableGroups
+        editableGroups = new ArrayList<>();
+        int[] editableGroupsIds = Tools.getTokensInt(userDetailsOriginal.getEditableGroups(), ",");
+        if(editableGroupsIds.length > 0) {
+            GroupsDB groupsDB = GroupsDB.getInstance();
+
+            for(int editableGroupId : editableGroupsIds) {
+                GroupDetails tmp = groupsDB.getGroup(editableGroupId);
+                if (tmp != null) editableGroups.add(tmp);
+            }
+        }
+
+        //Set editable pages Ids into List editablePages
+        editablePages = new ArrayList<>();
+        int[] editablePagesIds =  Tools.getTokensInt(userDetailsOriginal.getEditablePages(), ",");
+        if(editablePagesIds.length > 0) {
+            DocDB pagesDB = DocDB.getInstance();
+            GroupsDB groupsDB = GroupsDB.getInstance();
+
+            for(int editablePageId : editablePagesIds) {
+                DocDetails tmp = pagesDB.getDoc(editablePageId, -1, false);
+                if (tmp != null) {
+                    tmp.setFullPath(GroupsTreeService.addDomainPrefixToFullPath(tmp, groupsDB));
+                    editablePages.add(tmp);
                 }
             }
+        }
 
-            int userId = -1;
-            if (userDetailsOriginal.getId()!=null) userId = userDetailsOriginal.getId().intValue();
-
+        if (loadSubQueries && userId > 0) {
             //Set permission groups
             List<PermissionGroupBean> userPermGroups = UserGroupsDB.getPermissionGroupsFor(userId); //Get actual user perm groups
 
@@ -199,12 +260,11 @@ public class UserDetailsEditorFields extends BaseEditorFields {
             }
 
             //Set disabled/non-disabled items
-            Prop prop = Prop.getInstance(Constants.getServletContext(), request);
             Modules modules = Modules.getInstance();
             List<ModuleInfo> allModuleItems = modules.getUserEditItems(prop);
 
             Identity user = new Identity(UsersDB.getUser(userId));
-            UsersDB.loadDisabledItemsFromDB(user);
+            UsersDB.loadDisabledItemsFromDB(user, false);
             String enabledItemsKeysString = "";
             Set<String> disabledItems = user.getDisabledItemsTable().keySet();
 

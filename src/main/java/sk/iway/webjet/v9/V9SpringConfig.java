@@ -17,6 +17,8 @@ import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import org.springframework.web.servlet.i18n.AcceptHeaderLocaleResolver;
 
+import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.PageLng;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.system.spring.ApiTokenAuthFilter;
@@ -74,7 +76,11 @@ import sk.iway.iwcm.system.spring.ConfigurableSecurity;
     "sk.iway.iwcm.filebrowser",
     "sk.iway.iwcm.components.forum.rest",
     "sk.iway.iwcm.components.seo.rest",
-    "sk.iway.iwcm.setup"
+    "sk.iway.iwcm.setup",
+    "sk.iway.iwcm.doc.clone_structure",
+    "sk.iway.iwcm.update",
+    "sk.iway.iwcm.xls",
+    "sk.iway.iwcm.components.restaurant_menu.rest"
 })
 public class V9SpringConfig implements WebMvcConfigurer, ConfigurableSecurity {
 
@@ -86,13 +92,11 @@ public class V9SpringConfig implements WebMvcConfigurer, ConfigurableSecurity {
                 String lng = Prop.getLng(request, false);
                 if (Tools.isEmpty(lng)) lng = "sk";
                 if ("cz".equals(lng)) lng = "cs";
-                return lng != null
-                        ? org.springframework.util.StringUtils.parseLocaleString(lng)
-                        : super.resolveLocale(request);
+                return org.springframework.util.StringUtils.parseLocaleString(PageLng.getUserLngIso(lng).replaceAll("-", "_"));
             }
         };
 
-        localeResolver.setDefaultLocale(new Locale("sk"));
+        localeResolver.setDefaultLocale(new Locale(PageLng.getUserLngIso(Constants.getString("defaultLanguage")).replaceAll("-", "_")));
         return localeResolver;
     }
 

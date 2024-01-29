@@ -129,51 +129,37 @@ Scenario('zobrazenie atributov na web stranke', ({I}) => {
 });
 
 Scenario('filtrovanie tabulky podla URL parametra', async ({I}) => {
-    await I.executeScript(function(){
-        window.location.href="/apps/atributy-stranky/monitory/?atrs_GT_Power+Delivery+(W)=90";
-    });
+    I.amOnPage("/apps/atributy-stranky/monitory/");
+    I.logout();
+    I.amOnPage("/apps/atributy-stranky/monitory/?atrs_GT_Power+Delivery+(W)=90");
     I.waitForElement(table, 20);
     checkApple(table, I);
 
-    await I.executeScript(function(){
-        window.location.href="/apps/atributy-stranky/monitory/?atrs_LT_Power+Delivery+(W)=90";
-    });
+    I.amOnPage("/apps/atributy-stranky/monitory/?atrs_LT_Power+Delivery+(W)=90");
     I.waitForElement(table, 20);
     checkDell(table, I);
 
-    await I.executeScript(function(){
-        window.location.href="/apps/atributy-stranky/monitory/?atrs_GTLT_Power+Delivery+(W)=50:200";
-    });
+    I.amOnPage("/apps/atributy-stranky/monitory/?atrs_GTLT_Power+Delivery+(W)=50:200");
     I.waitForElement(table, 20);
     checkAppleDell(table, I);
 
-    await I.executeScript(function(){
-        window.location.href="/apps/atributy-stranky/monitory/?atrs_GTLT_Power+Delivery+(W)=50:80";
-    });
+    I.amOnPage("/apps/atributy-stranky/monitory/?atrs_GTLT_Power+Delivery+(W)=50:80");
     I.waitForElement(table, 20);
     checkDell(table, I);
 
-    await I.executeScript(function(){
-        window.location.href="/apps/atributy-stranky/monitory/?atrs_GTLT_Power+Delivery+(W)=50:59";
-    });
+    I.amOnPage("/apps/atributy-stranky/monitory/?atrs_GTLT_Power+Delivery+(W)=50:59");
     I.waitForElement(table, 20);
     I.see("Neboli nájdené žiadne stránky vyhovujúce zadaným kritériám");
 
-    await I.executeScript(function(){
-        window.location.href="/apps/atributy-stranky/monitory/?atrs_SS_vyrobca=pple";
-    });
+    I.amOnPage("/apps/atributy-stranky/monitory/?atrs_SS_vyrobca=pple");
     I.waitForElement(table, 20);
     checkApple(table, I);
 
-    await I.executeScript(function(){
-        window.location.href="/apps/atributy-stranky/monitory/?atrs_EQ_vyrobca=Apple";
-    });
+    I.amOnPage("/apps/atributy-stranky/monitory/?atrs_EQ_vyrobca=Apple");
     I.waitForElement(table, 20);
     checkApple(table, I);
 
-    await I.executeScript(function(){
-        window.location.href="/apps/atributy-stranky/monitory/?atrs_EQ_vyrobca=pple";
-    });
+    I.amOnPage("/apps/atributy-stranky/monitory/?atrs_EQ_vyrobca=pple");
     I.waitForElement(table, 20);
     I.see("Neboli nájdené žiadne stránky vyhovujúce zadaným kritériám");
 });
@@ -192,8 +178,9 @@ Scenario('logout', ({I, login}) => {
     I.logout();
 });
 
-function setAttr(title, I, DTE) {
+function setAttr(title, I, Browser) {
     I.fillField({css: "div[data-atr-group=Monitor] input.ui-autocomplete-input"}, title);
+    if (Browser.isFirefox()) I.fillField({css: "div[data-atr-group=Monitor] input.ui-autocomplete-input"}, title);
 }
 
 async function verifyAttrInWebpage(value, webpageUrl, I, see=true) {
@@ -234,7 +221,7 @@ Scenario('attrs v stranke-multigroup', async ({I, DataTables, DT, DTE, Browser})
     I.see("Výrobca", container);
     I.see("Monitor", container+" div.DTE_Field_Name_editorFields\\.attrGroup div.filter-option-inner-inner");
 
-    setAttr(attrMaster, I, DTE);
+    setAttr(attrMaster, I, Browser);
     DTE.save();
 
     await verifyAttrInWebpage(attrMaster, "/test-stavov/multigroup/master/multi-attrs.html", I);
@@ -249,7 +236,7 @@ Scenario('attrs v stranke-multigroup', async ({I, DataTables, DT, DTE, Browser})
     I.see("Výrobca", container);
     I.see("Monitor", container+" div.DTE_Field_Name_editorFields\\.attrGroup div.filter-option-inner-inner");
 
-    setAttr(attrSlave, I, DTE);
+    setAttr(attrSlave, I, Browser);
     DTE.save();
 
     await verifyAttrInWebpage(attrSlave, "/test-stavov/multigroup/master/multi-attrs.html", I);

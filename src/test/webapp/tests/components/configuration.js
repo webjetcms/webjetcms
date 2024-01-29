@@ -11,7 +11,7 @@ Before(({ I, login }) => {
     if (typeof randomNumber == "undefined") {
         randomNumber = I.getRandomText();
         name = "name-autotest-" + randomNumber;
-        value = "value-autotest-" + randomNumber;
+        value = "value-autotest-" + randomNumber+"<script>alert('TEST');</script> &#39; poKUS frame-ancestors 'self'";
     }
 });
 
@@ -55,7 +55,7 @@ Scenario('vyhladanie konfiguracnej premennej', ({ I, DT }) => {
     I.see(name);
 
     //hladanie podla hodnoty
-    I.fillField("input.dt-filter-value", randomNumber);
+    I.fillField("input.dt-filter-value", "&#39; pokus");
     I.pressKey('Enter', "input.dt-filter-value");
     DT.waitForLoader();
     I.see(value);
@@ -71,10 +71,19 @@ Scenario("upravenie konfiguracnej premennej", ({ I, DTE }) => {
     I.click(name);
     DTE.waitForEditor(datatableName);
 
+    I.seeInField("#DTE_Field_value", value);
+
     value = value + ".changed";
 
     I.fillField("#DTE_Field_value", value);
     DTE.save();
+
+    I.see(value);
+
+    I.click(name);
+    DTE.waitForEditor(datatableName);
+
+    I.seeInField("#DTE_Field_value", value);
 });
 
 //chyba v nastaveni id

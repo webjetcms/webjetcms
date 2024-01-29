@@ -478,6 +478,8 @@ public class ProxyByHttpClient4
 				}
 				else
 				{
+					response.setContentType(entity.getContentType().getValue());
+
 					copyStream(entity.getContent(), response.getOutputStream());
 				}
 

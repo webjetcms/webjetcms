@@ -1,13 +1,14 @@
 package sk.iway.iwcm.system.monitoring;
 
 import java.lang.management.ManagementFactory;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Optional;
 
-import org.hyperic.sigar.CpuPerc;
-import org.hyperic.sigar.ProcCpu;
-import org.hyperic.sigar.Sigar;
-import org.hyperic.sigar.SigarException;
-
-import sk.iway.iwcm.Logger;
+import javax.management.Attribute;
+import javax.management.AttributeList;
+import javax.management.MBeanServer;
+import javax.management.ObjectName;
 
 /**
  *  CpuInfo.java
@@ -23,71 +24,66 @@ import sk.iway.iwcm.Logger;
  */
 public class CpuInfo
 {
-	private double cpuUsage = 0;
-	private double procUsage = 0;
-	private int cpuCount = 1;
-	private static Sigar sigarProcessDB = new Sigar();	//kazdych 30 sekund zapisem do databazy
-	private static Sigar sigarProcessActual = new Sigar();	//aktualne hodnoty v admin casti
-	
+	private int cpuUsage = 0;
+	private int cpuUsageProcess = 0;
+	private int cpuCount = 0;
+
 	public CpuInfo() {
+
+        try {
+            MBeanServer mbs = ManagementFactory.getPlatformMBeanServer();
+            ObjectName name = ObjectName.getInstance("java.lang:type=OperatingSystem");
+
+			//https://stackoverflow.com/a/60985633
+			//https://docs.oracle.com/en/java/javase/17/docs/api/jdk.management/com/sun/management/OperatingSystemMXBean.html
+            AttributeList list = mbs.getAttributes(name, new String[]{"SystemCpuLoad"});
+            cpuUsage = (int)Math.round(getValue(list) * 100);
+
+			list = mbs.getAttributes(name, new String[]{"ProcessCpuLoad"});
+			cpuUsageProcess = (int)Math.round(getValue(list) * 100);
+
+        } catch (Exception ex) {
+
+        }
+		cpuCount = Runtime.getRuntime().availableProcessors();
 	}
-	
-	/*
-	 * Vrati vyuzitie procesora v percentach
-	 */
-	public double getCpuUsage()	
-	{
-		try
-		{
-			cpuUsage = 0;
-			Sigar sigar = new Sigar();
-			CpuPerc[] cpusPerc = sigar.getCpuPercList();	//ziskam zoznam CPU
-			cpuCount = cpusPerc.length;	//pocet CPU
-			for (int i=0; i<cpuCount; i++) {
-				Logger.println(this, "CPU "+i+": "+CpuPerc.format(cpusPerc[i].getCombined()));
-				cpuUsage += cpusPerc[i].getCombined();	//cpu usage v percentach
-			}
-			String cpuString = CpuPerc.format(cpuUsage/cpuCount); //percentualne - este delim procesormi a formatujem na 0.0%
-			cpuString = cpuString.substring(0, cpuString.length()-1);	//odstranim %
-			return Double.parseDouble(cpuString);
-		}
-		catch (SigarException e)
-		{
-			return 0D;
-		}
-		catch (UnsatisfiedLinkError e)
-		{
-			return 0D;
-		}
-		catch (RuntimeException e)
-		{
-			//niekedy nastava chyba java.lang.reflect.InvocationTargetException / Caused by: java.lang.UnsatisfiedLinkError: org.hyperic.sigar.Sigar.getCpuListNative()
-			return 0D;
-		}
+
+	private double getValue(AttributeList list) {
+		Double value = Optional.ofNullable(list)
+			.map(l -> l.isEmpty() ? null : l)
+			.map(List::iterator)
+			.map(Iterator::next)
+			.map(Attribute.class::cast)
+			.map(Attribute::getValue)
+			.map(Double.class::cast)
+			.orElse(null);
+
+		if (value == null) return 0d;
+
+		return value.doubleValue();
 	}
-	
-	/*
-	 * Vrati vyuzitie procesora procesom webjet v percentach
+
+	/**
+	 * Get total CPU usage
+	 * @return
 	 */
-	public double getProcCpuUsage(boolean intoDB) throws SigarException{
-		procUsage = 0;
-		String procPercentage = "0.0%";
-		String pid = ManagementFactory.getRuntimeMXBean().getName();	//ziskam pid procesu
-      int index = pid.lastIndexOf('@');
-      pid = pid.substring(0, index);
-		
-      try {
-     	 	ProcCpu pc;
-     	 	if(intoDB) pc = sigarProcessDB.getProcCpu(pid);	//ak ide o ulozenie do databazy -> kazdych 30 sekund
-     	 	else pc = sigarProcessActual.getProcCpu(pid);	//ak ide o aktualne hodnoty v admin casti
-     	 	//Ako dlho proces vyuziva procesor sa urcuje v casovom rozmedzi medzi dvoma volaniami metody getProcCpu(pid)
-     	 	//vytvoril som preto dva objekty - jeden pre ukladanie hodnot do databazy - kazdych 30 sekund - a jeden pre ziskanie aktualnej hodnoty v admin casti
-     	 	procUsage = pc.getPercent();
-     	 	procPercentage = CpuPerc.format(procUsage/cpuCount); //percentualne - este delim procesormi a formatujem na 0.0%
-     	 	Logger.println(this, "Process CPU Total: DB="+intoDB+" process="+pc.getTotal());
-      } catch (SigarException e) {} 
-      procPercentage = procPercentage.substring(0, procPercentage.length()-1);	//odstranim %
-      Logger.println(this, "Process CPU Usage: DB="+intoDB+" process="+procPercentage);
-		return Double.parseDouble(procPercentage);
+	public int getCpuUsage() {
+		return cpuUsage;
+	}
+
+	/**
+	 * Get process CPU usage for the Java Virtual Machine process
+	 * @return
+	 */
+	public int getCpuUsageProcess() {
+		return cpuUsageProcess;
+	}
+
+	/**
+	 * Get number of CPU cores
+	 * @return
+	 */
+	public int getCpuCount() {
+		return cpuCount;
 	}
 }

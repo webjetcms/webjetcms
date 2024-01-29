@@ -1,0 +1,304 @@
+extends ../../partials/layout
+
+block content
+
+    +breadcrumb(
+        'update',
+        [
+            [ '#update', '[[\#{admin.conf_editor.update_system}]]', true ]
+        ]
+    )
+
+    script.
+        let versionsJson = null;
+        let versionSelectorOptionTemplate = '<a id=\"REPLACE_ID\" class=\"list-group-item list-group-item-action d-flex justify-content-between align-items-center REPLACE_CLASS\" data-toggle=\"list\" onclick=\"showVersionContent(\'REPLACE_FN_PARAM\')\" role=\"tab\" aria-controls=\"home\">REPLACE_A</a>';
+        let bodyDivTemplate = '<div class="tab-pane fade REPLACE_CLASS" id="REPLACE_ID" role="tabpanel">REPLACE_CONTENT</div>';
+        var versions = [];
+        var actualVersion = "[(${actualVersion})]";
+        let succBadgeTemplate = '<span class="badge bg-success rounded-pill actual-version" title="Aktuálna verzia" data-toggle="tooltip"><i class="fas fa-check"></i></span>';
+        let uploadBadgeTemplate = '<span class="badge bg-warning rounded-pill" style="color: black;"><i class="far fa-download"></i></span>';
+        var selectedVersion;
+
+        function showVersionContent(versionId) {
+            versions.forEach((version) => {
+                let versionContentDiv = $("#" + version.id);
+                let versionSelectorOption = $("#" + version.id + "_selector");
+
+                if(version.id == versionId) {
+                    //Put there whole object
+                    selectedVersion = version;
+
+                    versionContentDiv.addClass("show");
+                    versionContentDiv.addClass("active");
+                    versionSelectorOption.addClass("active");
+                } else {
+                    versionContentDiv.removeClass("show");
+                    versionContentDiv.removeClass("active");
+                    versionSelectorOption.removeClass("active");
+                }
+            });
+
+            if(versionId == "UPLOAD") {
+                $("#submitButton").hide();
+
+                let value = $("#uploadedFileName").html();
+                if(value != undefined && value != null && value.length > 1 && value != "ERROR") {
+                    $("#submitButtonSecond").show();
+                }
+            } else {
+                $("#submitButton").show();
+                $("#submitButtonSecond").hide();
+            }
+        }
+
+        function getYearFromVersion(versionToParse) {
+
+            let myRegex = "(20[0-9]{2})\..*";
+            let parsedArr = (versionToParse).match(myRegex);
+
+            //Wrong format, probablz old version like 8.9.0
+            if(parsedArr == null) return null;
+
+            //index 0 is whole inserted string
+            //index 1 is result
+            let parsedString = parsedArr[1];
+
+            //last check
+            if(parsedString != undefined && parsedString != null && parsedString.length == 4) {
+                return parsedString;
+            }
+
+            //Something went wwrong in parsing
+            return null;
+        }
+
+        function doSubmit() {
+            WJ.confirm({
+                title: "[[\#{text.warning}]]",
+                message: "[[\#{admin.update.notify}]]",
+                success: function() {
+                    if(selectedVersion.original == "UPLOAD")  {
+                        //
+                        let value = $("#uploadedFileName").html();
+                        if(value != undefined && value != null && value.length > 1 && value != "ERROR") {
+                            location.href = "/admin/update/prepareFileUpdate?version=" + value;
+                        }
+                    } else {
+                        location.href = "/admin/update/prepareUpdate?version=" + selectedVersion.original;
+                    }
+                }
+            });
+        }
+
+        window.domReady.add(function () {
+            let versionSelector = $("#version-selector");
+            let versionsTabContent = $("#versions-tab-content");
+            var isFirst = true;
+
+            actualVersion = ( (actualVersion).split(" ")[0] ).replace(/(.*)\.[0-9]*/, '$1');
+
+            $.ajax({
+                method: 'get',
+                url: "/admin/update/versions",
+                success: function(result) {
+                    result.forEach((element) => {
+                        //Get and prepare version object
+                        var version = (element.version).replace(/[.-]/g, "_").trim();
+                        versions[versions.length] = { original : element.version, id : version}
+
+                        //Set info label
+                        if(version == "0_0") {
+                            var note = element.note;
+                            //translate SK text to current language
+                            note = note.replace("Maximalny pocet aktualizacii", WJ.translate("license.upduntil.max_updates_exceed.js"))
+                                .replace("je prekroceny.", WJ.translate("license.upduntil.max_updates_exceed_2.js"))
+                                .replace("Aktualizacie ste mali predplatene do", WJ.translate("license.upduntil.date_exceed.js"))
+                                .replace("Zostavajuci pocet povolenych aktualizacii pre vasu licenciu", WJ.translate("license.upduntil.max_updates.js"))
+                                .replace("Aktualizacie mate povolene do", WJ.translate("license.updunitl.updates_until.js"))
+                                .replace("INFO:", "")
+                            ;
+
+                            $("#updateUntilVersion").html(note);
+                            return;
+                        }
+
+                        //skip old versions
+                        if (version.startsWith("8_") || version.startsWith("2021_")) return;
+
+                        //Prepare and set new version option
+                        var newVersionOption;
+                        if(element.version == actualVersion) newVersionOption = versionSelectorOptionTemplate.replace("REPLACE_A", element.version + succBadgeTemplate);
+                        else newVersionOption = versionSelectorOptionTemplate.replace("REPLACE_A", element.version);
+                        newVersionOption = newVersionOption.replace("REPLACE_ID", version + "_selector").replace("REPLACE_FN_PARAM", version);
+
+                        //Set active status for verion option
+                        if(isFirst && version != "0_0") newVersionOption = newVersionOption.replace("REPLACE_CLASS", "active");
+                        else newVersionOption = newVersionOption.replace("REPLACE_CLASS", "");
+
+                        //Append option into list of options
+                        versionSelector.append(newVersionOption);
+
+                        //Prepare markdown options
+                        let options = {badge : true};
+                        let versionYear= getYearFromVersion(element.version);
+                        if(versionYear != null) {
+                            options.imgSrcPrefix = "https://docs.webjetcms.sk/v" + versionYear + "/";
+                        } else {
+                            options.imgSrcPrefix = null;
+                        }
+
+                        //Call parse mardown to prepare content body
+                        let body = WJ.parseMarkdown(element.note, options);
+                        var bodyContent = bodyDivTemplate.replace("REPLACE_ID", version).replace("REPLACE_CONTENT", body);
+                        if(isFirst && version != "0_0")
+                            bodyContent = bodyContent.replace("REPLACE_CLASS", "show active");
+                        else
+                           bodyContent = bodyContent.replace("REPLACE_CLASS", "");
+
+                        versionsTabContent.append(bodyContent);
+
+                        //Is first, only if it's real version
+                        if(isFirst) {
+                            isFirst = false;
+                            selectedVersion = versions[versions.length-1];
+                        }
+                    });
+
+                    //Add new defau option, UPLOAD VIA FILE
+                    var uploadVersion = versionSelectorOptionTemplate.replace("REPLACE_A", "[[\#{update.update_from_file}]]" + uploadBadgeTemplate);
+                    uploadVersion = uploadVersion.replace("REPLACE_ID", "UPLOAD_selector").replace("REPLACE_FN_PARAM", "UPLOAD").replace("REPLACE_CLASS", "");
+                    versionSelector.append(uploadVersion);
+                    versions[versions.length] = {
+                        "original" : "UPLOAD",
+                        "id" : "UPLOAD"
+                    };
+
+                    let value = $("#uploadedFileName").html();
+                    if(value != undefined && value != null && value.length > 1) {
+                        showVersionContent("UPLOAD");
+                    } else {
+                         $("#submitButton").show();
+                    }
+
+                    //activate tooltip
+                    WJ.initTooltip($('span.actual-version'));
+                }
+            });
+
+            $('#versions-tab-content').on('click', "img.img-fluid", function() {
+                $('.imagepreview').attr('src', $(this).attr('src'));
+                $('#imagemodal').modal('show');
+            });
+        });
+
+
+    div.dt-header-row.clearfix.push-content-down
+        div.dt-buttons
+            button#submitButton(class="btn btn-sm btn-success buttons-divider" type="button" onclick="doSubmit()" style="display:none;")
+                span
+                    i.far.fa-cloud-download
+                    |  [[\#{update.doUpdate}]]
+            a(class="btn btn-sm btn-outline-secondary buttons-settings" data-th-href="'http://'+\#{welcome.info_url}" target="_blank")
+                span
+                    i.far.fa-link
+                    |  [[\#{update.contact_support}]]
+        div.float-end
+            div#updateUntilVersion(style="padding-top: 4px;")
+
+    <div class="row">
+        <div class="col-sm-3">
+            <div class="list-group" id="version-selector" role="tablist">
+
+            </div>
+        </div>
+
+        <div class="col-sm-9">
+            <div class="tab-content" id="versions-tab-content">
+                <div class="tab-pane fade" id="UPLOAD" role="tabpanel">
+                    <p data-th-if="${importedFileNameSucc ne null}" class="alert alert-success">[[\#{settings.update.upload_file_succ_notif}]] <span data-th-text="${importedFileNameSucc}"></span> </p>
+
+                    <button data-th-if="${importedFileNameSucc ne null}" id="submitButtonSecond" class="btn btn-sm btn-success buttons-divider" type="button" onclick="doSubmit()" style="display:none;"><span><i class="far fa-cloud-download"></i> [[\#{update.doUpdate}]] </span></button>
+
+                    <p data-th-if="!${importedFileNameSucc ne null}" class="alert alert-info"> [[\#{settings.update.start_update_notif}]] </p>
+
+                    <p data-th-if="${importedFileNameFail ne null}" class="alert alert-danger"> [[\#{settings.update.upload_file_fail_notif}]] </p>
+
+                    <p id="uploadedFileName" data-th-if="${updateFileName ne null}" data-th-text="${updateFileName}" style="display:none;"></p>
+
+                    <form data-th-if="!${importedFileNameSucc ne null}" method="post" data-th-action="@{/admin/v9/settings/update/?__forceParse=0}" data-th-object="${form}" enctype="multipart/form-data">
+                        <div data-th-if="${#fields.hasErrors('*')}" class="alert alert-danger">
+                            <ul style="margin-bottom: 0;">
+                                <li data-th-each="error : ${#fields.errors('*')}" data-th-text="${error}">error</li>
+                            </ul>
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label for="document" class="form-label"> <strong> Aktualizačný súbor </strong> </label>
+                            <input type="file" data-th-field="*{document}" id="document" class="form-control">
+                        </div>
+
+                        <div class="form-group mb-3 text-end">
+                            <button class="btn btn-sm btn-primary" type="submit" id="uploadSubmitButton"> [[\#{fbrowse.upload_file}]] </button>
+                        </div>
+
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="imagemodal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-fullscreen" data-dismiss="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <img src="" class="imagepreview" style="width: 100%;" >
+                </div>
+            </div>
+        </div>
+    </div>
+
+    style.
+        #versions-tab-content img.img-fluid {
+            cursor: pointer;
+            cursor: zoom-in;
+            margin-top: 8px;
+            margin-bottom: 8px;
+            outline: 1px solid #dddfe6;
+        }
+        .code, .code-inline {
+            background-color: #DDDFE6;
+            font-family: monospace;
+            font-size: 12px;
+        }
+        .code {
+            margin-top: 10px;
+            padding: 6px;
+        }
+        li span.code, .code-inline {
+            word-wrap: break-word;
+            outline: 2px solid #dddfe6;
+            padding: 0px;
+        }
+        #imagemodal div.modal-header {
+            padding-top: 3px;
+            padding-bottom: 3px;
+            text-align: right;
+        }
+        #versions-tab-content blockquote {
+            background-color: #F3F3F6;
+            border: 1px solid #DDDFE6;
+            padding: 6px;
+            margin-top: 8px;
+        }
+        #versions-tab-content h1,
+        #versions-tab-content h2,
+        #versions-tab-content h3,
+        #versions-tab-content h4 {
+            margin-top: 8px;
+        }
+        #version-selector a.list-group-item {
+            cursor: pointer;
+        }

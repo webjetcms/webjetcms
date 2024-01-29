@@ -7,11 +7,18 @@ iframe.md-pageBuilder {
 div.exit-inline-editor {
     position: absolute;
     right: 25px;
-    top: 16px;
+    top: 10px;
     z-index: 101005;
     font-size: 14px;
-    display: none;
     background-color: #f5f5f5;
+
+    a {
+        font-size: 16px;
+        color: $secondary;
+        &:hover {
+            color: $primary;
+        }
+    }
 
     .bootstrap-select > .dropdown-toggle {
         font-size: 14px;
@@ -33,4 +40,8 @@ div.exit-inline-editor {
     .form-select {
         background-position: right 6px center;
     }
+}
+
+div.wysiwyg-pageBuilder, div.cke_contents.cke_reset {
+    background-color: #f5f5f5
 }

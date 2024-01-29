@@ -62,7 +62,7 @@
             autoHeight: false,
             onPreXhr: function(TABLE, e, settings, data) {
                 data.fixed_searchUrl = $("#searchQuery").val();
-                data.fixed_searchdayDate = dayDate;
+                data.fixed_searchDayDate = dayDate;
             }
         });
         enginesCountDataTable.hideButtons(["create", "edit", "remove", "celledit", "import", "duplicate"]);
@@ -107,9 +107,9 @@
         async function getDataAndUpdateAmcharts() {
             WJ.showLoader();
             //add table filter params
-            let searchDateValue = ChartTools.getDateRange(30);
+            let searchDateValue = ChartTools.getDateRange(null);
             enginesCountDataTable.ajax.url(WJ.urlUpdateParam(enginesCountDataTable.ajax.url(), "searchUrl", $("#searchQuery").val()));
-            enginesCountDataTable.ajax.url(WJ.urlUpdateParam(enginesCountDataTable.ajax.url(), "searchdayDate", searchDateValue));
+            enginesCountDataTable.ajax.url(WJ.urlUpdateParam(enginesCountDataTable.ajax.url(), "searchDayDate", searchDateValue));
 
             //reload table values
             await enginesCountDataTable.ajax.reload();
@@ -120,10 +120,10 @@
         }
 
         function getPieChartUrl() {
-            let searchDateValue = ChartTools.getDateRange(30);
+            let searchDateValue = ChartTools.getDateRange(null);
             let url = enginesCountUrl + "/search/findByColumns?";
             url += "searchUrl=" + $("#searchQuery").val();
-            url += "&searchdayDate=" + searchDateValue;
+            url += "&searchDayDate=" + searchDateValue;
             return url;
         }
     });

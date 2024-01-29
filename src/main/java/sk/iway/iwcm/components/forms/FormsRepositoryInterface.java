@@ -20,7 +20,7 @@ public interface FormsRepositoryInterface<E> extends JpaRepository<E, Long>, Jpa
 
     int countAllByFormNameAndDomainId(String formName, Integer domainId);
 
-    E findTopByFormNameAndDomainIdOrderByCreateDateDesc(String formName, Integer domainId);
+    E findTopByFormNameAndDomainIdAndCreateDateNotNullOrderByCreateDateDesc(String formName, Integer domainId);
 
     E findFirstByFormNameAndDomainIdAndCreateDateIsNullOrderByIdAsc(String formName, Integer domainId);
 

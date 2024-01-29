@@ -1,7 +1,6 @@
 package sk.iway.demo8;
 
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.doc.DocDB;
@@ -16,7 +15,7 @@ import java.util.stream.IntStream;
 @RestController
 public class DemoRestController
 {
-	@RequestMapping(path={"/demo-test"},method = RequestMethod.GET)
+	@GetMapping(path={"/demo-test"})
 	public String test()
 	{
 		final StringBuilder result = new StringBuilder();

@@ -62,7 +62,7 @@ DocDB docDB = DocDB.getInstance();
 		   </tr>
 		 </thead>
 		 <tbody>
-			 <logic:iterate name="topPages" id="r" type="sk.iway.iwcm.components.rating.RatingBean" indexId="index" >
+			 <logic:iterate name="topPages" id="r" type="sk.iway.iwcm.components.rating.jpa.RatingEntity" indexId="index" >
 					<tr>
 							<td><%=index.intValue()+1%>.&nbsp;</td>
 							<td><a href="<%=docDB.getDocLink(r.getDocId(), request)%>"><bean:write name="r" property="docTitle"/></a></td>

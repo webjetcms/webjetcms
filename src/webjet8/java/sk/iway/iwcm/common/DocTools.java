@@ -220,35 +220,7 @@ public class DocTools {
         ret=ret.replaceAll(" +", "-");
         ret=ret.replaceAll("\\.+", ".");
         ret=ret.replaceAll("\\-+", "-");
-        ret=ret.replaceAll("[^a-zA-Z/_0-9\\-\\.=]","");
-
-		/*ret = ret.replace('\\', '_');
-		ret = ret.replace('*', '_');
-		ret = ret.replace('?', '_');
-		ret = ret.replace('!', '_');
-		ret = ret.replace('&', '_');
-		ret = ret.replace('|', '_');
-		ret = ret.replace(' ', '-');
-		ret = ret.replace('>', '_');
-		ret = ret.replace('<', '_');
-		ret = ret.replace('?', '_');
-		ret = ret.replace('%', '_');
-		ret = ret.replace('?', '_');
-		ret = ret.replace('"', '_');
-		ret = ret.replace(';', '_');
-		ret = ret.replace('\'', '_');
-		ret = ret.replace(',', '_');
-		ret = ret.replace('+', '_');
-		ret = ret.replace(':', '_');
-		ret = ret.replace('?', '_');
-		//dlha pomlcka
-		ret = ret.replace('?', '_');
-		ret = ret.replace('(', '_');
-		ret = ret.replace(')', '_');
-		ret = ret.replace('[', '_');
-		ret = ret.replace(']', '_');
-		//tab
-		ret = ret.replace('	', '-');*/
+        ret=ret.replaceAll(Constants.getString("DocTools.removeCharsDir"),"");
 
         if (removeSpojky && Constants.getBoolean("urlRemoveSpojky"))
         {

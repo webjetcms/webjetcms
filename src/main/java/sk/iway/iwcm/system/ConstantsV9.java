@@ -5,7 +5,6 @@ import java.util.List;
 
 import sk.iway.iwcm.Cache;
 import sk.iway.iwcm.Constants;
-import sk.iway.iwcm.Tools;
 
 public class ConstantsV9 {
 
@@ -22,10 +21,11 @@ public class ConstantsV9 {
 		Constants.setString("mariaDbDefaultEngine", "InnoDB");
 		Constants.setString("chunksQuantity", "25");
 		Constants.setString("propertiesAdminKeys",
-				"button.*\ncomponent.calendar.month.*\ndayfull.*\ncomponents.forms.alert.gdpr\ngroupslist.docid_url\nwebstranky.folder_id\ndefault.project.name\neditor.paragraph\neditor.h1\neditor.h2\neditor.h3\neditor.h4\neditor.h5\neditor.h6,admin.conf_editor.do_you_really_want_to_restart,admin.conf_editor.restarted\neditor.preview\neditor.tab.*,components.import_web_pages.menu,editor.newDocumentName,history.editPage,history.showPage,groupslist.compare,groupslist.edit_dir,editor.save_as_abtest.confirm.title,editor.save_as_abtest.confirm.text,editor.save_as_abtest,stat_doc.pageStat,web_pages_list.link_check_button,menu.logout");
+				"button.*\ncomponent.calendar.month.*\ndayfull.*\ncomponents.forms.alert.gdpr\ngroupslist.docid_url\nwebstranky.folder_id\ndefault.project.name\neditor.paragraph\neditor.h1\neditor.h2\neditor.h3\neditor.h4\neditor.h5\neditor.h6,admin.conf_editor.do_you_really_want_to_restart,admin.conf_editor.restarted\neditor.preview\neditor.tab.*,components.import_web_pages.menu,editor.newDocumentName,history.editPage,history.showPage,groupslist.compare,groupslist.edit_dir,editor.save_as_abtest.confirm.title,editor.save_as_abtest.confirm.text,editor.save_as_abtest,stat_doc.pageStat,web_pages_list.link_check_button,menu.logout,pagebuilder.modal.tab.size,pagebuilder.modal.visibility.*");
 		Constants.setInt("webpagesTreeAutoOpenLimit", 2);
-		Constants.setString("deepl_auth_key", "", Constants.MOD_CONFIG,
-				"Preklady - authentifikacny kluc k sluzbe deepl.com pre preklad textov");
+		Constants.setString("deepl_auth_key", "", "translations", "Preklady - authentifikacny kluc k sluzbe deepl.com pre preklad textov");
+		Constants.setString("deepl_api_url", "https://api-free.deepl.com/v2/translate", "translations", "Domena pre API volanie DeepL, ak mate PRO ucet pouzite https://api.deepl.com/v2/translate");
+
 		Constants.setInt("formsDatatableServerSizeLimit", 5000, Constants.mods(Constants.MOD_PERFORMANCE, "forms"),
 				"Minimalny pocet zaznamov formularu pre ktore sa uz pouzije serverove strankovanie.");
 
@@ -52,7 +52,7 @@ public class ConstantsV9 {
 				Constants.MOD_SECURITY,
 				"Zoznam stlpcov v databaze, ktore mozu obsahovat HTML kod (nebudu pri citani escapovane specialne znaky). Pre zakaznicke projekty nastavte premennu xssHtmlAllowedFields");
 
-		Constants.setString("xsrfParamNameExceptionSystem", Constants.getString("xsrfParamNameExceptionSystem")+",tempId,redirectId,dir,bid");
+		Constants.setString("xsrfParamNameExceptionSystem", Constants.getString("xsrfParamNameExceptionSystem")+",tempId,redirectId,dir,bid,actualDir,pId,origUrl,week,w,h,ip,rnd");
 
 		Constants.setString("jpaToLowerFields", "description,questionText,notifyIntrotext,question,data,dataAsc,htmlHead,htmlData,attachments,message,files,html,note,descriptionLong*,answer,afterBodyData,value,mediaInfo*,userNote,messageText,htmlCode,purpose,content,propValue,defaultValue,dataResult,descriptionText,scriptBody,relatedPages", Constants.MOD_CONFIG, "Zoznam nazvov CLOB stlpcov pre ktore sa v pripade Oracle pouzije LOWER funkcia pri vyhladavani");
 
@@ -71,16 +71,25 @@ public class ConstantsV9 {
 		Constants.setBoolean("clusterHostnameTrimFromEnd", false, "cluster", "Rezim ziskania hostname pre cluster. Ak je hodnota true, tak sa hostname ziskava ako 16 znakov od konca, inak 16 znakov od zaciatku.");
 
 		Constants.setBoolean("attrAlwaysCleanOnSave", false, Constants.MOD_EDITOR, "Po nastaveni na true sa vzdy pri ulozeni stranky premaze zoznam atributov");
+
+		Constants.setString("DocTools.removeCharsDir", "[^a-zA-Z/_0-9\\-\\.=]", Constants.MOD_SECURITY, "Regex pre znaky, ktore sa maju odstranit z nazvu suboru/adresara. Pouziva sa v metode DocTools.removeCharsDir(). Hodnota premennej sa reloadne za behu.");
+
+		Constants.setString("FileBrowserTools.forbiddenSymbols", "@,#,+,(,),{,},=", Constants.MOD_SECURITY, "Zoznam zakazanych znakov v nazve suboru/adresara. Okrem defaultne zakazanych znakov sa pomocou konfiguracnej premennej definuju dalsie zakazane znaky. Oddelujeme ich ciarkou. Pouziva sa v metode FileBrowserTools.hasForbiddenSymbol(). Hodnota premennej sa reloadne iba pri starte.");
+
+		Constants.setBoolean("structureMirroringDisabledOnCreate", true, "structuremirroring", "Pri hodnote true budu novo vytvorene zrkadlene stranky mat vypnute zobrazenie aby sa nezacali ihned zobrazovat");
+
+		Constants.setInt("restaurantMenu.alergensCount", 14, "restaurant_menu", "Maximalny pocet alergenov, tie sa ziskavaju z prekladovych klucov s prefixom components.restaurant_menu.alergen");
 	}
 
 	/**
 	 * Returns coma separated value as Array
-	 * @param name - configuration name
+	 * @param name
 	 * @return
+	 * @deprecated use Constants.getArray(name)
 	 */
+	@Deprecated
 	public static String[] getArray(String name) {
-		String[] arr = Tools.getTokens(Constants.getString(name), ",");
-		return arr;
+		return Constants.getArray(name);
 	}
 
 	/**
@@ -94,7 +103,7 @@ public class ConstantsV9 {
 		Cache c = Cache.getInstance();
 		String[] arr = (String[])c.getObject(CACHE_KEY);
 		if (arr == null) {
-			arr = getArray(name);
+			arr = Constants.getArray(name);
 			c.setObject(CACHE_KEY, arr, cacheMinutes);
 		}
 		return arr;

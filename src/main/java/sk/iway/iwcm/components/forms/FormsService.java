@@ -62,7 +62,7 @@ public class FormsService<R extends FormsRepositoryInterface<E>, E extends Forms
         List<E> formsEntities = formsRepository.findAllByCreateDateIsNullAndDomainId(domainId);
         for (E entity : formsEntities) {
             entity.setCount(formsRepository.countAllByFormNameAndDomainId(entity.getFormName(), domainId) - 1);
-            E lastOne = formsRepository.findTopByFormNameAndDomainIdOrderByCreateDateDesc(entity.getFormName(), domainId);
+            E lastOne = formsRepository.findTopByFormNameAndDomainIdAndCreateDateNotNullOrderByCreateDateDesc(entity.getFormName(), domainId);
             if (lastOne != null) {
                 entity.setCreateDate(lastOne.getCreateDate());
                 entity.setDocId(lastOne.getDocId());
@@ -134,7 +134,7 @@ public class FormsService<R extends FormsRepositoryInterface<E>, E extends Forms
 
 		DocDB docDB = DocDB.getInstance();
 
-        E lastOne = formsRepository.findTopByFormNameAndDomainIdOrderByCreateDateDesc(formName, domainId);
+        E lastOne = formsRepository.findTopByFormNameAndDomainIdAndCreateDateNotNullOrderByCreateDateDesc(formName, domainId);
 
         return isFormAccessible(lastOne, userEditableGroups, userEditablePages, docDB);
     }

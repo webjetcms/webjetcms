@@ -57,9 +57,8 @@ else
 function loadComponentIframe()
 {
 	var rootDir = document.textForm.elements["rootDir"].value;
-	var url = "/admin/fbrowser.browse.do";
-	<%-- dir parameter pridavam len ak som zmenil cestu v dialogu, inak pouzijem session hodnotu ktora sa nastavuje v site_browser.jsp --%>
-	if (pathChanged) url += "?dir="+encodeURIComponent(rootDir);
+	var url = "/admin/elfinder/dialog.jsp";
+	url += "?inIframe=true&hideLinkInput=true&selectMode=directory&link="+encodeURIComponent(rootDir);
 	$("#componentIframeWindowTab").attr("src", url);
 }
 </script>
@@ -74,14 +73,13 @@ function loadComponentIframe()
 </iwcm:menu>
 
 <div class="tab-pane toggle_content tab-pane-fullheight">
-	<div class="tab-page" id="tabMenu1" style="width:970px; height: 500px; display: block;">
-
+	<div class="tab-page" id="tabMenu1" style="display: block;">
 		<table border="0" cellspacing="0" cellpadding="1">
 			<form method=get name=textForm>
 			<tr>
 				<td><iwcm:text key="components.sitemap.root_group"/>:&nbsp;&nbsp;</td>
 				<td nowrap="nowrap"><input type="text" id="rootDir" name="rootDir" size="40" maxlength="128" value="<%=ResponseUtils.filter(pageParams.getValue("rootDir", ""))%>">&nbsp;
-					<a href="javascript:void(0);" onclick="popupExt('/admin/dialog_select_dir.jsp?rootDir=<%=ResponseUtils.filter(pageParams.getValue("rootDir", ""))%>',200,300,window.screenX+window.outerWidth,window.screenY)" >
+					<a href="javascript:void(0);" onclick="popupExt('/admin/dialog_select_dir.jsp?rootDir=',400,700,window.screenX+window.outerWidth,window.screenY)" >
 						<img border="0" src="/admin/images/icon_edit.gif" alt="<iwcm:text key="components.gallery.dialog.set.path"/>" title="<iwcm:text key="components.gallery.dialog.set.path"/>" />
 					</a>
 				</td>
@@ -99,7 +97,7 @@ function loadComponentIframe()
 		</table>
 	</div>
 	<div class="tab-page tab-page-iframe" id="tabMenu2">
-		<iframe id="componentIframeWindowTab" frameborder="0" name="componentIframeWindowTab" width="100%" src="/admin/iframe_blank.jsp"></iframe>
+		<iframe id="componentIframeWindowTab" frameborder="0" name="componentIframeWindowTab" width="100%" style="height: 500px;" src="/admin/iframe_blank.jsp"></iframe>
 	</div>
 </div>
 

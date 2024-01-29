@@ -31,7 +31,7 @@ Scenario('overenie filtrovania perex skupin podla adresara', ({I, DTE}) => {
     I.click("Kontakt", "#datatableInit_wrapper");
     DTE.waitForEditor();
     I.clickCss("#pills-dt-datatableInit-perex-tab");
-    I.wait(1);
+    I.waitForVisible(editorContainer);
     I.scrollTo(editorContainer, 5, 5);
     I.wait(1);
     I.see("podnikanie", editorContainer);
@@ -44,7 +44,7 @@ Scenario('overenie filtrovania perex skupin podla adresara', ({I, DTE}) => {
     I.click("Newsletter", "#datatableInit_wrapper");
     DTE.waitForEditor();
     I.clickCss("#pills-dt-datatableInit-perex-tab");
-    I.wait(1);
+    I.waitForVisible(editorContainer);
     I.scrollTo(editorContainer, 5, 5);
     I.wait(1);
     I.see("podnikanie", editorContainer);
@@ -63,6 +63,7 @@ Scenario('overenie nastavenia perex skupiny web stranky', ({I, DTE}) => {
     //nastav perex skupinu
     openEditorOnPerexTab(I, DTE);
     I.checkOption("#DTE_Field_perexGroups_3");
+    I.wait(1);
     DTE.save();
 
     //over perex skupinu
@@ -72,7 +73,45 @@ Scenario('overenie nastavenia perex skupiny web stranky', ({I, DTE}) => {
 
     //odskrtni a uloz
     I.uncheckOption("#DTE_Field_perexGroups_3");
+    I.wait(1);
     DTE.save();
     openEditorOnPerexTab(I, DTE);
     I.dontSeeElement("#DTE_Field_perexGroups_3:checked");
 });
+
+Scenario('overenie filtrovania perexov podla prava', ({I, DT}) => { 
+    I.relogin("tester_perex");
+    I.amOnPage("/admin/v9/webpages/perex/");
+
+    //With perm for folder /Test stavov
+    checkPerex(I, DT, "PerexWithoutGroup", true);
+    checkPerex(I, DT, "PerexWithGroup_A", false);
+    checkPerex(I, DT, "PerexWithGroup_B", true);
+
+    //No perm
+    I.relogin("tester");
+    I.amOnPage("/admin/v9/webpages/perex/");
+    checkPerex(I, DT, "PerexWithoutGroup", true);
+    checkPerex(I, DT, "PerexWithGroup_A", true);
+    checkPerex(I, DT, "PerexWithGroup_B", true);
+
+    //With perm for folder /Newsletter
+    I.relogin("tester2");
+    I.amOnPage("/admin/v9/webpages/perex/");
+    checkPerex(I, DT, "PerexWithoutGroup", true);
+    checkPerex(I, DT, "PerexWithGroup_A", true);
+    checkPerex(I, DT, "PerexWithGroup_B", false);
+
+});
+
+function checkPerex(I, DT,  name, shouldSee = true) {
+    DT.filter("perexGroupName", name);
+
+    if(shouldSee) {
+        I.see(name);
+        I.dontSee("Nenašli sa žiadne vyhovujúce záznamy");
+    } else {
+        I.dontSee(name);
+        I.see("Nenašli sa žiadne vyhovujúce záznamy");
+    }
+}

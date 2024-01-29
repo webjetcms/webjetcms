@@ -32,21 +32,20 @@ Scenario('testy zaloziek', async ({I, DT, DTE}) => {
     let entityName = "autotest-zalozky-" + randomNumber;
     I.amOnPage("/apps/calendar/admin/");
 
-    I.click("div.dt-buttons button.buttons-create");
+    I.clickCss("div.dt-buttons button.buttons-create");
     DTE.waitForEditor("calendarEventsDataTable");
 
-    I.click("#DTE_Field_title");
+    I.clickCss("#DTE_Field_title");
     I.fillField("#DTE_Field_title", entityName);
 
     //Select type
-    I.click("#pills-dt-calendarEventsDataTable-advanced-tab");
-    I.click("#panel-body-dt-calendarEventsDataTable-advanced > div.DTE_Field.form-group.row.DTE_Field_Type_select.DTE_Field_Name_typeId > div.col-sm-7 > div.DTE_Field_InputControl > div > button");
-    I.click("Rodina");
+    I.clickCss("#pills-dt-calendarEventsDataTable-advanced-tab");
+    DTE.selectOption("typeId", "Rodina");
 
     //
-    I.click("#pills-dt-calendarEventsDataTable-notification-tab");
-    I.click("Obchodní partneri");
-    I.click("VIP Klienti");
+    I.clickCss("#pills-dt-calendarEventsDataTable-notification-tab");
+    DTE.clickSwitchLabel("Obchodní partneri");
+    DTE.clickSwitchLabel("VIP Klienti");
 
     DTE.save();
 
@@ -58,36 +57,36 @@ Scenario('testy zaloziek', async ({I, DT, DTE}) => {
     I.click(entityName);
     DTE.waitForEditor("calendarEventsDataTable");
 
-    I.click("#pills-dt-calendarEventsDataTable-advanced-tab");
+    I.clickCss("#pills-dt-calendarEventsDataTable-advanced-tab");
     I.see("Rodina");
 
-    I.click("#pills-dt-calendarEventsDataTable-notification-tab");
-    I.seeElement("#DTE_Field_editorFields-notifyEmailsUserGroups_3:checked");
-    I.seeElement("#DTE_Field_editorFields-notifyEmailsUserGroups_5:checked");
+    I.clickCss("#pills-dt-calendarEventsDataTable-notification-tab");
+    I.seeElement("#DTE_Field_editorFields-notifyEmailsUserGroups_4:checked");
+    I.seeElement("#DTE_Field_editorFields-notifyEmailsUserGroups_7:checked");
 
     //un-check
-    I.click("Obchodní partneri");
-    I.click("VIP Klienti");
+    DTE.clickSwitchLabel("Obchodní partneri");
+    DTE.clickSwitchLabel("VIP Klienti");
     //check
-    I.click("Bankári");
-    I.click("Redaktori");
+    DTE.clickSwitchLabel("Bankári");
+    DTE.clickSwitchLabel("Redaktori");
 
     DTE.save();
 
     I.click(entityName);
     DTE.waitForEditor("calendarEventsDataTable");
 
-    I.click("#pills-dt-calendarEventsDataTable-notification-tab");
-    I.dontSeeElement("#DTE_Field_editorFields-notifyEmailsUserGroups_1:checked");
-    I.dontSeeElement("#DTE_Field_editorFields-notifyEmailsUserGroups_3:checked");
+    I.clickCss("#pills-dt-calendarEventsDataTable-notification-tab");
+    I.dontSeeElement("#DTE_Field_editorFields-notifyEmailsUserGroups_4:checked");
+    I.dontSeeElement("#DTE_Field_editorFields-notifyEmailsUserGroups_7:checked");
     I.seeElement("#DTE_Field_editorFields-notifyEmailsUserGroups_0:checked");
-    I.seeElement("#DTE_Field_editorFields-notifyEmailsUserGroups_4:checked");
+    I.seeElement("#DTE_Field_editorFields-notifyEmailsUserGroups_5:checked");
 
     DTE.save();
 
     /* DELETE TEST */
-    I.click("td.dt-select-td.sorting_1");
-    I.click("button.buttons-remove");
+    I.clickCss("td.dt-select-td.sorting_1");
+    I.clickCss("button.buttons-remove");
     I.click("Zmazať", "div.DTE_Action_Remove");
     I.dtEditorWaitForLoader();
 

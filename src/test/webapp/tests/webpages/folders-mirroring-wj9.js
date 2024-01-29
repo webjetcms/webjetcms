@@ -1,9 +1,10 @@
 Feature('webpages.folders-mirroring-wj9');
 
-var auto_folder_sk, auto_folder_en, auto_subfolder1_sk, auto_subfolder2_sk, test_folder, elfinder_folder, randomNumber;
+var auto_folder_sk, auto_folder_en, auto_folder_de, auto_subfolder1_sk, auto_subfolder2_sk, test_folder, elfinder_folder, randomNumber;
 var add_button = (locate('.col-auto').find('.btn.btn-sm.buttons-create.btn-success.buttons-divider'));
 var edit_button = (locate('.col-auto').find('.btn.btn-sm.buttons-selected.buttons-edit.btn-warning'));
 var delete_button = (locate('.col-auto').find('.btn.btn-sm.buttons-selected.buttons-remove.btn-danger.buttons-divider'));
+var skID, enID, deID;
 
 Before(({ I, login }) => {
      login('admin');
@@ -13,6 +14,7 @@ Before(({ I, login }) => {
           I.say("randomNumber=" + randomNumber);
           auto_folder_sk = 'sk-mir-autotest-' + randomNumber;
           auto_folder_en = 'en-mir-autotest-' + randomNumber;
+          auto_folder_de = 'de-mir-autotest-' + randomNumber;
           auto_subfolder1_sk = 'sk-mir-subfolder1-' + randomNumber;
           auto_subfolder2_sk = 'sk-mir-subfolder2-' + randomNumber;
           test_folder = 'TEST-autotest-' + randomNumber;
@@ -20,8 +22,8 @@ Before(({ I, login }) => {
      }
      I.resizeWindow(1600, 1200);
      I.amOnPage('/admin/v9/webpages/web-pages-list/?groupid=9811');
-     I.wait(1);
-     I.amOnPage('/admin/v9/webpages/web-pages-list/?groupid=0');
+     //I.wait(1);
+     //I.amOnPage('/admin/v9/webpages/web-pages-list/?groupid=0');
      // prepnutie na domenu mirroring.tau27.iway.sk
      /*I.click("div.js-domain-toggler div.bootstrap-select button");
      I.wait(1);
@@ -34,7 +36,7 @@ function wj9CreateMirroringSubfolder(I, DTE, randomNumber) {
      var auto_folder_sk = 'sk-mir-autotest-' + randomNumber;
      var auto_subfolder1_sk = 'sk-mir-subfolder1-' + randomNumber;
      var auto_subfolder2_sk = 'sk-mir-subfolder2-' + randomNumber;
-     var add_button = (locate('.col-md-4.tree-col').find('.btn.btn-sm.buttons-create.btn-success.buttons-divider'));
+     var add_button = (locate('.tree-col').find('.btn.btn-sm.buttons-create.btn-success.buttons-divider'));
      // vytvorenie 1. podadresar v sk strukture
      I.say('Vytvaram prvy podpriecinok pre sk adresar');
      I.jstreeClick(auto_folder_sk);
@@ -160,42 +162,32 @@ Scenario('reset nastavenej domeny', ({ I }) => {
      I.logout();
  });
 
-Scenario('Zrkadlenie priecinkov', async ({ I, DTE }) => {
+Scenario('Zrkadlenie priecinkov', async ({ I, DTE, Document }) => {
      // vytvorenie mirroring hlavneho priecinka
-     I.wj9CreateMirroringFolder(randomNumber);
+     I.wj9CreateMirroringFolder(randomNumber, true);
 
      // nastavenie structureMirroringConfig
      // zober ID priecinkov sk a en
      I.say('Kopirujem ID priecinkov');
      I.jstreeClick(auto_folder_sk);
-     I.wait(2);
-     const skID = await I.grabValueFrom('#tree-folder-id');
+     I.wait(1);
+     skID = await I.grabValueFrom('#tree-folder-id');
      I.say('ID sk priecinka je: ' + skID);
-     I.wait(1);
+
      I.jstreeClick(auto_folder_en);
-     I.wait(2);
-     const enID = await I.grabValueFrom('#tree-folder-id');
-     I.say('ID en priecinka je: ' + enID);
      I.wait(1);
+     enID = await I.grabValueFrom('#tree-folder-id');
+     I.say('ID en priecinka je: ' + enID);
+
+     I.jstreeClick(auto_folder_de);
+     I.wait(1);
+     deID = await I.grabValueFrom('#tree-folder-id');
+     I.say('ID de priecinka je: ' + deID);
+
      // nastavenie konfiguracnej premennej
      I.say('Nastavujem createMirroringStructure');
-     I.amOnPage('/admin/v9/settings/configuration/');
-     I.fillField('.form-control.form-control-sm.filter-input.dt-filter-name', 'structureMirroringConfig');
-     I.wait(1);
-     I.click('.filtrujem.btn.btn-sm.btn-outline-secondary.dt-filtrujem-name')
-     I.waitForElement(locate('#configurationDatatable').withText('structureMirroringConfig'));
-     I.click(locate('#configurationDatatable').withDescendant('.datatable-column-width').withText('structureMirroringConfig').find('.far.fa-pencil'));
-     DTE.waitForEditor("configurationDatatable");
-     I.waitForValue('#DTE_Field_description', 'Nastavenie zrkadlenia jazykovych verzii stranok.', 10);
-     I.wait(1);
-     I.clearField('#DTE_Field_value');
-     I.fillField('#DTE_Field_value', skID + ',' + enID + ':mirroring.tau27.iway.sk');
-     I.wait(1);
-     DTE.save();
-     I.wait(1);
-     I.waitForElement(locate('#configurationDatatable').withDescendant('tr.odd').withText(skID + ',' + enID + ':mirroring.tau27.iway.sk'), 10);
-     I.amOnPage('/admin/v9/webpages/web-pages-list/?groupid=0');
-     I.wait(1);
+     Document.setConfigValue("structureMirroringConfig", skID + ',' + enID + ',' + deID + ':mirroring.tau27.iway.sk');
+
 });
 Scenario('vytvorenie 2 podpriecinkov do sk adresara', ({ I, DTE }) => {
      // vytvorenie 2 podpriecinkov do sk adresara
@@ -274,6 +266,43 @@ Scenario('presun hlavneho priecinka sk do ineho priecinka TEST', ({ I, DTE }) =>
      // presun hlavneho priecinka sk do ineho priecinka TEST
      //wj9MoveMainFolder(I, DTE, randomNumber);
 });
+
+Scenario('vypnutie synchronizacie na DE a overenie ze sa nezmeni', ({ I, DT, DTE, Document }) => {
+     I.say('Nastavujem createMirroringStructure');
+     Document.setConfigValue("structureMirroringConfig", skID + ',' + enID + ':mirroring.tau27.iway.sk');
+
+     I.amOnPage('/admin/v9/webpages/web-pages-list/?groupid=9811');
+
+     //
+     I.say("Change sort priority value");
+     I.jstreeClick(auto_folder_sk);
+     I.click(auto_folder_sk, "#datatableInit_wrapper");
+     DTE.waitForEditor();
+     I.click("#pills-dt-datatableInit-menu-tab");
+     DTE.fillField("sortPriority", "11");
+     DTE.save();
+
+     //
+     I.say("Check sort priority value");
+     I.jstreeClick(auto_folder_en);
+     I.click(auto_folder_en, "#datatableInit_wrapper");
+     DTE.waitForEditor();
+     I.click("#pills-dt-datatableInit-menu-tab");
+     I.seeInField("#DTE_Field_sortPriority", "11");
+     DTE.cancel();
+
+     //
+     I.say("Check sort priority not changed in DE version");
+     I.jstreeClick(auto_folder_de);
+     I.click(auto_folder_de, "#datatableInit_wrapper");
+     DTE.waitForEditor();
+     I.click("#pills-dt-datatableInit-menu-tab");
+     I.seeInField("#DTE_Field_sortPriority", "10");
+     DTE.cancel();
+
+     Document.setConfigValue("structureMirroringConfig", skID + ',' + enID + ',' + deID + ':mirroring.tau27.iway.sk');
+});
+
 Scenario('vymazanie hlavneho sk priecinka z test priecinka', ({ I, DT, DTE }) => {
      // vymazanie hlavneho sk priecinka z test priecinka
      wj9DeleteMainFolder(I, DT, DTE, randomNumber);

@@ -26,7 +26,7 @@ import sk.iway.iwcm.system.datatable.DatatableRestControllerV2;
 
 @RestController
 @RequestMapping("/admin/rest/stat/logon-user")
-@PreAuthorize("@WebjetSecurityService.hasPermission('cmp_stat')")
+@PreAuthorize("@WebjetSecurityService.hasPermission('cmp_stat&menuUsers')")
 @Datatable
 public class LogonUserRestController extends DatatableRestControllerV2<LogonUserDTO, Long> {
     private static final int MAX_ROWS = 100;

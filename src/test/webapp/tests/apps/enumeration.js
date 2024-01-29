@@ -65,6 +65,30 @@ Scenario('Okresne mesta zakladne testy', async ({I, DT, DataTables}) => {
     });
 });
 
+Scenario('test datatables paging', async ({I, DT}) => {
+    //types
+    I.amOnPage("/apps/enumeration/admin/enumeration-type/");
+    DT.waitForLoader();
+    I.see("2", ".dt-footer-row ul.pagination li a");
+    I.see("Okresne Mestá", "#enumerationTypeDataTable tbody tr td");
+
+    I.click({css: "ul.pagination li:nth-child(3) a"});
+    DT.waitForLoader();
+    I.dontSee("Okresne Mestá", "#enumerationTypeDataTable tbody tr td");
+
+    //data
+    I.amOnPage("/apps/enumeration/admin/#2");
+    I.see("5", ".dt-footer-row ul.pagination li a");
+    I.see("Bánovce nad Bebravou", "#enumerationDataDataTable tbody tr td");
+    I.dontSee("Poprad", "#enumerationDataDataTable tbody tr td");
+
+    I.click({css: "ul.pagination li:nth-child(6) a"});
+    DT.waitForLoader();
+    I.dontSee("Bánovce nad Bebravou", "#enumerationDataDataTable tbody tr td");
+    I.see("Senec", "#enumerationDataDataTable tbody tr td");
+    I.see("Sobrance", "#enumerationDataDataTable tbody tr td");
+});
+
 Scenario('Enum type and data tests', async ({I, DTE, DT}) => {
     I.amOnPage("/apps/enumeration/admin/enumeration-type/");
     enumTypeNameA = "EnumerationAutoTestA_" + randomNumber;

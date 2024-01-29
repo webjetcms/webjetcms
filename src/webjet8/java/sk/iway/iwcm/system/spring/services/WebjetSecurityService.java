@@ -70,17 +70,45 @@ public class WebjetSecurityService {
         return getUser() != null;
     }
 
+    /**
+     * Check user permissions. Perms can be separated by '|' or '&'. 
+     * If separated by '|' user must have at least one of this permissions.
+     * If separated by '&' user must have all of this permissions.
+     * @param permission
+     * @return
+     */
     public boolean hasPermission(String permission) {
         if (!isAdmin()) {
             return false;
         }
 
-        StringTokenizer st = new StringTokenizer(permission, "|");
-        while (st.hasMoreTokens()) {
-            if (hasAuthority("ROLE_Permission_" + normalizeUserGroupName(st.nextToken().trim()))) return true;
+        //Cant contain both separators at sme time
+        if(permission.contains("|") && permission.contains("&")) {
+            return false;
         }
 
-        return false;
+        //OR user must have at leats one of this permissions
+        if(permission.contains("|")) {
+            StringTokenizer st = new StringTokenizer(permission, "|");
+            while (st.hasMoreTokens()) {
+                if (hasAuthority("ROLE_Permission_" + normalizeUserGroupName(st.nextToken().trim()))) return true;
+            }
+
+            return false;
+        }
+
+        //AND user must have all of this permissions
+        if(permission.contains("&")) {
+            StringTokenizer st = new StringTokenizer(permission, "&");
+            while (st.hasMoreTokens()) {
+                if (hasAuthority("ROLE_Permission_" + normalizeUserGroupName(st.nextToken().trim())) == false) return false;
+            }
+
+            return true;
+        }
+
+        //Just need this one permission
+        return hasAuthority("ROLE_Permission_" + normalizeUserGroupName(permission.trim()));
     }
 
     public boolean isInUserGroup(String group) {

@@ -67,7 +67,7 @@ L.tileLayer('https://{s}.tile.osm.org/{z}/{x}/{y}.png', {
 }).addTo(map);
 
 if (<%=latitude%> == null || <%=longitude%> == null) {
-    $.get(location.protocol + '//nominatim.openstreetmap.org/search?format=json&q=<%= place %>', function(data){
+    $.get('https://nominatim.openstreetmap.org/search?format=json&q=<%= place %>', function(data){
         map.setView([data[0].lat, data[0].lon], <%= zoom %>);
         L.marker([data[0].lat, data[0].lon]).addTo(map);
     });

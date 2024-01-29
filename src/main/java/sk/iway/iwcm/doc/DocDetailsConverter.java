@@ -26,7 +26,7 @@ public class DocDetailsConverter implements AttributeConverter<DocDetailsDto, In
 
     @Override
     public DocDetailsDto convertToEntityAttribute(Integer docId) {
-        if (docId != null) {
+        if (docId != null && docId.intValue()>0) {
             DocDB docDB = DocDB.getInstance();
             DocDetails doc = docDB.getBasicDocDetails(docId, false);
             if (doc != null) return new DocDetailsDto(doc);

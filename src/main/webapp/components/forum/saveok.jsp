@@ -75,27 +75,33 @@ if (isAdmin)
 		   <%
 		   String type = request.getParameter("type");
 		   int docId = Tools.getIntValue(request.getParameter("docid"),-1);
-		   if(Tools.isNotEmpty(type))
-		   {
-		   	int parentId = Tools.getIntValue(request.getParameter("parent2"), Tools.getIntValue(request.getParameter("parentId"), -1));
-		   	int pageNum = Tools.getIntValue(request.getParameter("pageNum"), 1);
-		   	String pageParams = org.apache.struts.util.ResponseUtils.filter(Tools.getRequestParameterUnsafe(request, "pageParams"));
 
-		   	String component = "forum-open.jsp?docid="+docId+"&pageParams="+URLEncoder.encode(pageParams,"UTF-8");
-		   	if("normal".equals(type))
-		   		component = "forum.jsp?docid="+docId+"&page="+pageNum;
-		   	else if("mb".equals(type))
-		   		component = "forum_mb.jsp?docid="+docId+"&rootForumId="+request.getParameter("rootForumId");
-		   	else if("mb_open".equals(type))
-		   		component = "forum_mb_open.jsp?docid="+docId+"&rootForumId="+request.getParameter("rootForumId")+"&pId="+parentId+"&pageNum="+pageNum+"&pageParams="+pageParams;
-		   	Base64 b64 = new Base64();
-		   %>
-		    function reloadForumContent()
-		    {
-		  	 	$('#forumContentDiv').load('/components/forum/<%=component %>');
-		    }
-		    //jeeff: 4000 je tu preto, aby sa stihol zavret dialog, lebo po refreshe to robi problem
-		    window.setTimeout(reloadForumContent, 4000);
+ 			if("upload".equals(type)) {
+				%>
+					window.opener.location.reload();
+					window.close();
+				<%
+				
+			} else if(Tools.isNotEmpty(type)) {
+				int parentId = Tools.getIntValue(request.getParameter("parent2"), Tools.getIntValue(request.getParameter("parentId"), -1));
+				int pageNum = Tools.getIntValue(request.getParameter("pageNum"), 1);
+				String pageParams = org.apache.struts.util.ResponseUtils.filter(Tools.getRequestParameterUnsafe(request, "pageParams"));
+
+				String component = "forum-open.jsp?docid=" + docId + "&pageParams=" + URLEncoder.encode(pageParams,"UTF-8");
+				if("normal".equals(type))
+					component = "forum.jsp?docid="+docId+"&page="+pageNum;
+				else if("mb".equals(type))
+					component = "forum_mb.jsp?docid="+docId+"&rootForumId="+request.getParameter("rootForumId");
+				else if("mb_open".equals(type))
+					component = "forum_mb_open.jsp?docid="+docId+"&rootForumId="+request.getParameter("rootForumId")+"&pId="+parentId+"&pageNum="+pageNum+"&pageParams="+pageParams;
+
+				Base64 b64 = new Base64();
+			%>
+				function reloadForumContent() {
+					$('#forumContentDiv').load('/components/forum/<%=component %>');
+				}
+				// //jeeff: 4000 je tu preto, aby sa stihol zavret dialog, lebo po refreshe to robi problem
+				window.setTimeout(reloadForumContent, 4000);
 		   <%
 		   }
 		   %>

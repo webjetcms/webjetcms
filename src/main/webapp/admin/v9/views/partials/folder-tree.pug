@@ -22,6 +22,9 @@ include ../pug/mixins
                 <button class="btn btn-sm buttons-selected buttons-remove noperms-deleteDir btn-danger buttons-divider" data-toggle="tooltip" data-th-title="\#{button.delete}">
                     <span><i class="far fa-trash-alt"></i></span>
                 </button>
+                <button class="btn btn-sm buttons-selected btn-outline-secondary button-recover-group buttons-divider hidden" data-toggle="tooltip" data-th-title="\#{editor.recover.folder_button}">
+                    <span><i class="fa-solid fa-trash-can-undo text-danger"></i></span>
+                </button>
                 <button class="btn btn-sm btn-outline-secondary buttons-refresh" data-toggle="tooltip" data-th-title="\#{datatables.button.reload.js}">
                     <span><i class="fa-duotone fa-rotate"></i></span>
                 </button>

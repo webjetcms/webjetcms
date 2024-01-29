@@ -109,7 +109,8 @@
                         "memUsed": data["memUsed"],
                         "memTotal": data["memTotal"],
                         "memFree": data["memFree"],
-                        "cpuUsage": data["cpuUsage"]
+                        "cpuUsage": data["cpuUsage"],
+                        "cpuUsageProcess": data["cpuUsageProcess"]
                     }
 
                     dis.createTableJson();

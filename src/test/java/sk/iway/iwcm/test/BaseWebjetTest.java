@@ -6,6 +6,7 @@ import org.springframework.mock.web.MockServletContext;
 
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.database.SimpleQuery;
+import sk.iway.iwcm.system.ConstantsV9;
 
 /**
  *  BaseWebjetTest.java
@@ -20,7 +21,7 @@ import sk.iway.iwcm.database.SimpleQuery;
  */
 public class BaseWebjetTest
 {
-	
+
 	static
 	{
 		Constants.setServletContext(new MockServletContext("Webjet"){
@@ -37,8 +38,9 @@ public class BaseWebjetTest
 				return absolutePath;
 			}
 		});
+		ConstantsV9.clearValuesWebJet9();
 	}
-	
-	
+
+
 	protected SimpleQuery query = new SimpleQuery();
 }

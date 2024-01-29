@@ -33,11 +33,11 @@ Scenario('vybrany email docid', async ({ I, DataTables }) => {
      });
 });
 
-Scenario('test user tabu a linky na usera', ({ I, DTE }) => {
+Scenario('test user tabu a linky na usera', ({ I, DT, DTE }) => {
 
      I.amOnPage("/admin/v9/users/user-groups/");
-     I.fillField("input.dt-filter-userGroupName", "VIP Klienti");
-     I.pressKey('Enter', "input.dt-filter-userGroupName");
+     DT.waitForLoader();
+     DT.filter("userGroupName", "VIP Klienti");
 
      I.click("VIP Klienti");
      DTE.waitForEditor('userGroupsDataTable');

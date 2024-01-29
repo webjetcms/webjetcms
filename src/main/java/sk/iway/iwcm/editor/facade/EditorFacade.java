@@ -1,5 +1,6 @@
 package sk.iway.iwcm.editor.facade;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
@@ -20,6 +21,7 @@ import sk.iway.iwcm.doc.GroupDetails;
 import sk.iway.iwcm.doc.GroupsDB;
 import sk.iway.iwcm.doc.TemplatesDB;
 import sk.iway.iwcm.editor.service.EditorService;
+import sk.iway.iwcm.editor.service.GroupsService;
 import sk.iway.iwcm.editor.service.MediaService;
 import sk.iway.iwcm.editor.service.MultigroupService;
 import sk.iway.iwcm.system.context.ContextFilter;
@@ -38,6 +40,7 @@ public class EditorFacade {
     private EditorService editorService;
     private MultigroupService multigroupService;
     private MediaService mediaService;
+	private GroupsService groupsService;
     private HttpServletRequest request;
 
     //nastavene na true ak je potrebne vyvolat obnovenie stromovej struktury/datatabulky po ulozeni
@@ -47,10 +50,11 @@ public class EditorFacade {
 	private boolean ignoreMultigroupMapping = false;
 
     @Autowired
-    public EditorFacade(EditorService editorService, MultigroupService multigroupService, MediaService mediaService, HttpServletRequest request) {
+    public EditorFacade(EditorService editorService, MultigroupService multigroupService, MediaService mediaService, GroupsService groupsService, HttpServletRequest request) {
         this.editorService = editorService;
         this.multigroupService = multigroupService;
         this.mediaService = mediaService;
+		this.groupsService = groupsService;
         this.request = request;
     }
 
@@ -272,6 +276,10 @@ public class EditorFacade {
 		return editorService.deleteWebpage(doc, true);
 	}
 
+	public void recoverWebpageFromTrash(DocDetails doc) {
+		if (doc != null && doc.getDocId()>0) editorService.recoverWebpageFromTrash(doc.getDocId());
+	}
+
     public boolean isForceReload() {
         return forceReload || editorService.isForceReload();
     }
@@ -313,7 +321,18 @@ public class EditorFacade {
      * @return
      */
     public List<NotifyBean> getNotify() {
-        return editorService.getNotify();
+		List<NotifyBean> notify = new ArrayList<>();
+		if (editorService.getNotify()!=null) notify.addAll(editorService.getNotify());
+		if (groupsService.getNotify()!=null) notify.addAll(groupsService.getNotify());
+        return notify;
+    }
+
+	/**
+	 * Clears notify list
+	 */
+	public void clearNotify() {
+		if (editorService.getNotify()!=null) editorService.getNotify().clear();
+		if (groupsService.getNotify()!=null) groupsService.getNotify().clear();
     }
 
 	/**
@@ -365,5 +384,17 @@ public class EditorFacade {
 	 */
 	public void setIgnoreMultigroupMapping(boolean ignoreMultigroupMapping) {
 		this.ignoreMultigroupMapping = ignoreMultigroupMapping;
+	}
+
+	/**
+	 * Recover group from trash:
+	 * - check permissions
+	 * - set parentGroupId by history (if exists) or set to 0
+	 * @param entity
+	 * @param currentUser
+	 * @return
+	 */
+	public boolean recoverGroupFromTrash(GroupDetails entity, Identity currentUser) {
+		return groupsService.recoverGroupFromTrash(entity, currentUser);
 	}
 }

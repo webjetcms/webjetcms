@@ -1,6 +1,6 @@
 Feature('apps.tooltip');
 
-var add_button = (locate('.col-md-4.tree-col').find('.btn.btn-sm.buttons-create.btn-success.buttons-divider'));
+var add_button = (locate('.tree-col').find('.btn.btn-sm.buttons-create.btn-success.buttons-divider'));
 
 Before(({ I, login }) => {
     login('admin');

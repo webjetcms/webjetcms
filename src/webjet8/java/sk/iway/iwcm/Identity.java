@@ -164,13 +164,36 @@ public class Identity extends UserDetails
 	}
 
 	/**
-	 * Vrati true, ak ma pouzivatel dane pravo
+	 * Vrati true, ak ma pouzivatel dane pravo, prava je mozne zadat aj vo formate:
+	 * menuFbrowser|menuForms - pouzije sa ALEBO
+	 * menuFbrowser&menuForms - pouzije sa A
 	 * @param name
 	 * @return
 	 */
 	public boolean isEnabledItem(String name)
 	{
-		return (!isDisabledItem(name));
+		String separator = "";
+		if (name.contains("|")) separator = "|";
+		else if (name.contains("&")) separator = "&";
+
+		if (Tools.isEmpty(separator)) return !isDisabledItem(name);
+
+		int counter = 0;
+		String[] names = name.split(separator);
+		for (String n : names)
+		{
+			if (!isDisabledItem(n)) counter++;
+		}
+
+		if ("|".equals(separator))
+		{
+			return counter > 0;
+		}
+		else if ("&".equals(separator))
+		{
+			return counter == names.length;
+		}
+		return false;
 	}
 
 	public Map<String, String> getDisabledItemsTable()

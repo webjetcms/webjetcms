@@ -210,7 +210,7 @@ public class UploadFileAction {
 	 */
 	@Deprecated
 	public static String getPageUploadSubDir(int docId, int groupId, String prefix){
-		return UploadFileTools.getPageUploadSubDir(docId,groupId,prefix);
+		return UploadFileTools.getPageUploadSubDir(docId,groupId,null,prefix);
 	}
 
 	/**

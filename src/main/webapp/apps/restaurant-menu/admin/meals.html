@@ -1,0 +1,32 @@
+<script data-th-inline="javascript">
+    let url = "/admin/rest/restaurant-menu/meals";
+    let columns = /*[(${layout.getDataTableColumns("sk.iway.iwcm.components.restaurant_menu.jpa.RestaurantMenuMealsEntity")})]*/ '';
+</script>
+<script>
+    var mealsDataTable;
+
+    window.domReady.add(function () {
+
+        window.helpLink = "/redactor/apps/restaurant-menu/meals.md";
+
+        WJ.breadcrumb({
+            id: "meals",
+            tabs: [
+                {
+                    url: '/apps/restaurant-menu/admin/meals',
+                    title: '[[#{components.restaurant_menu.mealsList}]]',
+                    active: true
+                }
+            ]
+        });
+
+        mealsDataTable = WJ.DataTable({
+            url: url,
+            serverSide: true,
+            columns: columns,
+            id: "mealsDataTable"
+        });
+    });
+</script>
+
+<table id="mealsDataTable" class="datatableInit table"></table>

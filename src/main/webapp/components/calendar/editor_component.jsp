@@ -41,6 +41,7 @@ if (Tools.isNotEmpty(ResponseUtils.filter(pageParams.getValue("perexGroup", ""))
 																										//vstup vo specialnom formate ","+groupPerex+","
 	request.setAttribute("perexGroup", perexGroupString);
 }
+String[] typyNazyArr = Tools.getTokens(pageParams.getValue("typyNazvy", ""), "+", true);
 %>
 <script type='text/javascript'>
 
@@ -186,7 +187,7 @@ function loadRecommendedIframe()
 		}
 
 	</style>
-<div class="tab-pane toggle_content tab-pane-fullheight" style="width:900px !important;">
+<div class="tab-pane toggle_content tab-pane-fullheight">
 	<div class="tab-page" id="tabMenu1" style="display: block;">
 
 	<form name="textForm" style="margin: 0px">
@@ -205,7 +206,7 @@ function loadRecommendedIframe()
 				<p>
 					<div class="col-sm-8 col-sm-offset-2">
 						<logic:iterate id="type" name="types" type="sk.iway.iwcm.calendar.EventTypeDetails">
-						   <input type="checkbox" name="typ" value="<bean:write name="type" property="name"/>" <%if (ResponseUtils.filter(pageParams.getValue("typyNazvy", "")).indexOf(type.getName()) != -1)
+						   <input type="checkbox" name="typ" value="<bean:write name="type" property="name"/>" <%if (Tools.containsOneItem(typyNazyArr, type.getName()))
 									out.print("checked='checked'");%>>&nbsp;&nbsp;<bean:write name="type" property="name"/><br/>
 						</logic:iterate>
 					</div>

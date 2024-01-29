@@ -23,6 +23,7 @@ block content
         ];
 
         var usersDatatable = null;
+        var eventsBinded = false;
         let permGroups = [];
 
         window.domReady.add(function () {
@@ -55,6 +56,13 @@ block content
             usersDatatable.hideButton("import");
             usersDatatable.hideButton("select-cel");
 
+            usersDatatable.EDITOR.on('opened', function (e, type, action) {
+                if (eventsBinded == false) {
+                    eventsBinded = true;
+                    //aktivuj kontrolu kvality hesla
+                    (new WjPasswordStrength({element: "#DTE_Field_password"})).load();
+                }
+            });
         });
 
     <table class="datatableInit table"></table>

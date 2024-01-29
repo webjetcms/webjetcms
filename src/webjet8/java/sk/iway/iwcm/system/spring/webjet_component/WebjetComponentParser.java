@@ -2,18 +2,13 @@ package sk.iway.iwcm.system.spring.webjet_component;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
+import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
 
 import org.apache.commons.lang.StringEscapeUtils;
 import org.apache.struts.util.ResponseUtils;
@@ -22,23 +17,29 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.stereotype.Component;
+import org.springframework.web.context.annotation.RequestScope;
 
 import sk.iway.iwcm.Adminlog;
+import sk.iway.iwcm.Cache;
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.PageLng;
 import sk.iway.iwcm.PageParams;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.components.WebjetComponentInterface;
 import sk.iway.iwcm.i18n.Prop;
+import sk.iway.iwcm.stat.BrowserDetector;
 import sk.iway.iwcm.system.spring.WebjetComponentParserInterface;
 import sk.iway.iwcm.tags.WriteTag;
 import sk.iway.iwcm.users.UserDetails;
+import sk.iway.iwcm.users.UsersDB;
 
 /**
  * trieda pre parsovanie komponent z html kodu (doc_data) a nahradzanie za vygenerovany content
  */
 @Component
+@RequestScope
 public class WebjetComponentParser implements WebjetComponentParserInterface {
     @Autowired
     ApplicationContext context;
@@ -47,16 +48,8 @@ public class WebjetComponentParser implements WebjetComponentParserInterface {
     @Autowired
     WebjetComponentResolver componentResolver;
 
-    // mapa najdenych komponent (kluc: cely include string, hodnota: trieda)
-    Map<String, WebjetComponentInterface> components;
-
-    /*
-    HttpServletRequest request;
-
-    HttpServletResponse response;
-    */
-
-    List<String> attributes;
+    private static final String INCLUDE_START = "!INCLUDE(";
+	private static final String INCLUDE_END = ")!";
 
     /**
      * Metód parse slúži na parsovanie a nahradzovanie !INCLUDE()! v Stringu za vygenerovaný kód
@@ -66,16 +59,16 @@ public class WebjetComponentParser implements WebjetComponentParserInterface {
      */
     public String parse(HttpServletRequest request, HttpServletResponse response, String html) {
         //this.request = request;
-        components = new HashMap<>();
+        Map<String, WebjetComponentInterface> components = new LinkedHashMap<>();
 
         if (Tools.isEmpty(html)) return html;
 
         try {
             // parsuje komponenty a ich page params z html kodu
-            parseComponentsAndPageParams(html);
+            parseComponentsAndPageParams(html, components);
 
             // renderuje html kod z tried pre dane komponenty a nahradza v html kode include za html
-            html = renderComponents(request, response, html);
+            html = renderComponents(request, response, html, components);
         }
         catch (Exception ex) {
             html = getErrorMessage(request, ex, html);
@@ -92,14 +85,8 @@ public class WebjetComponentParser implements WebjetComponentParserInterface {
      * @param response
      */
     public void run(HttpServletRequest request, HttpServletResponse response) {
-        /*
-        this.request = request;
-        this.response = response;
-        */
 
-        components = new HashMap<>();
-
-        attributes = new ArrayList<>(Arrays.asList(
+        String[] attributes = {
                 "doc_data",
                 "doc_header",
                 "doc_footer",
@@ -108,8 +95,8 @@ public class WebjetComponentParser implements WebjetComponentParserInterface {
                 "template_object_a",
                 "template_object_b",
                 "template_object_c",
-                "template_object_d")
-        );
+                "template_object_d"
+        };
 
         // nastavenie locale pre message source, aby sa pri validaciach pouzili spravne texty zo sablony
         LocaleContextHolder.setLocale(request.getLocale());
@@ -131,7 +118,7 @@ public class WebjetComponentParser implements WebjetComponentParserInterface {
      * @param html
      * @throws BeansException
      */
-    private void parseComponentsAndPageParams(String html) throws BeansException {
+    private void parseComponentsAndPageParams(String html, Map<String, WebjetComponentInterface> components) throws BeansException {
         // pattern od !INCLUDE do )!
         Pattern pattern = Pattern.compile("!INCLUDE\\((.*?)\\)!");
         Matcher matcher = pattern.matcher(html);
@@ -208,7 +195,7 @@ public class WebjetComponentParser implements WebjetComponentParserInterface {
      * @return
      * @throws Exception
      */
-    private String renderComponents(HttpServletRequest request, HttpServletResponse response, String html) throws Exception {
+    private String renderComponents(HttpServletRequest request, HttpServletResponse response, String html, Map<String, WebjetComponentInterface> components) throws Exception {
         if (components.isEmpty()) {
             return html;
         }
@@ -222,19 +209,152 @@ public class WebjetComponentParser implements WebjetComponentParserInterface {
             if (i>0) pageParams = new PageParams(key.substring(i));
             else pageParams = new PageParams("");
 
-            // render html kodu z triedy
-            String rendered = componentResolver.render(request, response, v, pageParams);
+            /** Check if this app can be rendered in current device type (onlz if we checking device) **/
+            boolean render = canRenderForDevice(pageParams, request);
 
-            // ak navratova hodnota obsahuje redirect
-            if (isRedirected(response)) {
-                // nastavime nazov triedy pre vypis
-                redirectComponent = v.getClass().getSimpleName();
-                return "";
+            if(render) {
+                /*** CACHE logic ***/
+                String rendered = null;
+
+                Cache cache = Cache.getInstance();
+                String cacheKey = null;
+                int cacheMinutes = 0;
+
+                //Is cache permitted ?
+                if (isCacheEnabled(request, key)) {
+                    //Get cache time param
+                    cacheMinutes = pageParams.getIntValue("cacheMinutes", -1);
+
+                    if(cacheMinutes > 0) {
+                        //prepare cache key
+                        cacheKey = getCacheKey(key, request);
+
+                        String cachedHtml = (String) cache.getObject(cacheKey);
+
+                        //If html code is in cache, use it
+                        if(Tools.isNotEmpty(cachedHtml)) {
+                            rendered = cachedHtml;
+                        }
+                    }
+                }
+
+                //If cache logic wasn't executed, render html code
+                if(rendered == null) {
+                    // render html kodu z triedy
+                    rendered = componentResolver.render(request, response, v, pageParams);
+
+                    // ak navratova hodnota obsahuje redirect
+                    if (isRedirected(response)) {
+                        // nastavime nazov triedy pre vypis
+                        redirectComponent = v.getClass().getSimpleName();
+                        return "";
+                    }
+
+                    if (cacheMinutes > 0 && cacheKey != null) {
+                        //Save new rendered html code to cache
+                        cache.setObjectSeconds(cacheKey, rendered, cacheMinutes * 60, true);
+                    }
+                }
+
+                if (rendered != null) {
+                    html = Tools.replace(html, key, rendered);
+                }
+            } else {
+                //do not render component for current device type, remove it from html
+                html = Tools.replace(html, key, "");
             }
-            html = Tools.replace(html, key, rendered);
         }
 
         return html;
+    }
+
+    /**
+     * Chech if this app can be rendered in current device type
+     * @param pageParams
+     * @param request
+     * @return
+     */
+    private boolean canRenderForDevice(PageParams pageParams, HttpServletRequest request) {
+
+        //We are checking device type only if we are not in preview mode (preview mode showing apps for all devices types)
+        if (request.getAttribute("inPreviewMode") != null) return true;
+
+        String devices = pageParams.getValue("device", "");
+        if (Tools.isEmpty(devices)) return true;
+
+        String[] devicesArr = Tools.getTokens(devices, "+", true);
+
+        BrowserDetector browser = BrowserDetector.getInstance(request);
+        for (String device : devicesArr) {
+            if("pc".equalsIgnoreCase(device) && browser.isDesktop()) {
+                return true;
+            }
+            else if("tablet".equalsIgnoreCase(device) && browser.isTablet()) {
+                return true;
+            }
+            else if("phone".equalsIgnoreCase(device) && browser.isPhone()) {
+                return true;
+            } else if (device.equalsIgnoreCase(browser.getBrowserDeviceType())) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Test if result of component can be cached:
+     * - if user is admin, cache is disabled
+     * - if parameter _disableCache=true then cache is disabled
+     * - if component has parameter page other than 1 then cache is disabled
+     * @param request
+     * @param includeText
+     * @return
+     */
+    private boolean isCacheEnabled(HttpServletRequest request, String includeText) {
+        if ("true".equals(request.getParameter("_disableCache"))) return false;
+
+        Identity user = getUser(request);
+        if (user!=null && user.isAdmin() && Constants.getBoolean("cacheStaticContentForAdmin")==false) return false;
+
+        //news komponenta nemoze cachovat ak ma parameter page
+        if (request.getParameter("page")!=null && "1".equals(request.getParameter("page"))==false)
+        {
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * Prepare chache key for html code (rendered code)
+     * @param key
+     * @param request
+     * @return
+     */
+    private String getCacheKey(String key, HttpServletRequest request) {
+        //Prepare cache key
+        StringBuilder cacheKeySB = new StringBuilder( key );
+        String cacheKey = "";
+        int startIndex = cacheKeySB.indexOf(INCLUDE_START);
+        int includeEndIndex;
+        int failsafe = 0;
+
+        while (startIndex != -1 && failsafe < 100) {
+            failsafe++;
+            includeEndIndex = cacheKeySB.indexOf(INCLUDE_END, startIndex);
+
+            if (includeEndIndex < 0) {
+                //nenasiel sa koniec
+                cacheKeySB.delete(0,startIndex+INCLUDE_START.length());
+                startIndex = cacheKeySB.indexOf(INCLUDE_START);
+                continue;
+            }
+
+            cacheKey = "writeTag_" + cacheKeySB.substring(startIndex, includeEndIndex);
+			cacheKey = Tools.replace(cacheKey, "!DOC_ID!", request.getParameter("docid")) + " ;" + PageLng.getUserLng(request);
+        }
+
+        return cacheKey;
     }
 
     /**
@@ -283,7 +403,8 @@ public class WebjetComponentParser implements WebjetComponentParserInterface {
         Prop prop = Prop.getInstance();
         content.append(WriteTag.getErrorMessage(prop, "writetag.error", getComponentClass(include)));
 
-        if (getUser(request).filter(u -> u.isAdmin()).isPresent() && request.getAttribute("writeTagDontShowError") == null)
+        UserDetails user = getUser(request);
+        if (user != null && user.isAdmin() && request.getAttribute("writeTagDontShowError") == null)
         {
             StringWriter sw = new StringWriter();
             ex.printStackTrace(new PrintWriter(sw));
@@ -302,9 +423,7 @@ public class WebjetComponentParser implements WebjetComponentParserInterface {
     /**
      * @return Optional prihlásený používateľ
      */
-    private Optional<UserDetails> getUser(HttpServletRequest request) {
-        HttpSession session = request.getSession();
-        Identity user = (Identity)session.getAttribute(Constants.USER_KEY);
-        return Optional.ofNullable(user);
+    private Identity getUser(HttpServletRequest request) {
+        return UsersDB.getCurrentUser(request);
     }
 }

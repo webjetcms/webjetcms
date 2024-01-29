@@ -9,9 +9,6 @@ block content
         ]
     )
 
-    style(type="text/css").
-        #import-settings {display: none;}
-
     script.
         var translationKeysTable;
         window.domReady.add(function () {
@@ -38,6 +35,19 @@ block content
                     'title': '[[\#{components.translation_key.action.reload}]]',
                     'data-toggle': 'tooltip'
                 }
+            });
+
+            $('#datatableImportModal').on('show.bs.modal', function () {
+                var select = document.getElementById("dt-settings-update-by-column");
+                if (select.options.length > 0) {
+                    select.options.length = 0;
+                    var option = new Option("[[\#{components.translation_key.key}]] - key", "key");
+                    select.options[select.options.length] = option;
+
+                    $(select).selectpicker('refresh');
+                }
+                $("#dt-settings-import3").parent().hide();
+                $("label[for='dt-settings-import1']").text("[[\#{components.translation_key.import.addAndUpdate.js}]]");
             });
 
         });

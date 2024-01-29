@@ -1,0 +1,47 @@
+<div class="sidebar-section">Web dizajnér</div>
+
+- [:point_left: Späť na Úvod](/?back)
+
+- Šablóny
+  - [Spôsob zobrazenia stránky](/frontend/templates/README.md)
+  - [Šablóny](/frontend/templates/templates.md)
+  - [Skupiny šablón](/frontend/templates/template-groups.md)
+  - [Nastavenie šablón](/frontend/setup/README.md)
+- Voliteľné polia
+  - [Nastavenie](/frontend/webpages/customfields/README.md)
+- Thymeleaf šablóny
+  - [Úvod](/frontend/thymeleaf/README.md)
+  - [Atribúty, podmienky a cykly](/frontend/thymeleaf/statements.md)
+  - [Značky WebJET CMS](/frontend/thymeleaf/tags.md)
+  - [Zoznam dostupných atribútov](/frontend/thymeleaf/webjet-objects.md)
+  - [Nahradzovanie textov](/frontend/thymeleaf/text-replaces.md)
+- JSP šablóny
+  - [Základná šablóna](/frontend/jsp/README.md)
+- Ninja Starter Kit
+  - [Úvod](/frontend/ninja-starter-kit/README.md)
+  - [Nastavenie](/frontend/ninja-starter-kit/temp-group/README.md)
+  - [Základný kód](/frontend/ninja-starter-kit/ninja-bp/README.md)
+  - Dostupné objekty
+    - [Informácie o stránke](/frontend/ninja-starter-kit/ninja-jv/page/README.md)
+    - [Informácie o šablóne](/frontend/ninja-starter-kit/ninja-jv/temp/README.md)
+    - [Informácie o projekte](/frontend/ninja-starter-kit/ninja-jv/temp-group/README.md)
+    - [Informácie o zariadení](/frontend/ninja-starter-kit/ninja-jv/user-agent/README.md)
+    - [Informácie o WebJET CMS](/frontend/ninja-starter-kit/ninja-jv/webjet/README.md)
+    - [Režim ladenia](/frontend/ninja-starter-kit/ninja-jv/debug/README.md)
+  - JavaScript
+    - [Nastavenie](/frontend/ninja-starter-kit/ninja-js/settings/README.md)
+    - [Udalosti](/frontend/ninja-starter-kit/ninja-js/events/README.md)
+    - [Funkcie](/frontend/ninja-starter-kit/ninja-js/functions/README.md)
+  - Štýly
+    - [Názvoslovie](/frontend/ninja-starter-kit/ninja-cs/naming/README.md)
+- Prispôsobenie aplikácií
+  - [Úprava JSP súboru](/frontend/customize-apps/README.md)
+- PageBuilder
+  - [Úvod](/frontend/page-builder/README.md)
+  - [Nastavenia](/frontend/page-builder/settings.md)
+  - [Bloky](/frontend/page-builder/blocks.md)
+- Ukážky
+  - [Ukážkové šablóny](/frontend/examples/README.md)
+  - [Bare šablóna](/frontend/examples/template-bare/README.md)
+  - [Creative šablóna](/frontend/examples/templates-creative/README.md)
+

@@ -18,5 +18,5 @@ public interface FsService
 
 	FsServiceConfig getServiceConfig();
 
-    FsItemEx[] find(FsItemFilter filter);
+    FsItemEx[] find(FsItemFilter filter, FsItemEx target, boolean recursive);
 }

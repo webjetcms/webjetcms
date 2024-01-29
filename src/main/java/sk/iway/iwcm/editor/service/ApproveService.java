@@ -138,6 +138,9 @@ public class ApproveService {
 					else if(mode == UsersDB.APPROVE_APPROVE) isApprover = true;
 					//
 					else if(mode == UsersDB.APPROVE_NOTIFY) notifyTableGroup.put(Integer.valueOf(groupApprover.getUserId()), groupApprover);
+
+					//Can do anything on his own
+					else if(mode == UsersDB.APPROVE_NONE) isLevel2Approver = true;
 				} else {
 					///No, currentUser is not group approver
 
@@ -147,6 +150,8 @@ public class ApproveService {
 					else if (mode == UsersDB.APPROVE_APPROVE) groupApprovers.put(Integer.valueOf(groupApprover.getUserId()), groupApprover);
 					//
 					else if (mode == UsersDB.APPROVE_NOTIFY && groupApprover.getUserId() != currentUser.getUserId()) notifyTableGroup.put(Integer.valueOf(groupApprover.getUserId()), groupApprover);
+
+					//if (mode == UsersDB.APPROVE_NONE) user can do what he want BUT he is NO approver and dont want to get any email -> so not involved
 				}
 			}
 

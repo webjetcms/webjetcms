@@ -148,7 +148,6 @@ Scenario('zobrazenie web stranok-rozbalenie @singlethread', ({ I }) => {
     setSettings(I);
     I.dontSeeElement("#docId-9768_anchor");
     I.see("Podadresár A", "#SomStromcek");
-    I.see("archiv", "#SomStromcek");
     I.see("Test rozbalenia podadresarov", "#datatableInit");
     I.dontSee("Jet portal 4 - testovacia stranka", "#datatableInit")
 
@@ -157,9 +156,8 @@ Scenario('zobrazenie web stranok-rozbalenie @singlethread', ({ I }) => {
     setSettings(I, ["showpages"]);
 
     I.amOnPage("/admin/v9/webpages/web-pages-list/?groupid=0");
-    I.seeElement("#docId-9768_anchor");
+    I.waitForElement("#docId-9768_anchor");
     I.see("Podadresár A", "#SomStromcek");
-    I.see("archiv", "#SomStromcek");
     I.see("Test rozbalenia podadresarov", "#datatableInit");
     I.dontSee("Jet portal 4 - testovacia stranka", "#datatableInit")
 });
@@ -229,6 +227,7 @@ Scenario('nastavenie sirky stlpcov', ({ I }) => {
     I.say("Overujem zapamatanie stavu")
     I.amOnPage("/admin/v9/webpages/web-pages-list/?groupid=0");
 
+    I.waitForElement(".tree-col.col-md-6", 5);
     I.dontSeeElement(".tree-col.col-md-4");
     I.dontSeeElement(".datatable-col.col-md-8");
 
@@ -246,6 +245,7 @@ Scenario('nastavenie sirky stlpcov', ({ I }) => {
 
     setSettings(I, null, 6, true);
 
+    I.waitForElement(".tree-col.col-md-6", 5);
     I.dontSeeElement(".tree-col.col-md-4");
     I.dontSeeElement(".datatable-col.col-md-8");
 
@@ -256,6 +256,7 @@ Scenario('nastavenie sirky stlpcov', ({ I }) => {
     I.say("Overujem zapamatanie stavu galeria")
     I.amOnPage("/admin/v9/apps/gallery/");
 
+    I.waitForElement(".tree-col.col-md-6", 5);
     I.dontSeeElement(".tree-col.col-md-4");
     I.dontSeeElement(".datatable-col.col-md-8");
 

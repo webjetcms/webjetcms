@@ -1,8 +1,8 @@
 Feature('webpages.folderRights-and-loginWebPage');
 
 var folder_name, subfolder_one, subfolder_two;
-var add_button = (locate('.col-md-4.tree-col').find('.btn.btn-sm.buttons-create.btn-success.buttons-divider'));
-var edit_button = (locate('.col-md-4.tree-col').find('.btn.btn-sm.buttons-selected.buttons-edit.btn-warning'));
+var add_button = (locate('.tree-col').find('.btn.btn-sm.buttons-create.btn-success.buttons-divider'));
+var edit_button = (locate('.tree-col').find('.btn.btn-sm.buttons-selected.buttons-edit.btn-warning'));
 
 Before(({ I, login }) => {
      login('admin');
@@ -40,7 +40,7 @@ Scenario('Prava na adresar', ({ I, DTE }) => {
      I.click(locate('.custom-control.form-switch').withChild('#DTE_Field_editorFields-permisions_3').find('.form-check-label'));
      DTE.save();
      I.waitForText(folder_name, 20);
-     I.seeElement(locate('.jstree-anchor.jstree-clicked').withDescendant('.jstree-text-icon.fas.fa-lock').withText(folder_name));
+     I.waitForElement(locate('.jstree-anchor.jstree-clicked').withDescendant('.jstree-text-icon.fas.fa-lock').withText(folder_name), 10);
      I.wait(1);
 
      // 3. zrusenie ikony zamku priecinka name-autotest
@@ -95,6 +95,7 @@ Scenario('Prava na adresar', ({ I, DTE }) => {
 
      // 6. zrusenie prav pre priecinok name-autotest a aplikovanie zmien na vsetky jeho podpriecinky
      I.say('6. Zrusenie prav pre priecinok name-autotest a aplikovanie zmien na vsetky jeho podpriecinky');
+     I.jstreeClick(folder_name);
      I.click(edit_button);
      DTE.waitForEditor("groups-datatable");
      I.click('#pills-dt-groups-datatable-access-tab');
@@ -113,7 +114,7 @@ Scenario('Prava na adresar', ({ I, DTE }) => {
      // 7. Vymazanie priecinka name-autotest
      I.say('7. Zmazanie priecinka name-autotest');
      I.jstreeClick(folder_name);
-     I.click('div.tree-col .btn.btn-sm.buttons-selected.buttons-remove.btn-danger.buttons-divider');
+     I.clickCss('div.tree-col .btn.btn-sm.buttons-selected.buttons-remove.btn-danger.buttons-divider');
      I.waitForText('Zmazať', 5);
      I.click('Zmazať');
      I.dontSee('Chyba: niektoré polia neobsahujú správne hodnoty. Skontrolujte všetky polia na chybové hodnoty (aj v jednotlivých kartách).');
@@ -124,6 +125,13 @@ Scenario('Prava na adresar', ({ I, DTE }) => {
 });
 
 Scenario('Nastavenie prihlasovacej stranky', ({ I, DTE }) => {
+
+     //regenerate new folder name if folder from previous scenario was not deleted
+     randomNumber = I.getRandomText();
+     folder_name = 'name-autotest-' + randomNumber;
+     subfolder_one = 'folder-autotest-' + randomNumber;
+     subfolder_two = 'folder2-autotest-' + randomNumber;
+
      // 1. vytvorenie noveho priecinka name-autotest
      I.say('1. Pridanie noveho priecinka name-autotest');
      I.click(add_button);
@@ -189,7 +197,7 @@ Scenario('Nastavenie prihlasovacej stranky', ({ I, DTE }) => {
      // 5. Vymazanie priecinka name-autotest
      I.say('5. Zmazanie priecinka name-autotest');
      I.jstreeClick(folder_name);
-     I.click('div.tree-col .btn.btn-sm.buttons-selected.buttons-remove.btn-danger.buttons-divider');
+     I.clickCss('div.tree-col .btn.btn-sm.buttons-selected.buttons-remove.btn-danger.buttons-divider');
      I.waitForText('Zmazať', 5);
      I.click('Zmazať');
      I.dontSee('Chyba: niektoré polia neobsahujú správne hodnoty. Skontrolujte všetky polia na chybové hodnoty (aj v jednotlivých kartách).');

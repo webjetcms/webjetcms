@@ -5,6 +5,7 @@ import sk.iway.iwcm.stat.BrowserDetector;
 
 import java.util.Hashtable;
 import java.util.Map;
+import java.util.Properties;
 
 public class UserAgent {
     private Ninja ninja;
@@ -16,6 +17,18 @@ public class UserAgent {
 
         for (BrowserType browserType : BrowserType.values()) {
             minimalBrowserVersion.put(browserType.getBrowser(), Tools.getIntValue(ninja.getConfig("minBrowserVersion."+browserType), browserType.defaultMinimalVersion));
+        }
+        Properties config = ninja.getConfig();
+        if (config != null) {
+            for (Object key : config.keySet()) {
+                String keyStr = (String) key;
+                if (keyStr.startsWith("minBrowserVersion.") && keyStr.length() > 20) {
+                    String browser = keyStr.substring(18);
+                    if (minimalBrowserVersion.containsKey(browser)==false) {
+                        minimalBrowserVersion.put(browser, Tools.getIntValue(ninja.getConfig(keyStr), 0));
+                    }
+                }
+            }
         }
     }
 

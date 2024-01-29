@@ -149,17 +149,19 @@ public class UserDetailsEntity extends UserDetailsBasic {
     @Column(name = "is_admin")
     @DataTableColumn(
         inputType = DataTableColumnType.BOOLEAN,
-        title = "[[#{components.users.admin}]]",
+        title = "user.admin.admin",
         tab = "rightsTab",
         editor = {
             @DataTableColumnEditor(
+                label = "components.users.admin",
                 attr = {
                     @DataTableColumnEditorAttr(key = "data-dt-field-headline", value = "components.users.admin_section_entry"),
                     @DataTableColumnEditorAttr(key = "data-dt-field-hr", value = "after")
                 }
             )
         },
-        visible = false
+        visible = true,
+        sortAfter = "editorFields.emails"
     )
     private Boolean admin;
 
@@ -188,7 +190,9 @@ public class UserDetailsEntity extends UserDetailsBasic {
     @DataTableColumn(
         title = "admin.users.lastlogon",
         inputType = DataTableColumnType.DATETIME,
-        hiddenEditor = true
+        hiddenEditor = true,
+        tab = "rightsTab",
+        sortAfter = "admin"
     )
     private Date lastLogonAsDate;
 
@@ -202,7 +206,9 @@ public class UserDetailsEntity extends UserDetailsBasic {
         title = "components.forum.regdate",
         inputType = DataTableColumnType.DATETIME,
         hiddenEditor = true,
-        visible = false
+        visible = false,
+        tab = "rightsTab",
+        sortAfter = "lastLogonAsDate"
     )
     private Date regDate;
 

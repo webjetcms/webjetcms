@@ -16,7 +16,7 @@ function testSubFolders(I, DT, DTE, randomNumber, nameOfTest, selectValue) {
   var auto_name = 'name-autotest-' + randomNumber;
   var auto_folder_one = 'subone-autotest-' + randomNumber;
   var auto_folder_two = 'subtwo-autotest-' + randomNumber;
-  var edit_button = (locate('.col-md-4.tree-col').find('.btn.btn-sm.buttons-selected.buttons-edit.btn-warning'));
+  var edit_button = (locate('.tree-col').find('.btn.btn-sm.buttons-selected.buttons-edit.btn-warning'));
   var close_button = '.btn.btn-outline-secondary.btn-close-editor';
   // upravit priecinok name-autotest
   I.say('Testujem ' + nameOfTest.toUpperCase() + ' s hodnotou ' + selectValue.toUpperCase());

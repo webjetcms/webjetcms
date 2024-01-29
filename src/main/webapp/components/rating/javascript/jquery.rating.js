@@ -43,7 +43,7 @@
 			fill: function(n, el, settings, state){ // fill to the current mouse position.
 				//if(console) console.log(['fill', $(el), $(el).prevAll('.star_group_'+n), arguments]);
 				this.drain(n);
-				$(el).prevAll('.star_group_'+n).andSelf().addClass('star_'+(state || 'hover'));
+				$(el).prevAll('.star_group_'+n).addBack().addClass('star_'+(state || 'hover'));
 				// focus handler, as requested by focusdigital.co.uk
 				var lnk = $(el).children('a'); val = lnk.text();
 				if(settings.focus) settings.focus.apply($.rating.groups[n].valueElem[0], [val, lnk[0]]);
@@ -54,7 +54,7 @@
 			},
 			reset: function(n, el, settings){ // Reset the stars to the default index.
 				if(!$($.rating.groups[n].current).is('.cancel'))
-					$($.rating.groups[n].current).prevAll('.star_group_'+n).andSelf().addClass('star_on');
+					$($.rating.groups[n].current).prevAll('.star_group_'+n).addBack().addClass('star_on');
 				// blur handler, as requested by focusdigital.co.uk
 				var lnk = $(el).children('a'); val = lnk.text();
 				if(settings.blur) settings.blur.apply($.rating.groups[n].valueElem[0], [val, lnk[0]]);

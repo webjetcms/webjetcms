@@ -24,9 +24,6 @@ public interface EmailsRepository extends JpaRepository<EmailsEntity, Long>, Jpa
     @Query(value = "SELECT recipient_email FROM emails WHERE campain_id = ?1", nativeQuery=true)
     List<String> getAllCampainEmails(Long campaingId);
 
-    //List of all emails created by user
-    List<EmailsEntity> findAllByCreatedByUserId(Integer createdByUserId);
-
     //campaigns recipients - page
     Page<EmailsEntity> findAllByCampainId(Long campaingId, Pageable pageable);
 
@@ -36,17 +33,14 @@ public interface EmailsRepository extends JpaRepository<EmailsEntity, Long>, Jpa
     //campaigns opens
     Page<EmailsEntity> findAllByCampainIdAndSeenDateIsNotNull(Long campaingId, Pageable pageable);
 
-    @Query(value = "SELECT email_id FROM emails WHERE campain_id = ?1 AND created_by_user_id = ?2", nativeQuery=true)
-    List<Integer> getEmailsIds(Long campaingId, Integer createdByUserId);
-
     @Query(value = "SELECT email_id FROM emails WHERE campain_id = ?1", nativeQuery=true)
     List<Long> getEmailsIds(Long campaingId);
 
     @SuppressWarnings("all")
     @Transactional
     @Modifying
-    @Query(value = "UPDATE EmailsEntity SET createdByUserId=:createdByUserId, url=:url, subject=:subject, senderName=:senderName, senderEmail=:senderEmail, replyTo=:replyTo, ccEmail=:ccEmail, bccEmail=:bccEmail, sendAt=:sendAt, attachments=:attachments, campainId=:campaignId WHERE createdByUserId=:oldCreatedByUserId AND campainId = :oldCampaignId")
-    public void updateCampaingEmails(@Param("createdByUserId")Integer createdByUserId, @Param("url")String url, @Param("subject")String subject, @Param("senderName")String senderName, @Param("senderEmail")String senderEmail, @Param("replyTo")String replyTo, @Param("ccEmail")String ccEmail, @Param("bccEmail")String bccEmail, @Param("sendAt")Date sendAt, @Param("attachments")String attachments, @Param("campaignId")Long campaignId, @Param("oldCreatedByUserId")Integer oldCreatedByUserId, @Param("oldCampaignId")Long oldCampaignId);
+    @Query(value = "UPDATE EmailsEntity SET createdByUserId=:createdByUserId, url=:url, subject=:subject, senderName=:senderName, senderEmail=:senderEmail, replyTo=:replyTo, ccEmail=:ccEmail, bccEmail=:bccEmail, sendAt=:sendAt, attachments=:attachments, campainId=:campaignId WHERE campainId = :oldCampaignId")
+    public void updateCampaingEmails(@Param("createdByUserId")Integer createdByUserId, @Param("url")String url, @Param("subject")String subject, @Param("senderName")String senderName, @Param("senderEmail")String senderEmail, @Param("replyTo")String replyTo, @Param("ccEmail")String ccEmail, @Param("bccEmail")String bccEmail, @Param("sendAt")Date sendAt, @Param("attachments")String attachments, @Param("campaignId")Long campaignId, @Param("oldCampaignId")Long oldCampaignId);
 
     @Query(value = "SELECT COUNT(email_id) FROM emails WHERE campain_id = ?1", nativeQuery=true)
     Integer getNumberOfCampaingEmails(Long campaingId);

@@ -42,8 +42,7 @@ $(document).ready(function(){
 	showLookup();
 	checkMapSize();
 
-	$('.map-wrapper iframe').load(function(){
-
+	$('.map-wrapper iframe').on("load", function(){
         var iframe = $('.map-wrapper iframe').contents();
 
         iframe.click(function(){
@@ -334,9 +333,18 @@ function checkComment() {
 	/* END UPRAVA JVY*/
 </style>
 
+<div class="box_tab box_tab_thin left">
+	<ul class="tab_menu" id="Tabs">
+		<li class="first openFirst"><a href="#" onclick="showHideTab('1');" id="tabLink1"><iwcm:text key="components.map.address"/></a></li>
+		<li class="last"><a href="#" onclick="showHideTab('2');" id="tabLink2"><iwcm:text key="components.portal.settings"/></a></li>
+	</ul>
+</div>
+
 <div class="tab-pane toggle_content tab-pane-fullheight">
-	<h1><iwcm:text key="components.map.base_title"/></h1>
 	<div class="tab-page" id="tabMenu1" style="display: block;">
+		<div class="col-sm-12">
+			<p><iwcm:text key="components.map.base_title"/>:</p>
+		</div>
 		<div class="col-sm-12 text-center">
 			<div id="address" class="col-sm-4">
 				<label class="form-label"><iwcm:text key="components.map.address"/>:</label>
@@ -360,16 +368,15 @@ function checkComment() {
 			<div class="map-wrapper col-sm-12" style="clear: both;">
 				<iframe id="previewIframe" src="/components/iframe_blank.jsp" width="100%" height="410" style="display: none; padding-top: 8px;" frameborder="0"></iframe>
 			</div>
-		</div>
 
-	</div>
-	<div class="tab-page" id="tabMenu2" style="display: block;">
-		<div class="col-sm-12">
 			<div class="col-sm-12">
 				<p><iwcm:text key="components.map.pin_info"/></p>
 				<p></p>
 			</div>
 		</div>
+
+	</div>
+	<div class="tab-page" id="tabMenu2" style="display: none;">
 		<div>
 			<div class="col-sm-12">
 				<div class="row">
@@ -501,7 +508,7 @@ function checkComment() {
 						</div>
 					</div>
 					<div class="col-sm-12 action-btn text-center">
-						<input class="btn green" type="button" id="scrollToMap" value="<iwcm:text key="components.map.show_scroll" />" onclick='showLookup();' />
+						<input class="btn green" type="button" id="scrollToMap" value="<iwcm:text key="components.map.show_scroll" />" onclick="showLookup();showHideTab('1');" />
 					</div>
 				</div>
 			</div>

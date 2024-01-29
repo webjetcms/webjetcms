@@ -317,7 +317,7 @@ public class PageParams implements Serializable
 	public String getValue(String name, String defaultValue)
 	{
 		String value = params.get(name);
-		if (value==null)
+		if (Tools.isEmpty(value))
 		{
 			return(defaultValue);
 		}

@@ -23,7 +23,8 @@ public class TemplateDetailEditorFields {
                 },
                 message = "templates.temps-list.replace_template.tooltip"
             )
-        }
+        },
+        hidden = true
     )
     private Integer mergeToTempId = -1;
 
@@ -38,7 +39,8 @@ public class TemplateDetailEditorFields {
                     @DataTableColumnEditorAttr(key = "templates.temps-list.replace_template_checkbox", value = "true")
                 }
             )
-        }
+        },
+        hidden = true
     )
     private boolean mergeTemplates = false;
 }

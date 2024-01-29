@@ -8,10 +8,10 @@ import sk.iway.iwcm.*;
 import sk.iway.iwcm.common.AdminTools;
 import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.common.DocTools;
+import sk.iway.iwcm.components.forum.rest.ForumGroupService;
 import sk.iway.iwcm.database.SimpleQuery;
 import sk.iway.iwcm.editor.*;
 import sk.iway.iwcm.editor.service.WebpagesService;
-import sk.iway.iwcm.forum.ForumDB;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.stat.StatDB;
 import sk.iway.iwcm.stat.StatNewDB;
@@ -825,14 +825,21 @@ public class DocDB extends DB
 	 */
 	public int getVirtualPathDocId(String virtualPath, String domain)
 	{
-		if (virtualPath.startsWith("/admin")||
-				virtualPath.startsWith("/css")||
-				virtualPath.startsWith("/images")||
-				virtualPath.startsWith("/files")||
-				virtualPath.startsWith("/jscripts"))
+		//disallow webpages URL starts with /admin
+		if (virtualPath.startsWith("/admin")) return -1;
+
+		if (virtualPath.startsWith("/css")||
+			virtualPath.startsWith("/images")||
+			virtualPath.startsWith("/files") ||
+			virtualPath.startsWith("/jscripts"))
 		{
-			return -1;
+			if (virtualPath.endsWith(".html") || virtualPath.endsWith("/")) {
+				//allow to create webpage in this folder with .html or / extension
+			} else {
+				return -1;
+			}
 		}
+
 		if (Tools.isEmpty(domain) || Constants.getBoolean("multiDomainEnabled")==false) domain = "default";
 		TObjectIntHashMap<String> urlsByUrl = getUrlsByUrlDomains(domain, false);
 		//Logger.debug(DocDB.class, "getVirtualPathDocId: domain="+domain+" hashSize="+urlsByUrl.size());
@@ -1220,6 +1227,23 @@ public class DocDB extends DB
 	 */
 	public List<DocDetails> getDocByGroup(int groupId, int orderType, boolean asc, int start, int end, boolean no_data)
 	{
+		return getDocByGroup(groupId, orderType, asc, start, end, no_data, true);
+	}
+
+	/**
+	 *  vrati stranky v zadanom adresari
+	 *
+	 *@param  groupId    id skupiny
+	 *@param  orderType  sposob usporiadania
+	 *@param  asc        smer usporiadania, ak true vzostupne
+	 *@param  start      poradove cislo zaciatku (strankovanie)
+	 *@param  end        poradove cislo konca (strankovanie)
+	 *@param  no_data    ak je true nevracia sa obsah stlpca data
+	 *@param  onlyAvailable ak je true vrati len stranky s availabe=1
+	 *@return            List s dokumentami v skupine groupId
+	 */
+	public List<DocDetails> getDocByGroup(int groupId, int orderType, boolean asc, int start, int end, boolean no_data, boolean onlyAvailable)
+	{
 		List<DocDetails> ret = new ArrayList<>();
 		java.sql.Connection db_conn = null;
 		java.sql.PreparedStatement ps = null;
@@ -1278,6 +1302,12 @@ public class DocDB extends DB
 			String sql;
 			DocDetails doc;
 
+			String onlyAvailableAppend = "";
+			if (onlyAvailable) {
+				onlyAvailableAppend = "available=1 AND";
+				if (Constants.DB_TYPE == Constants.DB_ORACLE) onlyAvailableAppend = "AND available=1 AND";
+			}
+
 			if (Constants.DB_TYPE == Constants.DB_MSSQL)
 			{
 				String top = "";
@@ -1285,12 +1315,12 @@ public class DocDB extends DB
 				{
 					top = "TOP " + end;
 				}
-				sql = "SELECT " + top + " u.title as u_title, u.first_name, u.last_name, u.email, u.photo, d.* FROM documents d LEFT JOIN  users u ON d.author_id=u.user_id WHERE available=1 AND group_id=" + groupId + " ORDER BY " + order.toString();
+				sql = "SELECT " + top + " u.title as u_title, u.first_name, u.last_name, u.email, u.photo, d.* FROM documents d LEFT JOIN  users u ON d.author_id=u.user_id WHERE "+onlyAvailableAppend+" group_id=" + groupId + " ORDER BY " + order.toString();
 			}
 			else if (Constants.DB_TYPE == Constants.DB_ORACLE)
 			{
 				//POZOR: ORA tu chyba limit!
-				sql = "SELECT u.title as u_title, u.first_name, u.last_name, u.email, u.photo, d.* FROM documents d,  users u WHERE d.author_id=u.user_id(+) AND available=1 AND group_id=" + groupId + " ORDER BY " + order.toString();
+				sql = "SELECT u.title as u_title, u.first_name, u.last_name, u.email, u.photo, d.* FROM documents d,  users u WHERE d.author_id=u.user_id(+) "+onlyAvailableAppend+" group_id=" + groupId + " ORDER BY " + order.toString();
 			}
 			else
 			{
@@ -1303,7 +1333,7 @@ public class DocDB extends DB
 					end = rows + 1;
 					//?? je treba +1 ??
 				}
-				sql = "SELECT u.title as u_title, u.first_name, u.last_name, u.email, u.photo, d.* FROM documents d LEFT JOIN  users u ON d.author_id=u.user_id WHERE available=1 AND group_id=" + groupId + " ORDER BY " + order + limit;
+				sql = "SELECT u.title as u_title, u.first_name, u.last_name, u.email, u.photo, d.* FROM documents d LEFT JOIN  users u ON d.author_id=u.user_id WHERE "+onlyAvailableAppend+" group_id=" + groupId + " ORDER BY " + order + limit;
 			}
 			ps = db_conn.prepareStatement(sql);
 			rs = ps.executeQuery();
@@ -3121,6 +3151,8 @@ public class DocDB extends DB
 	 */
 	public static String getDomain(String serverName, HttpServletRequest request)
 	{
+		if (request == null) return serverName;
+
 		String sessionDomain = (String)request.getSession().getAttribute("preview.editorDomainName");
 
 		if (Tools.isNotEmpty(sessionDomain))
@@ -6873,23 +6905,6 @@ public class DocDB extends DB
 		return text;
 	}
 
-	private static boolean dataHasForumText(String data)
-	{
-		if (data == null) return false;
-
-		if (data.indexOf("/forum/forum_mb")!=-1 || data.indexOf("forum_mb.jsp")!=-1)
-		{
-			if (data.indexOf("type=topics") != -1 || data.indexOf("rootGroup=") != -1)
-				return(true);
-		}
-		else if (data.indexOf("/forum/forum")!=-1)
-			return(true);
-		else if (data.indexOf("/forum/diskusia")!=-1)
-			return(true);
-
-		return(false);
-	}
-
 	/**
 	 * Otestuje stav fora pre stranku
 	 * return: 0=nema forum, 1=forum aktivne, -1=forum neaktivne
@@ -6902,11 +6917,8 @@ public class DocDB extends DB
 		if (temp == null)
 			return(0);
 
-		if (dataHasForumText(docDet.getData()) || dataHasForumText(temp.getHeaderDocData()) || dataHasForumText(temp.getFooterDocData()) ||
-					dataHasForumText(temp.getMenuDocData()) || dataHasForumText(temp.getRightMenuDocData()) || dataHasForumText(temp.getObjectADocData()) ||
-					dataHasForumText(temp.getObjectBDocData()) || dataHasForumText(temp.getObjectCDocData()) || dataHasForumText(temp.getObjectDDocData()))
-		{
-			if (ForumDB.isActive(docDet.getDocId()))
+		if(ForumGroupService.isMessageBoard(docDet, temp)) {
+			if(ForumGroupService.isActive(docDet.getDocId()))
 				return(1);
 			else
 				return(-1);

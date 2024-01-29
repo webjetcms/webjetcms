@@ -406,6 +406,33 @@ public class SyncDirAction extends WebJETActionBean
 	 }
 
 	 /**
+	  * Convert string of remote group ids like 40,47,57 to local group ids, filter not/yet existing
+	  * @param groupIds
+	  * @return
+	  */
+	 private String convertGroupIdsToLocalFilter(String groupIds) {
+		//ak export neobsahuje skupiny, tak vrat povodne
+		if (Tools.isEmpty(groupIds)) return groupIds;
+
+		StringBuilder localGroups = new StringBuilder();
+		try {
+			int[] ids = Tools.getTokensInt(groupIds, ",");
+			for (int remoteGroupId : ids) {
+				GroupDetails localGroup = getLocalGroup(remoteGroupId);
+				if (localGroup != null) {
+					if (localGroups.length()>0) localGroups.append(",");
+					localGroups.append(String.valueOf(localGroup.getGroupId()));
+				}
+			}
+		} catch (Exception ex) {
+			sk.iway.iwcm.Logger.error(ex);
+			//ak to padlo, nastav povodne
+			if (Tools.isEmpty(localGroups)) localGroups.append(groupIds);
+		}
+		return localGroups.toString();
+	 }
+
+	 /**
      * Skonvertuje ID perex skupin z remote doc na lokalne IDecka, vrati NULL ak nastane chyba
      * @param remoteGroup
      * @return
@@ -664,6 +691,7 @@ public class SyncDirAction extends WebJETActionBean
 			int oTempHeaderDocId = remoteTemp.getHeaderDocId();
 			int oTempFooterDocId = remoteTemp.getFooterDocId();
 			int oTempMenuDocId = remoteTemp.getMenuDocId();
+			String oAvailableGroups = remoteTemp.getAvailableGroups();
 
 			if(remoteDocs == null) getRemoteDocs();
 
@@ -692,6 +720,10 @@ public class SyncDirAction extends WebJETActionBean
 			}
 
 			remoteTemp.setTempId(-1);
+
+			//replace available groups for local groups
+			remoteTemp.setAvailableGroups(convertGroupIdsToLocalFilter(remoteTemp.getAvailableGroups()));
+
 			TemplatesDB.getInstance().saveTemplate(remoteTemp);
 			localTempId = remoteTemp.getTempId();
 
@@ -701,6 +733,7 @@ public class SyncDirAction extends WebJETActionBean
 			remoteTemp.setHeaderDocId(oTempHeaderDocId);
 			remoteTemp.setFooterDocId(oTempFooterDocId);
 			remoteTemp.setMenuDocId(oTempMenuDocId);
+			remoteTemp.setAvailableGroups(oAvailableGroups);
 		}
 		if (localTempId < 1)
 		{

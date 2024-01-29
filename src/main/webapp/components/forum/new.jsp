@@ -1,12 +1,12 @@
 <%
 sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
 session.setMaxInactiveInterval(60*60*2);
-%><%@ page pageEncoding="utf-8"  import="java.util.*,sk.iway.iwcm.*,sk.iway.iwcm.forum.*,java.net.URLDecoder" %>
+%><%@ page pageEncoding="utf-8"  import="java.util.*,sk.iway.iwcm.*,sk.iway.iwcm.forum.*,sk.iway.iwcm.components.forum.jpa.*,java.net.URLDecoder" %>
 <%@ page import="sk.iway.iwcm.i18n.Prop" %>
 <%@ taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm" %>
 <%@ taglib uri="/WEB-INF/iway.tld" prefix="iway" %>
 <%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
-<%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
+<%@ taglib prefix="form" uri="http://www.springframework.org/tags/form"%>
 <%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %>
 <%!
 	public boolean isAdmin(Identity user,int forumId) {
@@ -64,7 +64,7 @@ try
 		}
 	}
 
-	ForumForm forumForm = new ForumForm();
+	DocForumEntity forumForm = new DocForumEntity();
 	forumForm.setParentId(parentId);
 	forumForm.setDocId(docId);
 
@@ -72,20 +72,20 @@ try
 	{
 		if (user!=null && user.isAdmin())
 		{
-			ForumBean forumBean = ForumDB.getForumBean(request, forumId);
-			forumForm.setAuthorFullName(forumBean.getAutorFullName());
-			forumForm.setAuthorEmail(forumBean.getAutorEmail());
+			DocForumEntity forumBean = ForumDB.getForumBean(request, forumId);
+			forumForm.setAuthorName(forumBean.getAuthorName());
+			forumForm.setAuthorEmail(forumBean.getAuthorEmail());
 			forumForm.setSubject(forumBean.getSubject());
 			forumForm.setQuestion(forumBean.getQuestion());
-			forumForm.setForumId(forumId);
-			forumForm.setSendNotif(forumBean.isSendNotif());
+			forumForm.setId((long) forumId);
+			forumForm.setSendAnswerNotif(forumBean.isSendNotif());
 		}
 	}
 	else
 	{
 		if (parentId > 0)
 		{
-			ForumBean forumBean = ForumDB.getForumBean(request, parentId);
+			DocForumEntity forumBean = ForumDB.getForumBean(request, parentId);
 			Prop prop = Prop.getInstance(Constants.getServletContext(), request);
 			if (forumBean != null && forumBean.getSubject().startsWith("Re:") == false && forumBean.getParentId() != -1)
 			{
@@ -100,11 +100,11 @@ try
 			{
 				if (Constants.getBoolean("disableWysiwyg"))
 				{
-					forumForm.setQuestion("\n\n---\n"+forumBean.getAutorFullName()+" "+prop.getText("components.forum.bb.write")+":\n"+ SearchAction.htmlToPlain(forumBean.getQuestion()));
+					forumForm.setQuestion("\n\n---\n"+forumBean.getAuthorName()+" "+prop.getText("components.forum.bb.write")+":\n"+ SearchAction.htmlToPlain(forumBean.getQuestion()));
 				}
 				else
 				{
-			   	forumForm.setQuestion("<p>&nbsp;</p><blockquote><p class='forumQuoteUser'>"+forumBean.getAutorFullName()+" "+prop.getText("components.forum.bb.write")+":</p><div class='forumQuote'>"+forumBean.getQuestion()+"</div></blockquote><p>&nbsp;</p>");
+			   	forumForm.setQuestion("<p>&nbsp;</p><blockquote><p class='forumQuoteUser'>"+forumBean.getAuthorName()+" "+prop.getText("components.forum.bb.write")+":</p><div class='forumQuote'>"+forumBean.getQuestion()+"</div></blockquote><p>&nbsp;</p>");
 				}
 			}
 		}
@@ -119,7 +119,7 @@ try
 			{
 				if ("forumname".equals(cookies[i].getName()))
 				{
-					forumForm.setAuthorFullName(Tools.URLDecode(cookies[i].getValue()));
+					forumForm.setAuthorName(Tools.URLDecode(cookies[i].getValue()));
 				}
 				if ("forumemail".equals(cookies[i].getName()))
 				{
@@ -129,7 +129,7 @@ try
 		}
 		if (user != null)
 		{
-			forumForm.setAuthorFullName(user.getFullName());
+			forumForm.setAuthorName(user.getFullName());
 			forumForm.setAuthorEmail(user.getEmail());
 			//aby sa nedal menit login
 			onfocus="blur();";
@@ -145,10 +145,10 @@ request.setAttribute("cmpName", "forum");
 request.setAttribute("titleKey", "forum.new.title");
 request.setAttribute("descKey", "components.forum.new.insert_new_post");
 
-ForumGroupBean fgb = ForumDB.getForum(docId, true);
+ForumGroupEntity fgb = ForumDB.getForum(docId, true);
 if (fgb == null && Tools.isNotEmpty(Constants.getString("forumDefaultAddmessageGroups")))
 {
-	fgb = new ForumGroupBean();
+	fgb = new ForumGroupEntity();
 	fgb.setAddmessageGroups(Constants.getString("forumDefaultAddmessageGroups"));
 }
 if (fgb != null && fgb.canPostMessage(user)==false)
@@ -168,16 +168,16 @@ if (fgb != null && fgb.canPostMessage(user)==false)
 	<script type="text/javascript" src="/components/form/check_form.js"></script>
 
 	<div class="forum">
-		<html:form name="forumForm" scope="request" method="post" action="/saveforum.do" type="sk.iway.iwcm.forum.ForumForm">
+		<form:form method="post" modelAttribute="forumForm" action="/apps/forum/saveforum" name="forumForm">
 
 			<div class="form-group">
-				<label><iwcm:text key="forum.new.name"/>:</label>
-				<html:text property="authorFullName" styleClass="required form-control" size="40" maxlength="255" onfocus="<%=onfocus %>"/>
+				<form:label path="authorName"><iwcm:text key="forum.new.name"/>:</form:label>
+				<form:input id="authorName" path="authorName" cssClass="required form-control" size="40" maxlength="255" required="required" disabled="true"/>
 			</div>
 
 			<div class="form-group">
-				<label><iwcm:text key="forum.new.email"/>:</label>
-				<html:text property="authorEmail" styleClass="email form-control" size="40" maxlength="255" onfocus="<%=onfocus %>"/>
+				<form:label path="authorEmail"><iwcm:text key="forum.new.email"/>:</form:label>
+				<form:input id="authorEmail" path="authorEmail" cssClass="email form-control" size="40" maxlength="255" disabled="true"/>
 			</div>
 
 			<%if(user!=null && isAdmin(user,docId) && parentId <= 0) {%>
@@ -192,22 +192,22 @@ if (fgb != null && fgb.canPostMessage(user)==false)
 			<%}%>
 
 			<div class="form-group">
-				<label><iwcm:text key="forum.new.subject"/>:</label>
-				<html:text property="subject" styleClass="required form-control" size="40" maxlength="255"/>
+				<form:label path="subject"><iwcm:text key="forum.new.subject"/>:</form:label>
+				<form:input path="subject" cssClass="required form-control" size="40" maxlength="255"/>
 			</div>
 
                 <div class="checkbox">
 				<label>
-				    <html:checkbox property="sendNotif"/> <iwcm:text key="components.forum.send_answer_notif"/>
+				    <form:checkbox path="sendAnswerNotif"/> <iwcm:text key="components.forum.send_answer_notif"/>
                 </label>
 			</div>
 			<div class="form-group">
-				<html:textarea property="question" styleClass="input required wysiwyg form-control" styleId="wysiwygForum" rows="15" cols="35"/></td>
+				<form:textarea path="question" cssClass="input required wysiwyg form-control" id="wysiwygForum" rows="15" cols="35" />
 			</div>
 
             <div class="form-group">
 
-                <html:hidden property="parentId"/>
+                <form:hidden path="parentId"/>
                 <input type="hidden" name="docid" value="<%=org.apache.struts.util.ResponseUtils.filter(request.getParameter("docid"))%>" />
                 <input type="hidden" name="docId" value="<%=org.apache.struts.util.ResponseUtils.filter(request.getParameter("docid"))%>" />
                 <input type="hidden" name="parent2" value="<%=org.apache.struts.util.ResponseUtils.filter(request.getParameter("parent2"))%>" />
@@ -230,7 +230,7 @@ if (fgb != null && fgb.canPostMessage(user)==false)
 		<%
 		}
 		%>
-		<html:hidden property="forumId"/>
+		<form:hidden path="id"/>
 
 		<logic:present name="setFlag">
 			<input type="hidden" name="flag" value="<%=flagStr%>" />
@@ -239,7 +239,7 @@ if (fgb != null && fgb.canPostMessage(user)==false)
 			<input type="submit" id="bSubmit" name="submit" value="<iwcm:text key="forum.new.send"/>"/>
 			<input type="button" onclick="javascript:window.close();" name="cancel" value="<iwcm:text key="forum.new.cancel"/>" />
 		</div>
-	</html:form>
+	</form:form>
 	</div>
 
 	<script type="text/javascript">
@@ -269,4 +269,21 @@ if (fgb != null && fgb.canPostMessage(user)==false)
 		}
 		window.setTimeout(reInitCheckForm, 5000);
 		<% } %>
+
+		//Let user SET name and email only in case that this values are empty
+		//!! -> this situation arise when NON logged user is adding message's to forum
+		var authorName = document.getElementById('authorName');
+		var authorEmail = document.getElementById('authorEmail');
+
+		if (!authorName.value) { 
+			authorName.removeAttribute('disabled');
+		} else {
+			authorName.setAttribute('disabled', '');
+		}	
+
+		if (!authorEmail.value) { 
+			authorEmail.removeAttribute('disabled');
+		} else {
+			authorEmail.setAttribute('disabled', '');
+		}	
 	</script>

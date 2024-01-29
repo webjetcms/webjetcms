@@ -23,17 +23,18 @@ function testDemoComponent(I, testAllFields=false) {
     if (testAllFields) {
         I.fillField("#DTE_Field_primitiveIntegerField", 20);
 
-        I.click("#pills-dt-component-datatable-advanced-tab");
+        I.clickCss("#pills-dt-component-datatable-advanced-tab");
         I.fillField("#DTE_Field_date", "15.2.2023 12:57:56");
+        I.pressKey("Escape");
     }
 
-    I.click("#pills-dt-component-datatable-json-tab");
-    I.click("#editorAppDTE_Field_groupDetails button.btn-vue-jstree-item-edit");
+    I.clickCss("#pills-dt-component-datatable-json-tab");
+    I.clickCss("#editorAppDTE_Field_groupDetails button.btn-vue-jstree-item-edit");
     I.waitForElement("div.jsTree-wrapper");
     I.click("Test stavov");
 
     I.switchTo();
-    I.click("a.cke_dialog_ui_button_ok");
+    I.clickCss("a.cke_dialog_ui_button_ok");
     I.wait(6);
 
     //over zobrazenie v nahlade
@@ -80,7 +81,7 @@ Scenario('spring - zoznam aplikacii', ({ I, DTE, Browser }) => {
     I.forceClick("#WebJETEditorBody p");
     I.switchTo();
 
-    I.click("a.cke_button__components");
+    I.clickCss("a.cke_button__components");
     I.waitForElement("div.cke_editor_data_dialog");
     I.wait(6);
 
@@ -91,7 +92,7 @@ Scenario('spring - zoznam aplikacii', ({ I, DTE, Browser }) => {
     I.see("Demo komponenta", "div.menu-app");
 
     //klikni na demo komponentu
-    I.click("#demo-komponenta");
+    I.clickCss("#demo-komponenta");
     I.wait(3);
 
     I.see("Demo komponenta nejaky dlhy opis");
@@ -116,7 +117,7 @@ Scenario('spring - nastavenie parametra', ({ I, DTE }) => {
 
     //zrus okno a uloz stranku
     I.switchTo();
-    I.click("a.cke_dialog_ui_button_cancel");
+    I.clickCss("a.cke_dialog_ui_button_cancel");
     I.wait(2);
 
     DTE.save();
@@ -137,7 +138,7 @@ function testCookieComponent(I) {
     I.fillField("#cookie_title", cookieTitle);
 
     I.switchTo();
-    I.click("a.cke_dialog_ui_button_ok");
+    I.clickCss("a.cke_dialog_ui_button_ok");
     I.wait(6);
 
     //over zobrazenie v nahlade
@@ -177,7 +178,7 @@ Scenario('jsp - zoznam aplikacii', ({ I, DTE, Browser }) => {
     I.forceClick("#WebJETEditorBody p");
     I.switchTo();
 
-    I.click("a.cke_button__components");
+    I.clickCss("a.cke_button__components");
     I.waitForElement("div.cke_editor_data_dialog");
     I.wait(6);
 
@@ -197,10 +198,10 @@ Scenario('jsp - zoznam aplikacii', ({ I, DTE, Browser }) => {
     I.dontSeeElement('div.promoApp');
 
     //klikni na demo komponentu
-    I.click("#components-app-cookiebar-title");
+    I.clickCss("#components-app-cookiebar-title");
     I.wait(3);
 
-    I.see("Vložte si do stránky cookiebar");
+    I.see("panel súhlasu s cookies");
 
     I.click("Vložiť do stránky");
     I.wait(6);
@@ -224,7 +225,7 @@ Scenario('jsp - cookies lista nastavenie parametra', ({ I, DTE, Browser }) => {
 
     //zrus okno a uloz stranku
     I.switchTo();
-    I.click("a.cke_dialog_ui_button_cancel");
+    I.clickCss("a.cke_dialog_ui_button_cancel");
     I.wait(2);
 
     DTE.save();

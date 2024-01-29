@@ -1,15 +1,6 @@
 package sk.iway.iwcm.doc;
 
-import java.io.IOException;
-
-import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
-import org.apache.struts.action.Action;
-import org.apache.struts.action.ActionForm;
-import org.apache.struts.action.ActionForward;
-import org.apache.struts.action.ActionMapping;
 
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.DBPool;
@@ -27,46 +18,8 @@ import sk.iway.iwcm.i18n.Prop;
  *@created      $Date: 2003/06/05 16:05:53 $
  *@modified     $Date: 2003/06/05 16:05:53 $
  */
-public class DocTreeAction extends Action
+public class DocTreeAction
 {
-
-   /**
-    *  Description of the Method
-    *
-    *@param  mapping               Description of the Parameter
-    *@param  form                  Description of the Parameter
-    *@param  request               Description of the Parameter
-    *@param  response              Description of the Parameter
-    *@return                       Description of the Return Value
-    *@exception  IOException       Description of the Exception
-    *@exception  ServletException  Description of the Exception
-    */
-   @Override
-	public ActionForward execute(ActionMapping mapping,
-         ActionForm form,
-         HttpServletRequest request,
-         HttpServletResponse response)
-          throws IOException, ServletException
-          {
-            String forward = doTree(request);
-
-            if ("error".equals(forward))
-            {
-               return (mapping.findForward(forward));
-            }
-            if (request.getParameter("archiv") != null)
-            {
-               return (mapping.findForward(forward));
-            }
-            if (forward.endsWith(".jsp"))
-            {
-              return (new ActionForward(forward));
-            }
-            else
-            {
-              return (mapping.findForward(forward));
-            }
-         }
 
    public static String doTree(HttpServletRequest request)
    {
@@ -87,7 +40,7 @@ public class DocTreeAction extends Action
       {
 
       }
-      
+
       Identity user = (Identity) request.getSession().getAttribute(Constants.USER_KEY);
       if(!GroupsDB.isGroupEditable(user, group_id))
       {

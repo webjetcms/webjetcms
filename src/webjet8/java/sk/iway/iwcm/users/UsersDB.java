@@ -2439,22 +2439,34 @@ public class UsersDB
 	 */
 	public static void loadDisabledItemsFromDB(Identity user)
 	{
+		loadDisabledItemsFromDB(user, true);
+	}
+
+	/**
+	 * Read disabled items for user
+	 * @param user
+	 * @param alsoGroups - true to load perms from groups
+	 */
+	public static void loadDisabledItemsFromDB(Identity user, boolean alsoGroups)
+	{
 		//najskor nacitame zoznam prav podla skupin (tie nasledne implicitne povolime)
 		Set<String> enabledItemsFromGroups = new HashSet<>();
-		try
-		{
-			List<PermissionGroupBean> permissionGroups = UserGroupsDB.getPermissionGroupsFor(user.getUserId());
-			for (PermissionGroupBean permGroup : permissionGroups)
+		if (alsoGroups) {
+			try
 			{
-				for (String permission : permGroup.getPermissionNames())
+				List<PermissionGroupBean> permissionGroups = UserGroupsDB.getPermissionGroupsFor(user.getUserId());
+				for (PermissionGroupBean permGroup : permissionGroups)
 				{
-					enabledItemsFromGroups.add(permission);
+					for (String permission : permGroup.getPermissionNames())
+					{
+						enabledItemsFromGroups.add(permission);
+					}
 				}
 			}
-		}
-		catch (Exception e)
-		{
-			sk.iway.iwcm.Logger.error(e);
+			catch (Exception e)
+			{
+				sk.iway.iwcm.Logger.error(e);
+			}
 		}
 
 		//nacitame prava pre usera

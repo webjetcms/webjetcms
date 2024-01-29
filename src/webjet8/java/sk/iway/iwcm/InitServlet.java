@@ -50,7 +50,6 @@ import sk.iway.iwcm.system.cron.CronFacade;
 import sk.iway.iwcm.system.cron.CronTask;
 import sk.iway.iwcm.system.cron.WebjetDatabaseTaskSource;
 import sk.iway.iwcm.system.proxy.WebJETProxySelector;
-import sk.iway.iwcm.update.UpdateAction;
 import sk.iway.iwcm.users.UserGroupsDB;
 /**
  *  Inicializacia systemu, nastavenie databazy, overenie licencie
@@ -71,7 +70,7 @@ public class InitServlet extends HttpServlet
 	 */
 	private static final long serialVersionUID = 3175770407979840865L;
 
-	private static String actualVersion = "2023.18-SNAPSHOT-java17.{minor.number} {build.date}";
+	private static String actualVersion = "2024.0-SNAPSHOT.{minor.number} {build.date}";
 
 	private static final int DOMAIN_LEN = 10;
 
@@ -349,7 +348,6 @@ public class InitServlet extends HttpServlet
 				num = num + i;
 
 				setLicenseId(num);
-				UpdateAction.setLicenseId(licenseId);
 
 				//konektni sa na license server a over licenciu
 				boolean serverValid = false;
@@ -885,9 +883,6 @@ public class InitServlet extends HttpServlet
 		DBPool.getConnection();
 		DBPool.getConnection();*/
 
-		System.setProperty("org.hyperic.sigar.path", Tools.getRealPath("/WEB-INF/sigar/"));
-		//nativne kniznice pre kniznicu sigar -> CPU Usage a Process Usage -> monitorovanie servera
-
 		//zavolanie localconf pri lokalnom developmente
 		if (FileTools.isFile("/localconf.jsp"))
 		{
@@ -1254,8 +1249,12 @@ public class InitServlet extends HttpServlet
 		{
 			return (false);
 		}
-		//defaultne povolene
-		if (request.getServerName().equals("iwcm.interway.sk") || request.getServerName().equals("localhost") || request.getServerName().endsWith(".iway.sk") || request.getServerName().endsWith(".iway.local"))
+		//false to not use alias because using alias you can use license from another domain
+		String serverName = Tools.getServerName(request, false);
+
+		//default allowed domains
+		if (serverName.equals("iwcm.interway.sk") || serverName.equals("neweb.interway.sk") || serverName.equals("localhost") ||
+			serverName.endsWith(".iway.sk") || serverName.endsWith(".iway.local") || serverName.endsWith(".iwcp.dev"))
 		{
 			return (true);
 		}
@@ -1263,7 +1262,7 @@ public class InitServlet extends HttpServlet
 		{
 			if (domain.length==1)
 			{
-				if (request.getServerName().endsWith(domain[0])) {
+				if (serverName.endsWith(domain[0])) {
 					return (true);
 				}
 			}
@@ -1271,13 +1270,13 @@ public class InitServlet extends HttpServlet
 			{
 				//Logger.println(this,"verify: domain="+domain+" request="+request.getServerName());
 				for (int i = 0; i < domain.length; i++) {
-					if (request.getServerName().endsWith(domain[i])) {
+					if (serverName.endsWith(domain[i])) {
 						return (true);
 					}
 				}
 			}
 		}
-		Logger.println(InitServlet.class,"Refusing: " + request.getServerName());
+		Logger.println(InitServlet.class,"Refusing: " + serverName + " original=" + request.getServerName());
 		Logger.println(InitServlet.class,"The license doesn't allow this domain.");
 		return (false);
 	}
@@ -1516,7 +1515,7 @@ public class InitServlet extends HttpServlet
 		File f = new File(Tools.getRealPath(url));
 		if (f.exists())
 		{
-			Logger.println(UpdateAction.class,"RESTART request InitServlet " + f.getAbsolutePath());
+			Logger.println(InitServlet.class,"RESTART request InitServlet " + f.getAbsolutePath());
 			f.setLastModified(Tools.getNow()); //NOSONAR
 			ret = true;
 		}
@@ -1654,5 +1653,9 @@ public class InitServlet extends HttpServlet
 		}
 
 		return hostname;
+	}
+
+	public static String getActualVersion() {
+		return actualVersion;
 	}
 }

@@ -44,6 +44,7 @@ public class ThymeleafShowdocController {
         model.addAttribute("docDetailsOriginal", request.getAttribute("docDetailsOriginal"));
         model.addAttribute("groupDetails", request.getAttribute("pageGroupDetails"));
         model.addAttribute("tempDetails", request.getAttribute("templateDetails"));
+        model.addAttribute("templatesGroupDetails", request.getAttribute("templatesGroupDetails"));
 
         return template;
     }

@@ -29,7 +29,7 @@ Scenario('zakladne testy', async ({I, DataTables}) => {
 });
 
 Scenario('REST proxy test', async ({I, DataTables}) => {
-    I.amOnPage("/facts/");
-    I.see("status");
-    I.see("\"verified\":true");
+    I.amOnPage("/todos/1/");
+    I.see("\"title\"");
+    I.see("\"id\": 1");
 });

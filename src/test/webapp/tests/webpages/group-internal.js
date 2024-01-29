@@ -1,7 +1,7 @@
 Feature('webpages.group-internal');
 
 var auto_name, auto_folder_internal, auto_folder_public, sub_folder_public;
-var add_button = (locate('.col-md-4.tree-col').find('.btn.btn-sm.buttons-create.btn-success.buttons-divider'));
+var add_button = (locate('.tree-col').find('.btn.btn-sm.buttons-create.btn-success.buttons-divider'));
 
 Before(({ I, login }) => {
      login('admin');
@@ -134,7 +134,7 @@ Scenario('Interny adresar', ({ I, DT, DTE }) => {
      I.waitForText(auto_name, 15);
      I.wait(1);
      I.click(locate('.jstree-anchor').withText(auto_name));
-     I.click('div.tree-col .btn.btn-sm.buttons-selected.buttons-remove.btn-danger.buttons-divider');
+     I.clickCss('div.tree-col .btn.btn-sm.buttons-selected.buttons-remove.btn-danger.buttons-divider');
      I.waitForText('Zmazať', 10);
      I.click('Zmazať');
      I.dontSee('Chyba: niektoré polia neobsahujú správne hodnoty. Skontrolujte všetky polia na chybové hodnoty (aj v jednotlivých kartách).');

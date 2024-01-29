@@ -59,10 +59,10 @@ public class GdprSearchRestController extends DatatableRestControllerV2<GdprSear
         modules.add(GdprModule.FORUM);
 
         //Get filtring param searchValue
-        String searchValue = params.get("searchvalue");
+        String searchValue = params.get("searchValue");
 
         //Set regexp (searchValue is used as regexp value and also regexp name)
-        regexps = new ArrayList<GdprRegExpBean>();
+        regexps = new ArrayList<>();
         GdprRegExpBean gdprBean = new GdprRegExpBean();
         gdprBean.setRegexpValue(searchValue);
         gdprBean.setRegexpName(searchValue);

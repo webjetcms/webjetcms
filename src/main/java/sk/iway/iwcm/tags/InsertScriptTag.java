@@ -37,7 +37,7 @@ public class InsertScriptTag extends BodyTagSupport {
 			if(Tools.isNotEmpty(position) && groupId != -1)
 			{
 				Date now = new Date(Tools.getNow());
-				List<InsertScriptBean> listInsertScript = InsertScriptDB.getInstance().filter(null, position, null, docId, groupId, now, now);
+				List<InsertScriptBean> listInsertScript = InsertScriptDB.getInstance().filter(null, "^"+position+"$", null, docId, groupId, now, now);
 
 				for (InsertScriptBean isb : listInsertScript) {
 					//Logger.debug(InsertScriptTag.class,"listInsertScript.size(): {}", listInsertScript.size());

@@ -25,9 +25,9 @@ Scenario("filter podla datumu", async ({ I, DT }) => {
   I.waitForInvisible("#loader", 20);
 
   //check at least values in datatable
-  DT.checkTableRow("serverMonitoringRecordsTable", 3, ["949383", "18.07.2020 13:59:30", "webjet4.dev.iwa", "1", "3", "50 646 312", "243 269 632", "5", "0", "0", "0"]);
-  DT.checkTableRow("serverMonitoringRecordsTable", 1, ["949385", "18.07.2020 14:00:00", "webjet4.dev.iwa", "3", "1", "97 182 960", "243 269 632", "5", "0", "0", "0"]);
-  DT.checkTableRow("serverMonitoringRecordsTable", 6, ["949380", "18.07.2020 13:59:00", "webjet4.dev.iwa", "1", "3", "95 950 216", "243 269 632", "5", "0", "0", "0"]);
+  DT.checkTableRow("serverMonitoringRecordsTable", 3, ["942940", "17.07.2020 14:00:00", "web25", "1", "1", "665 250 440", "1 643 642 880", "6", "1", "0", "0"]);
+  DT.checkTableRow("serverMonitoringRecordsTable", 1, ["942942", "17.07.2020 14:00:00", "webjet4.dev.iwa", "1", "2", "28 087 576", "243 269 632", "9", "0", "0", "0"]);
+  DT.checkTableRow("serverMonitoringRecordsTable", 6, ["942937", "17.07.2020 14:00:00", "iMacuzielaLubos", "1", "3", "887 597 752", "1 456 472 064", "6", "1", "0", "0"]);
 
 
   //zmen rozsah na iny
@@ -42,9 +42,9 @@ Scenario("filter podla datumu", async ({ I, DT }) => {
   I.waitForInvisible("#loader", 20);
 
   //check at least values in datatable
-  DT.checkTableRow("serverMonitoringRecordsTable", 1, ["997351", "26.07.2020 08:05:00", "webjet4.dev.iwa", "1", "3", "88 842 728", "243 269 632", "6", "0", "0", "0"]);
-  DT.checkTableRow("serverMonitoringRecordsTable", 3, ["997349", "26.07.2020 08:04:30", "webjet4.dev.iwa", "1", "3", "79 851 176", "243 269 632", "7", "0", "0", "0"]);
-  DT.checkTableRow("serverMonitoringRecordsTable", 5, ["997347", "26.07.2020 08:04:00", "webjet4.dev.iwa", "1", "3", "39 923 768", "243 269 632", "7", "0", "0", "0"]);
+  DT.checkTableRow("serverMonitoringRecordsTable", 1, ["991624", "25.07.2020 08:05:00", "webjet4.dev.iwa", "1", "3", "47 016 320", "243 269 632", "7", "0", "0", "0"]);
+  DT.checkTableRow("serverMonitoringRecordsTable", 3, ["991622", "25.07.2020 08:04:30", "webjet4.dev.iwa", "1", "3", "98 023 904", "243 269 632", "6", "0", "0", "0"]);
+  DT.checkTableRow("serverMonitoringRecordsTable", 5, ["991620", "25.07.2020 08:04:00", "webjet4.dev.iwa", "1", "3", "90 159 792", "243 269 632", "7", "0", "0", "0"]);
 });
 
 Scenario("aktualne hodnoty", ({ I }) => {

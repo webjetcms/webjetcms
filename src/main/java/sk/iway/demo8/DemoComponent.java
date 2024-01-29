@@ -19,7 +19,7 @@ import java.util.Date;
 import java.util.List;
 
 @WebjetComponent("sk.iway.demo8.DemoComponent")
-@WebjetAppStore(nameKey = "Demo komponenta", descKey = "Demo komponenta nejaky dlhy opis", imagePath = "fa fa-snowflake text-danger", galleryImages = "/components/map/screenshot-1.jpg,/components/gdpr/screenshot-2.png,/components/gallery/screenshot-3.jpg")
+@WebjetAppStore(nameKey = "Demo komponenta", descKey = "Demo komponenta nejaky dlhy opis", imagePath = "fa fa-snowflake text-danger", galleryImages = "/components/map/screenshot-1.jpg,/components/gdpr/screenshot-2.png,/components/gallery/screenshot-3.jpg", commonSettings = true)
 @Getter
 @Setter
 public class DemoComponent extends WebjetComponentAbstract {
@@ -75,8 +75,6 @@ public class DemoComponent extends WebjetComponentAbstract {
 
     @DataTableColumn(inputType = DataTableColumnType.JSON, title = "dirSimple", tab = "json", className = "dt-tree-dir-simple")
     private String dirSimple;
-
-
 
 	@DefaultHandler
 	public String render(Model model)

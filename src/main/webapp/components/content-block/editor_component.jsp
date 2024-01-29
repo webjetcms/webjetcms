@@ -73,9 +73,9 @@ if (!isFck)
 		<div class="row">
 			<div class="form-group col-xs-12">
 				<label for="title">
-					<iwcm:text key="editor.title"/>
+					<iwcm:text key="components.htmlbox.titles"/>
 				</label>
-				<input type="text" id="title" class="form-control" value="<%=ResponseUtils.filter(pageParams.getValue("title", ""))%>" placeholder="<iwcm:text key="editor.title"/>">
+				<input type="text" id="title" class="form-control" value="<%=ResponseUtils.filter(pageParams.getValue("title", ""))%>" placeholder="<iwcm:text key="components.htmlbox.titles"/>">
 			</div>
 		</div>
 
@@ -87,7 +87,7 @@ if (!isFck)
 				<div class="input-group">
 					<input type="text" id="image1" name="image1" class="form-control" value="<%=ResponseUtils.filter(pageParams.getValue("image1", ""))%>" placeholder="<iwcm:text key="editor.perex.image"/> 1">
 					<span class="input-group-addon btn green" onclick="openImageDialogWindow('contentBlockForm', 'image1', '')" >
-                 		<i class="fa fa-picture-o"></i>
+                 		<i class="fa fa-image"></i>
               	</span>
 				</div>
 			</div>
@@ -102,7 +102,7 @@ if (!isFck)
 				<div class="input-group">
 					<input type="text" id="image2" name="image2" class="form-control col-md-6 " value="<%=ResponseUtils.filter(pageParams.getValue("image2", ""))%>" placeholder="<iwcm:text key="editor.perex.image"/> 1">
 					<span class="input-group-addon btn green" onclick="openImageDialogWindow('contentBlockForm', 'image2', '')" >
-                 		<i class="fa fa-picture-o"></i>
+                 		<i class="fa fa-image"></i>
               	</span>
 				</div>
 			</div>

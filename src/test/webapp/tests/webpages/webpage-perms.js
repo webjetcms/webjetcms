@@ -181,6 +181,7 @@ Scenario('overenie prav na strukturu', ({ I, DT, DTE }) => {
     });
 
     //over, ze sa neda presunut adresar
+    /* - not possible anymore because of structure not showing root folder anymore
     I.say("over, ze sa neda presunut adresar");
     I.jstreeNavigate(["Jet portal 4", "Úvodná stránka", "Test podadresar", "Nesmie sa dať presunúť"]);
     DT.waitForLoader();
@@ -201,7 +202,7 @@ Scenario('overenie prav na strukturu', ({ I, DT, DTE }) => {
     I.seeInField('#editorAppDTE_Field_editorFields-parentGroupDetails input.form-control', '/Jet portal 4');
     DTE.save();
     I.see("Na tento priečinok nemáte prístupvé práva. Skúste o úroveň nižšie.");
-    DTE.cancel();
+    DTE.cancel();*/
 
     //over, ze sa neda zmazat
     I.jstreeNavigate(["Jet portal 4", "Úvodná stránka"]);
@@ -272,6 +273,7 @@ Scenario('overenie prav na strukturu - web stranky', ({ I, DTE }) => {
     I.dontSeeElement("#datatableInit_modal");
 
     //stranke nastav adresar, na ktory nemame prava
+    /* not possible anymore because of structure not showing root folder anymore
     I.click("Nesmie sa dať presunúť", "#datatableInit_wrapper");
     DTE.waitForEditor();
     I.click("#pills-dt-datatableInit-basic-tab");
@@ -287,6 +289,7 @@ Scenario('overenie prav na strukturu - web stranky', ({ I, DTE }) => {
     DTE.save();
     I.see("Nemáte právo na editáciu web stránky");
     DTE.cancel();
+    */
 });
 
 Scenario('zobrazenie samostatnych web stranok z prav', ({ I }) => {
@@ -321,4 +324,8 @@ Scenario('tester2 nema pravo na System a Kos', ({ I }) => {
     I.click("Priečinky", "div.tree-col div.md-breadcrumb");
     I.dontSee("Prístup na adresár zamietnutý");
     I.see("Nenašli sa žiadne vyhovujúce záznamy");
+});
+
+Scenario('logoff', ({ I }) => {
+    I.logout();
 });

@@ -1,283 +1,138 @@
 <!DOCTYPE html>
-<html lang="sk">
-
+<html>
 <head>
-    <meta charset="UTF-8">
-    <title>WebJET CMS v2023 - Dokumentácia</title>
-    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
-    <meta name="description" content="Dokumentácia WebJET CMS">
-    <meta property="og:image" content="https://www.interway.sk/images/css/og-webjet.jpg" />
+  <meta charset="UTF-8">
+  <title>Document</title>
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+  <meta name="description" content="Description">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0">
+  <!-- Theme: Simple -->
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/docsify-themeable@0/dist/css/theme-simple-dark.css">
+  <base href="/latest/">
 
-    <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
-    <link rel="stylesheet" href="_media/docsify.css">
-    <script src="https://kit.fontawesome.com/7be2385184.js" crossorigin="anonymous"></script>
-    <link rel="icon" href="_media/favicon-cms.ico" type="image/x-icon">
-    <style>
-        :root {
-            --sidebar-width: 22rem;
-            --docsify-example-panels-document-width: 100%;
-            --code-font-size: 12px;
-            --heading-h6-font-size: 14px;
-        }
+  <style type="text/css">
+    :root {
+      --base-background-color: #13151B;
+      --sidebar-width: 22rem;
+      --docsify-example-panels-document-width: 100%;
+      --code-font-size: 12px;
+      --heading-h3-margin: 14px 0 0 0;
+      --heading-h3-font-size: 16px;
+      --heading-h6-font-size: 14px;
+      --search-margin: 0 0 0 0;
+      --sidebar-nav-margin: 0.5rem 0 0 0;
+      --sidebar-nav-link-padding: 0 0 0 0;
+      --sidebar-nav-pagelink-padding: 0 0 0 20px;
+      --sidebar-background: #353943;
+      --code-theme-background: #353943;
+      --sidebar-nav-link-text-decoration--hover: none;
+      --sidebar-nav-link-color--hover: white;
+      --link-text-decoration: none;
+      --link-text-decoration--hover: underline;
+      --link-color: #0090fc;
+    }
 
-        .sidebar > h1 img {
-            height: auto;
-        }
+    .sidebar-section {
+      font-weight: bold;
+      font-size: 21px;
+      color: white;
+      text-align: center;
+    }
 
-        .sidebar div.sidebar-section {
-            margin: -14px 0 0;
-            font-size: 16px;
-        }
+    .sidebar-nav p {
+      margin-top: 4px;
+      margin-bottom: 4px;
+      color: #0090fc;
+    }
 
-        @media (min-width: 770px) {
-            .sidebar-toggle {
-                display: none;
-            }
-        }
+    .sidebar-nav > ul > li {
+      padding: 0.5rem 0;
+    }
 
-        .docsify-tabs__tab i {
-            display: none;
-        }
+    h1.app-name {
+      background-color: #272b35;
+      margin: 0 -25px;
+      padding: 10px 25px 0px 25px;
+    }
 
-        .sidebar-nav > ul > li {
-            margin-bottom: 15px;
-        }
+    .markdown-section iframe {
+        margin-left: auto;
+        margin-right: auto;
+        display: block;
+    }
 
-        .sidebar-nav li {
-            color: #b1b1b1
-        }
+    .video-container {
+        overflow: hidden;
+        position: relative;
+        width:100%;
+    }
 
-        main .markdown-section {
-            max-width: 10000px;
-            padding: 0 25px 80vh;
-        }
+    .video-container::after {
+        padding-top: 56.25%;
+        display: block;
+        content: '';
+    }
 
-        main .markdown-section table {
-            display: table;
-        }
+    .video-container iframe {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+    }
 
-        main .markdown-section table,
-        main .markdown-section table thead,
-        main .markdown-section table tfoot {
-            width: 100%;
-        }
+    div.mermaid {
+      background-color: white;
+      display: flex;
+      justify-content: center;
+      padding: 16px;
+    }
 
-        main .markdown-section pre {
-            padding: 0 0.5rem;
-        }
+    .markdown-section img {
+        display: block;
+        margin-left: auto;
+        margin-right: auto;
+    }
+    .markdown-section img.emoji {
+        display: inline-block;
+        width: auto;
+    }
 
-        main .markdown-section hr {
-            margin: 5em 0;
-        }
-
-        .app-nav.no-badge {
-            margin-right: 0;
-        }
-
-        .make-me-hide {
-            display: none;
-        }
-
-        main .make-toggler:hover {
-            cursor: pointer;
-            color: #42b983;
-        }
-
-        main .make-toggler::after {
-            content: "\f107";
-            font-family: "Font Awesome 6 Pro", sans-serif;
-            -webkit-font-smoothing: antialiased;
-            display: inline-block;
-            font-style: normal;
-            font-variant: normal;
-            text-rendering: auto;
-            line-height: 1;
-            font-weight: 900;
-            margin-left: 8px;
-        }
-
-        main .make-toggler.active::after {
-            content: "\f106";
-        }
-
-        main .markdown-section th {
-            font-weight: 700;
-            text-align: left;
-            padding-top: 15px !important;
-            padding-bottom: 15px !important;
-            font-size: 16px;
-        }
-
-        .tag {
-            padding: 0;
-        }
-
-        .markdown-section blockquote {
-            white-space: normal;
-            padding-bottom: 0;
-        }
-
-        main .markdown-section pre[data-lang]::after {
-            font-size: 10px;
-        }
-
-        main .markdown-section {
-            padding-top: 11px !important;
-        }
-
-        .docsify-example-panels.title-panel h1 a, h1 a {
-            text-transform: none;
-        }
-
-        nav.app-nav {
-            top: 4px;
-        }
-
-        .app-nav.no-badge {
-            right: 10px;
-        }
-
-        .sidebar-nav > ul > li > a {
-            color: white;
-        }
-
-        .markdown-section img {
-            display: block;
-            margin-left: auto;
-            margin-right: auto;
-        }
-
-        .markdown-section li img {
-            padding-top: 6px;
-            padding-bottom: 6px;
-        }
-
-        .markdown-section img[data-no-zoom] {
-            display: inline-block;
-            text-align: left;
-        }
-
-        .markdown-section li img[data-no-zoom] {
-            padding-top: 0;
-            padding-bottom: 2px;
-            padding-right: 6px;
-        }
-
-        .markdown-section ol li > ol,
-        .markdown-section ol li > ul {
-            margin-left: 1.5rem
-        }
-
-        .markdown-section ol {
-            counter-reset: step-counter
-        }
-
-        .markdown-section img.meme {
-            max-width: 320px;
-            border: 10px solid #191928;
-        }
-
-        .medium-zoom-image--opened {
-            z-index: 101;
-        }
-
-        .fa, .fas, .far, .fal {
-            font-size: 15px;
-        }
-
-        .fa-btn {
-            display: inline-block;
-            width: 32px;
-            height: 32px;
-            background-color: white;
-            color: #13151B;
-            border-radius: 6px;
-            padding-left: 6px;
-            line-height: 30px;
-            border: 1px solid #b3b8c7;
-            margin-top: 2px;
-            margin-bottom: 2px;
-        }
-
-        div.sidebar-nav {
-            margin-bottom: 4rem;
-        }
-
-        .markdown-section ul.task-list li.task-list-item:before {
-            content: '';
-        }
-
-        .markdown-section ul.task-list li.task-list-item label {
-            margin-left: 25px;
-        }
-
-        .markdown-section ul.task-list li.task-list-item input[type=checkbox] {
-            position: absolute;
-            left: -999px;
-        }
-
-        .markdown-section ul.task-list li.task-list-item input[type=checkbox]:after {
-            display: inline-block;
-            content: '\f0c8';
-            font-family: "Font Awesome 6 Pro", sans-serif;
-            color: grey;
-            position: absolute;
-            left: 1024px;
-            cursor: default;
-            font-size: 14px;
-        }
-
-        .markdown-section ul.task-list li.task-list-item input[type=checkbox]:checked:after {
-            content: '\f058';
-            color: #42b983;
-        }
-
-        .markdown-section iframe {
-            margin-left: auto;
-            margin-right: auto;
-            display: block;
-        }
-
-        .video-container {
-            overflow: hidden;
-            position: relative;
-            width:100%;
-        }
-
-        .video-container::after {
-            padding-top: 56.25%;
-            display: block;
-            content: '';
-        }
-
-        .video-container iframe {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-        }
-
-        div.mermaid {
-            text-align: center;
-        }
-
-        .markdown-section h2 code {
-            font-size: var(--heading-h2-font-size);
-            font-family: var(--heading-h2-font-family, var(--heading-font-family));
-            background-color: transparent !important;
-            color: var(--heading-h2-color, var(--heading-color)) !important;
-            padding: 0px !important;
-        }
-    </style>
+    .markdown-section li img {
+        padding-top: 6px;
+        padding-bottom: 6px;
+    }
+    .markdown-section img[data-no-zoom] {
+        display: inline-block;
+        text-align: left;
+    }
+    .markdown-section img.medium-zoom-image {
+      background: var(--code-theme-background);
+      padding: 6px;
+      border-radius: var(--code-block-border-radius);
+    }
+    .search input {
+        outline: none;
+        width: 100%;
+        padding: 0.6em 7px;
+        font-size: inherit;
+        border: 1px solid transparent;
+    }
+  </style>
 </head>
-
 <body>
+  <div id="app">Načítavam...</div>
 
-    <div id="app">Načítavam...</div>
+  <div id="search" style="display: none;">
+    <div class="search">
+      <div class="input-wrap">
+        <input type="search" value="" aria-label="Search text" placeholder="Vyhľadávanie">
+      </div>
+    </div>
+  </div>
 
-    <script>
-        var basePath = "/v2023/";
+  <script>
+    var basePath = "/latest/";
         if (
             window.location.href.indexOf("127.0.0.1") > -1
             || window.location.href.indexOf("iwcm.interway.sk") > -1
@@ -285,134 +140,167 @@
         ) {
             basePath = "/";
         }
+    window.$docsify = {
+      name: 'WebJET CMS',
+      nameLink: basePath,
+      repo: 'https://github.com/webjetcms/webjetcms',
+      logo: basePath+'sk/_media/logo.png',
+      basePath: "/", //because of base tag in head this must be set to /
+      routerMode: 'history',
+      auto2top: true, //Scrolls to the top of the screen when the route is changed.
+      loadSidebar: true,
+      loadNavbar: true, //Loads navbar from the Markdown file _navbar.md
+      mergeNavbar: true,
+      maxLevel: 6,
+      subMaxLevel: 6,
+      copyCode: {
+          buttonText: 'Skopírovať do schránky',
+          errorText: 'Chyba',
+          successText: 'Skopírované'
+      },
+      executeScript: true,
+      nativeEmoji: true,
+      notFoundPage: {
+        '/': '/_404.md'
+      },
+      relativePath: false, //otherwise history routing will not work
+      // complete configuration parameters
+      search: {
+        maxAge: 86400000, // Expiration time, the default one day
+        paths: 'auto',
 
-        window.$docsify = {
-            name: ' ',
-            logo: '/_media/logo.png',
-            basePath: basePath,
-            auto2top: true,
-            coverpage: false,
-            executeScript: true,
-            loadSidebar: true,
-            alias: {
-              //'/.*/_sidebar.md': '/_sidebar.md',
-              '/.*/_navbar.md': '/_navbar.md'
-            },
-            loadNavbar: true,
-            mergeNavbar: true,
-            maxLevel: 6,
-            subMaxLevel: 6,
+        // Localization
+        placeholder: {
+          '/sk/': 'Vyhľadávanie',
+          '/': 'Type to search',
+        },
 
-            themeable: {
-                readyTransition: true,
-            },
-            search: {
-                paths: 'auto',
-                placeholder: 'Vyhľadávanie',
-                noData: 'Žiadne výsledky!',
-            },
+        // Localization
+        noData: {
+          '/sk/': 'Neboli nájdené žiadne výsledky',
+          '/': 'No Results',
+        },
 
-            copyCode: {
-                buttonText: 'Skopírovať do schránky',
-                errorText: 'Chyba',
-                successText: 'Skopírované'
-            },
+        // Headline depth, 1 - 6
+        depth: 4,
 
-            pagination: {
-                previousText: 'Predchádzajúce',
-                nextText: 'Ďalšie',
-                crossChapter: true,
-                crossChapterText: true,
-            },
+        hideOtherSidebarContent: false, // whether or not to hide other sidebar content
 
-            relativePath: true,
+        // To avoid search index collision
+        // between multiple websites under the same domain
+        namespace: 'webjetcms-2024',
 
-            notFoundPage: {
-              '/': '/_404.md'
-            },
+        // Use different indexes for path prefixes (namespaces).
+        // NOTE: Only works in 'auto' mode.
+        //
+        // When initialiazing an index, we look for the first path from the sidebar.
+        // If it matches the prefix from the list, we switch to the corresponding index.
+        pathNamespaces: ['/sk', '/en'],
+      },
+    }
+  </script>
+  <!-- Docsify v4 -->
+  <script src="//cdn.jsdelivr.net/npm/docsify@4"></script>
+  <!-- docsify-themeable -->
+  <script src="//cdn.jsdelivr.net/npm/docsify-themeable@0/dist/js/docsify-themeable.min.js"></script>
 
-            tabs: {
-                sync: true,
-                theme: 'material'
+  <script src="//cdn.jsdelivr.net/npm/docsify@4/lib/plugins/zoom-image.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/docsify-copy-code/dist/docsify-copy-code.min.js"></script>
+
+  <!-- Full text search - https://docsify.js.org/#/plugins?id=full-text-search -->
+  <script src="//cdn.jsdelivr.net/npm/docsify/lib/plugins/search.min.js"></script>
+
+  <!-- docsify-tabs (latest v1.x.x) https://jhildenbiddle.github.io/docsify-tabs/#/ -->
+  <script src="https://cdn.jsdelivr.net/npm/docsify-tabs@1"></script>
+
+  <!-- https://github.com/Leward/mermaid-docsify -->
+  <script type="module">
+    import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs";
+    mermaid.initialize({ startOnLoad: true });
+    window.mermaid = mermaid;
+  </script>
+  <script src="//unpkg.com/docsify-mermaid@2.0.1/dist/docsify-mermaid.js"></script>
+
+  <script src="//cdn.jsdelivr.net/npm/prismjs@1/components/prism-bash.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/prismjs@1/components/prism-java.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/prismjs@1/components/prism-sql.js"></script>
+
+  <script>
+    var languages = ['sk', 'en'];
+    //uprav link rendered pre WJ potreby
+    document.addEventListener("DOMContentLoaded", function () {
+      const originalRender = window.$docsify.markdown.renderer.link;
+      window.$docsify.markdown.renderer.link = function(href, title, text) {
+          //console.log("href=", href, "title=", title, "text=", text, "location=", window.location.href, "basePath=", basePath);
+
+          var lngPrefix = "/sk/";
+          if (window.location.href.indexOf("/en/")!=-1) {
+            lngPrefix = "/en/";
+          }
+          if (href.indexOf("http")!=0 && href.indexOf("..")!=0 && href.indexOf("#")!=0 && href.indexOf("//")!=0) {
+            if (href.indexOf("/sk")!=0 && href.indexOf("/en")!=0) {
+              href = lngPrefix + href;
+              href = href.replace("//", "/");
             }
-        };
-    </script>
+          }
 
-    <script src="assets/js/jquery.min.js"></script>
-    <script>
-        $(() => {
-            const body = $("body");
-
-            function hideCode() {
-                setTimeout(() => {
-                    $("ul.app-sub-sidebar").parent("li").addClass("has-sub");
-                    $(".make-toggler").parents("p").next("pre").addClass("make-me-hide");
-                }, 300);
+          //console.log("href=", href)
+          for (var lang of languages) {
+            if (href.indexOf("/"+lang+"/")==0) {
+              //append basePath if hraf starts with /sk/ or /en/
+              href = basePath + href.substring(1);
             }
+          }
 
-            hideCode();
+          let link = originalRender(href, title, text);
+          //console.log("link=", link);
 
-            body.on("click", ".sidebar a:not(.section-link)", hideCode);
+          //ak sa jedna o javadoc otvor do noveho okna a zafrejmuj zobrazenie
+          if (href.indexOf("/javadoc/")!=-1) {
+              //console.log("originalLink=", link);
+              link = link.replace('href="/', 'target="_blank" href="/');
+              link = link.replace('/developer/javadoc/', '/developer/javadoc/index.html?');
+              link = link.replace("/developer/javadoc/index.html?index.html", "/developer/javadoc/index.html");
+              //console.log("fixed link:", link);
+          }
+          if (href.indexOf(".zip")!=-1 || href.indexOf(".xls")!=-1 || href.indexOf(".pdf")!=-1 || href.indexOf(".doc")!=-1) {
+              //console.log("originalLink=", link);
+              link = link.replace('href="', 'target="_blank" href="');
+          }
 
-            body.on("click", ".make-toggler", evt => {
-                const self = $(evt.currentTarget);
-                const code = self.parents("p").next("pre");
-                if (code.hasClass("make-me-hide")) {
-                    code.removeClass("make-me-hide");
-                    self.addClass("active");
-                } else {
-                    code.addClass("make-me-hide");
-                    self.removeClass("active");
-                }
-            });
+          link = link.replace('href="'+lngPrefix+"../", 'href="../');
+          link = link.replace('href="/../', 'href="../');
+          var pathname = window.location.pathname;
+          if (pathname.endsWith("/")==false) {
+            pathname = pathname.substring(0, pathname.lastIndexOf("/")+1);
+          }
+          link = link.replace('href="../', 'href="'+pathname+'../');
 
-            //uprav link rendered pre WJ potreby
-            const originalRender = window.$docsify.markdown.renderer.link;
-            window.$docsify.markdown.renderer.link = function(href, title, text) {
-                let link = originalRender(href, title, text);
-                //ak sa jedna o javadoc otvor do noveho okna a zafrejmuj zobrazenie
-                if (href.indexOf("/javadoc/")!=-1) {
-                    //console.log("originalLink=", link);
-                    link = link.replace('href="#/', 'target="_blank" href="'+basePath);
-                    link = link.replace('/developer/javadoc/', '/developer/javadoc/index.html?');
-                    link = link.replace("/developer/javadoc/index.html?index.html", "/developer/javadoc/index.html");
-                }
-                if (href.indexOf(".zip")!=-1 || href.indexOf(".xls")!=-1 || href.indexOf(".pdf")!=-1 || href.indexOf(".doc")!=-1) {
-                    //console.log("originalLink=", link);
-                    link = link.replace('href="#/', 'target="_blank" href="'+basePath);
-                }
-                //console.log("link: href=", href, "title=", title, "text=", text, "link=", link);
-                return link;
-            }
+          //prevent docsify onclick event
+          link = link.replace('target="_blank"', 'target="_blank" onclick="handleExternalClick(this, event)"');
+          //console.log("link final: ", link);
+          return link;
+      }
 
-            mermaid.initialize({
-                startOnLoad: true
-            });
-        });
-    </script>
+      //move #search element into aside.sidebar after h1 element
+      /*var search = document.getElementById("search");
+      var sidebar = document.getElementsByClassName("sidebar")[0];
+      var h1 = sidebar.getElementsByTagName("h1")[0];
+      if (h1) {
+        h1.parentNode.insertBefore(search, h1.nextSibling);
+      }
+      search.style.display = "block";
+      */
 
-    <script src="assets/js/docsify@4.js"></script>
-    <script src="assets/js/docsify-themeable@0.js"></script>
-    <script src="assets/js/docsify-copy-code@2.js"></script>
-    <script src="assets/js/docsify-tabs@1.js"></script>
 
-    <!-- docsify plugins -->
-    <script src="assets/js/external-script.min.js"></script>
-    <script src="assets/js/search.js"></script>
-    <script src="assets/js/class-change@1.js"></script>
-    <script src="assets/js/docsify-example-panels@1.js"></script>
-
-    <script src="assets/js/prism-bash.min.js"></script>
-    <script src="assets/js/prism-markdown.min.js"></script>
-    <script src="assets/js/prism-nginx.min.js"></script>
-    <script src="assets/js/prism-java.js"></script>
-    <script src="assets/js/prism-sql.js"></script>
-    <script src="assets/js/zoom-image.min.js"></script>
-    <script src="assets/js/docsify-pagination.min.js"></script>
-
-    <script src="assets/js/mermaid.js"></script>
-    <script src="assets/js/docsify-mermaid.js"></script>
+    });
+    function handleExternalClick(link, event) {
+      event.preventDefault();
+      //prevent docsify onclick event
+      event.stopPropagation();
+      window.open(link.href, '_blank');
+    }
+  </script>
 
 </body>
-
 </html>

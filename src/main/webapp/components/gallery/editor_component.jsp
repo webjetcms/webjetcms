@@ -150,23 +150,13 @@ function showHidePagingRow()
 function loadComponentIframe()
 {
 	var url = "/admin/v9/apps/gallery/?dir="+encodeURIComponent(document.textForm.elements["dir"].value);
+	url = url.replaceAll("//", "/");
 	 $("#componentIframeWindowTab").attr("src", url);
 }
 
 function setFileBrowserPath(path) {
 	$('#dir').val(path);
 }
-
-function galeryDirOnChange(dir)
-{
-	document.textForm.dir.value = dir;
-	if (document.textForm.dir.value != dir)
-	{
-		var newOption = new Option(dir, dir, false, true);
-		document.textForm.dir.options[document.textForm.dir.options.length] = newOption;
-	}
-}
-
 </script>
 
 <iwcm:menu name="menuGallery">
@@ -200,7 +190,7 @@ function galeryDirOnChange(dir)
 					<div class="col-sm-8">
 						<div class="input-group">
 							<stripes:text name="dir" id="dir" size="60" class="form-control" />
-							<span onclick="popupExt('/admin/dialog_select_dir.jsp?rootDir=/images/',200,300,window.screenX+window.outerWidth,window.screenY)" class="input-group-addon btn green">
+							<span onclick="popupExt('/admin/dialog_select_dir.jsp?rootDir=/images/',400,700,window.screenX+window.outerWidth,window.screenY)" class="input-group-addon btn green">
 								<i class="fa fa-link"></i>
 							</span>
 						</div>

@@ -19,7 +19,8 @@ public enum FieldType {
     LABEL,
     DATE,
     NUMBER,
-    BOOLEAN
+    BOOLEAN,
+    UUID
     ;
 
     public static FieldType asFieldType(String str) {
@@ -53,6 +54,7 @@ public enum FieldType {
         if ("date".equals(str)) return FieldType.DATE;
         if ("number".equals(str)) return FieldType.NUMBER;
         if ("boolean".equals(str)) return FieldType.BOOLEAN;
+        if ("uuid".equals(str)) return FieldType.UUID;
 
         return FieldType.TEXT;
     }

@@ -4,13 +4,11 @@ Before(({ I, login }) => {
     login('admin');
 });
 
-Scenario('custom-fields-webpages', ({ I, DT, DTE }) => {
+Scenario('custom-fields-webpages', async ({ I, DT, DTE }) => {
 
     I.say("Overujem zobrazenie volitelnych poli vo web stranke.");
 
-    I.amOnPage("/admin/v9/webpages/web-pages-list/?groupid=0");
-    I.jstreeNavigate(["Test stavov", "Voliteľné polia"]);
-    I.click("Voliteľné polia", "#datatableInit_wrapper");
+    I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=8487");
     DTE.waitForEditor();
     I.click("#pills-dt-datatableInit-fields-tab");
     DT.waitForLoader();
@@ -22,6 +20,18 @@ Scenario('custom-fields-webpages', ({ I, DT, DTE }) => {
     I.dontSee("Pole A", "#datatableInit_modal div.DTE_Field_Name_fieldA");
     I.dontSee("Pole B", "#datatableInit_modal div.DTE_Field_Name_fieldB");
     I.dontSee("Pole D", "#datatableInit_modal div.DTE_Field_Name_fieldD");
+    //
+    I.say("Checking UUID preserved value")
+    I.seeInField("#datatableInit_modal div.DTE_Field_Name_fieldM input.field-type-uuid", "7ddaab7f-3d08-b5ab-1e97-1528963fb99a")
+    I.say("Checking new UUID value");
+    DTE.cancel();
+    I.click("#datatableInit_wrapper button.buttons-create");
+    DTE.waitForEditor();
+    I.click("#pills-dt-datatableInit-fields-tab");
+    DT.waitForLoader();
+    var uuid = await I.grabValueFrom("#datatableInit_modal div.DTE_Field_Name_fieldM input.field-type-uuid");
+    //check uuid has 36 chars
+    I.assertEqual(36, uuid.length);
 
     I.say("Overujem zobrazenie standardnych poli.");
 

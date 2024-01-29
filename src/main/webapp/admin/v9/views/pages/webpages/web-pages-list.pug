@@ -113,6 +113,7 @@ block content
                         //server injected trash tab
                         $("#pills-trash-tab").parents("ul").find("li a").removeClass("active");
                         $("#pills-trash-tab").addClass("active");
+                        showHidePageRecoverButtons();
                     }
 
                     var webpageColumns = [(${layout.getDataTableColumns('sk.iway.iwcm.doc.DocDetails')})];
@@ -164,6 +165,22 @@ block content
                         }
                     });
                     webpagesDatatable = wpdInstance.createDatatable();
+
+                    var buttonCounter = 4;
+                    webpagesDatatable.button().add(buttonCounter++, {
+                        text: '<i class="fa-solid fa-trash-can-undo text-danger"></i>',
+                        action: function (e, dt, node) {
+                            webpagesDatatable.executeAction("recoverDoc", false);
+                        },
+                        init: function ( dt, node, config ) {
+                            $.fn.dataTable.Buttons.showIfRowSelected(this, dt);
+                        },
+                        className: 'btn btn-outline-secondary button-recover-page buttons-divider hidden',
+                        attr: {
+                            'title': '[[\#{editor.recover.page_button}]]',
+                            'data-toggle': 'tooltip'
+                        }
+                    });
 
                     var groupColumns = [(${layout.getDataTableColumns('sk.iway.iwcm.doc.GroupDetails')})];
 
@@ -230,6 +247,32 @@ block content
                     groupsDatatable.hideButton("import");
                     groupsDatatable.hideButton("export");
 
+                    $('.tree-col .dt-header-row .button-recover-group').click(function () {
+                        var type = getTreeNodeType(selectedNode);
+                        //console.log("Edit click, type=", type, "selectedNode=", selectedNode);
+                        if (type === 'group') {
+                            $(this).addClass("processing");
+                            groupsDatatable.rows().deselect();
+                            let selected = getTreeNodeSelectedGroups();
+                            let groupNames = "<ul>";
+                            selected.forEach(function(node) {
+                                groupsDatatable.row("#"+node.id).select();
+                                groupNames += "<li>"+node.original.groupDetails.groupName+"</li>";
+                            });
+                            groupNames += "</ul>";
+                            groupsDatatable.executeAction("recoverGroup", false,
+                                "[[\#{editor.recover.confirm_title}]]",
+                                groupNames+"[[\#{editor.recover.confirm_msg}]]");
+                        }
+                    });
+                    window.addEventListener("WJ.DT.executeAction", function(e) {
+                        $('#SomStromcek').jstree(true).refresh();
+                        $('.tree-col .dt-header-row .button-recover-group').removeClass("processing");
+                    });
+                    window.addEventListener("WJ.DT.executeActionCancel", function(e) {
+                        $('.tree-col .dt-header-row .button-recover-group').removeClass("processing");
+                    });
+
                     window.jsTreeDocumentOpener.dataTable = webpagesDatatable;
                     window.jsTreeDocumentOpener.init();
                     var docIdParameter = window.jsTreeDocumentOpener._currentId;
@@ -263,6 +306,8 @@ block content
 
                     $('#SomStromcek').on("changed.jstree", function(node, action, selected, event) {
                         //console.log("changed.jstree node=", node, "action=", action);
+
+                        showHidePageRecoverButtons();
 
                         if ("model"==action.action || "ready"==action.action || "deselect_all"==action.action) return;
 
@@ -411,10 +456,12 @@ block content
                         }
                         if ("datatableInit"===e.detail.id) {
                             if (webpagesDatatable.EDITOR.currentJson?.docId === -1) {
-                                //je to nova stranka, prepni sa na kartu Zakladne
-                                setTimeout(()=> {
-                                    $("#pills-dt-datatableInit-basic-tab").trigger("click");
-                                }, 700);
+                                if ($("#pills-dt-datatableInit-content-tab").hasClass("active")) {
+                                    //je to nova stranka, prepni sa na kartu Zakladne
+                                    setTimeout(()=> {
+                                        $("#pills-dt-datatableInit-basic-tab").trigger("click");
+                                    }, 700);
+                                }
                             }
                             //pri duplikovani zmazme niektore hodnoty
                             setTimeout(()=> {
@@ -553,7 +600,7 @@ block content
                 }
 
                 function getTreeNodeSelected() {
-                    var jstree = $('#SomStromcek').jstree();
+                    var jstree = $('#SomStromcek').jstree(true);
 
                     let selectedNodes = [];
                     let selected = jstree.get_selected();
@@ -571,6 +618,9 @@ block content
                 function getTreeNodeSelectedGroups() {
                     let jstree = $('#SomStromcek').jstree();
                     let selected = jstree.get_selected();
+
+                    showHidePageRecoverButtons();
+
                     let selectedNodes = [];
                     selected.forEach(function(id) {
                         let node = jstree.get_node(id);
@@ -653,6 +703,49 @@ block content
                     input.trigger(e);
                 }
 
+                function showHidePageRecoverButtons() {
+                    setTimeout(()=> {
+                        //console.log("showHidePageRecoverButtons, trash=", $("#pills-trash-tab").hasClass("active"));
+                        var showRecoverGroup = false;
+                        var showRecoverPages = false;
+                        //Folder recover can be apply only if we are in TRASH tab
+                        if($("#pills-trash-tab").hasClass("active")) {
+                            let selected = getTreeNodeSelected();
+                            //console.log("selected=", selected, "webpagesDatatableGroupId=", webpagesDatatableGroupId);
+
+                            if (selected!==false) {
+                                showRecoverGroup = true;
+                            }
+
+                            //Page recover can be apply only if we are in TRASH tab + web page tab is pills-pages-tab
+                            if($("#pills-pages-tab").hasClass("active")) {
+                                //Page can be recovered only pages, that are not INSIDE of deleetd folder's (so no folder can be selected in tree)
+                                if(selected===false) {
+                                    showRecoverPages = true;
+                                }
+                            }
+                        }
+
+                        if (showRecoverGroup) {
+                            $('.tree-col .dt-header-row button.button-recover-group').show();
+                            $('.tree-col .dt-header-row button.buttons-remove').removeClass("buttons-divider");
+                        } else {
+                            $('.tree-col .dt-header-row button.button-recover-group').hide();
+                            $('.tree-col .dt-header-row button.buttons-remove').addClass("buttons-divider");
+                        }
+
+                        if (showRecoverPages) {
+                            $("#datatableInit_wrapper .dt-header-row button.button-recover-page").show();
+                            $('#datatableInit_wrapper .dt-header-row button.buttons-remove').removeClass("buttons-divider");
+                        } else {
+                            $("#datatableInit_wrapper .dt-header-row button.button-recover-page").hide();
+                            $('#datatableInit_wrapper .dt-header-row button.buttons-remove').addClass("buttons-divider");
+                        }
+                    }, 300);
+                }
+
+                showHidePageRecoverButtons();
+
                 $('#pills-folders a[data-bs-toggle="tab"]').on('click', function (e) {
                     //console.log("tab clicked, e=", e, "shift=", e.shiftKey);
                     let id = e.target.id;
@@ -673,6 +766,8 @@ block content
                     if (window.jstreeSettings.isPagesShow()) {
                         click = click.replace(/dt-tree-group/gi, "dt-tree");
                     }
+
+                    showHidePageRecoverButtons();
 
                     //zmaz groupid parameter z URL aby sa nam potom znova neoznacil adresar ale zobrazil root
                     let url = window.location.protocol + '//' + window.location.host + window.location.pathname;
@@ -724,6 +819,8 @@ block content
                     let id = e.target.id;
                     let changesId =  [(${layout.getConstant('systemPagesRecentPages')})];
                     let waitingId =  [(${layout.getConstant('systemPagesDocsToApprove')})];
+
+                    showHidePageRecoverButtons();
 
                     if ("pills-folders-dt-tab" == id) {
                         $("#datatableInit_wrapper").hide();

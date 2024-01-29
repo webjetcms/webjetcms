@@ -223,6 +223,8 @@ function testAlwaysIncluded(I, page) {
      I.seeInSource("//Skript bez obmedzeni demo domena");
      I.dontSeeInSource("//Skript pre SK domena mirroring");
      I.dontSeeInSource("//Skript bez obmedzeni domena test");
+     //BUG: script was inserted with contains name, we must test as equals
+     I.dontSeeInSource("//This script should not be included in head position");
 
      //datumovo obmedzene
      I.seeInSource("//Platny skript s casovo obmedzenou platnostou");
@@ -243,6 +245,7 @@ Scenario('vkladanie skriptov', ({ I, DTE }) => {
 
      I.amOnPage("/uvodna-stranka-thymeleaf.html?NO_WJTOOLBAR=true")
      testAlwaysIncluded(I, "home");
+
 
      I.amOnPage("/kontakt/");
      testAlwaysIncluded(I, "kontakt");

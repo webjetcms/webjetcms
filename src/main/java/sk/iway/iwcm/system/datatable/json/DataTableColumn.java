@@ -107,7 +107,7 @@ public class DataTableColumn {
         DataTableColumnType[] inputType = annotation.inputType();
         if (inputType.length > 0) {
             for (DataTableColumnType type : inputType) {
-                setPropertiesFromType(type);
+                setPropertiesFromType(type, annotation);
             }
         }
 
@@ -273,7 +273,7 @@ public class DataTableColumn {
      * @param dataTableColumnType - {@link DataTableColumnType} - nastaveny v
      *                            anotacii inputType
      */
-    private void setPropertiesFromType(DataTableColumnType dataTableColumnType) {
+    private void setPropertiesFromType(DataTableColumnType dataTableColumnType, sk.iway.iwcm.system.datatable.annotations.DataTableColumn annotation) {
         if (dataTableColumnType == DataTableColumnType.ID) {
             if (Tools.isEmpty(data)) {
                 data = "id";
@@ -338,6 +338,8 @@ public class DataTableColumn {
                 editor = new DataTableColumnEditor();
             }
             editor.setType("textarea");
+
+            if (annotation.className()!=null && annotation.className().contains("show-html")) editor.addAttr("entityDecode", "false");
         }
 
         if (dataTableColumnType == DataTableColumnType.DATE) {

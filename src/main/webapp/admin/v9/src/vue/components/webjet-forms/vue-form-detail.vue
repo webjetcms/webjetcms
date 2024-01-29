@@ -265,6 +265,24 @@
                     }
                 });
                 columns.push({
+                    data: "userDetails.company",
+                    name: "userDetails.company",
+                    title: this.$userCompany,
+                    renderFormat: 'dt-format-text',
+                    orderable: orderable,
+                    filter: orderable,
+                    defaultContent: "",
+                    visible: false,
+                    className: "cell-not-editable",
+                    editor: {
+                        type: 'text',
+                        attr: {
+                            disabled: true
+                        },
+                        tab: "user"
+                    }
+                });
+                columns.push({
                     data: "userDetails.city",
                     name: "userDetails.city",
                     title: this.$userCity,

@@ -146,7 +146,7 @@ public class CalendarDB
 			List<String> typyIn = null;
 			if (Tools.isNotEmpty(typNazvy))
 			{
-				StringTokenizer st = new StringTokenizer(typNazvy, ",+ ");
+				StringTokenizer st = new StringTokenizer(typNazvy, ",+");
 				while (st.hasMoreTokens())
 				{
 					String nazov = DB.removeSlashes(st.nextToken());

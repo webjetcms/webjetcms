@@ -131,3 +131,98 @@ Scenario('multigroup - preserve sort order', ({ I, DT, DTE }) => {
     DTE.cancel();
 });
 
+function selectSlave(I) {
+    I.clickCss("#editorAppDTE_Field_editorFields-groupCopyDetails > section > div > div > button.btn-vue-jstree-add");
+    I.click(locate('.jstree-node.jstree-closed').withText('Test stavov').find('.jstree-icon.jstree-ocl'));
+    I.click(locate('.jstree-node.jstree-closed').withText('Multigroup').find('.jstree-icon.jstree-ocl'));
+    I.click(locate('#jsTree').find('.jstree-node.jstree-leaf').withText('Slave').find('a.jstree-anchor'));
+}
+
+function deletePage(I, DT, DTE) {
+    DT.waitForLoader();
+    I.clickCss("#datatableInit_wrapper table thead button.buttons-select-all");
+    I.see("Záznamy 1 až 1 z 1", "#datatableInit_wrapper .dt-footer-row");
+    I.see("1 riadok označený", "#datatableInit_wrapper .dt-footer-row");
+    I.clickCss("#datatableInit_wrapper button.buttons-remove");
+    I.click("Zmazať", "div.DTE_Action_Remove");
+    DTE.waitForLoader();
+    I.waitForText("Nenašli sa žiadne vyhovujúce záznamy", 10, "#datatableInit_wrapper");
+}
+
+Scenario('multigroup - delete slaves after master hard delete', ({ I, DT, DTE }) => {
+    I.amOnPage("/admin/v9/webpages/web-pages-list/?groupid=57591");
+
+    var docName = "autotest-multi-delete-" + randomNumber;
+
+    //
+    I.say("Create master with copy (slave)");
+        I.clickCss("#datatableInit_wrapper > div.dt-header-row button.buttons-create");
+        DTE.waitForEditor();
+        I.waitForElement("#DTE_Field_title");
+        I.click("#DTE_Field_title");
+        I.fillField("#DTE_Field_title", docName);
+        selectSlave(I);
+        DTE.save();
+
+    //
+    I.say("Check and delete slva + delete check -soft");
+        I.jstreeClick("Slave");
+        DT.filter("title", docName);
+        I.see(docName);
+        deletePage(I, DT, DTE);
+
+    //
+    I.say("Hard delete of slave");
+        I.click("#pills-trash-tab");
+        DT.waitForLoader();
+        I.see(docName);
+        deletePage(I, DT, DTE);
+        I.amOnPage("/admin/v9/webpages/web-pages-list/?groupid=57591");
+
+    //
+    I.say("Add slave again but this time delete MASTER + check that slave still works (not deleted)");
+        DT.filter("title", docName);
+        I.clickCss("#datatableInit_wrapper button.buttons-select-all");
+        I.clickCss("#datatableInit_wrapper div.dt-header-row button.buttons-edit");
+        DTE.waitForEditor();
+
+        I.click("#pills-dt-datatableInit-basic-tab");
+        selectSlave(I);
+        DTE.save();
+
+        I.jstreeClick("Slave");
+        I.see(docName, "#datatableInit_wrapper");
+
+        I.jstreeClick("Master");
+        deletePage(I, DT, DTE);
+
+        //Check that page still works
+        I.jstreeClick("Slave");
+        I.see(docName, "#datatableInit_wrapper");
+        I.click(docName);
+        DTE.waitForEditor();
+        DTE.cancel();
+
+    //
+    I.say("Master hard delete - should be allso slave hard deleted");
+        I.click("#pills-trash-tab");
+        DT.waitForLoader();
+        DT.waitForLoader();
+        DT.filter("title", docName);
+        deletePage(I, DT, DTE);
+
+        //
+        I.say("Check soft delete")
+        I.amOnPage("/admin/v9/webpages/web-pages-list/?groupid=57592");
+        DT.filter("title", docName);
+        I.dontSee(docName);
+        I.see("Nenašli sa žiadne vyhovujúce záznamy");
+
+        //
+        I.say("Check hard delete");
+        I.click("#pills-trash-tab");
+        DT.waitForLoader();
+        DT.filter("title", docName);
+        I.dontSee(docName);
+        I.see("Nenašli sa žiadne vyhovujúce záznamy");
+});

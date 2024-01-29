@@ -21,7 +21,7 @@ Scenario('Nastavenie tabulky', async ({ I, Browser, Document }) => {
         await Document.compareScreenshotElement("#insertScriptTable_wrapper", "autotest-insert-script-settings.png", 1280, 270, 5);
 
         //generate base on server:
-        //CODECEPT_URL='http://demotest.webjetcms.sk' CODECEPT_SHOW=false npx codeceptjs run --grep 'Nastavenie tabulky'
+        //CODECEPT_URL='http://webjet9.tau27.iway.sk' CODECEPT_SHOW=false npx codeceptjs run --grep 'Nastavenie tabulky'
     }
 });
 
@@ -143,10 +143,10 @@ Scenario('Editacia bunky po presune stlpca', ({ I, DT, Browser }) => {
     I.dtFilter("oldUrl", "imptest3");
     I.see("Záznamy 1 až 3 z 3");
 
-    I.fillField("input.dt-filter-from-redirectCode", "304");
+    I.fillField("input.dt-filter-from-redirectCode", "302");
     I.clickCss("button.dt-filtrujem-redirectCode");
     DT.waitForLoader();
-    I.see("Záznamy 1 až 2 z 2");
+    I.see("Záznamy 1 až 3 z 3");
 });
 
 Scenario('Presun stlpca, editacia bunky-reset', ({ I, DT }) => {
@@ -191,7 +191,9 @@ Scenario('drag drop okna editora', async ({ I, DTE, Browser }) => {
     DTE.waitForEditor();
     let value = await I.grabCssPropertyFrom('div.DTED.show div.modal-content', 'left');
     I.assertEqual(value, "0px");
+    I.wait(0.5);
     I.dragSlider("div.DTED.show div.modal-header", -70);
+    I.wait(0.5);
     value = await I.grabCssPropertyFrom('div.DTED.show div.modal-content', 'left');
     if (Browser.isFirefox()) {
         I.assertEqual(value, "-13px");

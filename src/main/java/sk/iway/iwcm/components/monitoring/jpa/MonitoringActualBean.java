@@ -9,18 +9,16 @@ import java.util.Locale;
 import java.util.Properties;
 
 import org.apache.commons.dbcp.ConfigurableDataSource;
-import oshi.SystemInfo;
-import oshi.hardware.CentralProcessor;
-import oshi.hardware.HardwareAbstractionLayer;
-import oshi.hardware.CentralProcessor.TickType;
 import lombok.Getter;
 import lombok.Setter;
+
 import sk.iway.iwcm.*;
 import sk.iway.iwcm.stat.SessionHolder;
 import sk.iway.iwcm.system.ConfDB;
 import sk.iway.iwcm.system.ConfDetails;
 import sk.iway.iwcm.system.cluster.ClusterDB;
 import sk.iway.iwcm.system.datatable.json.LabelValueInteger;
+import sk.iway.iwcm.system.monitoring.CpuInfo;
 
 /**
  * 47419 - monitorovanie servera Bean prenasajuci JSON data do administracie pre
@@ -42,7 +40,8 @@ public class MonitoringActualBean {
     private Long memMax;
 
     /** zatazenie CPU **/
-    private Long cpuUsage;
+    private Integer cpuUsage;
+    private Integer cpuUsageProcess;
     private Integer serverCpus;
 
     /** vseobecne informacie **/
@@ -90,20 +89,12 @@ public class MonitoringActualBean {
         memUsed = memTotal.longValue() - memFree.longValue();
         memMax = rt.maxMemory();
 
-        /** zatazenie CPU **/
-        try {
-            SystemInfo si = new SystemInfo();
-            HardwareAbstractionLayer hal = si.getHardware();
-            CentralProcessor cpu = hal.getProcessor();
-            long[] prevTicks = new long[TickType.values().length];
-            prevTicks = cpu.getSystemCpuLoadTicks();
-            Thread.sleep(1000);
-            cpuUsage = Math.round(cpu.getSystemCpuLoadBetweenTicks( prevTicks ) * 100);
-            serverCpus = cpu.getLogicalProcessorCount();
-        } catch (Exception ex) {
-            Logger.error(MonitoringActualBean.class, ex);
-        }
-        //cpuUsage = cpu.getSystemLoadAverage(1)[0];
+        CpuInfo cpu = new CpuInfo();
+        cpuUsage = cpu.getCpuUsage();
+        cpuUsageProcess = cpu.getCpuUsageProcess();
+        serverCpus = cpu.getCpuCount();
+
+        //Logger.debug(MonitoringActualBean.class, "cpuUsage: " + cpuUsage+" processUsage="+cpuUsageProcess+" cpuCount="+serverCpus);
 
         /** vseobecne informacie **/
         serverActualTime = Tools.getNow();

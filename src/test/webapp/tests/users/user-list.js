@@ -80,14 +80,14 @@ Scenario('test-prava-admin-user', ({ I }) => {
 
      I.fillField({css: "input.dt-filter-lastName"}, "Admin");
      I.pressKey('Enter', "input.dt-filter-key");
-     I.see("Admin");
+     I.see("Admin", "div.dataTables_scrollBody tbody");
      I.wait(1);
 
      I.amOnPage(url + "?removePerm=" + permEditAdminUser);
 
      I.fillField({css: "input.dt-filter-lastName"}, "Admin");
      I.pressKey('Enter', "input.dt-filter-key");
-     I.dontSee("Admin");
+     I.dontSee("Admin", "div.dataTables_scrollBody tbody");
 
      I.logout();
  });
@@ -96,14 +96,14 @@ Scenario('test-prava-admin-user', ({ I }) => {
 
      I.fillField({css: "input.dt-filter-lastName"}, "Balážová");
      I.pressKey('Enter', "input.dt-filter-key");
-     I.see("Balážová");
+     I.see("Balážová", "div.dataTables_scrollBody tbody");
      I.wait(1);
 
      I.amOnPage(url + "?removePerm=" + permEditPublicUser);
 
      I.fillField({css: "input.dt-filter-lastName"}, "Balážová");
      I.pressKey('Enter', "input.dt-filter-key");
-     I.dontSee("Balážová");
+     I.dontSee("Balážová", "div.dataTables_scrollBody tbody");
 
      I.logout();
  });
@@ -112,23 +112,23 @@ Scenario('test-prava-admin-user', ({ I }) => {
 
      I.fillField({css: "input.dt-filter-lastName"}, "Admin");
      I.pressKey('Enter', "input.dt-filter-key");
-     I.see("Admin");
+     I.see("Admin", "div.dataTables_scrollBody tbody");
      I.wait(1);
 
      I.fillField({css: "input.dt-filter-lastName"}, "Balážová");
      I.pressKey('Enter', "input.dt-filter-key");
-     I.see("Balážová");
+     I.see("Balážová", "div.dataTables_scrollBody tbody");
      I.wait(1);
 
      I.amOnPage(url + "?removePerm=" + permEditAdminUser + "," + permEditPublicUser);
 
      I.fillField({css: "input.dt-filter-lastName"}, "Admin");
      I.pressKey('Enter', "input.dt-filter-key");
-     I.dontSee("Admin");
+     I.dontSee("Admin", "div.dataTables_scrollBody tbody");
 
      I.fillField({css: "input.dt-filter-lastName"}, "Balážová");
      I.pressKey('Enter', "input.dt-filter-key");
-     I.dontSee("Balážová");
+     I.dontSee("Balážová", "div.dataTables_scrollBody tbody");
 
      I.logout();
  });
@@ -140,7 +140,7 @@ Scenario('test-prava-admin-user', ({ I }) => {
 
      I.fillField({css: "input.dt-filter-lastName"}, "Balážová");
      I.pressKey('Enter', "input.dt-filter-key");
-     I.see("Balážová");
+     I.see("Balážová", "div.dataTables_scrollBody tbody");
      I.wait(1);
 
      I.click("td.dt-select-td.sorting_1");
@@ -190,15 +190,27 @@ Scenario('filter by user group', ({ I, DT }) => {
 });
 
 Scenario("approve user - show user by id in DT", ({I}) => {
+     var url="/admin/v9/users/user-list/#dt-filter-id=3";
      I.logout();
-     I.amOnPage("/admin/v9/users/user-list/#dt-filter-id=3");
+     I.amOnPage(url);
      I.relogin("admin", false);
 
-     I.seeInCurrentUrl("/admin/v9/users/user-list/#dt-filter-id=3");
+     I.seeInCurrentUrl(url);
+     I.waitForText("Záznamy 1 až 1 z 1", 10, "div.dataTables_info");
+     I.see("vipklient", "#datatableInit");
+     I.dontSee("arnoldschwarzenegger", "#datatableInit");
+
+     url = url + "&dt-select=true";
+
+     I.logout();
+     I.amOnPage(url);
+     I.relogin("admin", false);
+
+     I.seeInCurrentUrl(url);
      I.waitForText("Záznamy 1 až 1 z 1", 10);
      I.see("vipklient", "#datatableInit");
      I.dontSee("arnoldschwarzenegger", "#datatableInit");
-     I.see("1 riadok označený");
+     I.see("1 riadok označený", "div.dataTables_info");
 });
 
 Scenario("BUG set user perms from first page", ({I, DTE}) => {
@@ -313,9 +325,58 @@ Scenario("Useredit-dialog", ({I}) => {
 
 });
 
-Scenario("logout", ({I, DTE}) => {
+Scenario("logout", ({I}) => {
      I.logout();
 });
+
+Scenario("New select filter using permGroups", ({I, DT}) => {
+
+     DT.showColumn("Skupiny práv");
+
+     DT.filter("login", "admin");
+
+     DT.filterSelect("editorFields.permGroups", "Admini");
+
+     I.see("Admini", "div.datatable-column-width");
+     I.dontSee("forTestA", "div.datatable-column-width");
+     I.dontSee("forTestB", "div.datatable-column-width");
+
+     DT.filter("login", "tester");
+     I.see("tester", "td.dt-row-edit");
+     I.see("tester3", "td.dt-row-edit");
+     I.dontSee("tester2", "td.dt-row-edit");
+
+     DT.filterSelect("editorFields.permGroups", "forTestA");
+
+     I.see("Nenašli sa žiadne vyhovujúce záznamy", "div.dataTables_scrollBody");
+
+     DT.filter("login", "testLogin");
+
+     I.see("testLogin", "td.dt-row-edit");
+     I.see("forTestA, forTestB", "div.datatable-column-width");
+
+     DT.resetTable();
+});
+
+Scenario('Test self_delete error', ({ I, DT, DTE}) => {
+     I.relogin("tester_self_delete");
+     I.amOnPage("/admin/v9/users/user-list/");
+     DT.filter("login", "tester_self_delete");
+     I.dontSee("Nenašli sa žiadne vyhovujúce záznamy");
+
+     I.say("try delete myself");
+     I.click("button.dt-filter-id");
+     I.click("button.btn.btn-sm.buttons-selected.buttons-remove");
+     DTE.waitForEditor();
+     I.click("Zmazať", "div.DTE_Action_Remove");
+     I.see("Nemôžete vymazať používateľa, s ktorým ste aktuálne prihlásený.", "div.DTE_Form_Error");
+     DTE.cancel();
+});
+
+Scenario("logout 2", ({I}) => {
+     I.logout();
+});
+
 
 //TODO: dalsie testy, overenie jednotlivych kariet, overenie prihlasenia vytvoreneho pouzivatela
 

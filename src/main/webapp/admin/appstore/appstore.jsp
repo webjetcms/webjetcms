@@ -123,7 +123,7 @@ $("document").ready(function()
 		hideApps();
 		$(".menu .menu-app").removeClass("selected");
 		$(".menu,.promoApp, .block-header").fadeIn();
-
+		return false;
 	});
 
 	$("div.promo .promoApp").click(function(event){
@@ -205,72 +205,12 @@ $("document").ready(function()
 
 function showFeatured(key)
 {
-	var topPosition = $("#"+key).offset().top + actualHeight;
-	if (topPosition < 0) topPosition = 0;
-
-	var failsafe = 0;
-	if (topPosition > (actualHeight + pageHeight))
-	{
-		while (topPosition > (actualHeight+pageHeight) && failsafe++ < 10)
-		{
-			//window.alert(topPosition+" vs "+(actualHeight));
-			//scrollerDown();
-			actualHeight = actualHeight + pageHeight;
-		}
-
-		$(".menuBox ul").animate({
-			top: "-" + (actualHeight) + "px"
-		});
-	}
-	else if (topPosition < actualHeight)
-	{
-		while (topPosition < actualHeight && failsafe++ < 10)
-		{
-			//window.alert(topPosition+" vs "+(actualHeight));
-			actualHeight = actualHeight - pageHeight;
-		}
-		$(".menuBox ul").animate({
-			top: "-" + (actualHeight) + "px"
-		});
-	}
-
 	$("#"+key).click();
 }
 
 function hideApps () {
 	$(".menu li").removeClass("selected");
 	$(".store .app").hide();
-}
-
-function scrollerUp(){
-	if (actualHeight - pageHeight < 0 || $(".menuBox ul").is(':animated')) {
-		return false;
-	}
-
-	hideApps();
-
-	actualHeight = actualHeight - pageHeight;
-
-	$(".menuBox ul").animate({
-		top: "-" + actualHeight + "px"
-	});
-}
-
-function scrollerDown()
-{
-	//window.alert("false, actualHeight="+actualHeight+" top="+$(".menu li:last").offset().top+" pageHeight="+pageHeight);
-	if (pageHeight > $(".menu li:last").offset().top || $(".menuBox ul").is(':animated'))
-	{
-		return false;
-	}
-
-	hideApps();
-
-	$(".menuBox ul").animate({
-		top: "-" + (actualHeight + pageHeight) + "px"
-	});
-
-	actualHeight = actualHeight + pageHeight;
 }
 
 function componentClick(componentName, width, height)
@@ -401,7 +341,7 @@ function componentClick(componentName, width, height)
 		for (AppBean app : appsList)
 		{
 			%>
-			<div class="app<%=appCounter %> app">
+			<div class="app<%=appCounter %> app app-<%=DocTools.removeChars(app.getNameKey(), true).replace('.', '-') %>">
 				<div class="app-header content">
 					<div class="container">
 					<a class="button-back"><img alt="<iwcm:text key="components.appstore.return"/>" src="/admin/appstore/images/btn-back.png"><iwcm:text key="components.appstore.return"/></a>
@@ -418,11 +358,10 @@ function componentClick(componentName, width, height)
 							</div>
 							<div class="col-sm-6 app-name">
 								<h2><iwcm:text key="<%=app.getNameKey() %>"/></h2>
-								<p><iwcm:text key="components.appstore.desc"/></p>
+								<%	if (app.isFree()) {%><span class="price free"><iwcm:text key="components.cloud.appstore.free"/></span><% } else { %><span class="price"><%=app.getPriceEur() %> €</span><% } %>
 							</div>
 							<div class="col-sm-4 app-buy">
-							<a href="javascript:componentClick('<%=app.getComponentClickAction()%>')" class="buy"><iwcm:text key="components.cloud.apps.insertToYourSite"/></a>
-							<%	if (app.isFree()) {%><span class="price free"><iwcm:text key="components.cloud.appstore.free"/></span><% } else { %><span class="price"><%=app.getPriceEur() %> €</span><% } %>
+								<a href="javascript:componentClick('<%=app.getComponentClickAction()%>')" class="buy"><iwcm:text key="components.cloud.apps.insertToYourSite"/></a>
 							</div>
 
 						</div>
@@ -430,37 +369,29 @@ function componentClick(componentName, width, height)
 				</div>
 
 				<div class="content app-desc">
-					<div class="container">
+					<div class="container-lg">
 						<div class="row">
 						<%
-						int colWidth = 12;
 						if (app.getGalleryImages()!=null && app.getGalleryImages().size()>0) {
-						colWidth = 6;
 						%>
-							<div class="col-sm-6 gallery">
-
-							<ul>
+							<div class="col-sm-8 gallery">
+								<ul>
 								<% for (String path : app.getGalleryImages()) { %>
-								<li><img src="<%=path %>" alt="" /></li>
+									<li><p class="text-center"><img class="img-responsive img-fluid" src="<%=path %>" alt="" loading="lazy" /></p></li>
 								<% } %>
-							</ul>
-						</div>
-
+								</ul>
+							</div>
 						<% } %>
-
-						<div class="col-sm-<%=colWidth %>">
-						<div class="description">
-						<h3><iwcm:text key="components.appstore.popis"/></h3>
-							<%
-						   if(Tools.isNotEmpty(app.getDescriptionKey()) && app.getDescriptionKey().indexOf(" ") > -1) out.print(app.getDescriptionKey());
-						   else out.print(prop.getText(app.getDescriptionKey()));
-						   %>
+						<div class="col-sm-4">
+							<div class="description">
+								<%
+								if(Tools.isNotEmpty(app.getDescriptionKey()) && app.getDescriptionKey().indexOf(" ") > -1) out.print(app.getDescriptionKey());
+								else out.print(prop.getText(app.getDescriptionKey()));
+								%>
+							</div>
 						</div>
-						</div>
-
-			</div>
-
-			</div>
+					</div>
+				</div>
 
 			</div>
 

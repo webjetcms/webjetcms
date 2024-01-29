@@ -24,7 +24,7 @@ import sk.iway.iwcm.system.jpa.DefaultTimeValueConverter;
 
 @Service
 public class ReservationService {
-    
+
     /**
      * !! Beware, reservation time must be already set into reservation date (date and time must be combined).
      * Check this validation requirements :
@@ -38,7 +38,7 @@ public class ReservationService {
      * @return If any of this validations are violated, text key with belonging error message is returned.
      *         Otherwise return null;
      */
-    public String checkReservationTimeRangeValidity(ReservationEntity reservation, ReservationObjectEntity reservationObject, 
+    public String checkReservationTimeRangeValidity(ReservationEntity reservation, ReservationObjectEntity reservationObject,
         List<ReservationObjectTimesEntity> reservationObjectTimes) {
 
         //Compute day range (how many days we want reservate)
@@ -104,7 +104,7 @@ public class ReservationService {
 
             //Now we have reservation object time range for specific day of week
             //We must check if "reservation" time range is inside "reservation object" time range
-            if((objectTimeFrom.getTime() <= reservationTimeFrom.getTime()) 
+            if((objectTimeFrom.getTime() <= reservationTimeFrom.getTime())
             && (objectTimeTo.getTime() >= reservationTimeTo.getTime())) {
                 //"reservation" time range IS inside "reservation object" time range
                 continue;
@@ -119,7 +119,7 @@ public class ReservationService {
     }
 
     /**
-     * !! Beware, reservation time must be already set into reservation date (date and time must be combined). 
+     * !! Beware, reservation time must be already set into reservation date (date and time must be combined).
      * Check this validation requirements :
      * 1. Reservation date from is <= than reservation date to (if from = to reservation is for 1 day)
      * 2. Reservation date from/to arent in past
@@ -138,7 +138,7 @@ public class ReservationService {
 
         //Validate date range
         if(reservationDateTo.before(reservationDateFrom)) return "reservation.reservations.date_range_in_bad_order.js";
-        
+
         //Reservation date from/to allready includes set time
         //Validate date time range (if part or whole range is in past)
         Date now = new Date();
@@ -151,12 +151,12 @@ public class ReservationService {
         //Potentially overlaping reservations, days are overlaping BUT time does not have overlap
         // !! We are finding only ACCEPTED reservations
         //We dont count reservations is they are rejected or still waiting for acceptance
-        List<ReservationEntity> potentiallyOverlappingReservations = 
-            rr.findAllByReservationObjectIdAndDomainIdAndDateFromLessThanEqualAndDateToGreaterThanEqualAndAcceptedTrue(reservationObejct.getId().intValue(), CloudToolsForCore.getDomainId(), reservationDateTo, reservationDateFrom); 
+        List<ReservationEntity> potentiallyOverlappingReservations =
+            rr.findAllByReservationObjectIdAndDomainIdAndDateFromLessThanEqualAndDateToGreaterThanEqualAndAcceptedTrue(reservationObejct.getId().intValue(), CloudToolsForCore.getDomainId(), reservationDateTo, reservationDateFrom);
 
         //When we do EDIT on reservation, we must remove this reservation from list
         Long reservationId = reservation.getId();
-        if(reservationId != null && reservationId > 0 && potentiallyOverlappingReservations != null) 
+        if(reservationId != null && reservationId > 0 && potentiallyOverlappingReservations != null)
             potentiallyOverlappingReservations.removeIf(item -> item.getId() == reservationId);
 
         //Now check if even time interval overlaps
@@ -173,13 +173,13 @@ public class ReservationService {
                 Date overlapFrom = DefaultTimeValueConverter.getValidTimeValue(overlapReservation.getDateFrom());
                 Date overlapTo = DefaultTimeValueConverter.getValidTimeValue(overlapReservation.getDateTo());
 
-                if(checkOverlap(reservationTimeFrom, reservationTimeTo, overlapFrom, overlapTo, true)) 
+                if(checkOverlap(reservationTimeFrom, reservationTimeTo, overlapFrom, overlapTo, true))
                     overlappingReservations.add(overlapReservation);
             }
         }
 
         /*
-         * Now we know that all reservations in List "overlapReservation" are overlaping with our new reservation, but 
+         * Now we know that all reservations in List "overlapReservation" are overlaping with our new reservation, but
          * we still must figure out if they are overlaping each other. Reason is we need compute max number of overlaps
          * in same time. Reason is because every "reservationObject" has it own set max number of reservations in same time.
         */
@@ -188,13 +188,13 @@ public class ReservationService {
         for(int i = 0; i < overlappingReservations.size(); i++) {
             int overlapCount = 0;
             ReservationEntity re1 = overlappingReservations.get(i);
-            
+
             for(int j = 0; j < overlappingReservations.size(); j++) {
                 //Do not compare with same entity
                 if(i == j) continue;
 
                 ReservationEntity re2 = overlappingReservations.get(j);
-                
+
                 if(checkOverlap(re1.getDateFrom(), re1.getDateTo(), re2.getDateFrom(), re2.getDateTo(), true))
                     overlapCount++;
             }
@@ -208,7 +208,7 @@ public class ReservationService {
 
         //+1 because we want add new reservation (+1 our new reservation)
         //Validate if still can add our reservation (due to number limitation)
-        if((maxOverlapCount + 1) > reservationObejct.getMaxReservations()) 
+        if((maxOverlapCount + 1) > reservationObejct.getMaxReservations())
             return "reservation.reservations.max_reservations_error.js";
 
         //No problem found so return null
@@ -218,7 +218,7 @@ public class ReservationService {
     /**
      * Prepare reservation to validation. First check if needed values arent null. Then set reservation date based on input value "isReservationForAllDay".
      * If isReservationForAllDay is true, date is same but hh:mm:ss:ms are set to 0 (because reservation upon reservation object for whole day cant set other time then default).
-     * If isReservationForAllDay is false, date is set as combination of date from reservation and time from reservationEditorFields.  
+     * If isReservationForAllDay is false, date is set as combination of date from reservation and time from reservationEditorFields.
      * @param reservation
      * @param isReservationForAllDay
      */
@@ -229,7 +229,7 @@ public class ReservationService {
 
         //If reservation object is set for all day (it means we do not select reservation time)
         if(isReservationForAllDay) {
-            //In case of "for all day", use only date range and time params set to 0         
+            //In case of "for all day", use only date range and time params set to 0
             reservation.setDateFrom(setTimeOfDate(reservation.getDateFrom(), 0, 0, 0, 0));
             reservation.setDateTo(setTimeOfDate(reservation.getDateTo(), 0, 0, 0, 0));
         } else {
@@ -248,11 +248,11 @@ public class ReservationService {
 
     /**
      * Get reservation object "email accepter" and send send mail to notify accpter about new waiting reservation for thi reservation object.
-     * Email inludes link to this reservation wating for approve. 
+     * Email inludes link to this reservation wating for approve.
      * @param reservation
      * @param reservationObject
      */
-    public void sendAcceptationEmail(ReservationEntity reservation, ReservationObjectEntity reservationObject) {
+    public void sendAcceptationEmail(ReservationEntity reservation, ReservationObjectEntity reservationObject, HttpServletRequest request) {
         if(reservation == null || reservationObject == null) return;
         //Validate recipient email
         String recipientEmail = reservationObject.getEmailAccepter();
@@ -275,7 +275,7 @@ public class ReservationService {
 		String phoneNumber = notNull(reservation.getPhoneNumber());
 
         String message = "";
-        if(reservationObject.getReservationForAllDay()) { 
+        if(reservationObject.getReservationForAllDay()) {
             message = prop.getText("components.reservation.mail.greeting") + "<br /><br />" + senderName
                 + " (" + prop.getText("user.phone") + " )" + phoneNumber + " "
                 + prop.getText("components.reservation.mail.next") + " <b>" + reservationObjectName + "</b> "
@@ -283,7 +283,7 @@ public class ReservationService {
                 + prop.getText("reservation.reservations.email_date_from") + " " + dateFrom + " "
                 + prop.getText("reservation.reservations.email_date_to") + " " + dateTo + " "
                 + prop.getText("components.reservation.mail.next4") + "<br/> " + reservation.getPurpose() + " <br /><br />"
-                + prop.getText("components.reservation.mail.next5") + "<a href=\"iwcm.interway.sk/apps/reservation/admin&id=" + reservation.getId() + "\">"
+                + prop.getText("components.reservation.mail.next5") + "<a href=\""+Tools.getBaseHref(request)+"/apps/reservation/admin&id=" + reservation.getId() + "\">"
                 + prop.getText("components.reservation.mail.accept") + "</a>";
         } else {
             message = prop.getText("components.reservation.mail.greeting") + "<br /><br />" + senderName
@@ -294,17 +294,17 @@ public class ReservationService {
                 + prop.getText("components.reservation.mail.next2") + " " + timeFrom + " "
                 + prop.getText("components.reservation.mail.next3") + " " + timeTo + " "
                 + prop.getText("components.reservation.mail.next4") + "<br/> " + reservation.getPurpose() + " <br /><br />"
-                + prop.getText("components.reservation.mail.next5") + "<a href=\"iwcm.interway.sk/apps/reservation/admin&id=" + reservation.getId() + "\">"
+                + prop.getText("components.reservation.mail.next5") + "<a href=\""+Tools.getBaseHref(request)+"/apps/reservation/admin&id=" + reservation.getId() + "\">"
                 + prop.getText("components.reservation.mail.accept") + "</a>";
         }
-        
+
 		SendMail.send(senderName, senderEmail, recipientEmail, null, null, subject, message, null);
     }
 
     /**
      * Send confirmation email to email adress set in reservation. Email subject and text is based on reservation "accepted" value where :
-     * (true, resevation was accepted), 
-     * (false, reservation was rejected), 
+     * (true, resevation was accepted),
+     * (false, reservation was rejected),
      * (null, reservation status was reset and reservation is waiting for approve)
      * @param reservation approved reservation
      * @param reservationObject reservation object that reservation is trying reservate
@@ -335,12 +335,12 @@ public class ReservationService {
         String status = "";
         String endOfEmail = ".";
         Boolean approved = reservation.getAccepted();
-        
+
         if(approved == null) {
             subject = prop.getText("reservation.reservations.email_subject_reset");
             status = prop.getText("reservation.reservations.email_was_reset");
             endOfEmail = prop.getText("reservation.reservations.reset_end_of_email");
-        } else if(approved == true) { 
+        } else if(approved == true) {
             subject = prop.getText("reservation.reservations.email_subject_accepted");
             status = prop.getText("reservation.reservations.email_was_accepted");
         } else if(approved == false) {
@@ -397,13 +397,13 @@ public class ReservationService {
      * Used formula ((s1 <= e2) && (s2 <= e1)), return true if they are overlaping.
      * Intervals are overlaping even if one start when second ends (08:00-09:00 and 09:00-10:00).
      * IF function is used to compare date values (intervals) representing TIME we want all the values to share same yyyy-mm-dd part and for this reason
-     * with input param "prepareDates" set to true, every date part of value will be set to 2000-01-01, so we can compare times. 
+     * with input param "prepareDates" set to true, every date part of value will be set to 2000-01-01, so we can compare times.
      * @param s1 date value representing START of FIRST interval
      * @param e1 date value representing END of FIRST interval
      * @param s2 date value representing START of SECOND interval
      * @param e2 date value representing END of SECOND interval
-     * @param prepareDates if true set date part of intervals to 2000-01-01, false/null - do nothing 
-     * @return true - if interval are overlaping, otherwise false 
+     * @param prepareDates if true set date part of intervals to 2000-01-01, false/null - do nothing
+     * @return true - if interval are overlaping, otherwise false
      */
     public Boolean checkOverlap(Date s1, Date e1, Date s2, Date e2, Boolean prepareDates) {
         if(prepareDates != null && prepareDates != false) {

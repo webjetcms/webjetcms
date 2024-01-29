@@ -42,7 +42,6 @@ taglib
 	String blog_url = pageParams.getValue("blog_url", "");
 	String facebook_url = pageParams.getValue("facebook_url", "");
 	String flickr_url = pageParams.getValue("flickr_url", "");
-	String google_plus_url = pageParams.getValue("google_plus_url", "");
 	String instagram_url = pageParams.getValue("instagram_url", "");
 	String linkedin_url = pageParams.getValue("linkedin_url", "");
 	String mail_url = pageParams.getValue("mail_url", "");
@@ -58,10 +57,6 @@ taglib
 	}
 	if (Tools.isNotEmpty(flickr_url)) {
 		flickr_url = new String(b64.decode(flickr_url.getBytes()));
-	}
-	if (Tools.isNotEmpty(google_plus_url)) {
-		google_plus_url = new String(b64.decode(google_plus_url
-				.getBytes()));
 	}
 	if (Tools.isNotEmpty(instagram_url)) {
 		instagram_url = new String(b64.decode(instagram_url.getBytes()));
@@ -94,7 +89,6 @@ taglib
 		var blog_url_coded = $("#blog_url").val();
 		var facebook_url_coded = $("#facebook_url").val();
 		var flickr_url_coded = $("#flickr_url").val();
-		var google_plus_url_coded = $("#google_plus_url").val();
 		var instagram_url_coded = $("#instagram_url").val();
 		var linkedin_url_coded = $("#linkedin_url").val();
 		var mail_url_coded = $("#mail_url").val();
@@ -104,7 +98,6 @@ taglib
 		var blog_url = window.btoa(blog_url_coded);
 		var facebook_url = window.btoa(facebook_url_coded);
 		var flickr_url = window.btoa(flickr_url_coded);
-		var google_plus_url = window.btoa(google_plus_url_coded);
 		var instagram_url = window.btoa(instagram_url_coded);
 		var linkedin_url = window.btoa(linkedin_url_coded);
 		var mail_url = window.btoa(mail_url_coded);
@@ -118,8 +111,6 @@ taglib
 				+ facebook_url
 				+ ", flickr_url="
 				+ flickr_url
-				+ ", google_plus_url="
-				+ google_plus_url
 				+ ", instagram_url="
 				+ instagram_url
 				+ ", linkedin_url="
@@ -215,7 +206,7 @@ taglib
 	input[type=text] { width:100%; }
 </style>
 
-<div class="tab-pane toggle_content" style="height:440px !important; overflow: auto; width:990px; padding:10px">
+<div class="tab-pane toggle_content tab-pane-fullheight">
 
 
 
@@ -283,36 +274,11 @@ taglib
 	</div>
 		<div class="form-group clearfix">
 			<div class="col-xs-2"
-				title="<%=prop.getText("components.app-social_icon.editor_components.blog")%>">
-				<img src="/components/app-social_icon/blog.png">
-			</div>
-			<div class="col-xs-10"><input type="text" name="blog_url"
-				id="blog_url" value="<%=blog_url%>" size="70" maxlength="250" /></div>
-		</div>
-		<div class="form-group clearfix">
-			<div class="col-xs-2"
 				title="<%=prop.getText("components.app-social_icon.editor_components.facebook")%>">
 				<img src="/components/app-social_icon/facebook.png">
 			</div>
 			<div class="col-xs-10"><input type="text" name="facebook_url"
 				id="facebook_url" value="<%=facebook_url%>" size="70"
-				maxlength="250" /></div>
-		</div>
-		<div class="form-group clearfix">
-			<div class="col-xs-2"
-				title="<%=prop.getText("components.app-social_icon.editor_components.flickr")%>">
-				<img src="/components/app-social_icon/flickr.png">
-			</div>
-			<div class="col-xs-10"><input type="text" name="flickr_url"
-				id="flickr_url" value="<%=flickr_url%>" size="70" maxlength="250" /></div>
-		</div>
-		<div class="form-group clearfix">
-			<div class="col-xs-2"
-				title="<%=prop.getText("components.app-social_icon.editor_components.google_plus")%>">
-				<img src="/components/app-social_icon/google_plus.png">
-			</div>
-			<div class="col-xs-10"><input type="text" name="google_plus_url"
-				id="google_plus_url" value="<%=google_plus_url%>" size="70"
 				maxlength="250" /></div>
 		</div>
 		<div class="form-group clearfix">
@@ -335,19 +301,11 @@ taglib
 		</div>
 		<div class="form-group clearfix">
 			<div class="col-xs-2"
-				title="<%=prop.getText("components.app-social_icon.editor_components.mail")%>">
-				<img src="/components/app-social_icon/mail.png">
+				title="<%=prop.getText("components.app-social_icon.editor_components.youtube")%>">
+				<img src="/components/app-social_icon/youtube.png">
 			</div>
-			<div class="col-xs-10"><input type="text" name="mail_url"
-				id="mail_url" value="<%=mail_url%>" size="70" maxlength="250" /></div>
-		</div>
-		<div class="form-group clearfix">
-			<div class="col-xs-2"
-				title="<%=prop.getText("components.app-social_icon.editor_components.rss")%>">
-				<img src="/components/app-social_icon/rss.png">
-			</div>
-			<div class="col-xs-10"><input type="text" name="rss_url" id="rss_url"
-				value="<%=rss_url%>" size="70" maxlength="250" /></div>
+			<div class="col-xs-10"><input type="text" name="youtube_url"
+				id="youtube_url" value="<%=youtube_url%>" size="70" maxlength="250" /></div>
 		</div>
 		<div class="form-group clearfix">
 			<div class="col-xs-2"
@@ -359,12 +317,40 @@ taglib
 		</div>
 		<div class="form-group clearfix">
 			<div class="col-xs-2"
-				title="<%=prop.getText("components.app-social_icon.editor_components.youtube")%>">
-				<img src="/components/app-social_icon/youtube.png">
+				title="<%=prop.getText("components.app-social_icon.editor_components.mail")%>">
+				<img src="/components/app-social_icon/mail.png">
 			</div>
-			<div class="col-xs-10"><input type="text" name="youtube_url"
-				id="youtube_url" value="<%=youtube_url%>" size="70" maxlength="250" /></div>
+			<div class="col-xs-10"><input type="text" name="mail_url"
+				id="mail_url" value="<%=mail_url%>" size="70" maxlength="250" /></div>
 		</div>
+
+		<div class="form-group clearfix">
+			<div class="col-xs-2"
+				title="<%=prop.getText("components.app-social_icon.editor_components.blog")%>">
+				<img src="/components/app-social_icon/blog.png">
+			</div>
+			<div class="col-xs-10"><input type="text" name="blog_url"
+				id="blog_url" value="<%=blog_url%>" size="70" maxlength="250" /></div>
+		</div>
+		<div class="form-group clearfix">
+			<div class="col-xs-2"
+				title="<%=prop.getText("components.app-social_icon.editor_components.flickr")%>">
+				<img src="/components/app-social_icon/flickr.png">
+			</div>
+			<div class="col-xs-10"><input type="text" name="flickr_url"
+				id="flickr_url" value="<%=flickr_url%>" size="70" maxlength="250" /></div>
+		</div>
+
+		<div class="form-group clearfix">
+			<div class="col-xs-2"
+				title="<%=prop.getText("components.app-social_icon.editor_components.rss")%>">
+				<img src="/components/app-social_icon/rss.png">
+			</div>
+			<div class="col-xs-10"><input type="text" name="rss_url" id="rss_url"
+				value="<%=rss_url%>" size="70" maxlength="250" /></div>
+		</div>
+
+
 	</form>
 </div>
 

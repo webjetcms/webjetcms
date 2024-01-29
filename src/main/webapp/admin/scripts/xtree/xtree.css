@@ -8,7 +8,7 @@ clear: both;
 #webfx-tree-object-4-cont{ padding: 0px 0px 0px 5px;}
 #webfx-tree-object-4-icon{ display: none; /*float: left; padding: 0px 0px 0px 3px;*/}
 #webfx-tree-object-4-anchor{ padding: 3px 0px 0px 0px; float: left;}
-    
+
 .webfx-tree-item {
 	padding: 0px;
 	margin: 0px;
@@ -30,6 +30,8 @@ clear: both;
 	color: black;
 	text-decoration: none;
    font-weight: normal;
+   font-size: 13px;
+   font-family: Arial, Helvetica, sans-serif;
 }
 
 .webfx-tree-item a:hover {

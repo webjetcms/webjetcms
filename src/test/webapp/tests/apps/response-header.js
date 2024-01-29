@@ -88,31 +88,62 @@ headers</pre>
  */
 
 Scenario('test-odpovede', ({I, DT, DTE}) => {
-    I.amOnPage("/apps/http-hlavicky/");
+    I.amOnPage("/apps/http-hlavicky/?NO_WJTOOLBAR=true");
     I.waitForText("content-language", "#response");
+    I.see("content-language: sk-SK");
     I.see("x-frame-options: SAMEORIGIN");
     I.see("x-webjet-header: root-folder");
     I.dontSee("x-frame-options: sub-folder");
     I.dontSee("x-webjet-header: sub-folder");
-    I.see("x-macro-test: aceintegration-demotest.webjetcms.sk");
+    I.see("x-macro-test: aceintegration-webjet9.tau27.iway.sk");
+    //^/apps/http-hlavicky/$
+    I.see("x-webjet-equals: true");
+    // /apps/http-hlavicky/*.html
+    I.dontSee("x-webjet-suffix");
 
-    I.amOnPage("/apps/http-hlavicky/podpriecinok/");
+    I.amOnPage("/apps/http-hlavicky/podpriecinok/?NO_WJTOOLBAR=true");
     I.waitForText("content-language", "#response");
     I.dontSee("x-frame-options: SAMEORIGIN");
     I.dontSee("x-webjet-header: root-folder");
     I.see("x-frame-options: sub-folder");
     I.see("x-webjet-header: sub-folder");
-    I.see("x-macro-test: aceintegration-demotest.webjetcms.sk");
+    I.see("x-macro-test: aceintegration-webjet9.tau27.iway.sk");
+    //^/apps/http-hlavicky/$
+    I.dontSee("x-webjet-equals");
+    // /apps/http-hlavicky/*.html
+    I.dontSee("x-webjet-suffix");
+    //xRobotsTag conf. value - NOT_SEARCHABLE_PAGE
+    I.see("x-robots-tag: noindex, nofollow");
 
-    I.amOnPage("/apps/http-hlavicky/podpriecinok/podstranka.html");
+    I.amOnPage("/apps/http-hlavicky/podpriecinok/podstranka.html?NO_WJTOOLBAR=true");
     I.waitForText("content-language", "#response");
+    //
+    I.say("owerwrite template value by response-header app");
+    I.see("content-language: cs-CZ");
     I.dontSee("x-frame-options: SAMEORIGIN");
     I.dontSee("x-webjet-header: root-folder");
     I.see("x-frame-options: sub-folder");
     I.see("x-webjet-header: sub-folder");
-    I.see("x-macro-test: aceintegration-demotest.webjetcms.sk");
+    I.see("x-macro-test: aceintegration-webjet9.tau27.iway.sk");
+    //^/apps/http-hlavicky/$
+    I.dontSee("x-webjet-equals");
+    // /apps/http-hlavicky/*.html
+    I.see("x-webjet-suffix: true");
+    //custom xRobotsTag value
+    I.dontSee("x-robots-tag: noindex, nofollow");
+    I.see("x-robots-tag: index, follow");
 
     I.amOnPage("/apps/http-hlavicky/rest-volanie.html");
     I.waitForText("content-language", "#response");
     I.see("x-webjet-header: rest");
+
+    //
+    I.say("Test autoset from files folder");
+    I.amOnPage("/files/en/http-headers.html");
+    I.waitForText("content-language", "#response");
+    I.see("content-language: en-GB");
+
+    I.amOnPage("/files/cz/http-headers.html");
+    I.waitForText("content-language", "#response");
+    I.see("content-language: cs-CZ");
 });

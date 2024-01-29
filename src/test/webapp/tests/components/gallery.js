@@ -223,3 +223,102 @@ Scenario('bug-remember column order-reset', ({ I, DT }) => {
     I.click("button.btn-gallery-size-s");
     DT.resetTable("galleryTable");
 });
+
+Scenario('editor check dir select', ({ I, Document, DTE, Browser }) => {
+
+    I.closeOtherTabs();
+
+    I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=45926");
+    DTE.waitForEditor();
+    I.wait(5);
+    Document.editorComponentOpen();
+    if (Browser.isFirefox()) I.wait(1);
+    I.waitForElement("#Tabs li.last.openLast");
+    I.wait(0.5);
+    I.click("#Tabs li.first a");
+    I.wait(0.5);
+    I.seeInField("#dir", "/images/gallery/test-vela-foto");
+    I.forceClick("span.input-group-addon.btn.green");
+
+    //it's open in new window
+    I.switchToNextTab();
+    I.see("/images/", "div.webfx-tree-item");
+    I.click(locate("div.webfx-tree-item.folder").withText("gallery").find({css: "img:first-child"}));
+    I.waitForText("test-vela-foto", 10, "div.webfx-tree-item.folder a");
+    if (Browser.isFirefox()) I.wait(1);
+    I.click(locate("div.webfx-tree-item.folder a").withText("user"));
+    I.wait(1);
+    I.openNewTab();
+    I.closeCurrentTab();
+
+    I.switchTo();
+    I.switchTo(".cke_dialog_ui_iframe");
+    I.switchTo("#editorComponent");
+
+    I.seeInField("#dir", "/images/gallery/user");
+
+    I.switchTo();
+    I.click(locate("div.cke_dialog_container td.cke_dialog_footer a span").withText("Zrušiť"));
+    DTE.cancel();
+
+});
+
+Scenario('close tabs', ({ I }) => {
+    I.closeOtherTabs();
+});
+
+function editImage(name, save, I, DTE) {
+    I.say("Edit image "+name)
+    I.waitForText(name, 10, "#galleryTable");
+    I.click(locate("td.dt-row-edit a").withText(name));
+    DTE.waitForEditor("galleryTable");
+    I.click("#pills-dt-galleryTable-photoeditor-tab");
+    I.waitForElement("li.tie-btn-crop.tui-image-editor-item", 10);
+
+    if (save) {
+        I.forceClickCss("li.tie-btn-flip.tui-image-editor-item");
+        I.wait(0.5);
+        I.forceClickCss("div.tui-image-editor-button.flipX");
+        I.wait(0.5);
+        I.forceClickCss("div.tui-image-editor-button.flipX");
+        I.wait(0.5);
+        DTE.save("galleryTable");
+        I.waitForElement("#toast-container-upload", 10);
+        I.waitForElement(locate("#toast-container-upload div.toast-message span").withText(name), 10);
+        I.waitForElement("#toast-container-upload i.fa-spin", 10);
+        I.waitForInvisible("#toast-container-upload i.fa-spin", 10);
+        I.waitForVisible(locate("#toast-container-upload div.toast-message").withText(name).find("i.fa-check-circle"), 10);
+        I.wait(0.5);
+        I.waitForVisible(locate("#toast-container-upload div.toast-message").withText(name).find("i.fa-check-circle"), 10);
+    } else {
+        DTE.cancel("galleryTable");
+        I.waitForElement("#toast-container-upload", 10);
+        I.wait(3);
+        I.dontSeeElement(locate("#toast-container-upload div.toast-message span").withText(name));
+    }
+}
+
+Scenario('editor check instance image change', ({ I, DTE }) => {
+    I.amOnPage("/admin/v9/apps/gallery/?dir=/images/gallery/test-vela-foto");
+
+    //
+    editImage("dsc04077.jpeg", true, I, DTE);
+
+    //
+    editImage("dsc04080.jpeg", false, I, DTE);
+
+    //
+    editImage("dsc04082.jpeg", true, I, DTE);
+
+    //
+    I.say("Change folder");
+    I.jstreeClick("user");
+    I.waitForText("stevensegal.jpg", 10, "#galleryTable");
+    editImage("stevensegal.jpg", true, I, DTE);
+    //there was bug that the file name was not changed and saved as previous file
+    I.dontSee("dsc04082", "#galleryTable");
+
+    //
+    I.say("recheck");
+    I.dontSeeElement(locate("#toast-container-upload div.toast-message span").withText("dsc04080.jpeg"));
+});

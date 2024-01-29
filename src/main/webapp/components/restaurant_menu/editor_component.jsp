@@ -8,7 +8,6 @@ sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
 %><%@ page pageEncoding="utf-8" import="java.io.*,sk.iway.iwcm.*" %>
 <%@ taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm" %>
 <%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %>
-<%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
 <iwcm:checkLogon admin="true" perms="cmp_restaurant_menu"/>
 <%@page import="sk.iway.iwcm.gallery.*"%>
 <%@page import="org.apache.struts.util.ResponseUtils"%>
@@ -80,11 +79,6 @@ function loadListMealsIframe()
 	var url = "/components/restaurant_menu/admin_list_meals.jsp";
  	$("#listMealsIframeWindowTab").attr("src", url);
 }
-function loadListMenuIframe()
-{
-	var url = "/components/restaurant_menu/admin_list_menu.jsp";
- 	$("#listMenuIframeWindowTab").attr("src", url);
-}
 function loadNewMenuIframe()
 {
 	var url = "/components/restaurant_menu/admin_new_menu.jsp";
@@ -116,17 +110,15 @@ function loadNewMenuIframe()
 		<li class="first openFirst"><a href="#" onclick="showHideTab('1');" id="tabLink1"><iwcm:text key="components.settings"/></a></li>
 		<li><a href="#" onclick="loadListMealsIframe();showHideTab('2');" id="tabLink2"><iwcm:text key="components.restaurant_menu.mealsList"/></a></li>
 		<li><a href="#" onclick="loadNewMenuIframe();showHideTab('4');" id="tabLink4"><iwcm:text key="components.restaurant_menu.newMenu"/></a></li>
-		<li class="last"><a href="#" onclick="loadListMenuIframe();showHideTab('3');" id="tabLink3"><iwcm:text key="components.restaurant_menu.listMenu"/></a></li>
 	</ul>
 </div>
 
-<div class="tab-pane toggle_content" style="height:840px; overflow: auto; width:1090px;">
+<div class="tab-pane toggle_content tab-pane-fullheight">
 
 	<div class="tab-page" id="tabMenu1" style="display: block; padding: 15px;">
 
 		<form name="textForm" style="margin: 0px">
 
-		<div id="cal_udalosti" style="width: 900px; height: 900px;">
 		<table>
 		<tr><th colspan="2" > <iwcm:text key="components.gis.settingsInfo"/>  </th></tr>
 		<tr>
@@ -136,76 +128,53 @@ function loadNewMenuIframe()
 			</td>
 		</tr>
 		</table>
-		<table border="0">
-			<tr>
-				<td valign="top">
-					<strong><iwcm:text key="components.restaurant_menu.visualSettings"/>:</strong>
-
-					<div id="styleSelectArea" style="height: 470px; width: 430px; overflow: auto;">
-
-						<%
-						int checkedInputPosition = 0;
-						IwcmFile stylesDir = new IwcmFile(Tools.getRealPath("/components/restaurant_menu/menu-styles"));
-						if (stylesDir.exists() && stylesDir.canRead())
+		<table style="border: 0px;">
+			<tr id="styleSelectArea">
+				<strong><iwcm:text key="components.restaurant_menu.visualSettings"/>:</strong>
+				<td valign="top" style="height: 100%; width: 100%; display: grid; grid-template-columns: auto auto;">
+					<%
+					int checkedInputPosition = 0;
+					IwcmFile stylesDir = new IwcmFile(Tools.getRealPath("/components/restaurant_menu/menu-styles"));
+					if (stylesDir.exists() && stylesDir.canRead())
+					{
+						IwcmFile styleFiles[] = stylesDir.listFiles();
+						styleFiles = FileTools.sortFilesByName(styleFiles);
+						int counter = 0;
+						for (IwcmFile file : styleFiles)
 						{
-							IwcmFile styleFiles[] = stylesDir.listFiles();
-							styleFiles = FileTools.sortFilesByName(styleFiles);
-							int counter = 0;
-							for (IwcmFile file : styleFiles)
-							{
-								if (file.getName().endsWith(".png")==false) continue;
-								if (file.getName().contains("bootstrap") && sk.iway.iwcm.common.CloudToolsForCore.isBootstrap(request)==false) continue;
+							if (file.getName().endsWith(".png")==false) continue;
+							if (file.getName().contains("bootstrap") && sk.iway.iwcm.common.CloudToolsForCore.isBootstrap(request)==false) continue;
 
-								String styleValue = file.getName().substring(0, file.getName().lastIndexOf("."));
+							String styleValue = file.getName().substring(0, file.getName().lastIndexOf("."));
 
-								if (styleValue.equals(style)) checkedInputPosition = counter;
-								%>
+							if (styleValue.equals(style)) checkedInputPosition = counter;
+							%>
 
-									<div class="styleBox">
-										<label class="image" for="style-<%=styleValue%>">
-											<img src="<%=file.getVirtualPath() %>" alt="<%=styleValue%>" />
-											<div class="radioSelect">
-			  									<input type="radio" name="style" id="style-<%=styleValue%>" value="<%=styleValue%>" <%= styleValue.equals(style) ? " checked=\"checked\"" : "" %> />
-			  									<% if ("iwcm.interway.sk".equals(request.getServerName())) out.print(styleValue); %>
-			  								</div>
-										</label>
-									</div>
-								<%
-								counter++;
-							}
+								<div class="styleBox" style="height: 175px;">
+									<label class="image" for="style-<%=styleValue%>">
+										<img src="<%=file.getVirtualPath() %>" alt="<%=styleValue%>" />
+										<div class="radioSelect">
+			  								<input type="radio" name="style" id="style-<%=styleValue%>" value="<%=styleValue%>" <%= styleValue.equals(style) ? " checked=\"checked\"" : "" %> />
+			  								<% if ("iwcm.interway.sk".equals(request.getServerName())) out.print(styleValue); %>
+			  							</div>
+									</label>
+								</div>
+							<%
+							counter++;
 						}
-						%>
-					</div>
-				</td>
-				<td valign="top" style="padding-left: 20px; width:100%;">
-					<table style="width:460px;" border="0" cellspacing="0" cellpadding="1">
-					<tr>
-                    <td style="width:460px;">
-	<h2><iwcm:text key="components.restaurant_menu.tutorial"/></h2>
-	<ul>
-	<li style="margin-bottom:7px"><iwcm:text key="components.restaurant_menu.tutorial_step1"/></li>
-	<li style="margin-bottom:7px"><iwcm:text key="components.restaurant_menu.tutorial_step2"/></li>
-	<li style="margin-bottom:7px"><iwcm:text key="components.restaurant_menu.tutorial_step3"/></li>
-	<li style="margin-bottom:7px"><iwcm:text key="components.restaurant_menu.tutorial_step4"/></li>
-	</ul>
-    </td>
-	</tr>
-					</table>
+					}
+					%>
 				</td>
 			</tr>
 		</table>
-		</div>
 		</form>
-		</div>
+	</div>
 
-	<div class="tab-page" id="tabMenu2">
-		<iframe id="listMealsIframeWindowTab" frameborder="0" name="listMealsIframeWindowTab" width="960" height="490" src="/admin/iframe_blank.jsp"></iframe>
+	<div class="tab-page tab-page-iframe" id="tabMenu2">
+		<iframe id="listMealsIframeWindowTab" frameborder="0" name="listMealsIframeWindowTab" width="100%" src="/admin/iframe_blank.jsp"></iframe>
 	</div>
-	<div class="tab-page" id="tabMenu3">
-		<iframe id="listMenuIframeWindowTab" frameborder="0" name="listMenuIframeWindowTab" width="960" height="490" src="/admin/iframe_blank.jsp"></iframe>
-	</div>
-	<div class="tab-page" id="tabMenu4">
-		<iframe id="newMenuIframeWindowTab" frameborder="0" name="newMenuIframeWindowTab" width="960" height="490" src="/admin/iframe_blank.jsp"></iframe>
+	<div class="tab-page tab-page-iframe" id="tabMenu4">
+		<iframe id="newMenuIframeWindowTab" frameborder="0" name="newMenuIframeWindowTab" width="100%" src="/admin/iframe_blank.jsp"></iframe>
 	</div>
 </div>
 

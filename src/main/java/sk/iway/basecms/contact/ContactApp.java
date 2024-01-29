@@ -40,7 +40,7 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
  * @see sk.iway.iwcm.system.spring.services.WebjetSecurityService
  */
 @WebjetComponent("sk.iway.basecms.contact.ContactApp")
-@WebjetAppStore(nameKey = "Kontakty", descKey = "Ukazkova aplikacia so zoznamom kontaktov", imagePath = "fas fa-address-card", galleryImages = "/components/map/screenshot-1.jpg,/components/gdpr/screenshot-2.png,/components/gallery/screenshot-3.jpg")
+@WebjetAppStore(nameKey = "Kontakty", descKey = "Ukazkova aplikacia so zoznamom kontaktov", imagePath = "fas fa-address-card", galleryImages = "/components/map/screenshot-1.jpg,/components/gdpr/screenshot-2.png,/components/gallery/screenshot-3.jpg", commonSettings = false)
 @Getter
 @Setter
 public class ContactApp extends WebjetComponentAbstract {

@@ -246,6 +246,7 @@ Scenario('Overenie zobrazenia sablon podla adresarov', ({ I, DTE }) => {
 });
 
 Scenario('Overenie zalozky Naposledy Upravene', ({ I, DT }) => {
+    DT.waitForLoader();
     I.see("Naposledy upravené", "#pills-pages");
     I.click("Naposledy upravené", "#pills-pages");
     DT.waitForLoader();
@@ -254,6 +255,7 @@ Scenario('Overenie zalozky Naposledy Upravene', ({ I, DT }) => {
 });
 
 Scenario('Overenie zalozky Na schvalenie', ({ I, DT }) => {
+    DT.waitForLoader();
     I.see("Čakajúce na schválenie", "#pills-pages");
     I.click("Čakajúce na schválenie", "#pills-pages");
     DT.waitForLoader();
@@ -362,7 +364,7 @@ Scenario('Kontrola subFolder dat', ({ I, DT }) => {
 
     I.click(locate('button').withAttr({ title: 'Zobrazenie stĺpcov' }));
     I.click(locate('span').withText('Šablóna web stránky'));
-    I.click("button.btn.colvis-postfix.btn-primary.dt-close-modal");
+    I.forceClick("button.btn.colvis-postfix.btn-primary.dt-close-modal");
     DT.waitForLoader();
 
     //over ze sa natiahla spravne sablona sub foldera
@@ -412,7 +414,7 @@ Scenario('Overenie vyhladavania podla boolean a password_protected', ({ I, DT })
     I.click("Prehľadávať");
     I.click("Povoliť prístup len pre skupinu používateľov");
     I.click("Priradiť stránku k hromadnému emailu");
-    I.click("button.btn.btn-primary.dt-close-modal");
+    I.forceClick("button.btn.colvis-postfix.btn-primary.dt-close-modal");
     I.waitForInvisible("div.dt-button-collection div.dropdown-menu.dt-dropdown-menu div.dt-button-collection div.dropdown-menu.dt-dropdown-menu");
 
     //prehladavat
@@ -534,6 +536,7 @@ Scenario('Otestuj nove stlpce tempFieldDocId', ({ I, DT, DTE }) => {
     //Check set values from history
 
     //Change to tab template
+    I.waitForElement("#pills-dt-datatableInit-content-tab.nav-link.active", 10);
     I.click('#pills-dt-datatableInit-template-tab');
 
     //CHECK if set values in selects are correct
@@ -754,6 +757,7 @@ Scenario('Stavove ikony', ({ I, DT }) => {
     DT.resetTable();
 
     I.amOnPage("/admin/v9/webpages/web-pages-list/?groupid=67");
+    DT.waitForLoader();
 
     DT.filterSelect("editorFields.statusIcons", "Zobrazený v menu");
     I.see("Hlavná stránka adresára", "#datatableInit_wrapper .dataTables_scrollBody");
@@ -917,11 +921,12 @@ Scenario('BUG - editacia viacerych zaznamov naraz @singlethread', async ({ I, DT
     //reloadni a over nacitanie
     I.amOnPage("/admin/v9/webpages/web-pages-list/?groupid=221");
     DT.waitForLoader();
+    I.wait(1);
 
     I.forceClick(locate("#datatableInit td.dt-select-td").withText("2664"));
     I.forceClick(locate("#datatableInit td.dt-select-td").withText("29195"));
 
-    I.click("button.buttons-edit", "#datatableInit_wrapper");
+    I.clickCss("#datatableInit_wrapper div.dt-buttons button.buttons-edit");
     DTE.waitForEditor();
     I.wait(4);
 
@@ -957,7 +962,7 @@ Scenario('BUG - vyhladavanie podla perex skupin', ({ I, DT }) => {
     I.click(container+" button.buttons-colvis");
     I.waitForVisible("div.dt-button-collection div.dropdown-menu.dt-dropdown-menu div.dt-button-collection div.dropdown-menu.dt-dropdown-menu");
     I.click("Značky", container+" div.colvisbtn_wrapper");
-    I.click("button.btn.colvis-postfix.btn-primary.dt-close-modal");
+    I.forceClick("button.btn.colvis-postfix.btn-primary.dt-close-modal");
     I.waitForInvisible("div.dt-button-collection div.dropdown-menu.dt-dropdown-menu div.dt-button-collection div.dropdown-menu.dt-dropdown-menu");
 
     I.see("News", container);
@@ -986,21 +991,25 @@ Scenario('BUG - prepinanie kariet a zobrazenie stranok', ({ I, DT }) => {
     I.amOnPage("/admin/v9/webpages/web-pages-list/?groupid=1");
     DT.waitForLoader();
     I.see("Jet portal 4 - testovacia stranka", "#datatableInit_wrapper");
+    I.dontSeeElement(locate("#SomStromcek a.jstree-anchor").withText("files"));
 
     I.click("#pills-system-tab");
     DT.waitForLoader();
     I.dontSee("Jet portal 4 - testovacia stranka", "#datatableInit_wrapper");
     I.see("System", "#datatableInit_wrapper");
+    I.seeElement(locate("#SomStromcek a.jstree-anchor").withText("files"));
 
     I.click("#pills-folders-tab");
     DT.waitForLoader();
     I.see("Jet portal 4 - testovacia stranka", "#datatableInit_wrapper");
     I.dontSee("System", "#datatableInit_wrapper");
+    I.dontSeeElement(locate("#SomStromcek a.jstree-anchor").withText("files"));
 
     I.click("#pills-system-tab");
     DT.waitForLoader();
     I.dontSee("Jet portal 4 - testovacia stranka", "#datatableInit_wrapper");
     I.see("System", "#datatableInit_wrapper");
+    I.seeElement(locate("#SomStromcek a.jstree-anchor").withText("files"));
 });
 
 Scenario('BUG #54953-6 - pri prvom nacitani sa citalo len 10 zaznamov, musi sa refreshnut', ({ I, DT }) => {

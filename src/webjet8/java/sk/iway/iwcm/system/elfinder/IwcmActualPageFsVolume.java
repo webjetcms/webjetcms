@@ -8,6 +8,7 @@ import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.SetCharacterEncodingFilter;
 import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.common.AdminTools;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.io.IwcmFile;
 import sk.iway.iwcm.users.UsersDB;
@@ -43,16 +44,19 @@ public class IwcmActualPageFsVolume extends IwcmFsVolume
 		IwcmFile fsiFile = asFile(fsi);
 
 		String virtualPath = fsiFile.getVirtualPath();
+		String domainAlias = AdminTools.getDomainNameFileAliasAppend();
+
 		if (virtualPath.endsWith("/")==false) virtualPath += "/";
 		for (String path : libraryFolders)
 		{
 			if (path.endsWith("/")==false) path += "/";
 			if (path.equals(virtualPath))
 			{
-				if (virtualPath.startsWith("/images/gallery")) return Prop.getTxt("elfinder.images.gallery");
-				if (virtualPath.startsWith("/images")) return Prop.getTxt("elfinder.images");
-				if (virtualPath.startsWith("/files")) return Prop.getTxt("elfinder.files");
-				if (virtualPath.startsWith("/images/video")) return Prop.getTxt("elfinder.images.video");
+				if (virtualPath.startsWith("/images"+domainAlias+"/gallery") || virtualPath.startsWith("/images/gallery")) return Prop.getTxt("elfinder.images.gallery");
+				if (virtualPath.startsWith("/images"+domainAlias+"/video") || virtualPath.startsWith("/images/video")) return Prop.getTxt("elfinder.images.video");
+				if (virtualPath.startsWith("/images"+domainAlias) || virtualPath.startsWith("/images")) return Prop.getTxt("elfinder.images");
+				if (virtualPath.startsWith("/files"+domainAlias) || virtualPath.startsWith("/files")) return Prop.getTxt("elfinder.files");
+				if (virtualPath.startsWith("/shared"+domainAlias) || virtualPath.startsWith("/shared")) return Prop.getTxt("elfinder.shared");
 			}
 		}
 

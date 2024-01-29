@@ -37,8 +37,14 @@ public class BrowseAction
 		//utility class
 	}
 
-	//private static Hashtable forbiddenSymbols = null;
-
+	/**
+	 *
+	 * @deprecated - user version with request parameter
+	 */
+	@Deprecated
+	public static void fillLists(String root, List<FileDirBean> dirL, List<FileDirBean> fileL, String webRoot, boolean onlySafeFiles) {
+		fillLists(root, dirL, fileL, webRoot, onlySafeFiles, null);
+	}
 
 	/**
 	 *  naplni dirList a fileList
@@ -50,9 +56,10 @@ public class BrowseAction
 	 *@param  filter   Description of the Parameter
 	 *@param  onlySafeFiles - ak je true, listuju sa len bezpecne subory (teda nie CVS adresare a podobne)
 	 */
-	public static void fillLists(String root, List<FileDirBean> dirL, List<FileDirBean> fileL, String webRoot, boolean onlySafeFiles)
+	public static void fillLists(String root, List<FileDirBean> dirL, List<FileDirBean> fileL, String webRoot, boolean onlySafeFiles, HttpServletRequest request)
 	{
-		fillLists(parseRoot(root, Tools.getRealPath("/")), dirL, fileL, onlySafeFiles, true, null);
+		Identity user = UsersDB.getCurrentUser(request);
+		fillLists(parseRoot(root, Tools.getRealPath("/")), dirL, fileL, onlySafeFiles, true, user, request);
 	}
 
 	/**
@@ -63,7 +70,7 @@ public class BrowseAction
 	 * @param onlySafeFiles
 	 * @param user
 	 */
-	private static void fillLists(String rootUrl, List<FileDirBean> dirL, List<FileDirBean> fileL, boolean onlySafeFiles, boolean addParentDirLink, Identity user)
+	private static void fillLists(String rootUrl, List<FileDirBean> dirL, List<FileDirBean> fileL, boolean onlySafeFiles, boolean addParentDirLink, Identity user, HttpServletRequest request)
 	{
 		IwcmFile[] arrayfile = null;
 
@@ -145,7 +152,7 @@ public class BrowseAction
 					image = "/components/_common/mime/folder.gif";
 
 					//	testni ci je password protected
-					if (PathFilter.isPasswordProtected(fdb.getPath(), null)!=null)
+					if (PathFilter.isPasswordProtected(fdb.getPath(), request)!=null)
 					{
 						image = "/components/_common/mime/folder_protected.gif";
 					}
@@ -307,13 +314,10 @@ public class BrowseAction
 					if (Tools.isEmpty(actualDir)) actualDir = rootDir;
 
 					//kontrola zakazanych znakov v adrese
-					for (String fSymbol : FileBrowserTools.forbiddenSymbols)
+					if (FileBrowserTools.hasForbiddenSymbol(actualDir.toLowerCase()))
 					{
-						if (actualDir.toLowerCase().indexOf(fSymbol) != -1)
-						{
-							actualDir = rootDir;
-							Logger.println(BrowseAction.class,"POZOR! V URL JE NEPOVOLENY ZNAK! -> "+fSymbol);
-						}
+						actualDir = rootDir;
+						Logger.println(BrowseAction.class,"POZOR! V URL JE NEPOVOLENY ZNAK! -> "+actualDir);
 					}
 					if (actualDir.startsWith("/admin") || actualDir.startsWith("/components") ||
 						 actualDir.startsWith("/templates") || actualDir.startsWith("/WEB-INF"))
@@ -327,7 +331,7 @@ public class BrowseAction
 
 					//actualRoot = Tools.getRealPath("/");
 
-					BrowseAction.fillLists(actualDir, dirList, fileList, true, !actualDir.equals(rootDir) , null);
+					BrowseAction.fillLists(actualDir, dirList, fileList, true, !actualDir.equals(rootDir) , null, request);
 
 					//nastavenie cesty do session pre inline editaciu komponent
 					if (user != null) request.getSession().setAttribute("fbrowse.lastDir", actualDir);
@@ -335,7 +339,7 @@ public class BrowseAction
 				else
 				{
 					request.setAttribute("correctDir", rootDir);
-					BrowseAction.fillLists(rootDir, dirList, fileList, true, false, null);
+					BrowseAction.fillLists(rootDir, dirList, fileList, true, false, null, request);
 
 					//nastavenie cesty do session pre inline editaciu komponent
 					if (user != null) request.getSession().setAttribute("fbrowse.lastDir", rootDir);

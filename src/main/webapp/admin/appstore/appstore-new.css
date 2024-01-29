@@ -131,13 +131,13 @@ body{margin:0; background-color:#f3f3f3;background-image:none;}
     padding: 5px 8px;
     font-size: 12px;
     color: #4d98f6;
-    left: 23%;
-    position: absolute;
-    bottom: 18px;
     text-decoration:none;
      -webkit-transition: all 0.3s linear;
     -ms-transition: all 0.3s linear;
     transition: all 0.3s linear;
+    width: 100%;
+    margin-top: 20px;
+    text-align: center;
 
 }.appStore .buy:hover{background-color:#4d98f6;color:#fff; cursor:pointer;}
 
@@ -232,24 +232,23 @@ div.app .app-header .button-back:hover img{opacity:0.8;}
 div.app .app-info{
     background-color: #fff;
     border-bottom: 2px solid #dadada;
-    min-height: 130px;
+    min-height: 105px;
     height: auto;
-    padding-bottom: 17px;
 }
 
 div.app .app-info > .container{ padding-top: 23px;}
 div.app .app-info .img{text-align:center;}
 div.app .app-info .img img{max-width:100px; height:auto;}
-div.app .app-info h2{font-weight:300; padding:0; margin: 10px 0 0 0;}
+div.app .app-info h2{font-weight:300; padding:0; margin: 6px 0 4px 0;}
 div.app .app-info p {font-size:13px;}
-div.app .app-info .buy{position:relative; display:inline-block;left: auto; bottom: auto; margin-right: 18px;}
+div.app .app-info .buy{position:relative; display:inline-block;left: auto; bottom: auto; margin-right: 18px; margin-top: 8px; }
 div.app .app-info .price{position:relative; display:inline-block;left: auto; bottom: auto;}
 div.app .app-info .app-name{padding-left:0;    padding-right: 0;}
-div.app .app-info .app-buy{padding-top: 28px;text-align: right;}
+div.app .app-info .app-buy{text-align: right;}
 
 div.app .app-desc{ padding-top: 30px; padding-bottom:30px; /*border-bottom:1px solid #dadada;*/ }
 div.app .app-desc .gallery{overflow:hidden;}
-div.app .app-desc .gallery ul{   padding: 0;  margin: 0;     width: 100% !important; overflow:hidden; min-height:190px;}
+div.app .app-desc .gallery ul{   padding: 0;  margin: 0;     width: 100% !important; overflow:hidden; min-height:300px;}
 div.app .app-desc .gallery ul li{ width: 100% !important;}
 div.app .app-desc .gallery ul li img{ max-width: 100% !important;}
 div.app .app-bottom{padding-top:30px; padding-bottom:30px;}

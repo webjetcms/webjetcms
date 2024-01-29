@@ -208,4 +208,26 @@ public class MirroringService {
    public static void forceReloadTree() {
       RequestBean.setAttribute("forceReloadTree", Boolean.TRUE);
    }
+
+   /**
+    * Clear syncId property in database for all groups and documents in tree
+    * @param rootGroupId - ID of root group
+    */
+   public static void clearSyncId(int rootGroupId) {
+      GroupsDB groupsDB = GroupsDB.getInstance();
+
+      List<GroupDetails> groups = groupsDB.getGroupsTree(rootGroupId, true, true);
+      //convert group.getGroupId to comma separated String
+      String groupIds = "";
+      for(GroupDetails group : groups) {
+          if(groupIds.isEmpty()==false) groupIds += ",";
+          groupIds += group.getGroupId();
+      }
+
+      if (Tools.isNotEmpty(groupIds)) {
+         //update database
+         (new SimpleQuery()).execute("UPDATE groups SET sync_id=0 WHERE group_id IN ("+groupIds+")");
+         (new SimpleQuery()).execute("UPDATE documents SET sync_id=0 WHERE group_id IN ("+groupIds+")");
+      }
+   }
 }

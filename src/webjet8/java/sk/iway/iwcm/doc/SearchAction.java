@@ -1,6 +1,5 @@
 package sk.iway.iwcm.doc;
 
-import java.io.IOException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -20,15 +19,9 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.StringTokenizer;
 
-import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
-
-import org.apache.struts.action.Action;
-import org.apache.struts.action.ActionForm;
-import org.apache.struts.action.ActionForward;
-import org.apache.struts.action.ActionMapping;
 
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.DB;
@@ -63,44 +56,13 @@ import sk.iway.iwcm.system.multidomain.MultiDomainFilter;
  * @created $Date: 2004/03/18 09:28:11 $
  * @modified $Date: 2004/03/18 09:28:11 $
  */
-public class SearchAction extends Action
+public class SearchAction
 {
 
 	/**
 	 * Identifikator 'score' pri pouziti oracletext hodnota 10 je cisto nahodna, ide o to aby v dotaze bolo pouzite to iste cislo :)
 	 */
 	private static int ORACLE_TEXT_CONTAINS_IDENTIFIER = 10; //NOSONAR
-	/**
-	 * Description of the Method
-	 *
-	 * @param mapping
-	 *           Description of the Parameter
-	 * @param form
-	 *           Description of the Parameter
-	 * @param request
-	 *           Description of the Parameter
-	 * @param response
-	 *           Description of the Parameter
-	 * @return Description of the Return Value
-	 * @exception IOException
-	 *               Description of the Exception
-	 * @exception ServletException
-	 *               Description of the Exception
-	 */
-	 @Override
-	public ActionForward execute(ActionMapping mapping, ActionForm form, HttpServletRequest request, HttpServletResponse response)
-				throws IOException, ServletException
-	{
-		String forward = search(request, response);
-		if (forward.endsWith(".jsp"))
-		{
-			return (new ActionForward(forward));
-		}
-		else
-		{
-			return (mapping.findForward(forward));
-		}
-	}
 
 	public static String search(HttpServletRequest request, HttpServletResponse response)
 	{

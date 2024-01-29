@@ -4,14 +4,13 @@ Before(({ I, login }) => {
     login('admin');
 });
 
-Scenario('kontrola banner-stat a banner-detail', ({I, DTE}) => {
+Scenario('kontrola banner-stat a banner-detail', ({I, DT}) => {
     I.amOnPage("/apps/banner/admin/banner-stat/");
 
     I.click("div.md-breadcrumb input.dt-filter-from-dayDate");
     I.fillField("div.md-breadcrumb input.dt-filter-from-dayDate", "01.05.2022");
     I.click("#bannerStatDataTable_extfilter > div > div.col-auto.dt-extfilter.dt-extfilter-dayDate > form > div > button");
-
-    I.wait(2);
+    DT.waitForLoader();
 
     //Values
     I.see("Obsahový banner");
@@ -23,10 +22,9 @@ Scenario('kontrola banner-stat a banner-detail', ({I, DTE}) => {
     I.see("Top štatistika kliknutí bannerov");
 
     //Check link to another page
-    I.click("Obsahový banner");
-    I.wait(2);
+    I.forceClick(locate("#bannerStatDataTable td div.datatable-column-width a").withText("Obsahový banner"));
 
-    I.see("Obsahový banner");
-    I.see("Štatistika videní bannera");
+    I.waitForText("Obsahový banner", 10, "#pills-banner-stat-detail");
+    I.waitForText("Štatistika videní bannera", 10);
     I.see("Štatistika kliknutí na banner");
 })

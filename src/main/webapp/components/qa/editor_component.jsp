@@ -131,11 +131,11 @@ function loadListIframe()
 		padding-top: 5px;
 	}
 	#tabMenu1 {
-		margin-top: 15px;
+		padding-top: 15px;
 	}
 </style>
 
-<div class="tab-pane toggle_content tab-pane-fullheight" style="width:790px;">
+<div class="tab-pane toggle_content tab-pane-fullheight">
 	<div class="tab-page" id="tabMenu1" style="display: block;">
 		<%
 		String field = ResponseUtils.filter(pageParams.getValue("field","qa"));
@@ -258,7 +258,7 @@ function loadListIframe()
 	</div>
 
 	<div class="tab-page" id="tabMenu3">
-		<div id="styleSelectArea" style="height: 470px; width: 100%; overflow: auto;">
+		<div id="styleSelectArea" staayle="height: 470px; width: 100%; overflow: auto;">
 			<form name="textForm2" style="padding: 0px" class="row typeForm">
 				<%
 				String displayType = ResponseUtils.filter(pageParams.getValue("displayType","1"));

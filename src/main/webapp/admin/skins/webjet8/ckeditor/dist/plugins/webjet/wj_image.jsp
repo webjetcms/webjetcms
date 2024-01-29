@@ -133,6 +133,7 @@
 		var lastDocId = -1;
 		var lastGroupId = -1;
 		var lastVirtualPath = "";
+		var lastTitle = "";
 		var elfinder;
 		var elFinderInstance;
 
@@ -142,17 +143,18 @@
 			var groupId = window.parent.getCkEditorInstance().element.$.form.groupId.value;
 			var virtualPath = window.parent.getCkEditorInstance().element.$.form.virtualPath.value;
 
-
 			//console.log("Initializing elfinder, docid="+docId+" groupId="+groupId);
 
 			lastDocId = docId;
 			lastGroupId = groupId;
             lastVirtualPath = virtualPath;
+			lastTitle = getPageNavbar();
 
 			var customData = {
 					volumes : "images",
 					docId: docId,
-					groupId: groupId
+					groupId: groupId,
+					title: getPageNavbar()
 			}
 
 			var file = $('#txtUrl').val();
@@ -164,14 +166,14 @@
 			if (file != "") {
 				customData.startPath = file.substring(0, file.lastIndexOf('/'));
 			}
-			//console.log(customData);
+			//console.log("Init customData=", customData);
 
 			elfinder = $('#finder').elfinder({
 				// requestType : 'post',
 
 				// url : 'php/connector.php',
 				url : '<iwcm:cp/>/admin/elfinder-connector/',
-            enableByMouseOver: false,
+            	enableByMouseOver: false,
 				width: '100%',
 				height: 395,
 				resizable: false,
@@ -218,14 +220,14 @@
 					change : function(event, elfinderInstance) {
 						processEventReload(event, elfinderInstance);
 					}
-            },
+            	},
 
 				lang : '<%=sk.iway.iwcm.i18n.Prop.getLngForJavascript(request)%>',
 
                 commands : [
                     'fileopen', 'dirprops', 'fileprops', 'open', 'reload', 'home', 'up', 'back', 'forward', 'getfile', 'quicklook',
                     'download', 'rm', 'duplicate', 'rename', 'mkdir', 'mkfile', 'upload', 'copy',
-                    'cut', 'paste', 'edit', 'extract', 'archive', 'search', 'info', 'view', 'help', 'resize', 'sort', 'netmount', 'fileupdate'
+                    'cut', 'paste', 'edit', 'extract', 'archive', 'search', 'info', 'view', 'help', 'resize', 'sort', 'netmount', 'fileupdate', 'wjsearch'
                     <% if (Constants.getBoolean("elfinderMetadataEnabled")) { %>,'wjmetadata'<% } %>
                 ],
                 contextmenu : {
@@ -240,7 +242,9 @@
 			           ['paste', 'cut', 'copy'],
 			           ['upload', 'mkdir', 'reload' /*'mkfile', */],
 
-			           ['view', 'sort']
+			           ['view', 'sort'],
+
+					   ['wjsearch']
 					]
 				}
 			});
@@ -279,27 +283,29 @@
 			var groupId = window.parent.getCkEditorInstance().element.$.form.groupId.value;
             var virtualPath = window.parent.getCkEditorInstance().element.$.form.virtualPath.value;
 
-			//console.log("Update elfinder data, docid="+docId+" groupId="+groupId);
+			//console.log("Update elfinder data, docid="+docId+" groupId="+groupId, " virtualPath="+virtualPath);
 
 			var elfinder = $('#finder').elfinder('instance');
 
 			var customData = {
 					volumes : "images",
 					docId: docId,
-					groupId: groupId
+					groupId: groupId,
+					title: getPageNavbar()
 			}
 
 			var file = $('#txtUrl').val();
-            if (file.indexOf("/images")!=0 || file.indexOf("/files")!=0)
-            {
-                file = "";
-            }
+			//console.log("file=", file);
+            if (file.indexOf("/images")!=0 && file.indexOf("/files")!=0)
+			{
+				file = "";
+			}
 			//console.log(file);
 			if (file != "")
 			{
 				customData.startPath = file.substring(0, file.lastIndexOf('/'));
 			}
-			//console.log(customData);
+			//console.log("Update elfinder customData", customData);
 
 			elfinder.options.customData = customData;
 
@@ -311,13 +317,13 @@
 			//zvol prvy element v "Aktualna stranka"
 			var openTimeout = 100;
 			var reload = false
-			if (lastDocId != docId || lastGroupId != groupId || virtualPath != lastVirtualPath)
+			if (lastDocId != docId || lastGroupId != groupId || virtualPath != lastVirtualPath || getPageNavbar() != lastTitle)
 			{
 			    //console.log("RELOADING, virtualPath="+virtualPath+" lastVirtualPath="+lastVirtualPath);
 				reload = true;
 				openTimeout = 500;
 			}
-			if (reload || file == "")
+			if (reload)
 			{
                 setTimeout(function() {
                     openDefaultImageFolder(reload);
@@ -327,8 +333,9 @@
             lastDocId = docId;
             lastGroupId = groupId;
             lastVirtualPath = virtualPath;
+			lastTitle = getPageNavbar();
 
-            //console.log("FILE="+file);
+            //console.log("FILE2="+file);
 			if (file != "")
 			{
 			    setTimeout(function() {

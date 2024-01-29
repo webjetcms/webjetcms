@@ -182,6 +182,8 @@ public class TemplatesDB extends DB
 				if (tempGroupName==null) tempGroupName = "";
 				tmpDetails.setTemplatesGroupName(tempGroupName);
 
+				tmpDetails.setInlineEditingMode(getDbString(rs, "inline_editing_mode"));
+
 				loadedTemps.add(tmpDetails);
 			}
 			rs.close();
@@ -560,10 +562,10 @@ public class TemplatesDB extends DB
 
 			TemplateDetails oldTemplate = t_form.getTempId() > 0 ? getTemplate(t_form.getTempId()) : null;
 
-			sql = "INSERT INTO templates (temp_name, forward, header_doc_id, footer_doc_id, menu_doc_id, after_body_data, css, lng, right_menu_doc_id, base_css_path, object_a_doc_id, object_b_doc_id, object_c_doc_id, object_d_doc_id, available_groups, template_install_name, disable_spam_protection, templates_group_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+			sql = "INSERT INTO templates (temp_name, forward, header_doc_id, footer_doc_id, menu_doc_id, after_body_data, css, lng, right_menu_doc_id, base_css_path, object_a_doc_id, object_b_doc_id, object_c_doc_id, object_d_doc_id, available_groups, template_install_name, disable_spam_protection, templates_group_id, inline_editing_mode) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
 			if (t_form.getTempId() > 0)
-				sql = "UPDATE templates SET temp_name=?, forward=?, header_doc_id=?, footer_doc_id=?, menu_doc_id=?, after_body_data=?, css=?, lng=?, right_menu_doc_id=?, base_css_path=?, object_a_doc_id=?, object_b_doc_id=?, object_c_doc_id=?, object_d_doc_id=?, available_groups=?, template_install_name=?, disable_spam_protection=?, templates_group_id=? WHERE temp_id=?";
+				sql = "UPDATE templates SET temp_name=?, forward=?, header_doc_id=?, footer_doc_id=?, menu_doc_id=?, after_body_data=?, css=?, lng=?, right_menu_doc_id=?, base_css_path=?, object_a_doc_id=?, object_b_doc_id=?, object_c_doc_id=?, object_d_doc_id=?, available_groups=?, template_install_name=?, disable_spam_protection=?, templates_group_id=?, inline_editing_mode=? WHERE temp_id=?";
 
 			ps = db_conn.prepareStatement(sql);
 			ps.setString(1, t_form.getTempName());
@@ -586,10 +588,11 @@ public class TemplatesDB extends DB
 			long tempGroupId = 1; //1==nepriradene
 			if (t_form.getTemplatesGroupId()!=null) tempGroupId = t_form.getTemplatesGroupId();
 			ps.setLong(18, tempGroupId);
+			ps.setString(19, t_form.getInlineEditingMode());
 
 			if (t_form.getTempId() > 0)
 			{
-				ps.setInt(19, t_form.getTempId());
+				ps.setInt(20, t_form.getTempId());
 			}
 			ps.execute();
 			ps.close();

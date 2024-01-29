@@ -30,14 +30,16 @@ $.fn.elfinderwjsearchbutton = function(cmd) {
 					mime = val;
 					val = '.';
 				}
+				var recursive=false;
+				if ($('#' + id('SearchFromCwdRecursive')).prop('checked')) recursive = true;
 				if (val) {
-					cmd.exec(val, from, mime).done(function() {
+					cmd.exec(val, from, mime, recursive).done(function() {
 						result = true;
 						input.focus();
 					}).fail(function() {
 						abort();
 					});
-					
+
 				} else {
 					fm.trigger('searchend');
 				}
@@ -75,16 +77,16 @@ $.fn.elfinderwjsearchbutton = function(cmd) {
 				})
 				.on('keydown', function(e) {
 					e.stopPropagation();
-					
+
 					e.keyCode == $.ui.keyCode.ENTER && search();
-					
+
 					if (e.keyCode == $.ui.keyCode.ESCAPE) {
 						e.preventDefault();
 						abort();
 					}
 				}),
 			opts;
-		
+
 		if (isopts.enable) {
 			isopts.minlen = isopts.minlen || 2;
 			isopts.wait = isopts.wait || 500;
@@ -107,12 +109,12 @@ $.fn.elfinderwjsearchbutton = function(cmd) {
 								incVal = val;
 								if (val === '' && fm.searchStatus.state > 1 && fm.searchStatus.query) {
 									input.val(fm.searchStatus.query).select();
-								} 
+								}
 							}
 						}, isopts.wait));
 					}
 				});
-			
+
 			if (fm.UA.ltIE8) {
 				input.on('keydown', function(e) {
 						if (e.keyCode === 229) {
@@ -133,15 +135,15 @@ $.fn.elfinderwjsearchbutton = function(cmd) {
 					});
 			}
 		}
-		
+
 		$('<span class="ui-icon ui-icon-search" title="'+cmd.title+'"/>')
 			.appendTo(button)
 			.click(search);
-		
+
 		$('<span class="ui-icon ui-icon-close"/>')
 			.appendTo(button)
 			.click(abort);
-		
+
 		// wait when button will be added to DOM
 		fm.bind('toolbarload', function(){
 			var parent = button.parent();
@@ -158,7 +160,7 @@ $.fn.elfinderwjsearchbutton = function(cmd) {
 				}
 			}
 		});
-		
+
 		fm
 			.one('open', function() {
 				opts = (fm.api < 2.1)? null : $('<div class="ui-front ui-widget ui-widget-content elfinder-button-menu ui-corner-all"/>')
@@ -166,8 +168,9 @@ $.fn.elfinderwjsearchbutton = function(cmd) {
 						$('<div class="buttonset"/>')
 							.append(
 								$('<input id="'+id('SearchFromCwd')+'" name="serchfrom" type="radio" checked="checked"/><label for="'+id('SearchFromCwd')+'">'+fm.i18n('btnCwd')+'</label>'),
-								$('<input id="'+id('SearchFromVol')+'" name="serchfrom" type="radio"/><label for="'+id('SearchFromVol')+'">'+fm.i18n('btnVolume')+'</label>'),
-								$('<input id="'+id('SearchFromAll')+'" name="serchfrom" type="radio"/><label for="'+id('SearchFromAll')+'">'+fm.i18n('btnAll')+'</label>')
+								$('<input id="'+id('SearchFromCwdRecursive')+'" name="serchfrom" type="radio"/><label for="'+id('SearchFromCwdRecursive')+'">'+fm.i18n('wjSearchRecursive')+'</label>'),
+								//$('<input id="'+id('SearchFromVol')+'" name="serchfrom" type="radio"/><label for="'+id('SearchFromVol')+'">'+fm.i18n('btnVolume')+'</label>'),
+								//$('<input id="'+id('SearchFromAll')+'" name="serchfrom" type="radio"/><label for="'+id('SearchFromAll')+'">'+fm.i18n('btnAll')+'</label>')
 							)
 						/*
 						$('<div class="buttonset"/>')
@@ -202,12 +205,12 @@ $.fn.elfinderwjsearchbutton = function(cmd) {
 			.bind('open parents', function() {
 				var dirs    = [],
 					volroot = fm.file(fm.root(fm.cwd().hash));
-				
+
 				if (volroot) {
 					$.each(fm.parents(fm.cwd().hash), function(i, hash) {
 						dirs.push(fm.file(hash).name);
 					});
-		
+
 					$('#'+id('SearchFromCwd')).next('label').attr('title', fm.i18n('searchTarget', dirs.join(fm.option('separator'))));
 					$('#'+id('SearchFromVol')).next('label').attr('title', fm.i18n('searchTarget', volroot.name));
 				}
@@ -215,7 +218,7 @@ $.fn.elfinderwjsearchbutton = function(cmd) {
 			.shortcut({
 				pattern     : 'ctrl+f f3',
 				description : cmd.title,
-				callback    : function() { 
+				callback    : function() {
 					input.select().focus();
 				}
 			});

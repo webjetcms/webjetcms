@@ -54,33 +54,35 @@ public class SortByName implements Comparator<ConfDetails> {
 
 	$(document).ready(function(){
 		$('.new_val').keyup(function repaintInputs()
+		{
+			$(' .org_val').each( function()
 			{
-				$(' .org_val').each( function()
-				{
+				try {
 					var act = $(this).attr("name");
 					var act_val =  $(this).val();
-			    	var neww = 'new'+act.substr(3,act.length);
-			    	var check = act.substr(4,act.length);
+					var neww = 'new'+act.substr(3,act.length);
+					var check = act.substr(4,act.length);
 
-			    	var neww_val = $("input[name$="+neww+"]").val();
+					var neww_val = $("input[name$="+neww+"]").val();
 
-			    	if(act_val == neww_val && act_val.length > 0)
-			    	{	<%--yelow & orange   bude po novom seda--%>
-				    		$(this).css({'border': '1px solid #cccccc'});
-			    			$("input[name$="+neww+"]").css({'border':'1px solid #cccccc'});
+					if(act_val == neww_val)
+					{	<%--yelow & orange   bude po novom seda--%>
+							$(this).css({'border': '1px solid #cccccc'});
+							$("input[name$="+neww+"]").css({'border':'1px solid #cccccc'});
 					}
 					else if ( act_val.length > 0 )
 					{	<%--red--%>
-		    			 $(this).css({'border':'1px solid #FF0000'});
-		    			 $("input[name$="+neww+"]").css({'border':'1px solid #FF0000'});
-			    	}
-			    	else
-			    	{	<%--green--%>
-		    			 $(this).css({'border':'1px solid #4fd46e'});
-		    			 $("input[name$="+neww+"]").css({'border':'1px solid #4fd46e'});
+							$(this).css({'border':'1px solid #FF0000'});
+							$("input[name$="+neww+"]").css({'border':'1px solid #FF0000'});
 					}
-				});
+					else
+					{	<%--green--%>
+							$(this).css({'border':'1px solid #4fd46e'});
+							$("input[name$="+neww+"]").css({'border':'1px solid #4fd46e'});
+					}
+				} catch (e) {}
 			});
+		});
 
 		$('.chk_cls').click(function reStyleBorderInputs()
 		{
@@ -298,7 +300,7 @@ else
 				{
 					cfd = updates.get(pom);
 					fileValue = cfd.getValue();
-					if(fileValue.length() == 0)
+					if(fileValue.length() == 0 && actValue.length()>0)
 						checkedChboxAct="checked=\"checked\"";
 
 					fileDate = (cfd.getDateChanged() != null) ? "<br>"+Tools.formatDateTimeSeconds((Date)cfd.getDateChanged()) : "<br>&nbsp;";
@@ -340,7 +342,7 @@ else
 						 <tr><th class="sortable" ><iwcm:text key="admin.conf_import.meno_premennej"/></th><th><iwcm:text key="admin.conf_import.stara_hodnota"/> </th><th>  <iwcm:text key="admin.conf_import.nova_hodnota"/> </th></tr><%
 					}
 					out.print("<tr class=\""); if(parny%2 == 0) out.print("even");else out.print("odd"); out.print( "\"><td>"+cf.getName()+" </td><td> "+Tools.getRequestParameter(request, "act_"+cf.getName())+" </td><td> "+Tools.getRequestParameter(request, "new_"+cf.getName())+"</td>");
-					ConfDB.setName(cf.getName(), Tools.getRequestParameter(request, "new_"+cf.getName()));
+					ConfDB.setName(cf.getName(), Tools.getRequestParameterUnsafe(request, "new_"+cf.getName()));
 				}
 			}
 			if(parny >= 1){

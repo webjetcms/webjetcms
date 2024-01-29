@@ -1349,7 +1349,8 @@ window.elFinder = function(node, opts) {
 
 		if ($.isPlainObject(file)) {
 			if (self.searchStatus.state && file.hash.indexOf(self.cwd().volumeid) !== 0) {
-				tmbUrl = self.option('tmbUrl', file.hash);
+				//webjet
+				tmbUrl = "/thumb"; // self.option('tmbUrl', file.hash);
 				tmbCrop = self.option('tmbCrop', file.hash);
 			} else {
 				tmbUrl = cwdOptions['tmbUrl'];

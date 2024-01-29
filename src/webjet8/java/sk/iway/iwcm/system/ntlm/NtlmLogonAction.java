@@ -81,7 +81,7 @@ public class NtlmLogonAction
 		{
 			if (request instanceof NtlmHttpServletRequest)
 			{
-				Identity loggedUser = (Identity)request.getSession().getAttribute(Constants.USER_KEY);
+				Identity loggedUser = UsersDB.getCurrentUser(request);
 				if (loggedUser != null)
 				{
 					//user je uz zalogovany, asi nema prava tam kde chce ist...

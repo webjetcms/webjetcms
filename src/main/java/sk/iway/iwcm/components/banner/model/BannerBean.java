@@ -105,7 +105,8 @@ public class BannerBean extends ActiveRecordRepository implements Serializable {
 				options = {
 					@DataTableColumnEditorAttr(key = "components.banner.picture", value = "1"),
 					@DataTableColumnEditorAttr(key = "components.banner.html", value = "3"),
-					@DataTableColumnEditorAttr(key = "components.banner.content_banner", value = "4")
+					@DataTableColumnEditorAttr(key = "components.banner.content_banner", value = "4"),
+					@DataTableColumnEditorAttr(key = "components.video.title", value = "5")
 				}
 			)
 		}
@@ -156,7 +157,7 @@ public class BannerBean extends ActiveRecordRepository implements Serializable {
 			title="[[#{components.banner.address}]]",
 			visible = false,
 			tab = "advanced",
-			className = "image banner-type banner-type-1 banner-type-4",
+			className = "image banner-type banner-type-1 banner-type-4 banner-type-5",
 			renderFormat = "dt-format-image"
 		)
 		private String bannerLocation;
@@ -167,7 +168,7 @@ public class BannerBean extends ActiveRecordRepository implements Serializable {
 			title="[[#{components.banner.redirect_link}]]",
 			visible = false,
 			tab = "advanced",
-			className = "banner-type banner-type-1 banner-type-3 banner-type-4",
+			className = "banner-type banner-type-1 banner-type-3 banner-type-4 banner-type-5",
 			renderFormat = "dt-format-link"
 		)
 		private String bannerRedirect;
@@ -188,7 +189,7 @@ public class BannerBean extends ActiveRecordRepository implements Serializable {
 					}
 				)
 			},
-			className = "banner-type banner-type-1"
+			className = "banner-type banner-type-1 banner-type-5"
 		)
 		private String target;
 

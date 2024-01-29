@@ -11,6 +11,7 @@ import sk.iway.iwcm.admin.jstree.JsTreeItemState;
 import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.editor.EditorDB;
 import sk.iway.iwcm.editor.rest.WebPagesListener;
+import sk.iway.iwcm.editor.service.GroupsService;
 import sk.iway.iwcm.i18n.Prop;
 
 import javax.servlet.http.HttpServletRequest;
@@ -33,14 +34,15 @@ public class GroupsTreeService {
     public List<JsTreeItem> getItems(Identity user, int id, boolean showPages, String click, String requestedDomain, HttpServletRequest request) {
         GroupsDB groupsDB = GroupsDB.getInstance();
         DocDB docDB = DocDB.getInstance();
+        int idOriginal = id;
 
         if (isSystemRequested(click) && id<1) {
             if (Constants.getBoolean("templatesUseRecursiveSystemFolder")==false) {
-                GroupDetails systemGroupDetails = getSystemGroupDetails();
+                GroupDetails systemGroupDetails = GroupsService.getSystemGroupDetails();
                 if (systemGroupDetails != null) id = systemGroupDetails.getGroupId();
             }
         } else if (isTrashRequested(click) && id<1) {
-            GroupDetails trashGroupDetails = getTrashGroupDetails();
+            GroupDetails trashGroupDetails = GroupsService.getTrashGroupDetails();
             if (trashGroupDetails != null) id = trashGroupDetails.getGroupId();
         }
 
@@ -53,23 +55,65 @@ public class GroupsTreeService {
 
         List<GroupDetails> groups = groupsDB.getGroups(id);
 
-        groups = filterByPerms(groups, user);
+        //Special case -> if we want tree items for STAT section AND user have cmp_stat_seeallgroups right, we do not filter by perms but RESTURN ALL ITEMS
+        String referer = request.getHeader("referer");
+        String uri = request.getRequestURI();
+        final boolean checkGroupsPerms;
+        //Referer -> that we call from stat section
+        //Uri -> that it's called from GroupTreeRestController NOT from WebPagesListener
+        if(referer!=null && referer.contains("/apps/stat/admin/") && uri != null && uri.contains("/admin/rest/groups/tree/tree") && user.isEnabledItem("cmp_stat_seeallgroups"))
+            checkGroupsPerms = false;
+        else {
+            checkGroupsPerms = true;
+            groups = filterByPerms(groups, user); //Filter groups by perms
+        }
 
         if (click.contains("alldomains")==false || requestedDomain!=null) groups = filterByDomain(groups, requestedDomain);
 
-        if (click.contains("filter-system-trash")) {
-            groups = filterSystem(groups);
-        }
-        if (isSystemRequested(click) && Constants.getBoolean("templatesUseRecursiveSystemFolder")) {
-            //musis odfiltrovat a vratit iba adresare, ktore maju potomka s nazvom System
-            groups = filterOnlyWithSystemChilds(groups, groupsDB);
-        }
-        if (isSystemRequested(click)) {
-            //musis odfiltrovat Kos priecinok
-            groups = filterTrash(groups);
+        GroupDetails domainRootGroup = null;
+        String domainFilesPrefix = "";
+        if (Constants.getBoolean("enableStaticFilesExternalDir"))
+        {
+            int domainId = CloudToolsForCore.getDomainId();
+            domainRootGroup = GroupsDB.getInstance().getGroup(domainId);
+            domainFilesPrefix =  "/" + domainRootGroup.getGroupName();
         }
 
-        items.addAll(groups.stream().sorted(Comparator.comparing(GroupDetails::getSortPriority)).map(g -> new GroupsJsTreeItem(g, user, showPages)).collect(Collectors.toList()));
+        if (click.contains("filter-system-trash")) {
+            groups = filterSystem(groups);
+            //filter Full text Index folder /files
+            groups = filterFullPath(groups, "/files");
+
+            if (Constants.getBoolean("enableStaticFilesExternalDir") && domainRootGroup!=null)
+            {
+                ///files adresar vytvarame v domenovom foldri
+                groups = filterFullPath(groups, domainFilesPrefix + "/files");
+            }
+        }
+        if (isSystemRequested(click)) {
+            if (group!=null && (group.getFullPath().startsWith("/files") || group.getFullPath().startsWith(domainFilesPrefix+"/files"))) {
+                //if it's /files/something OR /Jet Portal 4/files/something then do not filter and show all groups by requested parent folder
+            } else {
+                if (Constants.getBoolean("templatesUseRecursiveSystemFolder")) {
+                    groups = filterOnlyWithSystemChilds(groups, groupsDB);
+                } else {
+                    //musis odfiltrovat Kos priecinok
+                    groups = filterTrash(groups);
+                }
+
+                //add /files folder to root (it's shown in /System folder)
+                if (idOriginal==0) {
+                    List<GroupDetails> filesGroups = filterFullPath(groupsDB.getGroups(0), "!/files");
+                    groups.addAll(filesGroups);
+                    if (domainRootGroup != null && Tools.isNotEmpty(domainFilesPrefix)) {
+                        filesGroups = filterFullPath(groupsDB.getGroups(domainRootGroup.getGroupId()), "!"+domainFilesPrefix+"/files");
+                        groups.addAll(filesGroups);
+                    }
+                }
+            }
+        }
+
+        items.addAll(groups.stream().sorted(Comparator.comparing(GroupDetails::getSortPriority)).map(g -> new GroupsJsTreeItem(g, user, showPages, checkGroupsPerms)).collect(Collectors.toList()));
 
         //standardne zobrazenie v stromovej strukture, rovno zobraz aj pod adresare
         int groupId = WebPagesListener.getLastGroupId(request, 0);
@@ -242,6 +286,7 @@ public class GroupsTreeService {
      */
     private static List<GroupDetails> filterFullPath(List<GroupDetails> groups, String filterFullPath) {
         List<GroupDetails> filtered = groups.stream().filter(g->{
+            if (filterFullPath.startsWith("!") && g.getFullPath().startsWith(filterFullPath.substring(1))==false) return false;
             if ( g.getFullPath().startsWith(filterFullPath) ) return false;
             if (filterFullPath.startsWith("*") && filterFullPath.length()>2 && g.getFullPath().contains(filterFullPath.substring(1)) ) return false;
             return true;
@@ -271,34 +316,6 @@ public class GroupsTreeService {
         }).collect(Collectors.toList());
 
         return filtered;
-    }
-
-    /**
-     * Vrati adresar Kos
-     * @return
-     */
-    public GroupDetails getTrashGroupDetails() {
-        Prop propSystem = Prop.getInstance(Constants.getString("defaultLanguage"));
-        String trashDirName = propSystem.getText("config.trash_dir");
-        GroupsDB groupsDB = GroupsDB.getInstance();
-        GroupDetails trashGroupDetails = groupsDB.getCreateGroup(trashDirName);
-        return trashGroupDetails;
-    }
-
-    /**
-     * Vrati adresar System (lokalny)
-     * @return
-     */
-    public GroupDetails getSystemGroupDetails() {
-        GroupsDB groupsDB = GroupsDB.getInstance();
-        GroupDetails system = groupsDB.getLocalSystemGroup();
-
-        //ak sa nenaslo, pouzi globalny
-        if (system == null) {
-            system = groupsDB.getGroupByPath("/System");
-        }
-
-        return system;
     }
 
     /**

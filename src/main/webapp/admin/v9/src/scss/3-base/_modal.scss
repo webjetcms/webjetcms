@@ -494,7 +494,7 @@
     .modal-dialog {
         max-width: 1000px;
         display: block;
-        margin: 119px auto 0;
+        margin: 20px auto 0;
         position: relative;
     }
 
@@ -914,6 +914,15 @@ html.in-iframe, html.in-iframe-show-table {
     }
 }
 html.in-iframe {
+    //nezobrazime ani ziadnu DT, iba editor
+    div.ly-page-wrapper {
+        display: none;
+    }
+    div.modal.DTED.show div.DTE_Form_Error {
+        margin-top: 8px !important;
+    }
+}
+html.in-iframe:not(.in-iframe-show-footer-primary) {
     .modal:not(.DTE_nested_modal) .modal-dialog-scrollable {
         div.modal-content {
             div.modal-footer {
@@ -927,12 +936,11 @@ html.in-iframe {
             }
         }
     }
-    //nezobrazime ani ziadnu DT, iba editor
-    div.ly-page-wrapper {
-        display: none;
-    }
-    div.modal.DTED.show div.DTE_Form_Error {
-        margin-top: 8px !important;
+}
+html.in-iframe.in-iframe-show-footer-primary {
+    //enable only primary button - used in /components/htmlbox to edit page by docId in existing component editor
+    div.modal-footer {
+        span.buttons-footer-left, button.btn-outline-secondary, div.edit-append { visibility: hidden; }
     }
 }
 html.in-iframe-show-table {
@@ -975,7 +983,7 @@ html.in-iframe-show-table {
 .DTE_Action_Edit div.DTE_Field.hideOnEdit {
     display: none !important;
 }
-.DTE_Field.disabled .form-control {
+.DTE_Field.disabled .form-control, .field-type-disabled, .field-type-uuid, .field-type-uuid:focus {
     background-color: #F3F3F6;
     border-color: #868EA5;
     opacity: 1;
@@ -1019,6 +1027,20 @@ div.DTED.show[data-action=duplicate] {
             top: 0px;
             left: 0px;
             z-index: 10;
+        }
+    }
+}
+
+//tootip MD format
+div.tooltip.show {
+    opacity: unset;
+    div.tooltip-inner {
+        span.code-inline {
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 12px;
+            display: inline-block;
+            padding: 2px;
+            background-color: #4d4d4d;
         }
     }
 }

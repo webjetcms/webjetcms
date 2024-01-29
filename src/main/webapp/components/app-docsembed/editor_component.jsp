@@ -67,7 +67,7 @@ taglib
 </script>
 
 <div class="tab-pane toggle_content" style="height:440px !important; overflow: auto; width:790px; padding:10px">
-<form name="textForm" style="padding: 10px; margin: 0px;">
+<form name="textForm" onsubmit="return false" style="padding: 10px; margin: 0px;">
 
 		<div class="row">
 			<div class="col-4"><label class="col-form-label"><iwcm:text
@@ -89,15 +89,15 @@ taglib
 			<div class="col-4"><label class="col-form-label"> <iwcm:text key="components.app-docsembed.editor_components.width" />:</label></div>
 			<div class="col-8"><input type="text" name="width"
 				placeholder="900" value="<%=pageParams.getValue("width", "900")%>"
-				size="4" maxlength="4" /> px </div>
+				size="6" maxlength="10" /> px </div>
 		</div>
 
 		<div class="row">
 			<div class="col-4"><label class="col-form-label"><iwcm:text
 					key="components.app-docsembed.editor_components.height" />:</label></div>
 			<div class="col-8"><input type="text" name="height" placeholder="700"
-				value="<%=pageParams.getValue("height", "700")%>" size="4"
-				maxlength="4" /> px </div>
+				value="<%=pageParams.getValue("height", "700")%>" size="6"
+				maxlength="10" /> px </div>
 		</div>
 
 	</form>

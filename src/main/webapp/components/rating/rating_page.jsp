@@ -20,18 +20,18 @@ int range = pageParams.getIntValue("range", 10);
 int ratingDocId = pageParams.getIntValue("ratingDocId", -1);
 if (ratingDocId < 1) ratingDocId = Tools.getDocId(request);
 
-RatingBean rBean = new RatingBean();
+RatingEntity rBean = new RatingEntity();
 
-rBean = RatingDB.getDocIdRating(ratingDocId);
+rBean = RatingService.getDocIdRating(ratingDocId);
 request.setAttribute("docIdRating", "true");	
 %>
 
-<%@page import="sk.iway.iwcm.components.rating.RatingBean"%>
-<%@page import="sk.iway.iwcm.components.rating.RatingDB"%>
+<%@page import="sk.iway.iwcm.components.rating.jpa.RatingEntity"%>
+<%@page import="sk.iway.iwcm.components.rating.RatingService"%>
 <div class="rating">
 	<!--  RATING STRANKY -->
 	<logic:present name="docIdRating">
-	     <iwcm:text key="components.rating.hodnotenie" param1='<%=""+rBean.getRatingValue()%>' param2='<%=""+range%>'/><br/>
+	     <iwcm:text key="components.rating.hodnotenie" param1='<%=""+rBean.getRatingValueDouble()%>' param2='<%=""+range%>'/><br/>
 		 <iwcm:text key="components.rating.hlasovalo" param1='<%=""+rBean.getTotalUsers()%>'/><br/>
 	</logic:present>
 </div>		

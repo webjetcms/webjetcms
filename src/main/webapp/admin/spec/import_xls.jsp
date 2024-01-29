@@ -4,7 +4,7 @@ sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
 <%@ taglib uri="/WEB-INF/iway.tld" prefix="iway" %>
 <%@ taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm" %>
 <%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
-<%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
+<%@ taglib prefix="form" uri="http://www.springframework.org/tags/form"%>
 <%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %><iwcm:checkLogon admin="true" perms="menuWebpages|menuGallery"/>
 <%@ include file="/admin/layout_top.jsp" %>
 
@@ -12,12 +12,16 @@ sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
 
 <br><br>
 
-<html:form action="/admin/importxls.do" name="xlsImportForm" type="sk.iway.iwcm.xls.ImportXLSForm" enctype="multipart/form-data"> 
+<%
+request.setAttribute("xlsImportForm", new sk.iway.iwcm.xls.ImportXLSForm());
+%>
+
+<form:form method="post" modelAttribute="xlsImportForm" action="/admin/import/excel/" name="xlsImportForm" enctype="multipart/form-data">
  <table>
   <tr>
 	<td>Vyberte súbor:</td>
 	<td>
-		<html:file property="file" styleClass="input"/>
+		<input type="file" name="file" size="30">
 	</td>
   </tr>
   <tr>
@@ -32,11 +36,11 @@ sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
   <tr>
 	<td></td>
 	<td align="right">
-		<input type="submit" class="button50" value="Potvrdiť">		
+		<input type="submit" class="button50" value="Potvrdiť">
 	</td>
   </tr>
  </table>
-</html:form>
+</form:form>
 
 
 <%@ include file="/admin/layout_bottom.jsp" %>

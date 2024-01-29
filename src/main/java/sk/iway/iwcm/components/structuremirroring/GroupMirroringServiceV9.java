@@ -2,8 +2,10 @@ package sk.iway.iwcm.components.structuremirroring;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.List;
 
+import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.PkeyGenerator;
 import sk.iway.iwcm.Tools;
@@ -46,10 +48,29 @@ public class GroupMirroringServiceV9 {
          if (group.getSyncId()>1) {
             //najdi k tomu mirror verzie
             List<GroupDetails> syncedGroups = getGroupsBySyncId(group.getSyncId(), group.getGroupId());
-            if (syncedGroups.size()==0) {
+            List<GroupDetails> mappedGroupsList = MirroringService.getMappingForGroup(group.getParentGroupId());
+            List<GroupDetails> mappedGroupsListNotExisting = new ArrayList<>();
+
+            if (mappedGroupsList.size()>syncedGroups.size()) {
+               //there is new mapping group created in allready synced groups, we must create missing one
+               for (GroupDetails mappedGroup : mappedGroupsList) {
+                  boolean containGroup = false;
+                  for (GroupDetails syncedGroup : syncedGroups) {
+                     if (mappedGroup.getGroupId()==syncedGroup.getParentGroupId()) {
+                        //ok, this group is allready synced
+                        containGroup = true;
+                        break;
+                     }
+                  }
+                  if (containGroup==false) mappedGroupsListNotExisting.add(mappedGroup);
+               }
+               mappedGroupsList = mappedGroupsListNotExisting;
+            }
+
+            if (syncedGroups.isEmpty() || mappedGroupsListNotExisting.size()>0) {
                //este neexistuje, musime vytvorit novu grupu (kopiu)
                //vytvor kopie adresara v ostatnych mapovanych adresaroch
-               List<GroupDetails> mappedGroupsList = MirroringService.getMappingForGroup(group.getParentGroupId());
+
                //ak nie je pre tento adresar ziadne mapovanie, skonci, asi sa jedna o adresar mimo nastaveneho mapovania
                if (mappedGroupsList.size()<1) return;
 
@@ -78,7 +99,11 @@ public class GroupMirroringServiceV9 {
                   }
 
                   GroupDetails mirror = groupsDB.getNewGroupDetails(translatedGroupName, mappedGroup.getGroupId());
-                  mirror.setMenuType(GroupDetails.MENU_TYPE_HIDDEN);
+                  if (Constants.getBoolean("structureMirroringDisabledOnCreate")) mirror.setMenuType(GroupDetails.MENU_TYPE_HIDDEN);
+                  else {
+                     mirror.setMenuType(group.getMenuType());
+                     mirror.setLoggedMenuType(group.getLoggedMenuType());
+                  }
                   mirror.setParentGroupId(mappedGroup.getGroupId());
                   mirror.setDefaultDocId(0);
                   mirror.setSyncId(group.getSyncId());
@@ -87,7 +112,9 @@ public class GroupMirroringServiceV9 {
                   groupsDB.setGroup(mirror, false);
                   MirroringService.forceReloadTree();
                }
-            } else if (syncedGroups.size()>0) {
+            }
+
+            if (syncedGroups.size()>0) {
                //adresare uz existuju, over, ze tam je vsetko dobre nastavene
                //POZOR na zacyklenie
 
@@ -184,7 +211,7 @@ public class GroupMirroringServiceV9 {
 
       GroupsDB groupsDB = GroupsDB.getInstance();
 
-		return cq.list(new Mapper<GroupDetails>()
+		List<GroupDetails> groups = cq.list(new Mapper<GroupDetails>()
 		{
 			public GroupDetails map(ResultSet rs) throws SQLException
 			{
@@ -194,6 +221,21 @@ public class GroupMirroringServiceV9 {
 			}
 
 		});
+
+      //filter groups which is not synced anymore
+      List<GroupDetails> filtered = new ArrayList<>();
+      for (GroupDetails group : groups) {
+         List<GroupDetails> parents = groupsDB.getParentGroups(group.getGroupId(), true);
+         for (GroupDetails parent : parents) {
+            int[] rootIds = MirroringService.getRootIds(parent.getGroupId());
+            if (rootIds != null) {
+               filtered.add(group);
+               break;
+            }
+         }
+      }
+
+      return filtered;
 	}
 
    public static String getLanguage(GroupDetails group) {

@@ -6,6 +6,7 @@ import static sk.iway.iwcm.Tools.isNotEmpty;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.StringTokenizer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -14,7 +15,7 @@ import sk.iway.iwcm.Logger;
 
 /**
  *  BrowserExtractor.java
- *  
+ *
  *  Extracts browsers from User-Agent string
  *
  *@Title        webjet7
@@ -30,11 +31,11 @@ class BrowserExtractor
 	private static final List<String> correctlyBehavingBrowsers = Arrays.asList(
 		"Firefox", "Netscape", "Safari", "Chrome", "Camino", "Mosaic", "Opera", "Galeon"
 	);
-			
+
 	private static final List<String> browsersIgnoringRfc = Arrays.asList(
 		"Crazy Browser", "Avant Browser"
 	);
-	
+
 	private static final Pattern commentedProductPattern = Pattern.compile(
 				";[ ]*([^/]+?)[/ ]+([0-9.ab]+)",
 				Pattern.CASE_INSENSITIVE | Pattern.MULTILINE
@@ -78,17 +79,17 @@ class BrowserExtractor
 		}
 		return unknownBrowser();
 	}
-	
+
 	private Product unknownBrowser()
 	{
 		return new Product("Unknown");
 	}
-	
+
 	private boolean correctlyIdentifiesItself()
 	{
 		return extractCorrectlyIdentifiedBrowser() != null;
 	}
-	
+
 	private Product extractCorrectlyIdentifiedBrowser()
 	{
 		Product browser = null;
@@ -98,24 +99,24 @@ class BrowserExtractor
 					browser = product;
 		if (browser != null && isVersionOutsideOfProduct())
 			browser.version = extractVersionFromAnExternalProduct();
-		
+
 		return browser;
 	}
-	
+
 	private boolean cloaksAsMozilla()
 	{
 		Product firstBrowser = detector.firstProduct();
 		return "Mozilla".equals(firstBrowser.name) &&
 			firstBrowser.comment != null &&
-			firstBrowser.comment.toLowerCase().startsWith("compatible;"); 
+			firstBrowser.comment.toLowerCase().startsWith("compatible;");
 	}
-	
+
 	/**
-	 * General rule for comments containing 
+	 * General rule for comments containing
 	 * "compatible;" is as follows:
 	 * 	(compatible; BROWSER VERSION; OS VERSION;...)
-	 * 
-	 * Microsoft is, naturally, an exception 
+	 *
+	 * Microsoft is, naturally, an exception
 	 */
 	private Product extractFromComment(String comment)
 	{
@@ -124,16 +125,25 @@ class BrowserExtractor
 		if (illBehavingBrowser != null)
 		{
 			product.name = illBehavingBrowser;
+			try {
+				int i = comment.indexOf(illBehavingBrowser);
+				if (i>0) {
+					StringTokenizer st = new StringTokenizer(comment.substring(i+illBehavingBrowser.length()), ";) ");
+					if (st.hasMoreTokens()) product.version = detector.stripSubVersions(st.nextToken());
+				}
+			} catch (Exception e) {
+				//bad UA string
+			}
 			return product;
 		}
-		
+
 		Matcher matcher = commentedProductPattern.matcher(comment.replace("compatible", ""));
 
-		if (matcher.find()){
+		if (matcher.find()) {
 			product.name = firstNonNull(matcher.group(1), "Unknown");
 			product.version = detector.stripSubVersions(matcher.group(2));
 		}
-		
+
 		return product;
 	}
 
@@ -144,16 +154,16 @@ class BrowserExtractor
 				return browser;
 		return null;
 	}
-	
+
 	private boolean isVersionOutsideOfProduct()
 	{
 		return extractVersionFromAnExternalProduct() != null;
 	}
-	
+
 	/**
 	 * Some browsers, namely and mainly Safari identifies itself as
 	 * Safari/523.10. This "523.10" is not the version number, however.
-	 * 
+	 *
 	 * Version number can be found in a separate product format string,
 	 * such as "Version/5.0"
 	 */
@@ -164,7 +174,7 @@ class BrowserExtractor
 				return product.version;
 		return null;
 	}
-	
+
 	private boolean isInternetExplorer()
 	{
 		return detector.firstProduct().comment != null &&

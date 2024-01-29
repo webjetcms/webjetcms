@@ -19,6 +19,7 @@ public class FilterHeaderDto {
     private String url;
     private String searchEngineName;
     private Integer webPageId;
+    private String statType;
 
     public FilterHeaderDto() {
         this.dateFrom = null;
@@ -29,6 +30,7 @@ public class FilterHeaderDto {
         this.rootGroupIdQuery = "";
         this.searchEngineName = "";
         this.webPageId = -1;
+        this.statType = "days";
     }
 
     public void setRootGroupId(Integer rootGroupId) {

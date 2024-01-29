@@ -7,6 +7,90 @@ sk.iway.iwcm.components.banner.model.*" %><%@ page import="sk.iway.iwcm.tags.Wri
  <%@ page import="sk.iway.iwcm.doc.DocDetails" %>
  <%@ page import="sk.iway.iwcm.io.IwcmFile" %>
  <%@ page import="sk.iway.iwcm.components.banner.BannerDB" %>
+ <%@ page import="sk.iway.iwcm.stat.BrowserDetector" %>
+
+<style>
+div.jumbotron-has-video {
+	overflow: hidden;
+	position: relative;
+}
+div.jumbotron-has-video video, div.jumbotron-has-video iframe {
+	width: 100%;
+    position: absolute;
+    object-fit: cover;
+	top: 0px;
+	left: 0px;
+	z-index: 0;
+}
+div.jumbotron-has-video iframe {
+	height: 100%;
+}
+div.jumbotron-has-video div.masthead-content-wrapper, div.jumbotron-has-video div.masthead-links {
+	position: relative;
+	z-index: 1;
+}
+
+div.jumbotron-has-video-fullscreen {
+	background: rgba(0, 0, 0, 0%);
+}
+div.jumbotron-has-video-fullscreen video, div.jumbotron-has-video-fullscreen iframe {
+	position: fixed;
+	top: 50%;
+	left: 50%;
+	min-width: 100%;
+	min-height: 100%;
+	z-index: -100;
+	width: auto;
+	height: auto;
+	transform: translateX(-50%) translateY(-50%);
+	background-size: cover;
+	background: rgba(0, 0, 0, 0%);
+}
+div.jumbotron-has-video-fullscreen:before {
+    content: '';
+    display: block;
+    width: 100%;
+    height: 100%;
+    position: fixed;
+    background: #000;
+    opacity: .2;
+    top: 0;
+    bottom: 0;
+    right: 0;
+    left: 0;
+    margin: auto;
+    z-index: -1;
+}
+</style>
+
+<%!
+	public String prepareVideoCode(String link) {
+		String htmlCode = "";
+		if(link.contains("youtube.com")) {
+			//YouTue version
+			String urlParamsString = link.split("\\?")[1];
+			if(Tools.isNotEmpty(urlParamsString)) {
+				String urlParamsList[] = urlParamsString.split("&");
+				String videoParam = null;
+				for(String urlParam : urlParamsList) {
+					if(urlParam.startsWith("v=")) {
+						videoParam = urlParam.split("v=")[1];
+						break;
+					}
+				}
+
+				if(videoParam != null) {
+					htmlCode += "	<iframe id=\"video\" src=\"//www.youtube.com/embed/" + videoParam + "?enablejsapi=1&amp;html5=1&amp;mute=1&amp;showinfo=0&autoplay=1\" frameborder=\"0\" allowfullscreen=\"\" class=\"video\" data-gtm-yt-inspected-2=\"true\"></iframe>";
+				}
+			}
+		} else if(link.endsWith(".mp4")) {
+				htmlCode += "<video autoplay=\"\" loop=\"\" muted=\"\"><source src=\"" + link + "\" type=\"video/mp4\" /></video>";
+		}
+
+		return htmlCode;
+	}
+%>
+
  <%
 
 try
@@ -40,6 +124,12 @@ try
 	boolean targetBlank = pageParams.getBooleanValue("targetBlank", true);
 	boolean useAjax = pageParams.getBooleanValue("useAjax", false);
 	boolean insertPerexPre = pageParams.getBooleanValue("insertPerexPre",true);
+
+	String baseJumbotronClass = "jumbotron-has-video";
+	if (group != null && group.contains("fullscreen")) baseJumbotronClass = "jumbotron-has-video-fullscreen";
+	String jumbotronVideoClass = pageParams.getValue("jumbotronVideoClass", baseJumbotronClass);
+
+	String videoWrapperClass = pageParams.getValue("videoWrapperClass", "embed-responsive embed-responsive-16by9 ratio ratio-16x9 banner-has-video");
 
 	boolean usingPerexImage=false;
 	DocDetails docDetails = null;
@@ -189,12 +279,7 @@ try
 
 	String objectLink;
 	String redirectLink;
-	String fromDate;
-	String toDate;
 	String target;
-	//int maxViews;
-	//int maxClicks;
-
 	String htmlCode = "";
 
 	String statClick = "/components/_common/clk.jsp?";
@@ -212,19 +297,13 @@ try
 				}
 				//out.println("Banner ID = "+banner.getBannerId()+"<br>priority = "+banner.getPriority());
 
-				//picture
-				if (banner.getBannerType().intValue() == 1 && banner.getActive().booleanValue()==true)
-				{
-					objectLink = MultiDomainFilter.fixDomainPaths(banner.getBannerLocation(), request);
-					redirectLink = banner.getBannerRedirect();
-					fromDate = String.valueOf(banner.getDateFrom());
-					toDate = String.valueOf(banner.getDateTo());
-					target= banner.getTarget();
+				statClick += "bid="+banner.getBannerId();
+				statClick = Tools.replace(statClick, "&", "&amp;");
+				redirectLink = banner.getBannerRedirect();
+				target= banner.getTarget();
 
-					//maxViews = banner.getMaxViews().intValue();
-					//maxClicks = banner.getMaxClicks().intValue();
-					statClick += "bid="+banner.getBannerId();
-					statClick = Tools.replace(statClick, "&", "&amp;");
+				if (banner.getBannerType().intValue() == 1 && banner.getActive().booleanValue()==true) { //picture
+					objectLink = MultiDomainFilter.fixDomainPaths(banner.getBannerLocation(), request);
 
 					if (Tools.isEmpty(redirectLink))
 					{
@@ -238,34 +317,13 @@ try
 					}
 				}
 
-				//html code
-				if (banner.getBannerType().intValue() == 3 && banner.getActive().booleanValue()==true)
-				{
-					objectLink = banner.getBannerLocation();
-					redirectLink = banner.getBannerRedirect();
-					fromDate = String.valueOf(banner.getDateFrom());
-					toDate = String.valueOf(banner.getDateTo());
-					target = banner.getTarget();
-
-					//maxViews = banner.getMaxViews().intValue();
-					//maxClicks = banner.getMaxClicks().intValue();
-					statClick += "bid="+banner.getBannerId();
+				if (banner.getBannerType().intValue() == 3 && banner.getActive().booleanValue()==true) { //html code
 
 					htmlCode = banner.getHtmlCode();
 				}
 
-				if (banner.getBannerType().intValue() == 4 && banner.getActive().booleanValue()==true)
-				{
+				if (banner.getBannerType().intValue() == 4 && banner.getActive().booleanValue()==true) { //content banner
 					objectLink = MultiDomainFilter.fixDomainPaths(banner.getBannerLocation(), request);
-					redirectLink = banner.getBannerRedirect();
-					fromDate = String.valueOf(banner.getDateFrom());
-					toDate = String.valueOf(banner.getDateTo());
-					target= banner.getTarget();
-
-					//maxViews = banner.getMaxViews().intValue();
-					//maxClicks = banner.getMaxClicks().intValue();
-					statClick += "bid="+banner.getBannerId();
-					statClick = Tools.replace(statClick, "&", "&amp;");
 
 					if(BannerDB.isBannerForUrl(banner,url)){
 						String mobileImageLink = banner.getImageLinkMobile();
@@ -282,7 +340,17 @@ try
 							htmlCode += "</style>\n";
 						}
 
-						htmlCode += "<div class='jumbotron c-masthead' data-module='masthead' id='jumbotron-"+banner.getBannerId()+"'>";
+						String videoCode = null;
+						if(Tools.isNotEmpty(banner.getImageLinkMobile()) && BrowserDetector.getInstance(request).isPhone())
+							videoCode = prepareVideoCode(banner.getImageLinkMobile());
+						else if(Tools.isNotEmpty(banner.getImageLink()))
+							videoCode = prepareVideoCode(banner.getImageLink());
+
+						htmlCode += "<div class='jumbotron c-masthead";
+						if (Tools.isNotEmpty(videoCode)) htmlCode += " "+jumbotronVideoClass;
+						htmlCode += "' data-module='masthead' id='jumbotron-"+banner.getBannerId()+"'>";
+
+						if (Tools.isNotEmpty(videoCode)) htmlCode += videoCode;
 
 						/*if (Tools.isNotEmpty(banner.getImageLink()) && Tools.isNotEmpty(banner.getImageLinkMobile())) {
 							htmlCode += "><div class='masthead-image-wrapper'>" +
@@ -296,6 +364,8 @@ try
 							htmlCode += " style='background-image:url(/thumb"+banner.getImageLink()+"?w=1280&ip=1); background-size: cover;'>";
 						} else htmlCode += ">";*/
 						htmlCode += "<div class='masthead-content'>";
+
+						//System.out.println("")
 
 						if (Tools.isNotEmpty(banner.getPrimaryHeader())) {
 							htmlCode += "<h1>"+banner.getPrimaryHeader()+"</h1>\n";
@@ -334,6 +404,24 @@ try
 						htmlCode += "</div>";
 					} else {
 						htmlCode = "";
+					}
+				}
+
+				if (banner.getBannerType().intValue() == 5 && banner.getActive().booleanValue() == true) { //video
+					String videoCode = prepareVideoCode(banner.getBannerLocation());
+					if (Tools.isNotEmpty(videoCode)) {
+						//click event
+						if (Tools.isNotEmpty(redirectLink)) {
+							htmlCode += "<a href='" +statClick+ "'";
+							if (Tools.isNotEmpty(target) && "_self".equalsIgnoreCase(target)==false) htmlCode += " target='"+target+"'";
+							htmlCode += ">";
+						}
+
+						htmlCode += "<div class=\""+videoWrapperClass+"\">";
+						htmlCode += videoCode;
+						htmlCode += "</div>";
+
+						if (Tools.isNotEmpty(redirectLink)) htmlCode += "</a>";
 					}
 				}
 

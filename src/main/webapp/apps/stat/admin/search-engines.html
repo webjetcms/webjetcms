@@ -28,7 +28,7 @@
     });
 
     window.getSearchEnginesDetails = function (order) {
-        let dayDate = ChartTools.getDateRange(30);
+        let dayDate = ChartTools.getDateRange(null);
         let queryName = searchEnginesQueryDataTable.DATA.json[order - 1]['queryName']
         window.location.href="/apps/stat/admin/search-engines-details?queryName=" +  encodeURIComponent(queryName) + "&dayDate=" + (searchEnginesQueryDataTable.DATA.columns[1].searchVal);
     }
@@ -76,7 +76,7 @@
             autoHeight: false,
             defaultSearch: ChartTools.getSearchCriteria(),
             onPreXhr: function(TABLE, e, settings, data) {
-                data.fixed_searchDayDate = ChartTools.getDateRange(30),
+                data.fixed_searchDayDate = ChartTools.getDateRange(null),
                 data.fixed_searchRootDir = $('#rootDir').val();
             }
         });
@@ -177,7 +177,7 @@
             let rootDir = $('#rootDir').val();
             let filterEngine = $('#searchEngineSelect').val();
             let filterWebPage = $('#webPageSelect').val();
-            let searchDateValue = ChartTools.getDateRange(30);
+            let searchDateValue = ChartTools.getDateRange(null);
 
             if(type == ChartTools.ChartType.Bar) {
                 tmpDefURL += searchEnginesQueryUrl + "/search/findByColumns?chartType=" + ChartTools.ChartType.Bar;

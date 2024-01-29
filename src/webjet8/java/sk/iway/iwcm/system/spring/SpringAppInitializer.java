@@ -98,7 +98,7 @@ public class SpringAppInitializer implements WebApplicationInitializer
 				return Class.forName(c) != null;
 			} catch (ClassNotFoundException e) {
 				//sk.iway.iwcm.Logger.error(e);
-				Logger.println(this, "SPRING: NEnasiel som custom config pre  " + c);
+				Logger.println(this, "SPRING: NEnasiel som custom config (1) pre " + c);
 			}
 			return false;
 		}).collect(Collectors.toList());
@@ -114,11 +114,11 @@ public class SpringAppInitializer implements WebApplicationInitializer
 					Logger.println(this, "SPRING: nasiel som custom config " + customConfig);
 				}
 				else {
-					Logger.println(this, "SPRING: NEnasiel som custom config pre  " + customConfig);
+					Logger.println(this, "SPRING: NEnasiel som custom config (2) pre " + customConfig);
 				}
 			} catch (Exception e) {
 				// config class asi neexistuje.
-				Logger.println(this, "SPRING: NEnasiel som custom config pre  " + customConfig);
+				Logger.println(this, "SPRING: NEnasiel som custom config (3) pre " + customConfig);
 			}
 
 		}

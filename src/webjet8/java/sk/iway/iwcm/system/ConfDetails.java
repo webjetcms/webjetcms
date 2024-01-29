@@ -43,15 +43,11 @@ public class ConfDetails
    private String name;
 
    @DataTableColumn(
-      inputType = DataTableColumnType.TEXT,
-      renderFormat = "dt-format-text-wrap",
+      inputType = DataTableColumnType.TEXTAREA,
       title = "admin.conf_editor.value",
       tab = "basic",
       sortAfter = "name",
-      className = "wrap",
-      editor = {
-         @DataTableColumnEditor(type = "textarea")
-      }
+      className = "wrap show-html"
    )
    private String value;
 

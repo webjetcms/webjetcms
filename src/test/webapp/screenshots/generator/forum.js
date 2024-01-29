@@ -41,61 +41,74 @@ Scenario('Forum types', async ({I, DTE, Document}) => {
     I.switchTo(".cke_dialog_ui_iframe");
 
     Document.screenshotElement("#editorComponent", "/redactor/apps/forum/message-board.png");
+    I.switchTo();
+
+    I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=63768");
+    DTE.waitForEditor();
+    I.click('#trEditor', null, { position: { x: 177, y: 400 } });
+    I.pressKey(['Ctrl', 'Q']);
+    Document.screenshot("/redactor/apps/forum/message-board-upload.png");
 });
 
-
-Scenario('Foum list', async ({I, DT, DTE, Document}) => {
+Scenario('Forum list', async ({I, DT, DTE, Document}) => {
     I.amOnPage("/apps/forum/admin/");
 
+    DT.filter("subject", "diskusia testovací príspevok");
     Document.screenshot("/redactor/apps/forum/forum-list.png", 1500, 800);
 
     I.click("#forumDataTable_wrapper > div:nth-child(2) > div > div > div.dataTables_scroll > div.dataTables_scrollHead > div > table > thead > tr:nth-child(2) > th.dt-format-select.dt-th-editorFields-statusIcons > form > div > div > button");
-
     Document.screenshotElement("div.dropdown-menu.show", "/redactor/apps/forum/forum-list-statusSelect.png")
 
-    DT.filter("subject", "Forum_autotest_diskusia_1");
-
+    DT.filter("question", "Toto je jednoduchá diskusia pod článkom");
     I.click("button.buttons-select-all");
 
     Document.screenshotElement("button.buttons-edit", "/redactor/apps/forum/editButton.png");
     Document.screenshotElement("button.buttons-remove", "/redactor/apps/forum/removeButton.png");
     Document.screenshotElement("#forumDataTable_wrapper > div.dt-header-row.clearfix > div > div.col-auto > div > button:nth-child(5)", "/redactor/apps/forum/eyeButton.png");
-    Document.screenshotElement("#forumDataTable_wrapper > div.dt-header-row.clearfix > div > div.col-auto > div > button:nth-child(6)", "/redactor/apps/forum/settingsButton.png");
-    Document.screenshotElement("#forumDataTable_wrapper > div.dt-header-row.clearfix > div > div.col-auto > div > button:nth-child(7)", "/redactor/apps/forum/recoverButton.png");
+    Document.screenshotElement("#forumDataTable_wrapper > div.dt-header-row.clearfix > div > div.col-auto > div > button:nth-child(6)", "/redactor/apps/forum/recoverButton.png");
+    Document.screenshotElement("#forumDataTable_wrapper > div.dt-header-row.clearfix > div > div.col-auto > div > button:nth-child(7)", "/redactor/apps/forum/acceptButton.png");
+    Document.screenshotElement("#forumDataTable_wrapper > div.dt-header-row.clearfix > div > div.col-auto > div > button:nth-child(8)", "/redactor/apps/forum/rejectButton.png");
 
     I.click("button.buttons-edit");
-
     DTE.waitForEditor("forumDataTable");
-
     Document.screenshot("/redactor/apps/forum/forum-list-editor.png");
-
+    I.click("#pills-dt-forumDataTable-advanced-tab");
+    I.click("#DTE_Field_forumGroupEntity-messageConfirmation_0");
+    Document.screenshot("/redactor/apps/forum/forum-list-editor-advanced.png", 1000, 1100);
     DTE.cancel();
 
-    I.click("/Aplikácie/Diskusia/Diskusia");
-    I.wait(2);
-    I.switchToNextTab();
-    I.wait(15);
+    I.amOnPage("/apps/diskusia/");
+    I.waitForElement("#forumContentDiv", 15);
     Document.screenshot("/redactor/apps/forum/forum-list-forum.png");
-    I.closeCurrentTab();
 
-    DT.filter("subject", "Nova tema v podskupina 1");
+    I.resizeWindow(1200, 900);
+    I.click("#forumContentDiv > div.row > div > a");
+    I.waitForElement("div.ui-dialog.ui-corner-all");
+    Document.screenshot("/redactor/apps/forum/forum-list-forum-add.png");
+    //Resize back
+    I.resizeWindow(1280, 760);
 
-    I.click("/Aplikácie/Message Board/Skupina1/podskupina1");
-    I.wait(5);
-    I.switchToNextTab();
-    Document.screenshot("/redactor/apps/forum/forum-list-board.png", 1500, 800);
-    I.click("Nova tema v podskupina 1");
-    I.wait(2);
-    Document.screenshot("/redactor/apps/forum/forum-list-subBoard.png", 1500, 800);
-    I.closeCurrentTab();
+    I.amOnPage("/apps/message-board/skupina2/podskupina3.html");
+    I.waitForElement("#forumContentDiv");
+    Document.screenshot("/redactor/apps/forum/forum-list-board.png", 1200, 1100);
 
-    DT.filter("question", "Este jedna odpoved cislo DVA...");
-    I.wait(1);
-    I.click("button.buttons-select-all");
 
-    I.click("#forumDataTable_wrapper > div.dt-header-row.clearfix > div > div.col-auto > div > button:nth-child(6)");
+    I.amOnPage("/apps/message-board/skupina2/podskupina3.html?pId=809");
+    I.waitForElement("#forumContentDiv");
+    Document.screenshot("/redactor/apps/forum/forum-list-subBoard.png", 1200, 1100);
 
-    I.switchToNextTab();
-    I.wait(2);
-    Document.screenshot("/redactor/apps/forum/forum-list-admin.png", 800, 1000);
+    I.amOnPage("/apps/forum/admin/");
+    DT.filter("subject", "diskusia testovací príspevok");
+    I.click("Re: Viactémová diskusia testovací príspevok");
+    DTE.waitForEditor("forumDataTable");
+    I.click("#pills-dt-forumDataTable-advanced-tab");
+    I.click("#DTE_Field_forumGroupEntity-active_0");
+    DTE.save();
+    Document.screenshot("/redactor/apps/forum/forum-list-state-combination.png", 1000, 700);
+        //UNDO this action
+        I.click("Re: Viactémová diskusia testovací príspevok");
+        DTE.waitForEditor("forumDataTable");
+        I.click("#pills-dt-forumDataTable-advanced-tab");
+        I.click("#DTE_Field_forumGroupEntity-active_0");
+        DTE.save();
 });

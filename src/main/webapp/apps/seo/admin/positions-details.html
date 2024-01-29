@@ -99,7 +99,7 @@
 
         function getGraphUrl() {
             let graphUrl = url + "/lineChartData?keywordId=" + keywordId;
-            graphUrl += "&dayDate=" + ChartTools.getDateRange(30);
+            graphUrl += "&dayDate=" + ChartTools.getDateRange(null);
             ChartTools.saveSearchCriteria(googlePoitionDataTable.DATA);
             return graphUrl;
         }

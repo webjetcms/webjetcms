@@ -54,17 +54,8 @@ form.importExportTable h2 { padding-bottom: 4px; }
 form.importExportTable h2 label { font-weight: bold; }
 </style>
 
-<form action="import_zip_file.jsp" name="importWebPagesForm" class="importExportTable">
+<form action="import_pages.jsp" name="importWebPagesForm" class="importExportTable">
   <table>
-  	 <tr style="display: none;">
-  	 	<td valign="top">
-  	 		<input type="radio" id="type1" name="type" value="import_zip_file.jsp" checked >
-  	 	</td>
-  	 	<td colspan="2" >
-  	 		<h2><label for="type1"><iwcm:text key="components.import_web_pages.zip.dialogTitle"/></label> </h2>
-  	 		<iwcm:text key="components.import_web_pages.zip.dialogDesc"/>
-  	 	</td>
-  	 </tr>
   	 <tr>
   	 	<td valign="top">
   	 		<input type="radio"  id="type2" name="type" value="import_xls_struct.jsp">

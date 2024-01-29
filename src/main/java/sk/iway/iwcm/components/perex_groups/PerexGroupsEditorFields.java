@@ -21,12 +21,10 @@ public class PerexGroupsEditorFields implements Serializable{
     private List<GroupDetails> availableGroups;
 
     public void fromPerexGroupsEntity(PerexGroupsEntity perexGroupOriginal) {
-
         availableGroups = new ArrayList<>();
         String availableGroupsString = perexGroupOriginal.getAvailableGroups();
         if(availableGroupsString != null && !availableGroupsString.isEmpty()) {
             GroupsDB groupsDB = GroupsDB.getInstance();
-
             String availableGroupsIdArray[] = availableGroupsString.split(",");
 
             for(int i = 0; i < availableGroupsIdArray.length; i++) {

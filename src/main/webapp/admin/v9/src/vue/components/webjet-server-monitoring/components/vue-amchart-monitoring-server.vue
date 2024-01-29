@@ -32,8 +32,7 @@
             updateAmchart() {
                 var dis = this;
 
-
-                ChartTools.addData(this.chart.series.values, this.chart.xAxes.values[0],  this.chartData, this.type);
+                if (typeof this.chart != "undefined") ChartTools.addData(this.chart.series.values, this.chart.xAxes.values[0],  this.chartData, this.type);
             },
             createAmchart() {
                 window.initAmcharts().then(module => {

@@ -10,6 +10,24 @@
 - [ ] #39751-46 Galéria - test nahratia obrázka, jeho otočenia (overenie otočenia porovnaním screenshotu).
 - [ ] Media - test keď používateľ nemá práva na všetky média, že ide editovať médium v stránke a pridať nové.
 
+## Java 17
+
+https://gitlab.web.iway.local/webjet/webjet8v9/-/merge_requests/250/diffs?commit_id=a81b6e01ae4911519cd3c17c5c286a478234de1b
+
+```
+devcontainer.json
+        "version": "17",
+
+compile.xml
+        <javac
+                includeAntRuntime="false"
+                source="17"
+                target="17"
+        <iajc
+                source="17"
+                target="17"
+```
+
 ## TODO
 
 - Auditovanie v Oracle - nastavenie ```factory.getProperties().put("eclipselink.session.customizer", "sk.iway.webjet.v9.JpaSessionCustomizer");```

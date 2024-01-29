@@ -1,5 +1,6 @@
 package sk.iway.iwcm.components.templates;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,7 +12,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import sk.iway.iwcm.LabelValueDetails;
+import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.admin.layout.LayoutService;
+import sk.iway.iwcm.components.template_groups.TemplateGroupsService;
 import sk.iway.iwcm.doc.DocDB;
 import sk.iway.iwcm.doc.DocDetails;
 import sk.iway.iwcm.doc.TemplateDetailEditorFields;
@@ -28,11 +32,13 @@ import sk.iway.iwcm.system.datatable.DatatableRestControllerV2;
 public class TemplatesController extends DatatableRestControllerV2<TemplateDetails, Long> {
 
     private final TemplateDetailsService templateDetailsService;
+    private final TemplateGroupsService templateGroupsService;
 
     @Autowired
-    public TemplatesController(TemplateDetailsService templateDetailsService) {
+    public TemplatesController(TemplateDetailsService templateDetailsService, TemplateGroupsService templateGroupsService) {
         super(null);
         this.templateDetailsService = templateDetailsService;
+        this.templateGroupsService = templateGroupsService;
     }
 
     @Override
@@ -69,6 +75,15 @@ public class TemplatesController extends DatatableRestControllerV2<TemplateDetai
         page.addOptions("headerDocId,footerDocId", headerFooterDocs, "title", "docId", false);
         page.addOptions("menuDocId,rightMenuDocId", menuDocs, "title", "docId", false);
         page.addOptions("objectADocId,objectBDocId,objectCDocId,objectDDocId", ws.addEmptyDoc(headerFooterMenuDocs, -1), "title", "docId", false);
+
+        List<LabelValueDetails> inlineEditingModes = new ArrayList<>();
+        inlineEditingModes.add(new LabelValueDetails(getProp().getText("template.inline_editing_mode.byTemplateGroup"), ""));
+        for (LabelValueDetails lvd : templateGroupsService.getInlineEditors(getProp())) {
+            String mode = lvd.getValue();
+            if (Tools.isEmpty(mode)) mode="default"; //we must distinguish between byTemplateGroup and default
+            inlineEditingModes.add(new LabelValueDetails(lvd.getLabel(), mode));
+        }
+        page.addOptions("inlineEditingMode", inlineEditingModes, "label", "value", false);
         return page;
     }
 

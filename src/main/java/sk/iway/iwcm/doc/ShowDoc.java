@@ -9,7 +9,6 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.util.Enumeration;
 import java.util.List;
-import java.util.Locale;
 import java.util.StringTokenizer;
 
 import javax.servlet.ServletContext;
@@ -40,6 +39,7 @@ import sk.iway.iwcm.common.BlogTools;
 import sk.iway.iwcm.common.DocTools;
 import sk.iway.iwcm.common.FileBrowserTools;
 import sk.iway.iwcm.common.LogonTools;
+import sk.iway.iwcm.components.response_header.rest.ResponseHeaderService;
 import sk.iway.iwcm.doc.ninja.Amp;
 import sk.iway.iwcm.doc.ninja.Ninja;
 import sk.iway.iwcm.editor.service.WebpagesService;
@@ -1189,13 +1189,8 @@ private static String combineCss(String cssStyle)
         String lng = Tools.isNotEmpty(group.getLng()) ? group.getLng() : temp.getLng();
 
         PageLng.setUserLng(request, response, lng);
-
-        if ("cz".equals(lng)) lng = "cs";
-        String[] isoLocale = Tools.getTokens(PageLng.getUserLngIso(lng), "-");
-        if (isoLocale.length==2)
-        {
-            response.setLocale(new Locale(isoLocale[0], isoLocale[1]));
-        }
+        //force:false to allow owerwrite content-language by ResponseHeaders app
+        ResponseHeaderService.setContentLanguageHeader(PageLng.getUserLngIso(lng), false, request, response);
 
         setRequestData(temp, request);
 

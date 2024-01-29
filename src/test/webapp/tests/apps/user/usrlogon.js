@@ -8,7 +8,7 @@ let password;
 let firstName = "firstName_";
 let lastName = "lastName_";
 
-var defaultPassword = "*********";
+var defaultPassword = "***REMOVED***";
 
 Before(({ I }) => {
     if (randomText == null) {
@@ -27,7 +27,7 @@ function loginIN(I, password, correctPassword=false, checkText=true, userName="t
     I.fillField("username", userName);
     if (correctPassword) I.fillField("password", secret(password));
     else I.fillField("password", "tralala");
-    I.click(".login-submit");
+    I.forceClick(".login-submit");
 
     if (checkText) {
         if (correctPassword) I.see("tento text sa zobrazí len prihlásenému používateľovi.");
@@ -103,7 +103,7 @@ Scenario('uspesne prihlasenie @singlethread', ({ I }) => {
     I.dontSee("Odhlásenie", "#menu");
 
     I.fillField("username", "tester");
-    I.fillField("password", secret("*********"));
+    I.fillField("password", secret("***REMOVED***"));
     I.click(".login-submit");
 
     I.see("tento text sa zobrazí len prihlásenému používateľovi.");
@@ -125,7 +125,7 @@ Scenario('uspesne prihlasenie @singlethread', ({ I }) => {
 
     var address = "autotest-address-"+I.getRandomText();
     I.fillField("#usrAdress", address);
-    I.fillField("#usrOldPassword", secret("*********"));
+    I.fillField("#usrOldPassword", secret("***REMOVED***"));
 
     I.click("#bSubmitIdAjax");
     I.dontSee("Prosím, opravte nasledovné chyby", "#ajaxFormResultContainer");

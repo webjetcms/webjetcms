@@ -98,6 +98,9 @@ public class WebApproveRestController extends DatatableRestControllerV2<DocHisto
                         }
                     }
 
+                    //we must add something non existent otherwise it will select all data
+                    if (groupIdsInDomain.isEmpty()) groupIdsInDomain.add(-1);
+
                     if (groupIdsInDomain.size()>0) {
                         predicates.add(root.get("groupId").in(groupIdsInDomain));
                     }

@@ -42,9 +42,9 @@ Scenario('volanie podla URL', async ({I, DataTables}) => {
 /**
  * Test pageParams binding in demoComponent
  */
-Scenario('demo component page params', async ({I, DTE, login}) => {
+Scenario('demo component page params', ({I, DTE, login}) => {
 
-    await login('admin');
+    I.relogin('admin');
 
     I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=27030");
     DTE.waitForEditor();

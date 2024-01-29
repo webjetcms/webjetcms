@@ -43,7 +43,6 @@ public class EditorUtils {
 	 * Vrati orezany/ocisteny HTML kod:
 	 * - definovany <!-- zaciatok textu iwcm editor --> a <!-- koniec textu iwcm editor -->
 	 * - definovany konf. premennymi htmlImportStart a htmlImportEnd
-	 * - definovany HTML tagom body
 	 * @param data
 	 * @return
 	 */
@@ -85,21 +84,6 @@ public class EditorUtils {
 			index = data.toLowerCase().indexOf(Constants.getString("htmlImportEnd").toLowerCase());
 			if (index > 0) {
 				//odrezeme koniec
-				data = data.substring(0, index);
-			}
-		}
-		else {
-			index = dataLCase.indexOf("<body");
-			int index2;
-			if (index >= 0) {
-				index2 = dataLCase.indexOf(">", index + 1);
-				if (index2 > index && index2 < dataLCase.length()) {
-					data = data.substring(index2 + 1);
-				}
-			}
-
-			index = data.toLowerCase().indexOf("</body>");
-			if (index > 0) {
 				data = data.substring(0, index);
 			}
 		}

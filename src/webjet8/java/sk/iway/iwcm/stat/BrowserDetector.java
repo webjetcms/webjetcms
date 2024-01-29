@@ -494,6 +494,11 @@ public class BrowserDetector implements Serializable
 		return phone;
 	}
 
+	public boolean isDesktop() {
+		if(isTablet() || isPhone()) return false;
+		return true;
+	}
+
 	/**
 	 * Vrati true ak sa jedna o iPhone, iPad alebo Android zariadenie
 	 * @return

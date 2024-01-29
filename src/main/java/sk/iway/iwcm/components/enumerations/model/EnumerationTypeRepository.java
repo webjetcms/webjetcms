@@ -2,6 +2,7 @@ package sk.iway.iwcm.components.enumerations.model;
 
 import java.util.List;
 
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
@@ -29,7 +30,7 @@ public interface EnumerationTypeRepository extends JpaRepository<EnumerationType
     @Query(value = "UPDATE EnumerationTypeBean SET hidden = 1 WHERE enumerationTypeId = :enumerationTypeId")
     void deleteEnumTypeById(@Param("enumerationTypeId")Integer enumerationTypeId);
 
-    List<EnumerationTypeBean> findAllByHiddenFalse(Pageable pagebale);
+    Page<EnumerationTypeBean> findAllByHiddenFalse(Pageable pagebale);
 
     List<EnumerationTypeBean> findAllByHiddenFalse();
 

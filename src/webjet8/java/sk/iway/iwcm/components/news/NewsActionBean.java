@@ -800,9 +800,11 @@ public class NewsActionBean extends WebJETActionBean
 			vc.put("nextPage", paginatorMap.get("next"));
 			vc.put("lastPage", paginatorMap.get("last"));
 			vc.put("pages", paginatorMap.get("pages"));
+			vc.put("pagesAll", paginatorMap.get("pagesAll"));
 			vc.put("prop", prop);
 			vc.put("dateTool", new DateTool());
 			vc.put("totalCount", paginatorMap.get("totalCount"));
+			vc.put("totalPages", paginatorMap.get("totalPages"));
 
 			//ak tam je len jedna stranka nema zmysel zobrazit paginator, vratme prazdne
 			@SuppressWarnings("unchecked")
@@ -1205,6 +1207,7 @@ public class NewsActionBean extends WebJETActionBean
 				paginator.put("prev", getPrev(prop, url));
 				paginator.put("next", getNext(prop, url, totalPages));
 				paginator.put("last", getLast(prop, url, totalPages));
+				paginator.put("totalPages", totalPages);
 
 				List<PaginationInfo> pages = new LinkedList<>();
 				List<PaginationInfo> pagesAll = new LinkedList<>();

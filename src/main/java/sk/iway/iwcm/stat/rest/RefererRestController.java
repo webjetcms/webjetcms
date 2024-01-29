@@ -51,7 +51,7 @@ public class RefererRestController extends DatatableRestControllerV2<RefererDTO,
     }
 
     private List<RefererDTO> getDataAndConvertIntoItems() {
-        FilterHeaderDto filter = StatService.processRequestToStatFilter(getRequest(), "searchdayDate");
+        FilterHeaderDto filter = StatService.processRequestToStatFilter(getRequest(), null);
         List<RefererDTO> items = new ArrayList<>();
         int maxRows = MAX_ROWS;
         if (getRequest().getParameter("searchChartType")==null) maxRows = 5;

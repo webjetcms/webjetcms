@@ -30,7 +30,7 @@ public class Ninja {
     private UserAgent userAgent;
     private Webjet webjet;
     private Temp temp;
-    private Properties properties;
+    private Properties config;
 
     //patter a matcher pre nahradu nbsp za spojkou, su staticke, aby sa znovapouzili
     private static Pattern nbspPattern = null;
@@ -97,9 +97,9 @@ public class Ninja {
         if (request.getParameter(label) != null) {
             value = request.getParameter(label);
         } else if (request.getAttribute(label) != null) {
-            value = request.getAttribute("ninjaDebug");
-        } else if (properties != null && properties.containsKey(label)) {
-            value = properties.get(label);
+            value = request.getAttribute(label);
+        } else if (config != null && config.containsKey(label)) {
+            value = config.get(label);
         }
 
         return value;
@@ -140,6 +140,10 @@ public class Ninja {
         return prop;
     }
 
+    public Properties getConfig() {
+        return config;
+    }
+
     private void loadConfigProperties() {
         Cache c = Cache.getInstance();
         TemplatesGroupBean tempGroup = (TemplatesGroupBean)request.getAttribute("templatesGroupDetails");
@@ -151,15 +155,15 @@ public class Ninja {
             }
         }
 
-        properties = c.getObject("configProperties." + path, Properties.class);
+        config = c.getObject("configProperties." + path, Properties.class);
 
         Optional<UserDetails> userOptional = getUser();
-        if (userOptional.filter(u -> !u.isAdmin()).isPresent() && properties != null) {
+        if (userOptional.filter(u -> !u.isAdmin()).isPresent() && config != null) {
             Logger.debug(Ninja.class, "Vratiam config properties z cache");
             return;
         }
 
-        properties = new Properties();
+        config = new Properties();
 
         File file = new File(Tools.getRealPath(WriteTagToolsForCore.getCustomPage(path+"config.properties", getRequest())));
         if (!file.exists()) {
@@ -167,8 +171,8 @@ public class Ninja {
         }
 
         try (InputStream input = new FileInputStream(file)) {
-            properties.load(input);
-            c.setObject("configProperties." + path, properties, 60 * 24);
+            config.load(input);
+            c.setObject("configProperties." + path, config, 60 * 24);
         } catch (IOException ex) {
             sk.iway.iwcm.Logger.error(ex);
         }

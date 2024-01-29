@@ -10,12 +10,14 @@ import cn.bluejoe.elfinder.controller.executor.FsItemEx;
 import cn.bluejoe.elfinder.service.FsItem;
 import cn.bluejoe.elfinder.service.FsVolume;
 import cn.bluejoe.elfinder.util.MimeTypesUtils;
+import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.RequestBean;
 import sk.iway.iwcm.SetCharacterEncodingFilter;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.AdminTools;
+import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.doc.DeleteServlet;
 import sk.iway.iwcm.doc.DocDB;
 import sk.iway.iwcm.doc.DocDetails;
@@ -427,6 +429,12 @@ public class IwcmDocGroupFsVolume implements FsVolume
 				List<GroupDetails> subGroupsAll = GroupsDB.getInstance().getRootGroups(user.getEditableGroups());
 				for (GroupDetails group : subGroupsAll)
 				{
+					if (Constants.getBoolean("multiDomainEnabled")) {
+						//check domain name
+						String currentDomain = CloudToolsForCore.getDomainName();
+						if (Tools.isNotEmpty(currentDomain) && currentDomain.equals(group.getDomainName())==false) continue;
+					}
+
 					if (group.getParentGroupId()>0)
 					{
 						//musime naklonovat a nastavit parenta na 0, inak sa nezobrazi

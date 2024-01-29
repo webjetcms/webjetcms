@@ -307,6 +307,7 @@ public class FileIndexerTools {
                                 {
                                     //aby sa nam multidomain subfolder nezobrazoval v ceste
                                     group.setNavbar("&nbsp;");
+                                    group.setUrlDirName(dirName);
                                 }
 
                                 groupsDB.setGroup(group);

@@ -118,7 +118,7 @@
             //Load values
             let rootDir = $('#rootDir').val();
             let filterBotsOut = $('#botFilterOut').is(':checked');
-            let searchDateValue = ChartTools.getDateRange(30);
+            let searchDateValue = ChartTools.getDateRange(null);
 
             if(chartDivId == "lineVisits") {
                 tmpDefURL = url + "/lineChartData?dayDate=" + searchDateValue;

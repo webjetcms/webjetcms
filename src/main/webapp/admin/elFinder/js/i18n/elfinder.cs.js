@@ -145,7 +145,7 @@ if (elFinder && elFinder.prototype && typeof(elFinder.prototype.i18) == 'object'
 			'cmdfileprops' : 'Nastavení souboru',
 			'cmdwjmetadata' : 'Bezpečnostní nastavení',
 			'cmdfileupdate'  : 'Aktualizovat soubor',
-			
+
 			/*********************************** buttons ***********************************/
 			'btnClose'  : 'Zavřít',
 			'btnSave'   : 'Uložit',
@@ -466,7 +466,8 @@ if (elFinder && elFinder.prototype && typeof(elFinder.prototype.i18) == 'object'
 
             /************* WEBJET ******************/
             'cmdresize'    : 'Editovat',
-            'cmdwjedit'      : 'Upravit soubor'
+            'cmdwjedit'      : 'Upravit soubor',
+			'wjSearchRecursive': 'V podadresářích'
 		}
 	};
 }

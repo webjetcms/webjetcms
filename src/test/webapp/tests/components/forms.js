@@ -158,11 +158,12 @@ Scenario("vyplnenie formsimple", ({ I }) => {
 function checkFormSimpleRowHtml(I, random, rowNumber) {
     I.forceClick("#form-detail tbody tr:nth-child("+rowNumber+") a.form-view");
     I.wait(2);
+    I.waitForElement("#modalIframeIframeElement", 10);
     I.switchTo("#modalIframeIframeElement");
-    I.see("Meno a priezvisko");
-    I.see("E-mailová adresa");
-    I.see("Form-autotest-"+random);
-    I.see("autotest."+random+"@balat.sk");
+    I.waitForText("Meno a priezvisko", 10);
+    I.waitForText("E-mailová adresa", 5);
+    I.waitForText("Form-autotest-"+random, 5);
+    I.waitForText("autotest."+random+"@balat.sk", 5);
     I.switchTo();
     I.click("#modalIframe div.modal-footer button.btn-primary");
 }
@@ -228,7 +229,7 @@ Scenario("Overenie zoznamu podla prihlaseneho pouzivatela", ({ I, DT }) => {
     //aby sme vzdy v kazdom scenari mali prednastavenu velkost okna
     //odosli prihlasenie
     I.fillField("username", "tester2");
-    I.fillField("password", secret("*********"));
+    I.fillField("password", secret("***REMOVED***"));
     I.click("login-submit");
 
     I.wait(3);
@@ -366,6 +367,7 @@ Scenario("formsimple-encrypted", ({ I }) => {
 Scenario("form with note field", ({ I, DT }) => {
     //BUG: there is problem with name conflict between form field name and system fields eg. note
     I.amOnPage("/apps/form/admin/#/detail/formsimple-with-note-field");
+    DT.waitForLoader();
 
     I.waitForText("Admin poznamka", 20, "#form-detail_wrapper");
     I.see("Druhy zaznam formularu");
@@ -381,8 +383,10 @@ Scenario("form with note field", ({ I, DT }) => {
     I.dontSee("Druhy zaznam formularu");
     I.see("Toto je poznamka vo formulari z frontendu");
 
-
+    I.amOnPage("/admin/v9/");
     I.amOnPage("/apps/form/admin/#/detail/formsimple-with-note-field");
+    DT.waitForLoader();
+
     I.waitForText("Admin poznamka", 20, "#form-detail_wrapper");
     DT.filter("note", "Poznamka");
     I.see("Admin poznamka");
@@ -392,7 +396,7 @@ Scenario("form with note field", ({ I, DT }) => {
 
 function handleDownload(I, fileName, ext, url=null) {
     I.handleDownloads("downloads/"+fileName+"-"+randomNumber+ext);
-    if (url==null) I.click(fileName+ext);
+    if (url==null) I.click(locate("#form-detail td.cell-not-editable a").withText(fileName+ext));
     else {
         I.executeScript((url) => {
             window.location.href=url;

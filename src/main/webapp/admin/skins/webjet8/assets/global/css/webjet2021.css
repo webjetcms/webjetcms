@@ -1012,3 +1012,8 @@ a.cke_dialog_ui_button span.cke_dialog_ui_button {
 .dropdown-submenu > a:after {
     font-family: 'Font Awesome 6 Pro';
 }
+
+.tab-pane .tab-page .row {
+    margin-right: 0px;
+    margin-left: 0px;
+}

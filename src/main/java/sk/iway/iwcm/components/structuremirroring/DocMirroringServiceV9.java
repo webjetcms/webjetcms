@@ -57,13 +57,33 @@ public class DocMirroringServiceV9 {
          if (doc.getSyncId()>1) {
             //najdi k tomu mirror verziu
             List<DocDetails> syncedDocs = getDocBySyncId(doc.getSyncId(), doc.getDocId());
-            if (syncedDocs.isEmpty()) {
+            List<GroupDetails> mappedGroupsList = MirroringService.getMappingForGroup(doc.getGroupId());
+            List<GroupDetails> mappedGroupsListNotExisting = new ArrayList<>();
+
+            if (mappedGroupsList.size()>syncedDocs.size()) {
+               //there is new mapping group created in allready synced groups, we must create missing one
+               for (GroupDetails mappedGroup : mappedGroupsList) {
+                  boolean containGroup = false;
+                  for (DocDetails syncedDoc : syncedDocs) {
+                     if (mappedGroup.getGroupId()==syncedDoc.getGroupId()) {
+                        //ok, this group is allready synced
+                        containGroup = true;
+                        break;
+                     }
+                  }
+                  if (containGroup==false) mappedGroupsListNotExisting.add(mappedGroup);
+               }
+               mappedGroupsList = mappedGroupsListNotExisting;
+            }
+
+            if (syncedDocs.isEmpty() || mappedGroupsListNotExisting.isEmpty()==false) {
                //este neexistuje mirror doc, musime vytvorit novy (kopiu)
                //este neexistuje, musime vytvorit novu grupu (kopiu)
 
+               if (MirroringService.isEnabled(doc.getGroupId())==false) return;
+
                GroupDetails group = groupsDB.getGroup(doc.getGroupId());
                //vytvor kopie adresara v ostatnych mapovanych adresaroch
-               List<GroupDetails> mappedGroupsList = MirroringService.getMappingForGroup(doc.getGroupId());
 
                TranslationService translator = new TranslationService(GroupMirroringServiceV9.getLanguage(group), null);
 
@@ -89,7 +109,7 @@ public class DocMirroringServiceV9 {
                   DocDetails mirror = new DocDetails();
                   NullAwareBeanUtils.copyProperties(doc, mirror);
                   mirror.setDocId(-1);
-                  mirror.setAvailable(false);
+                  if (Constants.getBoolean("structureMirroringDisabledOnCreate")) mirror.setAvailable(false);
                   mirror.setGroupId(mappedGroup.getGroupId());
                   mirror.setSyncId(doc.getSyncId());
 
@@ -108,7 +128,9 @@ public class DocMirroringServiceV9 {
                   }
                   MirroringService.forceReloadTree();
                }
-            } else {
+            }
+
+            if (syncedDocs.size()>0) {
                //uz existuje, skontroluj ostatne kopie ci sa nepresunuli a podobne
 
                //overenie zmeny parent adresara
@@ -255,7 +277,7 @@ public class DocMirroringServiceV9 {
       if (skipDocId>0) cq.setParams(syncId, skipDocId);
       else cq.setParams(syncId);
 
-		return cq.list(new Mapper<DocDetails>()
+		List<DocDetails> docs = cq.list(new Mapper<DocDetails>()
 		{
 			public DocDetails map(ResultSet rs) throws SQLException
 			{
@@ -268,6 +290,23 @@ public class DocMirroringServiceV9 {
 			}
 
 		});
+
+      GroupsDB groupsDB = GroupsDB.getInstance();
+
+      //filter groups which is not synced anymore
+      List<DocDetails> filtered = new ArrayList<>();
+      for (DocDetails doc : docs) {
+         List<GroupDetails> parents = groupsDB.getParentGroups(doc.getGroupId(), true);
+         for (GroupDetails parent : parents) {
+            int[] rootIds = MirroringService.getRootIds(parent.getGroupId());
+            if (rootIds != null) {
+               filtered.add(doc);
+               break;
+            }
+         }
+      }
+
+      return filtered;
 	}
 
    public static int getSyncId(int docId) {

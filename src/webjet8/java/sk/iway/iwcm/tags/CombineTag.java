@@ -93,6 +93,18 @@ public final class CombineTag extends BodyTagSupport
 				"/admin/skins/webjet8/assets/js/zxcvbn/language-common/zxcvbn-ts.js,"+
 				"/admin/skins/webjet8/assets/js/zxcvbn/language-en/zxcvbn-ts.js";
 
+
+	public static String FILES_ADMIN_INLINE_JS = "/admin/skins/webjet8/ckeditor/dist/ckeditor.js," +
+			"/admin/skins/webjet8/assets/global/plugins/jquery-ui/jquery-ui.js," +
+			"/admin/webpages/page-builder/scripts/jquery.minicolors.min.js," +
+			"/admin/webpages/page-builder/scripts/ninja-page-builder.js.jsp," +
+			"/admin/webpages/page-builder/scripts/pagesupport.js";
+
+	public static String FILES_ADMIN_INLINE_CSS = "/components/_common/admin/inline/inline.css," +
+			"/admin/webpages/page-builder/style/style.css," +
+			"/admin/webpages/page-builder/style/jquery.minicolors.css," +
+			"/admin/skins/webjet8/ckeditor/dist/plugins/webjetcomponents/samples/contents.css";
+
 	//set oznacuje schovany zoznam suborov pre kombinovanie
 	private String set = null;
 	//typ kombinovaneho vystupu (js alebo css)
@@ -265,6 +277,14 @@ public final class CombineTag extends BodyTagSupport
 		{
 			files = CombineTag.FILES_ADMIN_STANDARD_CSS;
 			files = Tools.replace(files, "/admin/skins/webjet8/assets/global/plugins/font-awesome/css/font-awesome.min.css,", "/admin/skins/webjet8/assets/global/plugins/font-awesome/css/fontawesome5.min.css,");
+		}
+		else if ("adminInlineJs".equals(set))
+		{
+			files = CombineTag.FILES_ADMIN_INLINE_JS;
+		}
+		else if ("adminInlineCss".equals(set))
+		{
+			files = CombineTag.FILES_ADMIN_INLINE_CSS;
 		}
 		else
 		{

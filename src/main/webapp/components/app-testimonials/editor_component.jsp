@@ -379,14 +379,14 @@ background-image:url(/components/_common/custom_styles/images/icon_settings_hove
 		</ul>
 	</div>
 
-<div class="tab-pane toggle_content" style="height:540px; overflow: auto; width:990px;">
+<div class="tab-pane toggle_content tab-pane-fullheight">
 
 	<div class="tab-page" id="tabMenu1" style="display: block; width:850px;">
 
 		<!--<iwcm:text key="components.app-testimonials.desc"/> -->
 		<br>
 
-<div class="row">
+		<div class="row">
 				<div class="col-sm-7">
 
 					<strong><iwcm:text key="components.app-testimonials.visualStyle"/>:</strong>
@@ -431,92 +431,92 @@ background-image:url(/components/_common/custom_styles/images/icon_settings_hove
 					<strong><iwcm:text key="components.forum.admin.settingsTab"/>:</strong>
 					<p>&nbsp;</p>
 
-					<html:form action="/admin/editor.do" onsubmit="return false" name="textForm" type="sk.iway.iwcm.editor.EditorForm">
-						<div class="row">
+					<form onsubmit="return false" name="textForm">
+						<div class="" style="width: 400px;">
 
-						<div class="selectFolder" style="display: none;">
-							<div><label for="groupIds"><iwcm:text key="components.app-testimonials.groupids"/></label>:</div>
-							<div>
-								<input type="text" name="groupIds" id="groupIds" value="<%=ResponseUtils.filter(pageParams.getValue("groupIds", "-1"))%>"/>
-								<input type="button" class="button50" name="groupSelect" value="<iwcm:text key="editor.perex_group.select"/>" onClick='popupFromDialog("<iwcm:cp/>/admin/grouptree.jsp", 500, 500);'>
-								<br/>
-								<input type="checkbox" name="noPerexCheck" value="yes" <%if (pageParams.getBooleanValue("noPerexCheck", true)) out.print("checked='checked'");%>> <iwcm:text key="components.app-testimonials.noPerexCheck"/>
+							<div class="selectFolder" style="display: none;">
+								<div><label for="groupIds"><iwcm:text key="components.app-testimonials.groupids"/></label>:</div>
+								<div>
+									<input type="text" name="groupIds" id="groupIds" value="<%=ResponseUtils.filter(pageParams.getValue("groupIds", "-1"))%>"/>
+									<input type="button" class="button50" name="groupSelect" value="<iwcm:text key="editor.perex_group.select"/>" onClick='popupFromDialog("<iwcm:cp/>/admin/grouptree.jsp", 500, 500);'>
+									<br/>
+									<input type="checkbox" name="noPerexCheck" value="yes" <%if (pageParams.getBooleanValue("noPerexCheck", true)) out.print("checked='checked'");%>> <iwcm:text key="components.app-testimonials.noPerexCheck"/>
+								</div>
 							</div>
-						</div>
-
-						<div class="novinky photoRow form-group clearfix">
-							<div class="col-sm-6"><label for="showPhoto"><iwcm:text key="components.app-testimonials.showPhoto"/>:</label></div>
-							<div class="col-sm-6">
-								<input type="checkbox" name="showPhoto" <% if (pageParams.getBooleanValue("showPhoto", true)) { out.print(" checked='checked'"); } %>/>
-							</div>
-						</div>
-
-							<div class="nameRow form-group clearfix">
-							<div class="col-sm-6"><label for="showName"><iwcm:text key="components.app-testimonials.showName"/></label>:</div>
-							<div class="col-sm-6">
-								<input type="checkbox" name="showName" <% if (pageParams.getBooleanValue("showName", true)) { out.print(" checked='checked'"); } %>/>
-							</div>
-						</div>
 
 							<div class="novinky photoRow form-group clearfix">
-							<div class="col-sm-6"><label for="nameColor"><iwcm:text key="components.app-testimonials.nameColor"/></label>:</div>
-							<div class="col-sm-6">
-								<input type="text" id="nameColor"  class="colorpicker-rgba" name="nameColor" value="<%=pageParams.getValue("nameColor", "#000")%>"/>
-								<input id="customStyleName" value="<%=pageParams.getValue("customStyleMeno", "") %>" type="text" style="display:none" />
-							<a style="cursor:pointer" class="rozsireneLink" onclick="openCustomStyle(customStyleName)"></a>
-							<div class="rozsirene"></div>
+								<div class="col-sm-6"><label for="showPhoto"><iwcm:text key="components.app-testimonials.showPhoto"/>:</label></div>
+								<div class="col-sm-6">
+									<input type="checkbox" name="showPhoto" <% if (pageParams.getBooleanValue("showPhoto", true)) { out.print(" checked='checked'"); } %>/>
+								</div>
 							</div>
-						</div>
+
+								<div class="nameRow form-group clearfix">
+								<div class="col-sm-6"><label for="showName"><iwcm:text key="components.app-testimonials.showName"/></label>:</div>
+								<div class="col-sm-6">
+									<input type="checkbox" name="showName" <% if (pageParams.getBooleanValue("showName", true)) { out.print(" checked='checked'"); } %>/>
+								</div>
+							</div>
 
 								<div class="novinky photoRow form-group clearfix">
-							<div class="col-sm-6"><label for="textColor"><iwcm:text key="components.app-testimonials.textColor"/></label>:</div>
-							<div class="col-sm-6">
-								<input type="text" id="textColor" class="colorpicker-rgba" name="textColor" value="<%=pageParams.getValue("textColor", "#000")%>"/>
-								<input id="customStyleTextTestimonials" value="<%=pageParams.getValue("customStyleTextTestimonials", "") %>" type="text" style="display:none" />
-							<a style="cursor:pointer" class="rozsireneLink" onclick="openCustomStyle(customStyleTextTestimonials)"></a>
+								<div class="col-sm-6"><label for="nameColor"><iwcm:text key="components.app-testimonials.nameColor"/></label>:</div>
+								<div class="col-sm-6">
+									<input type="text" id="nameColor"  class="colorpicker-rgba" name="nameColor" value="<%=pageParams.getValue("nameColor", "#000")%>"/>
+									<input id="customStyleName" value="<%=pageParams.getValue("customStyleMeno", "") %>" type="text" style="display:none" />
+								<a style="cursor:pointer" class="rozsireneLink" onclick="openCustomStyle(customStyleName)"></a>
+								<div class="rozsirene"></div>
+								</div>
 							</div>
-						</div>
 
-						<div class="novinky photoRow form-group clearfix">
-							<div class="col-sm-6"><label for="backgroundColor"><iwcm:text key="components.app-testimonials.backgroundColor"/></label>:</div>
-							<div class="col-sm-6">
-							<input type="text" id="backgroundColor" class="colorpicker-rgba" name="backgroundColor" value="<%=pageParams.getValue("backgroundColor", "#fff")%>"/>
-
+									<div class="novinky photoRow form-group clearfix">
+								<div class="col-sm-6"><label for="textColor"><iwcm:text key="components.app-testimonials.textColor"/></label>:</div>
+								<div class="col-sm-6">
+									<input type="text" id="textColor" class="colorpicker-rgba" name="textColor" value="<%=pageParams.getValue("textColor", "#000")%>"/>
+									<input id="customStyleTextTestimonials" value="<%=pageParams.getValue("customStyleTextTestimonials", "") %>" type="text" style="display:none" />
+								<a style="cursor:pointer" class="rozsireneLink" onclick="openCustomStyle(customStyleTextTestimonials)"></a>
+								</div>
 							</div>
-						</div>
 
+							<div class="novinky photoRow form-group clearfix">
+								<div class="col-sm-6"><label for="backgroundColor"><iwcm:text key="components.app-testimonials.backgroundColor"/></label>:</div>
+								<div class="col-sm-6">
+								<input type="text" id="backgroundColor" class="colorpicker-rgba" name="backgroundColor" value="<%=pageParams.getValue("backgroundColor", "#fff")%>"/>
 
-
-						<div class="novinky" style="display: none;">
-							<div class="col-sm-6"><label for="pageSize"><iwcm:text key="components.app-testimonials.pageSize"/></label>:</div>
-							<div class="col-sm-6">
-								<input type="text" id="pageSize" name="pageSize" size=5 maxlength="5" value="<%=pageParams.getIntValue("pageSize", 15)%>">
+								</div>
 							</div>
-						</div>
-						<div class="nivoSlider">
-							<div class="col-sm-6"><label for="nivoSliderEffect"><iwcm:text key="components.app-testimonials.nivoSlider.effectType"/></label>:</div>
-							<div class="col-sm-6">
-								<select id="nivoSliderEffect" name="nivoSliderEffect">
-									<option value="random"><iwcm:text key="components.app-testimonials.nivoSlider.random"/></option>
-									<option value="sliceDownRight"><iwcm:text key="components.app-testimonials.nivoSlider.sliceDownRight"/></option>
-									<option value="sliceDownLeft"><iwcm:text key="components.app-testimonials.nivoSlider.sliceDownLeft"/></option>
-									<option value="sliceUpRight"><iwcm:text key="components.app-testimonials.nivoSlider.sliceUpRight"/></option>
-									<option value="sliceUpLeft"><iwcm:text key="components.app-testimonials.nivoSlider.sliceUpLeft"/></option>
-									<option value="sliceUpDown"><iwcm:text key="components.app-testimonials.nivoSlider.sliceUpDown"/></option>
-									<option value="sliceUpDownLeft"><iwcm:text key="components.app-testimonials.nivoSlider.sliceUpDownLeft"/></option>
-									<option value="fold"><iwcm:text key="components.app-testimonials.nivoSlider.fold"/></option>
-									<option value="fade"><iwcm:text key="components.app-testimonials.nivoSlider.fade"/></option>
-									<option value="boxRandom"><iwcm:text key="components.app-testimonials.nivoSlider.boxRandom"/></option>
-									<option value="boxRain"><iwcm:text key="components.app-testimonials.nivoSlider.boxRain"/></option>
-									<option value="boxRainReverse"><iwcm:text key="components.app-testimonials.nivoSlider.boxRainReverse"/></option>
-									<option value="boxRainGrow"><iwcm:text key="components.app-testimonials.nivoSlider.boxRainGrow"/></option>
-									<option value="boxRainGrowReverse"><iwcm:text key="components.app-testimonials.nivoSlider.boxRainGrowReverse"/></option>
-								</select>
+
+
+
+							<div class="novinky" style="display: none;">
+								<div class="col-sm-6"><label for="pageSize"><iwcm:text key="components.app-testimonials.pageSize"/></label>:</div>
+								<div class="col-sm-6">
+									<input type="text" id="pageSize" name="pageSize" size=5 maxlength="5" value="<%=pageParams.getIntValue("pageSize", 15)%>">
+								</div>
 							</div>
-						</div>
+							<div class="nivoSlider">
+								<div class="col-sm-6"><label for="nivoSliderEffect"><iwcm:text key="components.app-testimonials.nivoSlider.effectType"/></label>:</div>
+								<div class="col-sm-6">
+									<select id="nivoSliderEffect" name="nivoSliderEffect">
+										<option value="random"><iwcm:text key="components.app-testimonials.nivoSlider.random"/></option>
+										<option value="sliceDownRight"><iwcm:text key="components.app-testimonials.nivoSlider.sliceDownRight"/></option>
+										<option value="sliceDownLeft"><iwcm:text key="components.app-testimonials.nivoSlider.sliceDownLeft"/></option>
+										<option value="sliceUpRight"><iwcm:text key="components.app-testimonials.nivoSlider.sliceUpRight"/></option>
+										<option value="sliceUpLeft"><iwcm:text key="components.app-testimonials.nivoSlider.sliceUpLeft"/></option>
+										<option value="sliceUpDown"><iwcm:text key="components.app-testimonials.nivoSlider.sliceUpDown"/></option>
+										<option value="sliceUpDownLeft"><iwcm:text key="components.app-testimonials.nivoSlider.sliceUpDownLeft"/></option>
+										<option value="fold"><iwcm:text key="components.app-testimonials.nivoSlider.fold"/></option>
+										<option value="fade"><iwcm:text key="components.app-testimonials.nivoSlider.fade"/></option>
+										<option value="boxRandom"><iwcm:text key="components.app-testimonials.nivoSlider.boxRandom"/></option>
+										<option value="boxRain"><iwcm:text key="components.app-testimonials.nivoSlider.boxRain"/></option>
+										<option value="boxRainReverse"><iwcm:text key="components.app-testimonials.nivoSlider.boxRainReverse"/></option>
+										<option value="boxRainGrow"><iwcm:text key="components.app-testimonials.nivoSlider.boxRainGrow"/></option>
+										<option value="boxRainGrowReverse"><iwcm:text key="components.app-testimonials.nivoSlider.boxRainGrowReverse"/></option>
+									</select>
+								</div>
+							</div>
 
 						</div>
-					</html:form>
+					</form>
 
 
 			</div>
@@ -524,7 +524,7 @@ background-image:url(/components/_common/custom_styles/images/icon_settings_hove
 
 
 	</div>
-	<div class="tab-page" style="min-height:800px; width:850px;" id="tabMenu2">
+	<div class="tab-page" style="min-height:800px;" id="tabMenu2">
 
 
 	<div id="editorWrapper" class="editorWrapper"></div>

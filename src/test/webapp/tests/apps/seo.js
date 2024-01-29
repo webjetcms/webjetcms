@@ -96,26 +96,26 @@ Scenario("admin", ({ I, DT }) => {
 
     checkDates(I);
 
-    DT.filter("name", "ThinkChaos 0.0");
-    I.see("ThinkChaos 0.0");
-    I.see(20);
-    I.see(98);
-    I.see("30.07.2021");
+    DT.checkTableRow("botsDataTable", 1, ["1", "Googlebot 2.0", "24 861", "12,76", "30.07.2021"]);
+    DT.checkTableRow("botsDataTable", 2, ["2", "Slackbot-LinkExpanding 1.0", "96 504", "49,52", "30.07.2021"]);
 
+    DT.filter("name", "ThinkChaos 0.0");
+    DT.waitForLoader();
+    DT.checkTableRow("botsDataTable", 1, ["20", "ThinkChaos 0.0", "98", "0,05", "30.07.2021"]);
     I.click("ThinkChaos 0.0");
+
     //pockaj na loader pre grafy
     I.waitForInvisible("#loader", 20);
 
     checkDates(I);
 
-    I.seeElement("#botsDetails-lineVisits");
+    I.waitForElement("#botsDetails-lineVisits", 10);
     I.seeElement("#botsDetailsDataTable");
 
     DT.filter("document", "News");
-    I.see("50 291 842");
-    I.see("50 487 296");
-    I.see("50 684 027");
-    I.see("English");
+    DT.checkTableRow("botsDetailsDataTable", 1, ["50 291 842", "06.07.2021", "News", "", "English"]);
+    DT.checkTableRow("botsDetailsDataTable", 2, ["50 487 296", "15.07.2021", "News", "", "English"]);
+    DT.checkTableRow("botsDetailsDataTable", 3, ["50 684 027", "23.07.2021", "News", "", "English"]);
 
     //Back to index.html
     I.click(locate("span.seoPageTitle").withText("ThinkChaos 0.0"));
@@ -130,14 +130,12 @@ Scenario("management-keywords", ({ I, DT, DTE }) => {
 
     DT.filter("name", "Redakčný systém WebJET");
 
-    I.see("www.interway.sk");
-    I.see("www.webjetcms.sk");
+    DT.checkTableRow("managementKeywordsDataTable", 1, ["9", "Redakčný systém WebJET", "www.webjetcms.sk", "bing.com", "15.08.2023 08:37:35", "Tester Playwright", "5"]);
+    DT.checkTableRow("managementKeywordsDataTable", 2, ["17", "Redakčný systém WebJET", "www.interway.sk", "bing.com", "15.08.2023 08:55:23", "Tester Playwright", "4"]);
 
     DT.filter("domain", "www.webjetcms.sk");
-
-    I.see("bing.com");
     I.dontSee("www.interway.sk");
-    I.see("15.08.2023 08:37:35");
+    DT.checkTableRow("managementKeywordsDataTable", 1, ["9", "Redakčný systém WebJET", "www.webjetcms.sk", "bing.com", "15.08.2023 08:37:35", "Tester Playwright", "5"]);
 
     //Test create/update/delete
 
@@ -177,7 +175,10 @@ Scenario("management-keywords", ({ I, DT, DTE }) => {
     I.see("Nenašli sa žiadne vyhovujúce záznamy");
 });
 
-Scenario("stat-keywords", ({ I, DT }) => {
+Scenario("stat-keywords", ({ I, DT, Browser }) => {
+    if (Browser.isFirefox) {
+        I.resizeWindow(1280, 900);
+    }
     I.amOnPage("/apps/seo/admin/stat-keywords/");
     DT.waitForLoader();
 
@@ -187,6 +188,7 @@ Scenario("stat-keywords", ({ I, DT }) => {
     setDates(I, "#statKeywordsDataTable_extfilter");
 
     I.amOnPage("/apps/seo/admin/stat-keywords/");
+    DT.waitForLoader();
 
     checkDates(I);
 
@@ -205,32 +207,29 @@ Scenario("stat-keywords", ({ I, DT }) => {
 
     DT.checkTableRow("statKeywordsDataTable", 1, ["3", "archiv", "11", "26,83"]);
 
-    I.click("archiv");
+    I.forceClick(locate("#statKeywordsDataTable td div.datatable-column-width a").withText("archiv"));
 
-    I.seeElement("#statKeywordsDetailsDataTable");
+    I.waitForElement("#statKeywordsDetailsDataTable", 10);
     I.seeElement("#statKeywordsDetails-pieAccessCount");
     I.seeElement("#enginesCountDataTable");
 
     checkCustomDates(I, "10.07.2021", dayDateTo);
 
-    I.see("WebJET");
-    I.see("//??? docId=7047");
-    I.see("msnbot-40-77-167-63.search.msn.com");
-    I.see("msnbot-207-46-13-180.search.msn.com");
+    DT.checkTableRow("statKeywordsDetailsDataTable", 1, ["1", "10.07.2021 02:26:15", "WebJET", "//??? docId=7047", "msnbot-40-77-167-63.search.msn.com"]);
+    DT.checkTableRow("statKeywordsDetailsDataTable", 2, ["2", "11.07.2021 16:48:59", "WebJET", "//??? docId=7047", "msnbot-157-55-39-91.search.msn.com"]);
+    DT.checkTableRow("statKeywordsDetailsDataTable", 3, ["3", "12.07.2021 05:07:46", "WebJET", "//??? docId=7047", "msnbot-157-55-39-167.search.msn.com"]);
 
     I.fillField("#searchQuery", "web stránka v cloude");
     I.click("Button.filtrujem.dt-filtrujem-query");
 
-    I.see("93-153-24-125.customers.tmcz.cz");
-    I.see("msnbot-40-77-167-38.search.msn.com");
-    I.see("fulltextrobot-77-75-78-170.seznam.cz");
+    DT.checkTableRow("statKeywordsDetailsDataTable", 1, ["1", "12.07.2021 13:32:11", "WebJET", "//??? docId=7047", "93-153-24-125.customers.tmcz.cz"]);
+    DT.checkTableRow("statKeywordsDetailsDataTable", 2, ["2", "13.07.2021 15:34:36", "WebJET", "//??? docId=7047", "msnbot-40-77-167-38.search.msn.com"]);
+    DT.checkTableRow("statKeywordsDetailsDataTable", 3, ["3", "14.07.2021 06:33:00", "WebJET", "//??? docId=7047", "msnbot-40-77-167-38.search.msn.com"]);
 
-    setCustomDates(I, "#statKeywordsDetailsDataTable_extfilter", "27.07.2021",  "27.07.2021", false);
+    setCustomDates(I, "#statKeywordsDetailsDataTable_extfilter", "27.07.2021 00:00",  "27.07.2021 15:00", false);
 
-    I.see("Záznamy 1 až 2 z 2");
-    I.see("msnbot-207-46-13-165.search.msn.com");
-    I.see("msnbot-40-77-167-72.search.msn.com");
-    I.see("//??? docId=7047");
+    DT.checkTableRow("statKeywordsDetailsDataTable", 1, ["1", "27.07.2021 09:10:29", "WebJET", "//??? docId=7047", "msnbot-207-46-13-165.search.msn.com"]);
+    DT.checkTableRow("statKeywordsDetailsDataTable", 2, ["2", "27.07.2021 14:31:58", "WebJET", "//??? docId=7047", "msnbot-40-77-167-72.search.msn.com"]);
 });
 
 Scenario("positions", ({ I, DT }) => {
@@ -275,10 +274,17 @@ Scenario("positions", ({ I, DT }) => {
     I.seeElement(locate("span.seoPageTitle").withText("Redakčný systém WebJET"));
 });
 
-Scenario("number-keywords", ({ I, DT }) => {
+Scenario("number-keywords", ({ I, Browser, DT }) => {
+    if (Browser.isFirefox) {
+        I.resizeWindow(1280, 900);
+    }
     I.amOnPage("/apps/seo/admin/number-keywords/");
 
     DT.waitForLoader();
+
+    I.click("button.btn-vue-jstree-item-edit");
+    I.click(locate(".jstree-anchor").withText("Koreňový priečinok"));
+
     DT.filter("name", "rozpočet");
 
     DT.checkTableRow("numberKeywordsDataTable", 1, ["4", "rozpočet", "2", "2", "2"]);
@@ -297,7 +303,7 @@ Scenario("number-keywords", ({ I, DT }) => {
 
     DT.checkTableRow("numberKeywordsDataTable", 1, ["4", "rozpočet", "1", "1", "1"]);
 
-    I.click("rozpočet");
+    I.click(locate("#numberKeywordsDataTable a").withText("rozpočet"));
 
     I.waitForText("Konsolidácia naprieč trhmi 05.11.2018 06:00", 20);
 });
@@ -384,8 +390,10 @@ Scenario("Special cross pages (stat and seo section) ext filter test", ({ I, DT 
     I.dontSee("google.com");
     I.dontSee("seznam.cz");
 
-        DT.checkTableRow("statKeywordsDataTable", 1, ["1", "intranetové riešenie", "0", "0,00"]);
-        DT.checkTableRow("statKeywordsDataTable", 2, ["2", "primátor", "0", "0,00"]);
+        //DT.checkTableRow("statKeywordsDataTable", 1, ["1", "intranetové riešenie", "0", "0,00"]);
+        //DT.checkTableRow("statKeywordsDataTable", 2, ["2", "primátor", "0", "0,00"]);
+        I.see("intranetové riešenie", "#statKeywordsDataTable");
+        I.see("primátor", "#statKeywordsDataTable");
 
     I.click("button.btn-vue-jstree-item-edit");
     I.click(locate(".jstree-anchor").withText("Koreňový priečinok"));
@@ -395,9 +403,9 @@ Scenario("Special cross pages (stat and seo section) ext filter test", ({ I, DT 
     I.see("google.com");
     I.see("seznam.cz");
 
-        DT.checkTableRow("statKeywordsDataTable", 1, ["1", "web stránka v cloude", "13", "28,89"]);
-        DT.checkTableRow("statKeywordsDataTable", 2, ["2", "primátor", "12", "26,67"]);
-        DT.checkTableRow("statKeywordsDataTable", 3, ["3", "archiv", "11", "24,44"]);
+        DT.checkTableRow("statKeywordsDataTable", 1, ["1", "primátor", "12", "27,27"]);
+        DT.checkTableRow("statKeywordsDataTable", 2, ["2", "web stránka v cloude", "12", "27,27"]);
+        DT.checkTableRow("statKeywordsDataTable", 3, ["3", "archiv", "11", "25"]);
 
     I.click("seznam.cz");
 

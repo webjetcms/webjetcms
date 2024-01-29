@@ -6,6 +6,7 @@ const CopyPlugin = require('copy-webpack-plugin');
 const { VueLoaderPlugin } = require('vue-loader');
 //const WebjetModifyPlugin = require('./plugins/modify-plugin/index.js');
 const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
+const MomentLocalesPlugin = require('moment-locales-webpack-plugin');
 
 const WP_DATA = {
     name: "WebJET CMS 2023",
@@ -184,7 +185,7 @@ module.exports = {
         new HtmlWebpackPlugin(generateHtmlPlugins("/settings/cronjob")),
         new HtmlWebpackPlugin(generateHtmlPlugins("/settings/missing-keys")),
         //new HtmlWebpackPlugin(generateHtmlPlugins("/settings/backup")),
-        //new HtmlWebpackPlugin(generateHtmlPlugins("/settings/update")),
+        new HtmlWebpackPlugin(generateHtmlPlugins("/settings/update")),
         //new HtmlWebpackPlugin(generateHtmlPlugins("/settings/restart")),
         //new HtmlWebpackPlugin(generateHtmlPlugins("/settings/missing-keys")),
 
@@ -211,6 +212,11 @@ module.exports = {
             ]
         }),
         new VueLoaderPlugin(),
+
+        //ignore all locale files of moment.js (we must specifically import ones we need)
+        new MomentLocalesPlugin({
+            localesToKeep: ['sk', 'cs', 'de'],
+        }),
 
         //new BundleAnalyzerPlugin()
     ],

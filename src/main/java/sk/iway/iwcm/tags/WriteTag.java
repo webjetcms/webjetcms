@@ -37,6 +37,8 @@ import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.StringTokenizer;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  *  vypise string ulozeny v request objekte (vyhodne ked sa to setne v nejakej
@@ -132,12 +134,22 @@ public class WriteTag extends BodyTagSupport
 					Identity user = UsersDB.getCurrentUser(request);
 					if (isInlinePageEditable(user, docId, request))
 					{
-						appendInlineEditingScript(pageContext, request);
-						pageContext.include(WriteTag.getCustomPageAdminNotNull("/admin/inline/inline_page_toolbar.jsp", request));
-						inlineEditingToolbarAppended = true;
-						if (request.getAttribute(SKIP_BODY)!=null)
-						{
-							value = null;
+						if ("true".equals(request.getParameter("inlineEditorAdmin"))) {
+							request.setAttribute("writeTag.inlineEditingScriptInserted", "1");
+							pageContext.include(WriteTag.getCustomPageAdminNotNull("/admin/inline/inline_page_toolbar_v9.jsp", request));
+							inlineEditingToolbarAppended = true;
+							if (request.getAttribute(SKIP_BODY)!=null)
+							{
+								value = null;
+							}
+						} else {
+							appendInlineEditingScript(pageContext, request);
+							pageContext.include(WriteTag.getCustomPageAdminNotNull("/admin/inline/inline_page_toolbar.jsp", request));
+							inlineEditingToolbarAppended = true;
+							if (request.getAttribute(SKIP_BODY)!=null)
+							{
+								value = null;
+							}
 						}
 					}
 				}
@@ -586,6 +598,48 @@ public class WriteTag extends BodyTagSupport
 						else
 						{
 							Logger.debug(WriteTag.class, "attempt to include non component file: " + includeFileName + ", include denied");
+						}
+
+						//Only if banner can be included
+						boolean checkDeviceType = true;
+						final String deviceParam = "device=";
+						//In preview mode it does not matter what type of device we use (we want see all banners)
+						if (request.getAttribute("inPreviewMode")!=null) checkDeviceType = false;
+						
+						/** Check if this app can be included in current device type **/
+						if(canInclude && checkDeviceType && includeText.contains(deviceParam)) {
+							final String regex = "([^\";, ]*)";
+							Pattern pattern = Pattern.compile(deviceParam + regex);
+							Matcher matcher = pattern.matcher(includeText);
+
+							//Is deviceParam presented in include ? -> NO, then do nothing
+							if(matcher.find()) {
+								String devicesString = matcher.group(1);
+								//Does deviceParam contain any value ? -> NO, then do nothing
+								if(Tools.isNotEmpty(devicesString)) {
+									//Devices values are separated by "+"
+									StringTokenizer devices = new StringTokenizer(devicesString, "+");
+
+									//So there is set device type limitation, set canInclude to false, until we verify that actual device is right type (supported device type)
+									if(devices.hasMoreTokens()) canInclude = false;
+
+									//Loop all suported device types and check if actual device has right type
+									while(devices.hasMoreTokens()) {
+										String device = Tools.getStringValue(devices.nextToken(), "");
+
+										if("phone".equals(device) && browser.isPhone()) {
+											canInclude = true;
+											break;
+										} else if("tablet".equals(device) && browser.isTablet()) {
+											canInclude = true;
+											break;
+										} else if("pc".equals(device) && browser.isDesktop()) {
+											canInclude = true;
+											break;
+										}
+									}
+								}
+							}
 						}
 
 						buff.delete(0,includeEndIndex + INCLUDE_END.length());

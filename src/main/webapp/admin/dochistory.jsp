@@ -47,8 +47,7 @@ int doc_id = -1;
       }
       function editPage(docId, historyId)
       {
-    	  window.resizeTo(1024, 600);
-    	  window.location.href="/admin/editor.do?isPopup=true&docid="+docId+"&historyid="+historyId;
+    	  window.parent.open("/admin/v9/webpages/web-pages-list/?docid="+docId+"&historyid="+historyId);
       }
       $(document).ready(function(){
 			$('table.history tr').hover(function(){
@@ -59,12 +58,10 @@ int doc_id = -1;
       });
    </script>
    <style type="text/css">
-	   <!--
 	   .activetrue { font-weight: bold; }
 	   .activefalse { font-weight: normal;}
 	   body { background: none !important;}
-	   -->
-</style>
+   </style>
 </head>
 <body>
 <logic:notPresent name="docHistory">

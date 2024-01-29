@@ -44,9 +44,9 @@ public class IwcmLibraryFsVolume extends IwcmFsVolume
 		String domainAlias = AdminTools.getDomainNameFileAliasAppend();
 
 		if ( ("/images"+domainAlias+"/gallery").equals(virtualPath)) return Prop.getTxt("elfinder.images.gallery");
+		if ( ("/images"+domainAlias+"/video").equals(virtualPath)) return Prop.getTxt("elfinder.images.video");
 		if ( ("/images"+domainAlias).equals(virtualPath)) return Prop.getTxt("elfinder.images");
 		if ( ("/files"+domainAlias).equals(virtualPath)) return Prop.getTxt("elfinder.files");
-		if ( ("/images"+domainAlias+"/video").equals(virtualPath)) return Prop.getTxt("elfinder.images.video");
 		if ( ("/shared"+domainAlias).equals(virtualPath)) return Prop.getTxt("elfinder.shared");
 
 		return super.getName(fsi);
@@ -93,7 +93,7 @@ public class IwcmLibraryFsVolume extends IwcmFsVolume
 	@Override
 	public FsItem[] listChildren(FsItem fsi)
 	{
-		List<FsItem> list = new ArrayList<FsItem>();
+		List<FsItem> list = new ArrayList<>();
 
 		IwcmFile fsiFile = asFile(fsi);
 

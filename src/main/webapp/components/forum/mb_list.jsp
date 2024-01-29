@@ -1,6 +1,6 @@
 <%@page import="java.util.List"%><%
 sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
-%><%@ page pageEncoding="utf-8"  import="sk.iway.iwcm.*,sk.iway.iwcm.doc.*,sk.iway.iwcm.forum.*, sk.iway.iwcm.users.*,java.util.*"%>
+%><%@ page pageEncoding="utf-8"  import="sk.iway.iwcm.*,sk.iway.iwcm.doc.*,sk.iway.iwcm.forum.*,sk.iway.iwcm.components.forum.jpa.*, sk.iway.iwcm.users.*,java.util.*"%>
 <%@ taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm" %>
 <%@ taglib uri="/WEB-INF/iway.tld" prefix="iway" %>
 <%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
@@ -121,7 +121,7 @@ int totalPhorumNum = 0;
 boolean hasPerex;
 boolean hasLink;
 
-ForumBean fb;
+DocForumEntity fb;
 Identity user = (Identity) session.getAttribute(Constants.USER_KEY);
 
 int count = 0;

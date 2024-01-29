@@ -5,7 +5,7 @@ var folder_name, subfolder_one, subfolder_two, auto_webPage, randomNumber,
      edit_webpage = (locate('#datatableInit_wrapper').find('.btn.btn-sm.buttons-selected.buttons-edit.btn-warning')),
      delete_webpage = (locate('#datatableInit_wrapper').find('.btn.btn-sm.buttons-selected.buttons-remove.btn-danger.buttons-divider')),
      note = 'AUTOTEST',
-     refresh_data = (locate('.col-md-4.tree-col').find('.btn.btn-sm.btn-outline-secondary.buttons-refresh'));
+     refresh_data = (locate('.tree-col').find('.btn.btn-sm.btn-outline-secondary.buttons-refresh'));
 
 Before(({ I, login }) => {
      login('admin');
@@ -73,7 +73,7 @@ Scenario('Priprav strukturu', ({ I, DTE }) => {
      createNewWebPage(I, randomNumber, DTE);
 });
 
-Scenario('Zakladne funkcie webstranky - zalozka Zakladne', ({ I, DTE }) => {
+Scenario('Zakladne funkcie webstranky - zalozka Zakladne', ({ I, DT, DTE }) => {
      I.amOnPage('/admin/v9/webpages/web-pages-list/');
      I.jstreeNavigate([folder_name]);
 
@@ -94,11 +94,16 @@ Scenario('Zakladne funkcie webstranky - zalozka Zakladne', ({ I, DTE }) => {
      I.waitForLoader(".WJLoaderDiv");
      I.switchTo('#modalIframeIframeElement');
      I.waitForElement(locate('#nav-iwcm_doc_group_volume_').withText('Zoznam web stránok'), 15);
-     I.wait(4);
-     I.click(locate('#nav-iwcm_doc_group_volume_').find('.elfinder-navbar-arrow'));
+     I.wait(1);
+     I.waitForElement(locate(".ui-state-active.elfinder-subtree-loaded").withText("Obrázky"), 15);
+     I.wait(1);
+     I.click(locate('#nav-iwcm_doc_group_volume_'));
+     I.wait(1);
      I.click(locate('.elfinder-navbar-wrapper').withText(folder_name).last());
+     I.wait(1);
      I.waitForVisible('.elfinder-cwd-file.ui-corner-all.ui-selectee', 10);
      I.click(locate('.elfinder-cwd-file.ui-corner-all.ui-selectee').withText(folder_name).last());
+     I.wait(1);
      I.waitForElement('.elfinder-cwd-file.ui-corner-all.ui-selectee.ui-state-hover.ui-selected', 10);
      I.switchTo();
      I.click(locate('.btn.btn-primary').withText('Potvrdiť'));
@@ -139,6 +144,7 @@ Scenario('Zakladne funkcie webstranky - zalozka Zakladne', ({ I, DTE }) => {
      I.seeInField('#DTE_Field_editorFields-redactorNote', note);
      I.dtEditorCancel();
      I.click(refresh_data);
+     DT.waitForLoader();
 
      // Kontrola web stranky - nie je verejna, bola pridana kopia webstranky
      I.say('Kontrola ci stranka je verejna a bola vytvorena kopia');
@@ -149,7 +155,7 @@ Scenario('Zakladne funkcie webstranky - zalozka Zakladne', ({ I, DTE }) => {
      // vymazanie jednej webstranky
      I.say('Vymazanie jednej webstranky');
      //musime odznacit, lebo delete si to oznaci same
-     I.forceClick(locate('.is-not-public').withText(auto_webPage).find('.dt-select-td.sorting_1'));
+     I.forceClick(locate('#datatableInit .is-not-public').withText(auto_webPage).find('.dt-select-td.sorting_1'));
      I.deleteCreatedWebPage(randomNumber);
      I.seeNumberOfVisibleElements(locate('.even.is-not-public').withText(auto_webPage), 1);
 });

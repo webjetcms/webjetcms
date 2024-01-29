@@ -30,6 +30,8 @@ public class UnknownAction extends Action {
 	  String path = PathFilter.getOrigPath(request);
 	  String doShowdocAction = request.getParameter("doShowdocAction");
 	  if (Tools.isNotEmpty(doShowdocAction) && ShowDoc.isDoShowdocActionAllowed(doShowdocAction)) path = doShowdocAction;
+	  if (path==null) path = request.getRequestURI();
+
 	  request.getRequestDispatcher(Tools.replace(path, ".do", ".struts")).forward(request, response);
 	  return null;
 

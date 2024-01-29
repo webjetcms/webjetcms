@@ -36,6 +36,7 @@ public class UnsubscribedRestController extends DatatableRestControllerV2<Unsubs
     @Override
     public UnsubscribedEntity insertItem(UnsubscribedEntity entity) {
         Set<String> unsubscribedEmails = DmailUtil.getUnsubscribedEmails();
+        entity.setEmail(entity.getEmail().toLowerCase());
         if (unsubscribedEmails.contains(entity.getEmail())) return null;
 
         return super.insertItem(entity);

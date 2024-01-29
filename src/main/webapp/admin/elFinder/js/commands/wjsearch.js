@@ -10,7 +10,7 @@ elFinder.prototype.commands.wjsearch = function() {
 	this.options        = {ui : 'wjsearchbutton'}
 	//this.alwaysEnabled  = false;
 	this.updateOnSelect = false;
-	
+
 	/**
 	 * Return command status.
 	 * Search does not support old api.
@@ -23,28 +23,31 @@ elFinder.prototype.commands.wjsearch = function() {
 			file = fm.file(root),
 			el = $('#finder .elfinder-button-search');
 
-		if (typeof file != 'undefined' && file.mime == 'directory' && file.url == '/files/archiv') {
-			el.show();
-			return 0;
+		if (typeof file != 'undefined' && file.mime == 'directory' && file.url.startsWith('/files/archiv')) {
+			// V toolbare mi nefunguje skryvanie cez getstate == -1 tak to skryvam cez jQuery
+			if (file.url == '/files/archiv') {
+				el.show();
+			} else {
+				el.hide();
+				return 0;
+			}
 		}
 
-        // V toolbare mi nefunguje skryvanie cez getstate == -1 tak to skryvam cez jQuery
-        el.hide();
 		return -1;
 	}
-	
+
 	/**
 	 * Send search request to backend.
 	 *
 	 * @param  String  search string
 	 * @return $.Deferred
 	 **/
-	this.exec = function(q, target, mime) {
+	this.exec = function(q, target, mime, recursive=false) {
 		var fm = this.fm,
 			reqDef = [],
 			onlyMimes = fm.options.onlyMimes,
 			phash;
-		
+
 		if (typeof q == 'string' && q) {
 			if (typeof target == 'object') {
 				mime = target.mime || '';
@@ -53,23 +56,23 @@ elFinder.prototype.commands.wjsearch = function() {
 			target = target? target : '';
 			if (mime) {
 				mime = $.trim(mime).replace(',', ' ').split(' ');
-				mime = $.map(mime, function(m){ 
+				mime = $.map(mime, function(m){
 					m = $.trim(m);
 					return m && ($.inArray(m, onlyMimes) !== -1
 								|| $.map(onlyMimes, function(om) { return m.indexOf(om) === 0? true : null }).length
-								)? m : null 
+								)? m : null
 				});
 			} else {
 				mime = [].concat(onlyMimes);
 			}
 
 			fm.trigger('searchstart', {query : q, target : target, mimes : mime});
-			
+
 			if (! onlyMimes.length || mime.length) {
 				if (target === '' && fm.api >= 2.1) {
 					$.each(fm.roots, function(id, hash) {
 						reqDef.push(fm.request({
-							data   : {cmd : 'search', q : q, target : hash, mimes : mime},
+							data   : {cmd : 'search', q : q, target : hash, mimes : mime, recursive: recursive},
 							notify : {type : 'search', cnt : 1, hideCnt : (reqDef.length? false : true)},
 							cancel : true,
 							preventDone : true
@@ -77,7 +80,7 @@ elFinder.prototype.commands.wjsearch = function() {
 					});
 				} else {
 					reqDef.push(fm.request({
-						data   : {cmd : 'search', q : q, target : target, mimes : mime},
+						data   : {cmd : 'search', q : q, target : target, mimes : mime, recursive: recursive},
 						notify : {type : 'search', cnt : 1, hideCnt : true},
 						cancel : true,
 						preventDone : true
@@ -104,26 +107,26 @@ elFinder.prototype.commands.wjsearch = function() {
 			} else {
 				reqDef = [$.Deferred().resolve({files: []})];
 			}
-			
+
 			fm.searchStatus.mixed = (reqDef.length > 1);
-			
+
 			return $.when.apply($, reqDef).done(function(data) {
 				var argLen = arguments.length,
 					i;
-				
+
 				data.warning && fm.error(data.warning);
-				
+
 				if (argLen > 1) {
 					data.files = (data.files || []);
 					for(i = 1; i < argLen; i++) {
 						arguments[i].warning && fm.error(arguments[i].warning);
-						
+
 						if (arguments[i].files) {
 							data.files.push.apply(data.files, arguments[i].files);
 						}
 					}
 				}
-				
+
 				fm.lazy(function() {
 					fm.trigger('search', data);
 				}).then(function() {

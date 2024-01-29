@@ -1,1 +1,0 @@
-﻿CKEDITOR.plugins.setLang("webjetmagicline","sk",{title:"Magic lajna",insertTextHere:"Sem vložte text",insert:"Vložiť",text:"Text",image:"Obrázok",app:"Aplikácia",temp:"Blok"});

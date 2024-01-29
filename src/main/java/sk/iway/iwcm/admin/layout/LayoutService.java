@@ -12,7 +12,6 @@ import sk.iway.iwcm.admin.AdminPropRestController;
 import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.doc.GroupsDB;
 import sk.iway.iwcm.i18n.Prop;
-import sk.iway.iwcm.system.ConstantsV9;
 import sk.iway.iwcm.system.stripes.CSRF;
 import sk.iway.iwcm.users.UsersDB;
 
@@ -176,7 +175,7 @@ public class LayoutService
     public List<LabelValueDetails> getLanguages(boolean addFirstEmpty, boolean translateValue, String appendTextKey) {
         List<LabelValueDetails> languages = new ArrayList<>();
 
-        String[] lngArr = ConstantsV9.getArray("languages");
+        String[] lngArr = Constants.getArray("languages");
         String defaultLang = Constants.getString("defaultLanguage");
         Prop prop = Prop.getInstance(request);
 

@@ -27,7 +27,7 @@ Scenario('Priprav strukturu', ({ I }) => {
      I.createNewWebPage(randomNumber);
 });
 
-Scenario('Obsah web stranky - zakladne ikony', ({ I, DTE, Browser }) => {
+Scenario('Obsah web stranky - zakladne ikony', ({ I, DT, DTE, Browser }) => {
      I.amOnPage('/admin/v9/webpages/web-pages-list/?groupid=0');
      I.jstreeNavigate([folder_name]);
 
@@ -36,7 +36,7 @@ Scenario('Obsah web stranky - zakladne ikony', ({ I, DTE, Browser }) => {
 
      // KONTROLA NASTAVENYCH PEREX DATUMOV
      I.say('Kontrolujem nastavene perex datumy');
-     I.click('#pills-dt-datatableInit-perex-tab');
+     I.clickCss('#pills-dt-datatableInit-perex-tab');
      I.seeInField('#DTE_Field_publishStartDate', '01.01.2022 00:00:00');
      I.seeInField('#DTE_Field_publishEndDate', '03.01.2022 00:00:00');
      I.seeInField('#DTE_Field_eventDateDate', '02.01.2022 00:00:00'); // TODO sice sa nastavi hodnota 00:00:00 no v editore je 00:05:00
@@ -44,15 +44,15 @@ Scenario('Obsah web stranky - zakladne ikony', ({ I, DTE, Browser }) => {
      //--------------- OBSAH WEBSTRANKY----------------------
      // PRIDANIE TABULKY
      I.say('Pridavam tabulku do obsahu');
-     I.click('#pills-dt-datatableInit-content-tab');
+     I.clickCss('#pills-dt-datatableInit-content-tab');
      I.dontSeeElement(locate('.cke_path_item').withText('table'));
      I.waitForElement('#trEditor', 10);
-     I.click('#trEditor');
+     I.clickCss('#trEditor');
      if (Browser.isFirefox()) I.wait(2);
-     I.click('#trEditor');
+     I.clickCss('#trEditor');
      I.pressKey('ArrowDown');
 
-     I.click('.cke_button.cke_button__table.cke_button_.cke_button_off');
+     I.clickCss('.cke_button.cke_button__table.cke_button_.cke_button_off');
      I.waitForElement('.cke_button.cke_button__table.cke_button_.cke_button_on', 10);
      // volba velkosti tabulky
      for (let i = 0; i <= 3; i++) {
@@ -64,7 +64,7 @@ Scenario('Obsah web stranky - zakladne ikony', ({ I, DTE, Browser }) => {
      I.pressKey('Enter');
      if (Browser.isFirefox()) I.wait(1);
      // vidim tabulku v editore
-     I.click(".cke_path a.cke_path_item:nth-child(2)"); //klikni na body p v navbare dole v ckeditore
+     I.clickCss(".cke_path a.cke_path_item:nth-child(2)"); //klikni na body p v navbare dole v ckeditore
      if (Browser.isFirefox()) I.wait(3);
      I.pressKey('ArrowUp');
      if (Browser.isFirefox()) {
@@ -81,12 +81,13 @@ Scenario('Obsah web stranky - zakladne ikony', ({ I, DTE, Browser }) => {
           //ff ma nejak inak kurzor a je potrebne ist dole
           I.pressKey('ArrowDown');
      }
-     I.click('.cke_button.cke_button__image.cke_button_off');
+     I.clickCss('.cke_button.cke_button__image.cke_button_off');
      I.waitForText('Vlastnosti obrázka', 20);
      I.switchTo('#wjImageIframeElement');
      I.waitForLoader(".WJLoaderDiv");
 
      I.waitForElement(locate('.ui-corner-all.elfinder-navbar-dir.elfinder-navbar-root.elfinder-tree-dir.elfinder-ro.elfinder-navbar-collapsed.ui-droppable.elfinder-subtree-loaded').withText('Médiá všetkých stránok'), 20);
+     I.wait(1);
      I.click(locate('.ui-corner-all.elfinder-navbar-dir.elfinder-navbar-root.elfinder-tree-dir.elfinder-ro.elfinder-navbar-collapsed.ui-droppable.elfinder-subtree-loaded').withText('Médiá všetkých stránok'));
      I.waitForText('Foto galéria', 10, ".elfinder-cwd-file");
      I.wait(1);
@@ -102,12 +103,12 @@ Scenario('Obsah web stranky - zakladne ikony', ({ I, DTE, Browser }) => {
 
      // VRATIT SPAT KROK - odstrani pridany obrazok
      I.say('Pouzitie kroku spat');
-     I.click('.cke_button_icon.cke_button__undo_icon');
+     I.clickCss('.cke_button_icon.cke_button__undo_icon');
      I.dontSeeElement(locate('.cke_path_item').withText('img'));
 
      // PRIDANIE ODKAZU
      I.say('Pridavam odkaz');
-     I.click('.cke_button_icon.cke_button__link_icon');
+     I.clickCss('.cke_button_icon.cke_button__link_icon');
      I.waitForText('Informácie o odkaze', 10);
      I.switchTo('#wjLinkIframe');
      I.waitForVisible('.elfinder-cwd-file.directory.ui-corner-all.ui-droppable.native-droppable.ui-selectee', 20);
@@ -119,14 +120,16 @@ Scenario('Obsah web stranky - zakladne ikony', ({ I, DTE, Browser }) => {
      I.doubleClick(locate('.elfinder-cwd-file.directory.ui-corner-all.ui-droppable.native-droppable.ui-selectee').withText('name-autotest'));
      I.waitForElement('.elfinder-cwd-file.ui-corner-all.ui-selectee', 10);
      I.waitForElement(locate('.elfinder-cwd-file.ui-corner-all.ui-selectee').withText('name-autotest'), 20);
+     I.wait(0.3);
      I.doubleClick(locate('.elfinder-cwd-file.ui-corner-all.ui-selectee').withText('name-autotest'));
+     I.wait(0.3);
      I.switchTo();
      I.waitForElement(locate('.cke_path_item').withText('a'), 10);
      I.wait(1);
 
      // ODSTRANIT ODKAZ - IKONA
      I.say('Odstranujem odkaz z obsahu cez ikonu');
-     I.click('.cke_button.cke_button__unlink.cke_button_off');
+     I.clickCss('.cke_button.cke_button__unlink.cke_button_off');
      I.dontSeeElement(locate('.cke_path_item').withText('a'));
      I.pressKey('ArrowRight');
      I.pressKey('Enter');
@@ -134,7 +137,7 @@ Scenario('Obsah web stranky - zakladne ikony', ({ I, DTE, Browser }) => {
 
      // VLOZIT SPECIALNY ZNAK
      I.say('Pridavam specialny znak do obsahu');
-     I.click('.cke_button.cke_button__specialchar.cke_button_off');
+     I.clickCss('.cke_button.cke_button__specialchar.cke_button_off');
      I.waitForText('Výber špeciálneho znaku', 20);
      I.waitForText('¾', 20);
      I.click(locate('.cke_specialchar').withText('¾'));
@@ -146,7 +149,7 @@ Scenario('Obsah web stranky - zakladne ikony', ({ I, DTE, Browser }) => {
 
      // HLADAT A NAHRADIT
      I.say('Hladam a nahradzam slovo');
-     I.click('.cke_button.cke_button__find.cke_button_off');
+     I.clickCss('.cke_button.cke_button__find.cke_button_off');
      I.waitForText('Vyhľadať a nahradiť', 10);
      I.waitForText('Čo hľadať', 10);
      I.fillField('.cke_dialog_ui_input_text', 'This');
@@ -179,7 +182,7 @@ Scenario('Obsah web stranky - zakladne ikony', ({ I, DTE, Browser }) => {
      DTE.cancel();
 });
 
-Scenario('TODO - bugs', ({ I, DTE }) => {
+Scenario('TODO - bugs', ({ I, DT, DTE }) => {
      I.amOnPage('/admin/v9/webpages/web-pages-list/?groupid=0');
      I.jstreeNavigate([folder_name]);
 
@@ -193,12 +196,12 @@ Scenario('TODO - bugs', ({ I, DTE }) => {
      I.waitForVisible('#editorAppDTE_Field_editorFields-groupDetails', 5); // TODO
 
      // ********** ZALOZKA OBSAH **************
-     I.click('#pills-dt-datatableInit-content-tab');
+     I.clickCss('#pills-dt-datatableInit-content-tab');
      I.waitForVisible('#pills-dt-datatableInit-content', 20);
 
      // BLOKY - zalozka VASE -> diakritika v dynamicky a staticky blok, v dropdowne .filterOptions su options bez diakritiky OSTATNE a INA STRANKA s DocID
-     I.click('#trEditor');
-     I.click('.cke_button_icon.cke_button__htmlbox_icon');
+     I.clickCss('#trEditor');
+     I.clickCss('.cke_button_icon.cke_button__htmlbox_icon');
      I.wait(3);
      I.waitForElement(locate('.cke_dialog_title').withText('Bloky'), 10);
      I.waitForElement('.cke_dialog_ui_iframe', 5);
@@ -219,8 +222,8 @@ Scenario('TODO - bugs', ({ I, DTE }) => {
      I.waitForElement('#trEditor', 10);
 
      // HLADAT - diakritika na tlacidle Zatvorit
-     I.click('#trEditor');
-     I.click('.cke_button.cke_button__find.cke_button_off');
+     I.clickCss('#trEditor');
+     I.clickCss('.cke_button.cke_button__find.cke_button_off');
      I.waitForText('Vyhľadať a nahradiť', 10);
      I.waitForElement('.cke_dialog_footer', 10);
      I.waitForElement(locate('.cke_dialog_ui_button.cke_dialog_ui_button_cancel').withText('Zatvoriť'), 10); // TODO
@@ -318,7 +321,7 @@ Scenario('Zadanie existujúceho docid', ({I}) => {
      I.wait(3);
 
      I.say('Zatvorím modal');
-     I.click(closeModalBtn);
+     I.clickCss(closeModalBtn);
      I.waitForInvisible(modal, 10);
 
      I.say('Zadám do url ID existujúceho dokumentu.');
@@ -332,7 +335,7 @@ Scenario('Zadanie existujúceho docid', ({I}) => {
      I.wait(3);
 
      I.say('Zatvorím modal');
-     I.click(closeModalBtn);
+     I.clickCss(closeModalBtn);
      I.waitForInvisible(modal, 10);
 });
 
@@ -352,11 +355,11 @@ Scenario('Notify', ({ I, DT, DTE }) => {
 
      //over zobrazenie info o historickych zaznamoch
      I.see("Existuje rozpracovaná alebo neschválená verzia tejto stránky");
-     I.click(".toast-close-button");
+     I.clickCss(".toast-close-button");
      I.dontSee("Existuje rozpracovaná alebo neschválená verzia tejto stránky");
 
      //Prejsi na tab zakladane
-     I.click("#pills-dt-datatableInit-basic-tab");
+     I.clickCss("#pills-dt-datatableInit-basic-tab");
 
      //Zmen honotu navbaru
      I.fillField('#DTE_Field_navbar', "Test-edit");
@@ -367,7 +370,7 @@ Scenario('Notify', ({ I, DT, DTE }) => {
 
      I.see("Stránka podlieha schvaľovaniu");
 
-     I.click(".toast-close-button");
+     I.clickCss(".toast-close-button");
 
      I.dontSee("Stránka podlieha schvaľovaniu");
 });
@@ -390,7 +393,7 @@ Scenario('Notify edit button', ({ I, DT, DTE }) => {
      I.see("Existuje rozpracovaná alebo neschválená verzia tejto stránky");
 
      //Prejsi na tab zakladane
-     I.click("#pills-dt-datatableInit-basic-tab");
+     I.clickCss("#pills-dt-datatableInit-basic-tab");
      //Over honotu navbaru
      I.dontSeeInField('#DTE_Field_navbar', "Test-edit");
      I.seeInField('#DTE_Field_navbar', "Test");
@@ -403,7 +406,7 @@ Scenario('Notify edit button', ({ I, DT, DTE }) => {
      I.dontSee("Existuje rozpracovaná alebo neschválená verzia tejto stránky");
 
      //Prejsi na tab zakladane
-     I.click("#pills-dt-datatableInit-basic-tab");
+     I.clickCss("#pills-dt-datatableInit-basic-tab");
 
      //Over honotu navbaru
      I.seeInField('#DTE_Field_navbar', "Test-edit");
@@ -414,20 +417,20 @@ Scenario('overit notifikacie pri ulozeni pracovnej verzie stranky', ({ I, DTE })
      I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=22916");
      DTE.waitForEditor();
      I.wait(5);
-     I.click("#pills-dt-datatableInit-basic-tab");
+     I.clickCss("#pills-dt-datatableInit-basic-tab");
      DTE.fillField("virtualPath", "/test-stavov/test-pracovnej-verzie-stranky.html");
-     I.click("#webpagesSaveCheckbox");
+     I.clickCss("#webpagesSaveCheckbox");
      DTE.save();
 
      I.see("Stránka bola uložená ako pracovná verzia, pre návštevníkov web sídla sa nebude zobrazovať.");
-     I.click(".toast-close-button");
+     I.clickCss(".toast-close-button");
 
      //over zobrazenie info o rozpracovanej verzii
      I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=22916");
      DTE.waitForEditor();
 
      I.see("Existuje rozpracovaná alebo neschválená verzia tejto stránky");
-     I.click(".toast-close-button");
+     I.clickCss(".toast-close-button");
      I.dontSee("Existuje rozpracovaná alebo neschválená verzia tejto stránky");
 });
 
@@ -436,7 +439,7 @@ Scenario('overit zobrazenie notifikacie, ak vytvorim stranku s URL, ktora uz exi
      I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=22916");
      DTE.waitForEditor();
      I.wait(5);
-     I.click("#pills-dt-datatableInit-basic-tab");
+     I.clickCss("#pills-dt-datatableInit-basic-tab");
      DTE.fillField("virtualPath", "/test-stavov/test-pracovnej-verzie-stranky.html");
      DTE.save();
 
@@ -445,14 +448,14 @@ Scenario('overit zobrazenie notifikacie, ak vytvorim stranku s URL, ktora uz exi
      I.wait(5);
 
      I.say("Nastavujem text");
-     I.click('#trEditor');
+     I.clickCss('#trEditor');
      I.pressKey(["CommandOrControl", "A"]);
      I.pressKey("Delete");
      I.wait(1);
      I.type("Test existujucej URL adresy");
 
      I.say('overit zobrazenie notifikacie, ked nastane zmena URL a premenuju sa niektore linky');
-     I.click('.cke_button_icon.cke_button__link_icon');
+     I.clickCss('.cke_button_icon.cke_button__link_icon');
      I.waitForText('Informácie o odkaze', 10);
      I.switchTo('#wjLinkIframe');
      I.waitForLoader(".WJLoaderDiv");
@@ -461,7 +464,7 @@ Scenario('overit zobrazenie notifikacie, ak vytvorim stranku s URL, ktora uz exi
      I.switchTo();
      I.click("OK");
 
-     I.click("#pills-dt-datatableInit-basic-tab");
+     I.clickCss("#pills-dt-datatableInit-basic-tab");
      //najskor nastav prazdnu hodnotu, aby sa zresetovalo pocitadlo na konci URL a neskoncilo nam to po X testoch
      DTE.fillField("virtualPath", "/test-stavov/test-existujucej-url-adresy.html");
 
@@ -473,7 +476,7 @@ Scenario('overit zobrazenie notifikacie, ak vytvorim stranku s URL, ktora uz exi
      DTE.waitForEditor();
      I.wait(5);
 
-     I.click("#pills-dt-datatableInit-basic-tab");
+     I.clickCss("#pills-dt-datatableInit-basic-tab");
      //nastav existujuce URL zo stranky 22916
      DTE.fillField("virtualPath", "/test-stavov/test-existujucej-url-adresy-5.html");
 
@@ -488,7 +491,7 @@ Scenario('overit zobrazenie notifikacie, ak vytvorim stranku s URL, ktora uz exi
      DTE.waitForEditor();
      I.wait(5);
 
-     I.click("#pills-dt-datatableInit-basic-tab");
+     I.clickCss("#pills-dt-datatableInit-basic-tab");
      //nastav existujuce URL zo stranky 22916
      DTE.fillField("virtualPath", "/test-stavov/test-pracovnej-verzie-stranky.html");
 
@@ -499,12 +502,12 @@ Scenario('overit zobrazenie notifikacie, ak vytvorim stranku s URL, ktora uz exi
      I.see("22954-Test existujucej URL");
 
      I.see("Zadaná virtuálna cesta je už použitá na stránke: 22916");
-     I.click(".toast-close-button");
+     I.clickCss(".toast-close-button");
 
      I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=22954");
      DTE.waitForEditor();
 
-     I.click("#pills-dt-datatableInit-basic-tab");
+     I.clickCss("#pills-dt-datatableInit-basic-tab");
      //over pridanie -1 na koniec URL
      I.seeInField("#DTE_Field_virtualPath", "/test-stavov/test-pracovnej-verzie-stranky-1.html");
 
@@ -516,20 +519,20 @@ Scenario('overit notifikacie pri publikovani so zadanym datumom zaciatku', ({ I,
 
      I.waitForElement(".toast-close-button", 10);
      I.see("Existuje rozpracovaná alebo neschválená verzia tejto stránky");
-     I.click(".toast-close-button");
+     I.clickCss(".toast-close-button");
      I.dontSee("Existuje rozpracovaná alebo neschválená verzia tejto stránky");
 
      I.waitForElement('.cke_wysiwyg_frame.cke_reset', 10);
-     I.click('#trEditor');
+     I.clickCss('#trEditor');
      I.type('<!-- This is an autotest -->');
 
-     I.click("#pills-dt-datatableInit-perex-tab");
+     I.clickCss("#pills-dt-datatableInit-perex-tab");
      I.click("Zverejniť stránku po tomto dátume");
 
      DTE.save();
 
      I.see("Stránka bola uložená, bude automaticky publikovaná do verejnej časti web stránky 01.12.2030 6:00:00");
-     I.click(".toast-close-button");
+     I.clickCss(".toast-close-button");
 
      I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=22955");
      DTE.waitForEditor();
@@ -548,9 +551,9 @@ async function setPublishPageDefault(webpageText, I, DTE) {
      I.see("Test casoveho publikovania", "#datatableInit_modal div.DTE_Header h5.modal-title");
 
      await DTE.fillCkeditor("<p>"+webpageText+"</p>");
-     I.click("#pills-dt-datatableInit-basic-tab");
+     I.clickCss("#pills-dt-datatableInit-basic-tab");
      I.checkOption("#DTE_Field_available_0");
-     I.click("#pills-dt-datatableInit-perex-tab");
+     I.clickCss("#pills-dt-datatableInit-perex-tab");
      DTE.fillField("publishStartDate", "");
      I.uncheckOption("#DTE_Field_editorFields-publishAfterStart_0");
      DTE.fillField("publishEndDate", "");
@@ -587,7 +590,7 @@ Scenario('overit ze s casovym publikovanim sa stranka ulozi a zobrazi v historii
      let webpageTextPublish = "Test vypublikovania "+publishStartDateText;
 
      await DTE.fillCkeditor("<p>"+webpageTextPublish+"</p>");
-     I.click("#pills-dt-datatableInit-perex-tab");
+     I.clickCss("#pills-dt-datatableInit-perex-tab");
      DTE.fillField("publishStartDate", publishStartDateText);
      I.pressKey("Tab");
      I.checkOption("#DTE_Field_editorFields-publishAfterStart_0");
@@ -600,7 +603,7 @@ Scenario('overit ze s casovym publikovanim sa stranka ulozi a zobrazi v historii
      //
      I.say("over zobrazenie info spravy");
      I.see("Stránka bola uložená, bude automaticky publikovaná do verejnej časti web stránky", "div.toast-message");
-     I.click("button.toast-close-button");
+     I.clickCss("button.toast-close-button");
 
      I.wait(2);
 
@@ -610,7 +613,7 @@ Scenario('overit ze s casovym publikovanim sa stranka ulozi a zobrazi v historii
      DTE.waitForEditor();
      I.click("Editovať poslednú verziu");
      DTE.waitForEditor();
-     I.click("#pills-dt-datatableInit-history-tab");
+     I.clickCss("#pills-dt-datatableInit-history-tab");
      I.wait(3);
      //v history tabulke v stlpci Bude publikovane
      I.waitForText(publishStartDateText, 20, "#datatableFieldDTE_Field_editorFields-history tr td:nth-child(3)");
@@ -637,7 +640,7 @@ Scenario('overit ze s casovym publikovanim sa stranka ulozi a zobrazi v historii
      I.relogin('admin');
      I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=22956");
      DTE.waitForEditor();
-     I.click("#pills-dt-datatableInit-perex-tab");
+     I.clickCss("#pills-dt-datatableInit-perex-tab");
      I.seeCheckboxIsChecked("#DTE_Field_editorFields-disableAfterEnd_0");
 
      I.logout();
@@ -666,7 +669,7 @@ Scenario('casove odpublikovanie existujucej stranky @singlethread', async ({ I, 
      let publishEndTime = startTime+(2*60*1000);
      let publishEndDateText = await I.formatDateTime(publishEndTime);
 
-     I.click("#pills-dt-datatableInit-perex-tab");
+     I.clickCss("#pills-dt-datatableInit-perex-tab");
      DTE.fillField("publishEndDate", publishEndDateText);
      I.pressKey("Tab");
      I.checkOption("#DTE_Field_editorFields-disableAfterEnd_0");
@@ -677,7 +680,7 @@ Scenario('casove odpublikovanie existujucej stranky @singlethread', async ({ I, 
      I.say("Overujem zobrazenie v historii");
      I.click("Test casoveho publikovania");
      DTE.waitForEditor();
-     I.click("#pills-dt-datatableInit-history-tab");
+     I.clickCss("#pills-dt-datatableInit-history-tab");
      I.wait(3);
      //v history tabulke v stlpci Bude publikovane
      I.waitForText(publishEndDateText, 30, "#datatableFieldDTE_Field_editorFields-history tr td:nth-child(4)");
@@ -702,7 +705,7 @@ Scenario('Zmena linky btn', ({ I, DT, DTE }) => {
      DT.waitForLoader();
 
      DTE.waitForEditor();
-     I.wait(6);
+     I.wait(4);
 
      I.switchTo(".cke_wysiwyg_frame.cke_reset");
      I.click("Sollicitudin");
@@ -712,23 +715,22 @@ Scenario('Zmena linky btn', ({ I, DT, DTE }) => {
      I.see("Adresa stránky kliknutia", "table.cke_dialog");
      I.seeInField(locate("input.cke_dialog_ui_input_text").inside(locate("td.cke_dialog_ui_hbox_first").withText("Adresa stránky kliknutia")), "#")
 
-     I.forceClick("div.cke_dialog_body i.wj-action-icon");
+     I.forceClick({css: "div.cke_dialog_body i.wj-action-icon"});
 
      I.waitForVisible("#modalIframeIframeElement");
      I.wait(5);
      I.switchTo("#modalIframeIframeElement");
      I.waitForElement("#nav-iwcm_1_");
-     I.wait(2);
-     I.click("#nav-iwcm_1_");
      I.waitForElement("#nav-iwcm_1_L2ltYWdlcw_E_E");
-     I.click("#nav-iwcm_1_L2ltYWdlcw_E_E");
+     I.click("#nav-iwcm_1_");
+     I.clickCss("#nav-iwcm_1_L2ltYWdlcw_E_E");
      I.waitForElement("#nav-iwcm_1_L2ltYWdlcy9iYW5uZXJ5");
-     I.click("#nav-iwcm_1_L2ltYWdlcy9iYW5uZXJ5");
+     I.clickCss("#nav-iwcm_1_L2ltYWdlcy9iYW5uZXJ5");
      I.waitForElement("#iwcm_1_L2ltYWdlcy9iYW5uZXJ5L2Jhbm5lci1pbnZlc3RpY2llLmpwZw_E_E");
-     I.click("#iwcm_1_L2ltYWdlcy9iYW5uZXJ5L2Jhbm5lci1pbnZlc3RpY2llLmpwZw_E_E");
+     I.clickCss("#iwcm_1_L2ltYWdlcy9iYW5uZXJ5L2Jhbm5lci1pbnZlc3RpY2llLmpwZw_E_E");
 
      I.switchTo();
-     I.click("#modalIframe div.modal-footer button.btn-primary");
+     I.clickCss("#modalIframe div.modal-footer button.btn-primary");
 
      I.seeInField(locate("input.cke_dialog_ui_input_text").inside(locate("td.cke_dialog_ui_hbox_first").withText("Adresa stránky kliknutia")), "/images/bannery/banner-investicie.jpg")
 
@@ -744,14 +746,15 @@ Scenario('Nastavenie editorAutoFillPublishStart @singlethread', ({ I, DT, DTE, D
      I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=40273");
      DT.waitForLoader();
      DTE.waitForEditor();
-     I.click("#pills-dt-datatableInit-perex-tab");
+     I.clickCss("#pills-dt-datatableInit-perex-tab");
      I.dontSeeInField("#DTE_Field_publishStartDate", date);
 
      DTE.cancel();
 
-     I.click("#datatableInit_wrapper button.buttons-create");
+     I.clickCss("#datatableInit_wrapper button.buttons-create");
      DTE.waitForEditor();
-     I.click("#pills-dt-datatableInit-perex-tab");
+     I.waitForElement("#pills-dt-datatableInit-perex-tab", 10);
+     I.clickCss("#pills-dt-datatableInit-perex-tab");
      I.dontSeeInField("#DTE_Field_publishStartDate", date);
 
      //
@@ -761,13 +764,15 @@ Scenario('Nastavenie editorAutoFillPublishStart @singlethread', ({ I, DT, DTE, D
      I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=40273");
      DT.waitForLoader();
      DTE.waitForEditor();
-     I.click("#pills-dt-datatableInit-perex-tab");
+     I.waitForElement("#pills-dt-datatableInit-perex-tab", 10);
+     I.clickCss("#pills-dt-datatableInit-perex-tab");
      I.seeInField("#DTE_Field_publishStartDate", date);
 
      DTE.cancel();
 
-     I.click("#datatableInit_wrapper button.buttons-create");
+     I.clickCss("#datatableInit_wrapper button.buttons-create");
      DTE.waitForEditor();
-     I.click("#pills-dt-datatableInit-perex-tab");
+     I.waitForElement("#pills-dt-datatableInit-perex-tab", 10);
+     I.clickCss("#pills-dt-datatableInit-perex-tab");
      I.seeInField("#DTE_Field_publishStartDate", date);
 });

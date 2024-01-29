@@ -56,6 +56,7 @@ public class EmailsRestController extends DatatableRestControllerV2<EmailsEntity
 
         String selectType = getRequest().getParameter("selectType");
         Long campainId = Long.valueOf(Tools.getIntValue(getRequest().getParameter("campainId"), -1));
+        if (campainId<1L) campainId = (long)-getUser().getUserId();
 
         if(selectType != null && !selectType.isEmpty()) {
             if(selectType.equals("recipients")) {
@@ -85,9 +86,9 @@ public class EmailsRestController extends DatatableRestControllerV2<EmailsEntity
         CampaingsEntity campaign = null;
         if (campainId>0L) campaign = campaingsRepository.getById(campainId);
 
-        if (campaign != null) {
-            //Load allready pushed emails in DB
-            emailsTable.addAll(emailsRepository.getAllCampainEmails(campaign.getId()));
+        //Load allready pushed emails in DB
+        for (String email : emailsRepository.getAllCampainEmails(CampaingsRestController.getCampaignId(campaign, getUser()))) {
+            emailsTable.add(email.toLowerCase());
         }
 
         EmailsEntity saved = null;
@@ -99,10 +100,10 @@ public class EmailsRestController extends DatatableRestControllerV2<EmailsEntity
             recipientEmail = recipientEmail.replaceAll("\\s+","");
 
             //Protection against unsubscribed email addresses
-            if(unsubscribedEmails.contains(recipientEmail)) continue;
+            if(unsubscribedEmails.contains(recipientEmail.toLowerCase())) continue;
 
             //Email duplicity protection
-            if(emailsTable.contains(recipientEmail)) {
+            if(emailsTable.contains(recipientEmail.toLowerCase())) {
                 if (emailsToInsert.length==1 && (entity.getId()!=null && entity.getId()>0)) {
                     //ak je v zozname len jeden email a uz ma v DB idecko, tak pokracuj, ulozime jeho zmeny
                 } else {
@@ -151,6 +152,9 @@ public class EmailsRestController extends DatatableRestControllerV2<EmailsEntity
         //trimni email adresu
         if (entity.getRecipientEmail()!=null) entity.setRecipientEmail(entity.getRecipientEmail().trim());
 
+        //sprav lower case
+        if (entity.getRecipientEmail()!=null) entity.setRecipientEmail(entity.getRecipientEmail().toLowerCase());
+
         if(Tools.isEmail(entity.getRecipientEmail())==false) {
             return false;
         }
@@ -168,12 +172,12 @@ public class EmailsRestController extends DatatableRestControllerV2<EmailsEntity
 
         //Set create values
         if (campaign == null) {
-            entity.setCampainId(-1L);
+            entity.setCampainId((long)-loggedUserId);
             entity.setUrl("");
             entity.setSubject("");
             entity.setSenderName("");
             entity.setSenderEmail("");
-            entity.setCreatedByUserId(-loggedUserId);
+            entity.setCreatedByUserId(loggedUserId);
         } else {
             entity.setCampainId(campaign.getId());
             entity.setUrl(campaign.getUrl());

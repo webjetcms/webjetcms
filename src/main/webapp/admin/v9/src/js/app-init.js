@@ -20,6 +20,9 @@ if (window != window.top) {
     } else {
         document.getElementsByTagName("html")[0].classList.add("in-iframe-show-table");
     }
+    if (window.location.href.indexOf("showEditorFooterPrimary=true")!=-1) {
+        document.getElementsByTagName("html")[0].classList.add("in-iframe-show-footer-primary");
+    }
 }
 
 function initClosure() {
@@ -293,8 +296,8 @@ function initClosure() {
                             //console.log("Selected item=", item);
                             window.selectedNode = item;
                         }
-                        //console.log(item.id, "item.state.loaded=", item.state.loaded);
-                        if ((jsTreeParamValue == 0 && (item.parent == null || item.parent=='' || item.parent=="#")) ||
+                        //console.log(item.id, "item.state.loaded=", item.state.loaded, "parent=", item.parent);
+                        if (((jsTreeParamValue == 0 || jsTreeParamValue == "/images") && (item.parent == null || item.parent=='' || item.parent=="#")) ||
                             (jsTreeParamValue == item.parent)) {
                             items.push(item);
                         } else {

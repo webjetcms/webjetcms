@@ -59,7 +59,7 @@ public class TemplateDetailsService {
                         continue;
                     }
                     for (GroupDetails group : groups) {
-                        if (currentDomain.equals(group.getDomainName())) {
+                        if (Tools.isEmpty(group.getDomainName()) || currentDomain.equals(group.getDomainName())) {
                             filtered.add(temp);
                             break;
                         }

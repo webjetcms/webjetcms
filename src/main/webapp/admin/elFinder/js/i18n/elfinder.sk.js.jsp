@@ -480,7 +480,8 @@ if (elFinder && elFinder.prototype && typeof(elFinder.prototype.i18) == 'object'
 
             /************* WEBJET ******************/
             'cmdresize'    : 'Editovať',
-            'cmdwjedit'      : 'Upraviť súbor'
+            'cmdwjedit'      : 'Upraviť súbor',
+			'wjSearchRecursive': 'V podpriečinkoch'
 		}
 	};
 }

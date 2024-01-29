@@ -1,6 +1,6 @@
 <%@page import="java.util.List"%><%
 sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
-%><%@ page pageEncoding="utf-8" import="sk.iway.iwcm.forum.*,java.util.*,sk.iway.iwcm.*,sk.iway.iwcm.doc.*" %>
+%><%@ page pageEncoding="utf-8" import="sk.iway.iwcm.forum.*,sk.iway.iwcm.components.forum.jpa.*,java.util.*,sk.iway.iwcm.*,sk.iway.iwcm.doc.*" %>
 <%@ taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm" %>
 <%@ taglib uri="/WEB-INF/iway.tld" prefix="iway" %>
 <%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
@@ -145,7 +145,7 @@ document.write('<style type="text/css" media="screen">	@import "/components/foru
 						iMod++;
 					%>
 					   <td class="row1 forum-name"><%
-					      ForumBean fBean = null;
+					      DocForumEntity fBean = null;
 							if(sr.getParentId() >= 0)
 							{
 								fBean = ForumDB.getForumBean(request, ForumDB.getForumMessageParent(sr.getParentId(), sr.getDocId()), sortAscending);

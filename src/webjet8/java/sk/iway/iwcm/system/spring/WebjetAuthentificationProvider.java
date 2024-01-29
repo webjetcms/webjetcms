@@ -81,20 +81,18 @@ public class WebjetAuthentificationProvider implements AuthenticationProvider
             List<String> errorKeys = LogonTools.logonUser(request, (String) auth.getPrincipal(), (String) auth.getCredentials());
 		    if (errorKeys==null || errorKeys.isEmpty())
             {
-                Identity identity;
-                if (user == null)
+                //get user from session, it cab be set by logonUser method (eg. in BasicLdapLogon)
+                Identity identity = UsersDB.getCurrentUser(request);
+                if (identity == null)
                 {
-                   //nebol najdeny vo WJ databaze, mohol ho ale custom logon setnut do session
-                   identity = UsersDB.getCurrentUser(request);
-                }
-                else
-                {
-                   identity = new Identity(user);
+                    //was not set, use user from DB
+                    identity = new Identity(user);
                 }
 
                 return LogonTools.setUserToSession(request.getSession(), identity);
             }
-            else {
+            else
+            {
                 StringBuilder message = new StringBuilder();
                 for (String key : errorKeys)
                 {

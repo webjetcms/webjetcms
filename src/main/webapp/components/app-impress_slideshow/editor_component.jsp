@@ -67,72 +67,8 @@ taglib
 <script type='text/javascript'>
 //<![CDATA[
 $(document).ready(function(){
-	if($.browser.msie)
-	{
-		$img = $("label img");
-
-		$img.click(function(e)
-		{
-			$("#" + $(this).parent().attr("for"))
-				.change()
-				.click();
-		});
-	}
-	loadComponentIframe();
 	showHideTab('2');
-
 });
-
-function setParentGroupId(returnValue)
-{
-	//var returnValue = showModalDialog("<iwcm:cp/>/admin/grouptree.jsp", "", "dialogHeight: 500px; resizable: Yes;") + " ";
-	if (returnValue.length > 15)
-	{
-		var groupid = returnValue.substr(0,15);
-		var groupname = returnValue.substr(15);
-		groupid = groupid.replace(/^[ \t]+|[ \t]+$/gi, "");
-		if (document.textForm.groupIds.value=="")
-		{
-			document.textForm.groupIds.value = groupid;
-		}
-		else
-		{
-			document.textForm.groupIds.value = document.textForm.groupIds.value + "+"+groupid;
-		}
-	}
-}
-
-function setRootGroup(returnValue)
-{
-	//var returnValue = showModalDialog("<iwcm:cp/>/admin/grouptree.jsp", "", "dialogHeight: 500px; resizable: Yes;") + " ";
-	if (returnValue.length > 15)
-	{
-		var groupid = returnValue.substr(0,15);
-		var groupname = returnValue.substr(15);
-		groupid = groupid.replace(/^[ \t]+|[ \t]+$/gi, "");
-		document.MenuULForm.rootGroupId.value = groupid;
-	}
-}
-
-function showHelp(select)
-{
-	size = select.options.length;
-	for (i=0; i<size; i++)
-	{
-		el = document.getElementById("help_"+i);
-		if (el!=null)
-		{
-			if (i==select.selectedIndex)
-			{
-				el.style.display = "block";
-			}
-			else
-			{
-				el.style.display = "none";
-			}
-		}
-	}
-}
 
 function getIncludeText()
 {
@@ -140,24 +76,14 @@ function getIncludeText()
 	editorItemsList.setDataFromDom($("#editorWrapper .item"));
 
 	var jspFileName = "<%=jspFileName%>";
-	var groupIds = document.textForm.groupIds.value;
-	var orderType = document.textForm.orderType.value;
-	var asc = "no";
-	if ($("#order").val() == "yes") {
-		asc = "yes";
-	}
-
 	 var imageWidth = $('#imageWidth').prop('value');
 	 var imageHeight = $('#imageHeight').prop('value');
 
 	var publishType = "new";
 	var nivoSliderHeight = document.textForm.nivoSliderHeight.value;
-	var includeText = "!INCLUDE(" + jspFileName + ", groupIds=" + groupIds
-			+ ", orderType=" + orderType
-			+ ", asc=" + asc
+	var includeText = "!INCLUDE(" + jspFileName +
 			+ ", imageWidth=" + imageWidth
 			+ ", imageHeight=" + imageHeight
-			+ ", publishType=" + publishType
 			+", editorData="+ EditorItemsList.encodeJSONData(editorItemsList.getData())
 			+ ", nivoSliderHeight="+ nivoSliderHeight+")!";
 	return includeText;
@@ -189,10 +115,6 @@ function getIncludeText()
 	if (isFck) {
 	} else {
 		resizeDialog(570, 750);
-	}
-
-	function loadComponentIframe() {
-
 	}
 	//]]>
 </script>
@@ -303,8 +225,6 @@ background-image:url(/components/_common/custom_styles/images/icon_settings_hove
 
 <script type="text/javascript">
 
-
-
 function perexImageBlur(input)
 {
 	$(input).closest('.item').find(".imageDiv").css("background-image", "url(/thumb"+input.value+"?w=100&h=100&ip=5)");
@@ -406,84 +326,48 @@ var renderer = new EditorRenderer("#editorWrapper", editorItemsList, editorItemF
 			onclick="showHideTab('1');" id="tabLink1"><iwcm:text
 					key="components.news.styleAndSettings" /></a></li>
 		<li class="last"><a href="#"
-			onclick="loadComponentIframe();showHideTab('2');" id="tabLink2"><iwcm:text
+			onclick="showHideTab('2');" id="tabLink2"><iwcm:text
 					key="components.news.items" /></a></li>
 	</ul>
 </div>
 
-<div class="tab-pane toggle_content"
-	style="height: 840px; overflow: auto; width: 990px;">
-	<div class="tab-page" id="tabMenu1" style="display: block; height: 500px;">
+<div class="tab-pane toggle_content tab-pane-fullheight">
+	<div class="tab-page" id="tabMenu1" style="display: block;">
 		<br>
 		<div>
-			<html:form action="/admin/editor.do" onsubmit="return false" name="textForm" type="sk.iway.iwcm.editor.EditorForm">
+			<form onsubmit="return false" name="textForm">
 			<div>
-
-							<div style="display: none;">
-								<div class="col-xs-4"><label for="groupIds"><iwcm:text
-											key="components.news.groupids" /></label>:</div>
-								<div class="col-xs-8"><input type="text" name="groupIds" id="groupIds"
-										value="<%=ResponseUtils.filter(pageParams.getValue("groupIds","-1"))%>" />
-								</div>
-							</div>
-
-							<div class="form-group clearfix">
-								<div class="col-xs-4"><label for="orderType"><iwcm:text
-											key="components.news.ordertype" /></label>:</div>
-								<div class="col-xs-8"><select id="orderType" name="orderType">
-										<option value="priority"><iwcm:text
-												key="components.news.ORDER_PRIORITY" /></option>
-										<option value="title"><iwcm:text
-												key="components.news.ORDER_TITLE" /></option>
-										<option value="id"><iwcm:text
-												key="components.news.ORDER_ID" /></option>
-								</select>
-								</div></div>
-							<div class="form-group clearfix">
-								<div class="col-xs-4"><label for="order"><iwcm:text
-											key="components.news.order" /></label>:</div>
-								<div class="col-xs-8"><select id="order" name="asc">
-										<option value="yes"><iwcm:text
-												key="components.inquiry.orderAsc" /></option>
-										<option value="no"><iwcm:text
-												key="components.inquiry.orderDesc" /></option>
-								</select></div>
-							</div>
-							<div class="form-group clearfix">
-								<div class="col-xs-4"><label for="nivoSliderHeight"><iwcm:text
-											key="editor.table.height" /></label>:</div>
-								<div class="col-xs-8"><input type="text" id="nivoSliderHeight"
-									name="nivoSliderHeight" size="5" maxlength="5"
-									value="<%=pageParams.getIntValue("nivoSliderHeight", 400)%>">
-									<iwcm:text key="components.forms.file_restrictions.points" /></div>
-							</div>
-
-
-
-									     <div class="form-group clearfix">
-		   	<div class="col-xs-4">
-					 <iwcm:text key="components.app-impress_slideshow.imageWidth"/>:&nbsp;
+				<div class="form-group clearfix">
+					<div class="col-xs-4"><label for="nivoSliderHeight"><iwcm:text
+								key="editor.table.height" /></label>:</div>
+					<div class="col-xs-8"><input type="text" id="nivoSliderHeight"
+						name="nivoSliderHeight" size="5" maxlength="5"
+						value="<%=pageParams.getIntValue("nivoSliderHeight", 400)%>">
+						<iwcm:text key="components.forms.file_restrictions.points" /></div>
 				</div>
-				<div class="col-xs-8">
-					<input type="text" id="imageWidth" size="5" maxlength="5" value="<%=pageParams.getValue("imageWidth", "400")%>"> <iwcm:text key="components.forms.file_restrictions.points" />
+				<div class="form-group clearfix">
+					<div class="col-xs-4">
+							<iwcm:text key="components.app-impress_slideshow.imageWidth"/>:&nbsp;
+						</div>
+						<div class="col-xs-8">
+							<input type="text" id="imageWidth" size="5" maxlength="5" value="<%=pageParams.getValue("imageWidth", "400")%>"> <iwcm:text key="components.forms.file_restrictions.points" />
+						</div>
 				</div>
-		   </div>
-
-		   		   <div class="form-group clearfix">
-		   	<div class="col-xs-4">
-					 <iwcm:text key="components.app-impress_slideshow.imageHeight"/>:&nbsp;
+				<div class="form-group clearfix">
+					<div class="col-xs-4">
+							<iwcm:text key="components.app-impress_slideshow.imageHeight"/>:&nbsp;
+						</div>
+						<div class="col-xs-8">
+							<input type="text" id="imageHeight" size="5" maxlength="5" value="<%=pageParams.getValue("imageHeight", "300")%>"> <iwcm:text key="components.forms.file_restrictions.points" />
+						</div>
 				</div>
-				<div class="col-xs-8">
-					<input type="text" id="imageHeight" size="5" maxlength="5" value="<%=pageParams.getValue("imageHeight", "300")%>"> <iwcm:text key="components.forms.file_restrictions.points" />
-				</div>
-		   </div>
-		   </div>
-						</html:form>
+		    </div>
+			</form>
 
 		</div>
 	</div>
-	<div class="tab-page" id="tabMenu2" style="height: 800px; width: 800px;">
-								<div class="rozsirene" style="display:none"></div>
+	<div class="tab-page" id="tabMenu2">
+		<div class="rozsirene" style="display:none"></div>
 
 		<div id="editorWrapper" class="editorWrapper collapsable"
 			data-collapse="<iwcm:text key="components.json_editor.collapse" />"
@@ -505,17 +389,6 @@ if (isFck)
 	var oEditor = window.parent.InnerDialogLoaded();
 	var FCK		= oEditor.FCK ;
 }
-<%if (Tools.isNotEmpty(ResponseUtils.filter(pageParams.getValue(
-					"orderType", "")))) {%>
-		document.textForm.orderType.value = "<%=ResponseUtils.filter(pageParams.getValue("orderType",""))%>";
-<%}
-			if (Tools.isNotEmpty(ResponseUtils.filter(pageParams.getValue(
-					"asc", "")))) {
-				String order = "yes";
-				if ("no".equals(pageParams.getValue("asc", "")))
-					order = "no";%>
-		document.textForm.order.value = "<%=order%>";
-<%}%>
 
 </script>
 

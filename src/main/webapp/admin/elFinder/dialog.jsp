@@ -28,6 +28,7 @@ String selectMode = Tools.getStringValue(Tools.getRequestParameter(request, "sel
 	}
 	String actualFile = "";
 	if (Tools.isNotEmpty(Tools.getRequestParameter(request, "link"))) actualFile = Tools.getRequestParameter(request, "link");
+	if ("directory".equals(selectMode) && Tools.isNotEmpty(actualFile) && actualFile.endsWith("/")==false) actualFile = actualFile + "/";
 
 	FileTools.createDefaultStaticContentFolders();
 
@@ -64,6 +65,9 @@ String selectMode = Tools.getStringValue(Tools.getRequestParameter(request, "sel
 	<script src="/admin/codemirror/addon/search/search.js"></script>
 
 	<style type="text/css">
+		body {
+			background-image: none;
+		}
 		.tabbable-custom > .nav-tabs {
 			background-color: white;
 			border-top: 0px;
@@ -172,10 +176,12 @@ String selectMode = Tools.getStringValue(Tools.getRequestParameter(request, "sel
 						{
 							var docId = ckEditorInstance.element.$.form.docId.value;
 							var groupId = ckEditorInstance.element.$.form.groupId.value;
+							var title = getPageNavbar();
 
 							customData.volumes = "<%= volumes %>";
 							customData.docId = docId;
 							customData.groupId = groupId;
+							customData.title = title;
 
 							lastDocId = docId;
 							lastGroupId = groupId;
@@ -183,20 +189,29 @@ String selectMode = Tools.getStringValue(Tools.getRequestParameter(request, "sel
 				}
 				catch (e) { console.log(e); }
 
+				if (window.location.href.indexOf("hideLinkInput=true")!=-1) $("#linkInput").hide();
+
 				var elFinderHeight = $(".page-content").innerHeight();
 				//console.log("h1="+elFinderHeight);
 				elFinderHeight -= parseInt($(".page-content").css("margin-top")) + 12;
 				//console.log("h2="+elFinderHeight);
+
+				if (isNaN(elFinderHeight) && window.location.href.indexOf("inIframe=true")!=-1) {
+					elFinderHeight = Math.round($(window).innerHeight() - $("ul.nav.nav-tabs").outerHeight());
+					if (window.location.href.indexOf("hideLinkInput=true")==-1) elFinderHeight -= $("#linkInput").outerHeight();
+				}
+
+				//console.log("elFinderHeight=", elFinderHeight);
 
 				elfinder = $('#finder').elfinder({
 					// requestType : 'post',
 
 					// url : 'php/connector.php',
 					url : '<iwcm:cp/>/admin/elfinder-connector/',
-               enableByMouseOver: false,
+               		enableByMouseOver: false,
 					width: '100%',
 					height: elFinderHeight,
-               rememberLastDir: <%=rememberLastDir%>,
+               		rememberLastDir: <%=rememberLastDir%>,
 					uploadOverwrite: true,
 					customData : customData,
 					requestType: 'post',
@@ -569,26 +584,22 @@ String selectMode = Tools.getStringValue(Tools.getRequestParameter(request, "sel
 				var toolbarFixApplied = false;
                 elFinderInstance.bind('lazydone', function(event) {
 	                if (!toolbarFixApplied) {
-	                     toolbarFixApplied = true;
-	                     elfinderToolbarFix();
-	                     elfinderTabClick("file");
+						toolbarFixApplied = true;
+						elfinderToolbarFix();
+						elfinderTabClick("file");
 
-							   //vypni search button
-								try { if (elFinderInstance.root().indexOf("iwcm_archiv_volume")==-1) $("#finder .elfinder-button-search").hide(); } catch (e) {}
-
-								var actualUrl = $("#file").val();
-								if (actualUrl != "")
-								{
-											setTimeout(function() { try {
-												openElfinderInFolder(actualUrl);
-											} catch (e) {} }, 500);
-										}
-										else
-								{
-											setTimeout(function () {
-												openDefaultImageFolder(false);
-											}, 500);
-								}
+						var actualUrl = $("#file").val();
+						if (actualUrl != "") {
+							setTimeout(function() {
+								try {
+									openElfinderInFolder(actualUrl);
+								} catch (e) {}
+							}, 500);
+						} else {
+							setTimeout(function () {
+								openDefaultImageFolder(false);
+							}, 500);
+						}
 	                }
 				});
 			}
@@ -696,23 +707,12 @@ String selectMode = Tools.getStringValue(Tools.getRequestParameter(request, "sel
 			<div id="finder"><iwcm:text key="divpopup-blank.wait_please"/></div>
 			<div id="pixabay" style="display: none;"><iframe id="wjImagePixabayIframeElement" style="width: 100%; height: 480px; border: 0px;" src="/admin/skins/webjet8/ckeditor/dist/plugins/webjet/wj_pixabay.jsp" border="0" ></iframe></div>
 		</div>
-		<div class="inputs container-fluid" style="background: #fff; padding-top: 15px; height: 160px; overflow: auto;">
+		<div id="linkInput" class="inputs container-fluid" style="background: #fff; padding-top: 15px; height: 160px; overflow: auto;">
 			<div class="row template">
 				<div class="form-group col-sm-12">
 					<label for="file" class="control-label block"><iwcm:text key="editor.media.link"/></label>
 					<input class="form-control" name="file" id="file" value="<%=ResponseUtils.filter(actualFile)%>" />
 				</div>
-				<%--
-				<div class="form-group col-sm-6">
-					<label for="width" class="control-label"><iwcm:text key="components.video_player.width"/></label>
-					<input class="form-control" type="input" name="width" id="width" />
-				</div>
-
-				<div class="form-group col-sm-6">
-					<label for="height" class="control-label"><iwcm:text key="components.video_player.height"/></label>
-					<input class="form-control" type="input" name="height"  id="height" />
-				</div>
-				--%>
 			</div>
 		</div>
 

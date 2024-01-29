@@ -5,21 +5,26 @@ import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
+import javax.servlet.http.HttpServletRequest;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
+import org.springframework.validation.Errors;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.common.AdminTools;
 import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.common.DocTools;
 import sk.iway.iwcm.common.FileBrowserTools;
 import sk.iway.iwcm.gallery.GalleryDB;
 import sk.iway.iwcm.io.IwcmFile;
 import sk.iway.iwcm.system.datatable.Datatable;
+import sk.iway.iwcm.system.datatable.DatatableRequest;
 import sk.iway.iwcm.system.datatable.DatatableRestControllerV2;
 
 @RestController
@@ -75,7 +80,7 @@ public class GalleryDimenstionRestController extends DatatableRestControllerV2<G
 
         //Get entity path (this path we are setting in getOne) and add entity name to path, get entity from DB by path
         //If DB return entity, path is allready in use throw error, or set new path to entity
-        String path = entity.getPath() + "/" + DocTools.removeCharsDir(entity.getName(), true).toLowerCase(); //NOSONAR
+        String path = getPathForNewEntity(entity.getPath(), entity.getName());
         Identity user = getUser();
 
         Optional<GalleryDimension> tmp = repository.findFirstByPathAndDomainId(path, CloudToolsForCore.getDomainId());
@@ -216,4 +221,54 @@ public class GalleryDimenstionRestController extends DatatableRestControllerV2<G
 
         return entity;
     }
+
+    @Override
+    public void validateEditor(HttpServletRequest request, DatatableRequest<Long, GalleryDimension> target, Identity user, Errors errors, Long id, GalleryDimension entity) {
+
+        String path = entity.getPath();
+
+        if (target.isInsert()) {
+            if (Tools.isEmpty(entity.getName())) {
+                errors.rejectValue("errorField.name", "403", getProp().getText("datatables.field.required.error.js"));
+                return;
+            }
+
+            //for insert we must add entity name to path
+            path = getPathForNewEntity(path, entity.getName());
+        }
+
+        if (isFolderEditable(path, user)==false) {
+            errors.rejectValue("errorField.path", "403", getProp().getText("components.gallery.folderIsNotEditable"));
+        }
+    }
+
+    /**
+     * Returns path for new entity (merging path with new name)
+     * @param parent
+     * @param name
+     * @return
+     */
+    private static String getPathForNewEntity(String parent, String name) {
+        return parent + "/" + DocTools.removeCharsDir(name, true).toLowerCase(); //NOSONAR
+    }
+
+    /**
+     * Returns true if folder is editable.
+     * Some folders like /images/DOMAIN-ALIAS is protected/not editable
+     * @param path
+     * @return
+     */
+    public static boolean isFolderEditable(String path, Identity user) {
+        String domainAlias = AdminTools.getDomainNameFileAliasAppend();
+        if (Tools.isNotEmpty(domainAlias)) {
+            if (path.equals("/images"+domainAlias)) {
+                return false;
+            }
+        }
+        if (!user.isFolderWritable(path+"/")) {
+            return false;
+        }
+        return true;
+    }
+
 }

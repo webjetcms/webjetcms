@@ -31,4 +31,12 @@ public interface AfterRegUserSaveInterceptor
 	 * @return
 	 */
 	public boolean intercept(UserDetails user, HttpServletRequest request);
+
+	/**
+	 * Override send of default welcome email to user (if you send it in your own interceptor)
+	 * @return true/false or NULL for default behaviour
+	 */
+	default Boolean shouldSendUserWelcomeEmail() {
+		return null;
+	}
 }

@@ -28,6 +28,38 @@ public class StatService {
     }
 
     /**
+     * Function will set default range into dateRangeArr. Default range is 1 month.
+     * @param dateRangeArr - [0] dateFrom, [1] dateTo
+     * @param statType - type of stat, can be days, weeks, months
+     */
+    private static void setDefaultRange(Date [] dateRangeArr, String statType) {
+        Calendar cal = Calendar.getInstance();
+
+        //If date to is not set, set it
+        if(dateRangeArr[1] == null) {
+            cal.setTime(new Date());
+            dateRangeArr[1] = cal.getTime(); //To NOW
+        } else {
+            //Use allready preapred dateTo
+            cal.setTime(dateRangeArr[1]);
+        }
+
+        if(Tools.isNotEmpty(statType) && "months".equals(statType)) {
+            //Stat type is set to months, set default range 6 month
+            cal.add(Calendar.MONTH, -6); //From 6 month's ago
+        } else {
+            //Stat type is not set OR its days/weeks, set default range 1 month
+            cal.add(Calendar.MONTH, -1); //From 1 month ago
+        }
+
+        dateRangeArr[0] = cal.getTime();
+    }
+
+    public static Date[] processDateRangeString(String stringRange) {
+        return processDateRangeString(stringRange, null);
+    }
+
+    /**
      * Function will handle String on input and retun array of 2 Date values. This values represent date range from-to.
      * In case of input that contain "daterange:" prefix (added by date picker), function can handle this prefix.
      * If input is empty 1 month range is returned.
@@ -40,7 +72,7 @@ public class StatService {
      * @param stringRange  string of milliseconds represent date
      * @return array with 2 Date values
      */
-    public static Date[] processDateRangeString(String stringRange) {
+    public static Date[] processDateRangeString(String stringRange, String statType) {
         //Represent dateFrom, dateTo
         Date [] dateRangeArr = {null, null};
 
@@ -61,18 +93,14 @@ public class StatService {
                 //First check if its valid string
                 if(Tools.isEmpty(stringTo)) {
                     //String is no valid, set default month range
-                    cal.add(Calendar.MONTH, -1);
-                    dateRangeArr[0] = cal.getTime();
-                    dateRangeArr[1] = new Date();
+                    setDefaultRange(dateRangeArr, statType);
                 } else {
-                    //set dateTo from value
+                    //We have set only dateTo
                     cal.setTimeInMillis(Long.parseLong(stringTo));
                     dateRangeArr[1] = cal.getTime();
 
-                    //dateFrom we set on 1 month range
-                    cal.setTimeInMillis(Long.parseLong(stringTo));
-                    cal.add(Calendar.MONTH, -1);
-                    dateRangeArr[0] = cal.getTime();
+                    //dateFrom set at default range
+                    setDefaultRange(dateRangeArr, statType);
                 }
             } else {
                 //We have set both dateFrom and dateTo
@@ -90,24 +118,39 @@ public class StatService {
 
             //First check if its valid string
             if(Tools.isEmpty(stringFrom)) {
-                 //String is no valid, set default month range
-                 cal.add(Calendar.MONTH, -1);
-                 dateRangeArr[0] = cal.getTime();
-                 dateRangeArr[1] = new Date();
+                //String is no valid, set default range
+                setDefaultRange(dateRangeArr, statType);
             } else {
+                //Range is dateFrom - now
                 cal.setTimeInMillis(Long.parseLong(stringFrom));
                 dateRangeArr[0] = cal.getTime();
-
-                //dateTo we set on 1 month range
-                dateRangeArr[1] = new Date();
+                dateRangeArr[1] = new Date(); //To actual date
             }
         }
 
-        //Need to add 1 day !
-        cal.clear();
-        cal.setTime(dateRangeArr[1]);
-        cal.add(Calendar.DATE, 1);
-        dateRangeArr[1] = cal.getTime();
+        //align dateRangeArr[0] to start of day
+        if(dateRangeArr[0] != null) {
+            cal.setTime(dateRangeArr[0]);
+            if (cal.get(Calendar.HOUR_OF_DAY)==0 && cal.get(Calendar.MINUTE)==0 && cal.get(Calendar.SECOND)==0) {
+                cal.set(Calendar.HOUR_OF_DAY, 0);
+                cal.set(Calendar.MINUTE, 0);
+                cal.set(Calendar.SECOND, 0);
+            }
+
+            dateRangeArr[0] = cal.getTime();
+        }
+
+        //align dateRangeArr[1] to end of day
+        if(dateRangeArr[1] != null) {
+            cal.setTime(dateRangeArr[1]);
+            if (cal.get(Calendar.HOUR_OF_DAY)==0 && cal.get(Calendar.MINUTE)==0 && cal.get(Calendar.SECOND)==0) {
+                cal.set(Calendar.HOUR_OF_DAY, 23);
+                cal.set(Calendar.MINUTE, 59);
+                cal.set(Calendar.SECOND, 59);
+            }
+
+            dateRangeArr[1] = cal.getTime();
+        }
 
         return dateRangeArr;
     }
@@ -122,11 +165,11 @@ public class StatService {
     public static ChartType stringToChartTypeEnum(String chartType) {
         if(chartType == null || chartType.equalsIgnoreCase("notChart"))
             return ChartType.NOT_CHART;
-        else if(chartType.equalsIgnoreCase("pie"))
+        else if("pie".equalsIgnoreCase(chartType))
             return ChartType.PIE;
-        else if(chartType.equalsIgnoreCase("line"))
+        else if("line".equalsIgnoreCase(chartType))
             return ChartType.LINE;
-        else if(chartType.equalsIgnoreCase("bar"))
+        else if("bar".equalsIgnoreCase(chartType))
             return ChartType.BAR;
         else return ChartType.NOT_CHART;
     }
@@ -160,31 +203,33 @@ public class StatService {
 
             //In specific case, FE returned value as String "undefined"
             String value = entry.getValue();
-            if(value.equals("undefined")) value = "";
+            if("undefined".equals(value)) value = "";
 
             if(entry.getKey().equalsIgnoreCase(searchDate)) {
                 stringRange = value;
-            } else if(entry.getKey().equalsIgnoreCase("searchRootDir")) {
+            } else if("searchRootDir".equalsIgnoreCase(entry.getKey())) {
                 String rootGroupIdString = value;
                 filter.setRootGroupId(Tools.getIntValue(rootGroupIdString, -1));
-            } else if(entry.getKey().equalsIgnoreCase("searchFilterBotsOut")) {
+            } else if("searchFilterBotsOut".equalsIgnoreCase(entry.getKey())) {
                 String filterBotsOutString = value;
                 filter.setFilterBotsOut(Boolean.parseBoolean(filterBotsOutString));
-            }  else if(entry.getKey().equalsIgnoreCase("chartType")) {
+            }  else if("chartType".equalsIgnoreCase(entry.getKey())) {
                 String chartTypString = value;
                 filter.setChartType(stringToChartTypeEnum(chartTypString));
-            } else if(entry.getKey().equalsIgnoreCase("searchUrl")) {
+            } else if("searchUrl".equalsIgnoreCase(entry.getKey())) {
                 filter.setUrl(value);
-            } else if(entry.getKey().equalsIgnoreCase("searchEngine")) {
+            } else if("searchEngine".equalsIgnoreCase(entry.getKey())) {
                 filter.setSearchEngineName(value);
-            } else if(entry.getKey().equalsIgnoreCase("searchWebPage")) {
+            } else if("searchWebPage".equalsIgnoreCase(entry.getKey())) {
                 String webPageIdString = value;
                 filter.setWebPageId(Tools.getIntValue(webPageIdString, -1));
+            } else if("statType".equalsIgnoreCase(entry.getKey())) {
+                filter.setStatType( value );
             }
         }
 
         //Process dateString
-        Date[] dateRange = processDateRangeString(stringRange);
+        Date[] dateRange = processDateRangeString(stringRange, filter.getStatType());
 
         //Set date range into filter
         filter.setDateFrom(dateRange[0]);
@@ -230,27 +275,34 @@ public class StatService {
 
         //Set filter bots out
         filter.setFilterBotsOut(Tools.getBooleanValue(request.getParameter("searchFilterBotsOut"), false));
-        if(filter.getFilterBotsOut() == false)
+        if(Boolean.FALSE.equals(filter.getFilterBotsOut()))
             filter.setFilterBotsOut(Tools.getBooleanValue(request.getParameter("filterBotsOut"), false));
 
         //Set chart type
         String chartType = Tools.getStringValue(request.getParameter("searchChartType"), "notChart");
-        if(chartType.equals("notChart")) chartType = Tools.getStringValue(request.getParameter("chartType"), "notChart");
-            filter.setChartType(stringToChartTypeEnum(chartType));
+        if("notChart".equals(chartType)) chartType = Tools.getStringValue(request.getParameter("chartType"), "notChart");
+
+        filter.setChartType(stringToChartTypeEnum(chartType));
 
         //Set url
         filter.setUrl(Tools.getStringValue(request.getParameter("searchUrl"), ""));
-        if(filter.getUrl().equals(""))
+        if("".equals( filter.getUrl() ))
             filter.setUrl(Tools.getStringValue(request.getParameter("url"), ""));
 
         //Set search engine name
         filter.setSearchEngineName(Tools.getStringValue(request.getParameter("searchEngine"), ""));
-        if(filter.getSearchEngineName().equals(""))
+        if("".equals( filter.getSearchEngineName() ))
             filter.setSearchEngineName(Tools.getStringValue(request.getParameter("engine"), ""));
 
+        //Set web page id
         filter.setWebPageId(Tools.getIntValue(request.getParameter("searchWebPage"), -1));
         if(filter.getWebPageId() == -1)
             filter.setWebPageId(Tools.getIntValue(request.getParameter("webPage"), -1));
+
+        //Set stat type
+        filter.setStatType( Tools.getStringValue(request.getParameter("searchStatType"), "days") );
+        if("days".equals( filter.getStatType() ))
+            filter.setStatType( Tools.getStringValue(request.getParameter("statType"), "days") );
 
         return filter;
     }
@@ -264,7 +316,7 @@ public class StatService {
             columns = StatTableDB.getSearchEnginesCount(MAX_ROWS,  filter.getDateFrom(), filter.getDateTo(), filter.getRootGroupIdQuery());
         else
             columns = StatTableDB.getSearchEnginesQuery(MAX_ROWS, filter.getDateFrom(), filter.getDateTo(), filter.getRootGroupIdQuery());
-    
+
         return columnsToItems(columns, filter.getChartType());
     }
 

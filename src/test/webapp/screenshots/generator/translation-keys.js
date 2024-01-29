@@ -6,6 +6,13 @@ Before(({ I, login }) =>{
 });
 
 Scenario('translation keys', async ({ I, DTE, Document }) => {
+
+    I.click("button.btn-import-dialog");
+    I.waitForElement("#datatableImportModal");
+    I.clickCss("label[for=dt-settings-import4]");
+    Document.screenshot("/admin/settings/translation-keys/dataTable-import.png", 1280, 500);
+    I.click("#datatableImportModal .modal-footer button.btn-outline-secondary");
+
     var entityName = "editor.disableAfterEnd";
     var entityName2 = "admin.fck.last_pages";
 

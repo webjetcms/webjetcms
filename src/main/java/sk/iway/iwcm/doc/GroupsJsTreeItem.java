@@ -15,6 +15,10 @@ public class GroupsJsTreeItem extends JsTreeItem {
     //private UserDetails user;
 
     public GroupsJsTreeItem(GroupDetails group, UserDetails user, boolean showPages) {
+        this(group, user, showPages, true);
+    }
+
+    public GroupsJsTreeItem(GroupDetails group, UserDetails user, boolean showPages, boolean checkGroupsPerms) {
         this.group = group;
         //this.user = user;
 
@@ -22,14 +26,14 @@ public class GroupsJsTreeItem extends JsTreeItem {
         setText(Tools.replace(group.getGroupName(), "&#47;", "/"));
         setVirtualPath(group.getVirtualPath());
 
-        setIcon(getIconPrivate(user));
+        setIcon(getIconPrivate(user, checkGroupsPerms));
         setState(getStatePrivate());
 
         setChildren(hasChildren(showPages));
         setType(JsTreeItemType.GROUP);
     }
 
-    private String getIconPrivate(UserDetails user) {
+    private String getIconPrivate(UserDetails user, boolean checkGroupsPerms) {
         String faPrefix = "fas";
 
         if (group.getMenuType()==GroupDetails.MENU_TYPE_HIDDEN) {
@@ -44,7 +48,8 @@ public class GroupsJsTreeItem extends JsTreeItem {
             addTextIcon("fas fa-lock");
         }
 
-        if (GroupsDB.isGroupEditable(user, group.getGroupId())==false) {
+        //If user have allgroupPerm (for example cmp_stat_seeallgroups in stat section) we are showing all groups as editable
+        if (checkGroupsPerms && GroupsDB.isGroupEditable(user, group.getGroupId())==false) {
             return faPrefix+" fa-folder-times";
         }
 

@@ -457,7 +457,15 @@ export class WebPagesDatatable {
             this.webpagesDatatable.button().add(buttonCounter+2, {
                 text: '<i class="far fa-download"></i>',
                 action: function (e, dt, node) {
-                    WJ.openPopupDialog("/components/import_web_pages/import_pages.jsp?groupId="+window.lastGroup.groupId);
+                    let groupId = 0;
+                    if (typeof window.lastGroup != "undefined" && window.lastGroup != null && typeof window.lastGroup.groupId != "undefined") {
+                        groupId = window.lastGroup.groupId;
+                    }
+                    //this apend on load where lastGroup is not initialized
+                    if (typeof window.lastGroup != "undefined" && window.lastGroup == null && window.selectedNode != null) {
+                        if (typeof window.selectedNode.groupDetails != "undefined") groupId = window.selectedNode.groupDetails.groupId;
+                    }
+                    WJ.openPopupDialog("/components/import_web_pages/import_pages.jsp?groupId="+groupId);
                 },
                 init: function ( dt, node, config ) {
                     let button = this;

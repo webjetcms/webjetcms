@@ -55,6 +55,20 @@ export function bindExportButton(TABLE, DATA) {
             }
         }
 
+        //skontroluj externe filtre
+        try {
+            for (var i = 0; i < DATA.columns.length; i++) {
+                var column = DATA.columns[i];
+                //over, ci existuje input v extfiltri
+                if ($("#" + DATA.id + "_extfilter .dt-extfilter-" + column.name).length > 0) {
+                    var value = column.searchVal;
+                    if (typeof value !== "undefined" && value !== "") {
+                        restParams.push({name: "search" + column.name, value: value});
+                    }
+                }
+            }
+        } catch (e) {console.log(e);}
+
         //console.log("restParams=", restParams);
 
         const data = await $.get({
@@ -101,6 +115,7 @@ export function bindExportButton(TABLE, DATA) {
     }
 
     var exportButtonsEventsBinded = false;
+    $("#datatableExportModal").off("show.bs.modal");
     $("#datatableExportModal").on("show.bs.modal", function () {
         if (exportButtonsEventsBinded==false) {
             exportButtonsEventsBinded = true;
@@ -117,6 +132,7 @@ export function bindExportButton(TABLE, DATA) {
     });
 
     $(".dt-settings-export-printsettings").toggle(false);
+    $("#datatableExportModal input[name=dt-settings-extend]").off("click");
     $("#datatableExportModal input[name=dt-settings-extend]").on("click", function (e) {
         let value = e.target.value;
         //console.log("CLICK value=", value);
@@ -129,6 +145,7 @@ export function bindExportButton(TABLE, DATA) {
         }
     });
 
+    $('#datatableExportModal').off("click", ".btn-primary");
     $('#datatableExportModal').on("click", ".btn-primary", function () {
         //console.log("EXPORT MODAL CLICK, id=", window.datatableExportModal.tableId, "tableID=", TABLE.DATA.id);
 
@@ -256,10 +273,12 @@ export function bindExportButton(TABLE, DATA) {
 
                     let rowData = c;
 
-                    if (DATA.id === 'forms-list' || DATA.id === 'form-detail') {
+                    if (DATA.id === 'form-detail') {
+                        //console.log("c.columnNamesAndValues=", c.columnNamesAndValues);
                         //pre formulare su data v columnNamesAndValues
                         Object.keys(c.columnNamesAndValues).forEach(function(key,index) {
-                            rowData[key] = c.columnNamesAndValues[key];
+                            //console.log("fixing column names, key=", key, "value=", c.columnNamesAndValues[key]);
+                            rowData["col_"+key] = c.columnNamesAndValues[key];
                         });
 
                         //odstran NULL hodnoty, pretoze tie su potom nahradene za vyraz nevyplnene, co vo formoch nechceme
@@ -268,7 +287,6 @@ export function bindExportButton(TABLE, DATA) {
                         });
 
                         delete rowData.columnNamesAndValues;
-
                         //console.log("Export rowData:", rowData);
                     }
 
@@ -360,6 +378,7 @@ export function bindExportButton(TABLE, DATA) {
         });
     });
 
+    $('#datatableExportModalOptions').off("click", "input");
     $('#datatableExportModalOptions').on("click", "input", function (event) {
         //console.log("click, event=", event, "this=", this);
         var $this = $(this);
@@ -378,6 +397,7 @@ export function bindExportButton(TABLE, DATA) {
 
 export function bindImportButton(TABLE, DATA) {
 
+    $("#datatableImportModal").off("click", ".btn-primary");
     $("#datatableImportModal").on("click", ".btn-primary", async () => {
         //console.log("IMPORT MODAL CLICK, id=", window.datatableImportModal.tableId, "tableID=", TABLE.DATA.id);
 
@@ -398,7 +418,6 @@ export function bindImportButton(TABLE, DATA) {
         function sendAjax() {
             var fixedUrl = url;
             if (dzchunkindex === 1 && importMode === "deleteimport") fixedUrl = WJ.urlAddParam(fixedUrl, "deleteOldData", "true");
-            if (importMode === "update") formData["updateByColumn"] = updateByColumn;
             return $.ajax({
                 type: 'POST',
                 url: fixedUrl,
@@ -430,6 +449,9 @@ export function bindImportButton(TABLE, DATA) {
                     //console.log("stringify=", JSON.stringify(readyData.data), "readyData=", readyData);
                     formData['dzchunksize'] = Buffer.byteLength(JSON.stringify(readyData));
                     formData['importedColumns'] = importedColumns;
+                    formData['importMode'] = importMode;
+                    formData["updateByColumn"] = updateByColumn;
+
                     dzchunkindex += 1;
                     //console.log("countedData"+dzchunkindex+"=", countedData);
 
@@ -514,7 +536,6 @@ export function bindImportButton(TABLE, DATA) {
             mainData.forEach(data => data[DATA.columns[0].data] = 0);
         } else {
             action = 'edit';
-            url = WJ.urlAddParam(url, "updateByColumn", updateByColumn);
         }
 
         let fileName = $("#insert-file").val();
@@ -743,11 +764,17 @@ export function bindImportButton(TABLE, DATA) {
                 });
                 //console.log("mainData=", mainData);
             });
+
+            $("#datatableImportModal input[name=dt-settings-import]").off("click");
+            $("#datatableImportModal input[name=dt-settings-import]").on("click", function (e) {
+                $("#dt-import-update-by-column").toggle("update" === e.target.value||"onlyNew" === e.target.value);
+            });
         }
 
         importModalListenersBinded = true;
     });
 
+    $('#datatableImportModalOptions').off("click", "input");
     $('#datatableImportModalOptions').on("click", "input", function (event) {
         //console.log("click, event=", event, "this=", this);
         var $this = $(this);

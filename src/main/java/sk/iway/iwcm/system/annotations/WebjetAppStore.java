@@ -14,4 +14,5 @@ public @interface WebjetAppStore {
     String imagePath() default "";
     String galleryImages() default "";
     String domainName() default "";
+    boolean commonSettings() default true;
 }

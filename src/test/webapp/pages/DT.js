@@ -73,7 +73,8 @@ module.exports = {
             I.wait(2);
         }
 
-        I.click({ css: "div.dataTables_scrollHeadInner button.dt-filtrujem-" + name });
+        //because of firefox we use forceClick
+        I.forceClick({ css: "div.dataTables_scrollHeadInner button.dt-filtrujem-" + name });
         //this.waitForLoader();
         //this is faster
         I.wait(0.3);
@@ -96,12 +97,14 @@ module.exports = {
     //zresetuje nastavenie datatabulky (poradie stlpcov, usporiadanie, zoznam stlpcov)
     resetTable(name = "datatableInit") {
       var container = "#"+name+"_wrapper";
+      I.wait(1); //must be here otherwise on webpages it will not reset sorting correctly after load
       this.waitForLoader();
       I.click(container+" button.buttons-settings");
       I.click(container+" button.buttons-colvis");
       I.waitForVisible("div.dt-button-collection div.dropdown-menu.dt-dropdown-menu div.dt-button-collection div.dropdown-menu.dt-dropdown-menu");
-      I.click("Obnoviť");
+      I.clickCss(container+" div.colvispostfix_wrapper button.buttons-colvisRestore");
       I.waitForInvisible("div.dt-button-collection div.dropdown-menu.dt-dropdown-menu div.dt-button-collection div.dropdown-menu.dt-dropdown-menu");
+      this.waitForLoader();
     },
 
     showColumn(columnText, tableId="datatableInit") {
@@ -109,7 +112,7 @@ module.exports = {
         I.click(container+" button.buttons-settings");
         I.click(container+" button.buttons-colvis");
         I.waitForVisible("div.dt-button-collection div.dropdown-menu.dt-dropdown-menu div.dt-button-collection div.dropdown-menu.dt-dropdown-menu");
-        I.click(columnText);
+        I.click(locate("div.colvisbtn_wrapper button.buttons-columnVisibility").withText(columnText));
         I.click("button.btn.btn-primary.dt-close-modal");
         I.waitForInvisible("div.dt-button-collection div.dropdown-menu.dt-dropdown-menu div.dt-button-collection div.dropdown-menu.dt-dropdown-menu");
     },

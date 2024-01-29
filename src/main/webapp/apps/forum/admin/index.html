@@ -1,15 +1,16 @@
 <script data-th-inline="javascript">
     let columns = /*[(${layout.getDataTableColumns("sk.iway.iwcm.components.forum.jpa.DocForumEntity")})]*/ '';
+    let url = "/admin/rest/forum";
 </script>
+
 <script type="text/javascript">
     var forumDataTable;
 
-    window.undeleteEntity = function (forumId) {
-        forumDataTable.executeAction("undelete", false, null, null, null, forumId);
+    window.recoverForum = function (forumId) {
+        forumDataTable.executeAction("recoverForum", false, null, null, null, forumId);
     }
 
     window.domReady.add(function () {
-
         WJ.breadcrumb({
             id: "forum",
             tabs: [
@@ -21,12 +22,16 @@
             ]
         });
 
-        let url = "/admin/rest/forum";
+        var tabs = [
+            { id: 'main', title: '[[#{datatable.tab.basic}]]', selected: true},
+            { id: 'advanced', title: '[[#{datatable.tab.advanced}]]' },
+        ];
 
         forumDataTable = WJ.DataTable({
             url: url,
             serverSide: true,
             columns: columns,
+            tabs: tabs,
             id: "forumDataTable",
             fetchOnEdit: true,
             fetchOnCreate: true,
@@ -38,6 +43,22 @@
         forumDataTable.hideButton("create");
         forumDataTable.hideButton("import");
         forumDataTable.hideButton("duplicate");
+
+        forumDataTable.EDITOR.on('open', function (e, mode, action) {
+            let isMessageBoard = e.currentTarget.currentJson["forumGroupEntity"]["messageBoard"];
+
+            if(!isMessageBoard) {
+                $(".DTE_Field_Name_forumGroupEntity\\.advertisementType").hide();
+                $(".DTE_Field_Name_forumGroupEntity\\.adminPerms").hide();
+            }
+
+            $("#DTE_Field_forumGroupEntity-messageConfirmation_0").on("change", function() {
+                if($("#DTE_Field_forumGroupEntity-messageConfirmation_0").is(':checked'))
+                    $(".DTE_Field_Name_forumGroupEntity\\.approveEmail").show();
+                else
+                    $(".DTE_Field_Name_forumGroupEntity\\.approveEmail").hide();
+            });
+        });
 
         var buttonCounter = 4;
         forumDataTable.button().add(buttonCounter++, {
@@ -65,31 +86,9 @@
         });
 
         forumDataTable.button().add(buttonCounter++, {
-            text: '<i class="fa-regular fa-gear"></i>',
-            action: function (e, dt, node) {
-                let selectedRows = dt.rows({ selected: true }).data();
-                for (let i=0; i<selectedRows.length; i++) {
-                    let row = selectedRows[i];
-                    var docId = row.docDetails.docId;
-
-                    var options = "toolbar=no,scrollbars=no,resizable=yes,width=800,height=850;"
-	                window.open("/components/forum/admin_forum_open.jsp?docid=" + docId, 'forumSettings' + docId, options);
-                }
-            },
-            init: function ( dt, node, config ) {
-                $.fn.dataTable.Buttons.showIfRowSelected(this, dt);
-            },
-            className: 'btn btn-outline-secondary',
-            attr: {
-                'title': '[[#{apps.forum.show_administration}]]',
-                'data-toggle': 'tooltip'
-            }
-        });
-
-        forumDataTable.button().add(buttonCounter++, {
             text: '<i class="fa-solid fa-trash-can-undo" style="color: #fabd00;"></i>',
             action: function (e, dt, node) {
-                forumDataTable.executeAction("undelete", false);
+                forumDataTable.executeAction("recoverForum", false);
             },
             init: function ( dt, node, config ) {
                 $.fn.dataTable.Buttons.showIfRowSelected(this, dt);
@@ -97,6 +96,36 @@
             className: 'btn btn-outline-secondary',
             attr: {
                 'title': '[[#{components.banner.recover}]]',
+                'data-toggle': 'tooltip'
+            }
+        });
+
+        forumDataTable.button().add(buttonCounter++, {
+            text: '<i class="fa-solid fa-circle-check"></i>',
+            action: function (e, dt, node) {
+                forumDataTable.executeAction("approveForum");
+            },
+            init: function ( dt, node, config ) {
+                $.fn.dataTable.Buttons.showIfRowSelected(this, dt);
+            },
+            className: 'btn btn-success',
+            attr: {
+                'title': '[[#{components.forum.button.confirm}]]',
+                'data-toggle': 'tooltip'
+            }
+        });
+
+        forumDataTable.button().add(buttonCounter++, {
+            text: '<i class="fa-solid fa-circle-xmark"></i>',
+            action: function (e, dt, node) {
+                forumDataTable.executeAction("rejectForum");
+            },
+            init: function ( dt, node, config ) {
+                $.fn.dataTable.Buttons.showIfRowSelected(this, dt);
+            },
+            className: 'btn btn-danger buttons-divider',
+            attr: {
+                'title': '[[#{components.forum.button.not_confirm}]]',
                 'data-toggle': 'tooltip'
             }
         });

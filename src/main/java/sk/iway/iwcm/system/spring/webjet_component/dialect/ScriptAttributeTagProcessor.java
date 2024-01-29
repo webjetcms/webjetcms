@@ -45,7 +45,7 @@ public class ScriptAttributeTagProcessor extends AbstractIwcmAttributeTagProcess
         }
 
         Date now = new Date(Tools.getNow());
-        List<InsertScriptBean> listInsertScript = InsertScriptDB.getInstance().filter(null, attributeValue, null, docId, groupId, now, now);
+        List<InsertScriptBean> listInsertScript = InsertScriptDB.getInstance().filter(null, "^"+attributeValue+"$", null, docId, groupId, now, now);
 
         if (Tools.isEmpty(listInsertScript)) {
             Logger.debug(ScriptAttributeTagProcessor.class, "listInsertScript for postition {} is empty of parent groups list for group id {} is empty", attributeValue, groupId);

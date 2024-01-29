@@ -41,6 +41,7 @@ block content
                 let dir = urlParams.get('dir')
                 //console.log("dir=", dir);
                 if (dir == null) dir = "[(${baseDir})]";
+                window.treeInitialJson = [(${treeInitialJson})];
 
                 window.getJstreeUrl = function() {
                     if (somStromcek==null) somStromcek = $('#SomStromcek');
@@ -88,7 +89,8 @@ block content
                             }
 
                             $('.tree-col .dt-header-row .buttons-edit').removeClass("processing");
-                        }
+                        },
+                        initialData: dtWJ.getEmptyData(true)
                     });
 
                     var url = "/admin/rest/components/gallery";
@@ -150,7 +152,8 @@ block content
                         tabs: tabs,
                         fetchOnCreate: true,
                         fetchOnEdit: true,
-                        idAutoOpener: false
+                        idAutoOpener: false,
+                        initialData: dtWJ.getEmptyData(true)
                     });
                     //- console.log("galleryTable 6", galleryTable);
                     //- console.log("galleryTable buttons", galleryTable.button());
@@ -335,14 +338,16 @@ block content
                     $('#SomStromcek').on("changed.jstree", function(e, data) {
                         //console.log("changed.jstree e=", e, "data=", data);
 
-                        if ("deselect_all"==data.action) return;
+                        if ("deselect_all"==data.action || "model"==data.action) return;
 
                         var node = selectedNode = data.instance.get_node(data.selected);
                         //console.log("node", node);
 
                         if (node === false) return;
 
-                        setCurrentGalleryDimension(node.original.galleryDimension);
+                        var isEditable = true;
+                        if (typeof node.original.icon != "undefined" && node.original.icon.indexOf("folder-times")!=-1) isEditable = false;
+                        setCurrentGalleryDimension(node.original.galleryDimension, isEditable);
 
                         if (node == null) {
                             console.warn("Node null");
@@ -356,6 +361,7 @@ block content
                     });
 
                     function setGalleryTablePath(virtualPath) {
+                        //console.log("setGalleryTablePath", virtualPath);
                         //https://datatables.net/reference/type/column-selector
                         galleryTable.columns("imagePath:name").search("^"+virtualPath+"$").draw();
                         adminUpload.setDestinationFolder(virtualPath);
@@ -396,12 +402,28 @@ block content
                         $('#SomStromcek').jstree(true).refresh();
                     }, false);
 
-                    function setCurrentGalleryDimension(galleryDimension) {
+                    function setCurrentGalleryDimension(galleryDimension, isEditable=true) {
                         window.lastGalleryDimension = galleryDimension;
+
+                        if (isEditable===true) {
+                            $('.tree-col .dt-header-row .buttons-edit').removeClass("disabled");
+                            $('.tree-col .dt-header-row .buttons-remove').removeClass("disabled");
+                            $('#galleryTable_wrapper .dt-header-row .btn-success').removeClass("disabled");
+                            adminUpload.element.style.display="";
+                            adminUpload.element.style.visibility="hidden";
+                        } else {
+                            $('.tree-col .dt-header-row .buttons-edit').addClass("disabled");
+                            $('.tree-col .dt-header-row .buttons-remove').addClass("disabled");
+                            $('#galleryTable_wrapper .dt-header-row .btn-success').addClass("disabled");
+                            adminUpload.element.style.display="none";
+                        }
+
                         loadTablesForGalleryDimesnion(galleryDimension.id, galleryDimension.path);
                     }
 
                     function loadTablesForGalleryDimesnion(dimensionId, path) {
+
+                        //console.log("loadTablesForGalleryDimesnion", dimensionId, path);
 
                         galleryDimensionDatatable.ajax.url(urlDimension + "?dimensionId=" + dimensionId + "&path=" + encodeURIComponent(path));
 
@@ -527,7 +549,7 @@ block content
 
                         }
                         imageEditorInstance = new module.ImageEditor(document.querySelector("#photoEditorContainer"), options);
-                        //console.log("ImageEditor initialized");
+                        // console.log("ImageEditor initialized");
                     });
                 };
 
@@ -568,7 +590,17 @@ block content
                     //console.log("tabclick, id=", e.detail.id, " e=", e);
                     if (e.detail.id === 'galleryTable-areaOfInterest') initializeAreaOfInterest(e);
                     if (e.detail.id === 'galleryTable-photoeditor') {
-                        initializeImageEditor(e);
+                        if(imageEditorInstance === null || imageEditorInstance === undefined) {
+                            initializeImageEditor(e);
+                        } else {
+                             let now = (new Date()).getTime();
+                             imageEditorInstance.loadImageFromURL(
+                                  `${$("#DTE_Field_imagePath").val()}/o_${$("#DTE_Field_imageName").val()}?v=${now}`,
+                                   $("#DTE_Field_imageName").val(),
+                             ).then(()=> {
+                                    imageEditorInstance.clearUndoStack();
+                            });
+                        };
                     }
                 }, false);
 

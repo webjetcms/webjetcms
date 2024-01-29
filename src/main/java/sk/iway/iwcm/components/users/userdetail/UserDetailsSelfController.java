@@ -63,7 +63,9 @@ public class UserDetailsSelfController extends DatatableRestControllerV2<UserDet
 	public UserDetailsSelfEntity editItem(UserDetailsSelfEntity entity, long id) {
 		if (id != getUser().getUserId()) throwPermsDenied();
 
-        return super.editItem(entity, id);
+        UserDetailsSelfEntity saved = super.editItem(entity, id);
+        UserDetailsService.savePassword(entity, entity.getId().intValue());
+        return saved;
 	}
 
     @Override

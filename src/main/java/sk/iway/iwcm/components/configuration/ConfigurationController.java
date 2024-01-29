@@ -7,11 +7,13 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.Errors;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.Identity;
+import sk.iway.iwcm.InitServlet;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.components.configuration.model.ConfDetailsDto;
@@ -53,6 +55,7 @@ public class ConfigurationController extends DatatableRestControllerV2<ConfDetai
         try {
             //musime setnut nejake ID
             confDetailsDto.setId(Tools.getNow());
+            setForceReload(true);
             return configurationService.save(getUser(), confDetailsDto);
         } catch (Exception e) {
             Logger.error(ConfigurationController.class, e);
@@ -65,6 +68,7 @@ public class ConfigurationController extends DatatableRestControllerV2<ConfDetai
         try {
             //ID sa nam v beane neposiela, takze setnime na rovnake ako bolo poslane
             confDetailsDto.setId(id);
+            setForceReload(true);
             return configurationService.save(getUser(), confDetailsDto);
         } catch (Exception e) {
             Logger.error(ConfigurationController.class, e);
@@ -109,5 +113,15 @@ public class ConfigurationController extends DatatableRestControllerV2<ConfDetai
         }
 
         return configurationService.getAutocomplete(user, term);
+    }
+
+    @PostMapping("/restart")
+    public void restart() {
+        Identity user = getUser();
+        if (null == user) {
+            return;
+        }
+
+        InitServlet.restart();
     }
 }

@@ -27,17 +27,17 @@
 	String filterBloggerName = Tools.getStringValue(request.getParameter("filterBloggerName"), "");
 
 	int blogGroupId = DocDB.getBlogGroupId();//zistime si group id, do ktorej su zaradeni blogeri
+	System.out.println("blogGroupId: " + blogGroupId);
 
-	if (blogGroupId == -1)
+	if (blogGroupId < 1)
 	{
 %>
 
 		<br />
 		<iwcm:text key="components.blog.admin.no_blog_group"/> <br /> <br />
-		<input type="button" class="button100" value="<iwcm:text key="components.blog.admin.found_blog_group" />" onclick="javascript:openPopupDialogFromLeftMenu('/admin/editusergroup.do?id=-1&userGroupName=Blog');"/>
+		<input type="button" class="button100" value="<iwcm:text key="components.blog.admin.found_blog_group" />" onclick="javascript:openPopupDialogFromLeftMenu('/admin/v9/users/user-groups/?id=-1&userGroupName=Blog', 800, 600);"/>
 <%
-		return;
-	}
+	} else {
 
 	List<UserDetails> users = UsersDB.getUsersByGroup(blogGroupId);
 	if (Tools.isNotEmpty(filterBloggerName))
@@ -138,4 +138,7 @@
 
 <input type="button" onclick="javascript:openPopupDialogFromLeftMenu('/components/blog/blog_new_user.jsp');" class="button100" value="<iwcm:text key="components.blog.add_user"/>" />
 
+<%
+	}
+%>
 <%@ include file="/admin/layout_bottom.jsp" %>

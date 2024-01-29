@@ -37,6 +37,7 @@ public class DatatableRequest<K, V>
 	private boolean writeDirectlyToDestination;
 	private String updateByColumn;
 	private boolean deleteOldData;
+	private String importMode;
 
 	//set of columns in excel import (filled in export-import.js during xlsx parsing)
 	private Set<String> importedColumns;

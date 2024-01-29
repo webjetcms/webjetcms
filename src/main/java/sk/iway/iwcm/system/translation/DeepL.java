@@ -23,8 +23,6 @@ import sk.iway.iwcm.Tools;
  */
 public class DeepL {
 
-    private static final String DOMAIN_NAME = "https://api-free.deepl.com";
-    private static final String API_URL = "/v2/translate";
     private static final String CACHE_KEY = "DeepL.translations";
 
     private DeepL() {
@@ -41,6 +39,9 @@ public class DeepL {
     }
 
     public static String translate(String text, String fromLanguage, String toLanguage) {
+
+        if ("cz".equalsIgnoreCase(toLanguage)) toLanguage = "cs";
+        if ("cz".equalsIgnoreCase(fromLanguage)) fromLanguage = "cs";
 
         Cache cache = Cache.getInstance();
         @SuppressWarnings("unchecked")
@@ -59,19 +60,21 @@ public class DeepL {
             if (translatedText!=null) return translatedText;
         }
 
+        String apiUrl = Constants.getString("deepl_api_url");
+
         try{
             //DeepL has a problem with nbsp entity
             text = Tools.replace(text, "&nbsp;", " ");
 
-            String response = Request.Post(DOMAIN_NAME+API_URL)
+            String response = Request.Post(apiUrl)
                 .bodyForm(Form.form()
-                    .add("auth_key", getAuthKey())
                     .add("text", text)
                     .add("source_lang", fromLanguage.toUpperCase())
                     .add("target_lang", toLanguage.toUpperCase())
                     .add("tag_handling", "html")
                     .build(), Consts.UTF_8)
                 .setHeader("Content-Type", "application/x-www-form-urlencoded; charset=utf-8")
+                .setHeader("Authorization", "DeepL-Auth-Key "+getAuthKey())
                 .execute().returnContent().asString(StandardCharsets.UTF_8);
 
             JSONObject json = new JSONObject(response);
@@ -84,7 +87,7 @@ public class DeepL {
                 if (Tools.isNotEmpty(translatedText)) return translatedText;
             }
 		} catch (Exception e){
-            Logger.error(DeepL.class,"Unable to connect to '" + DOMAIN_NAME + "'");
+            Logger.error(DeepL.class,"Unable to connect to '" + apiUrl + "'");
             Logger.error(DeepL.class, e);
         }
 

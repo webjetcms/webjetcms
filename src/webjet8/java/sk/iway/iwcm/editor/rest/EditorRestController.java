@@ -10,7 +10,6 @@ import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 
-import org.apache.struts.action.Action;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -52,7 +51,7 @@ import springfox.documentation.annotations.ApiIgnore;
 @RequestMapping(path = "/admin/rest/document")
 @PreAuthorize("@WebjetSecurityService.hasPermission('menuWebpages')")
 @SuppressWarnings({"rawtypes", "unchecked"})
-public class EditorRestController extends Action
+public class EditorRestController
 {
 	@Autowired
 	private HttpServletRequest request;

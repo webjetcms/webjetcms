@@ -52,6 +52,8 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.math.BigDecimal;
 import java.sql.Timestamp;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.*;
 
 /**
@@ -139,7 +141,13 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 					//ak je hiddenEditor preskoc
 					if (hiddenEditor[0]==true) continue;
 				}
-				if (field.getType().isAssignableFrom(Date.class) || field.getType().isAssignableFrom(java.sql.Date.class)) {
+				boolean alwaysCopy = false;
+				if (annotation.alwaysCopyProperties().length>0) {
+					alwaysCopy = annotation.alwaysCopyProperties()[0];
+					//implicit false value
+					if (alwaysCopy==false) continue;
+				}
+				if (alwaysCopy || field.getType().isAssignableFrom(Date.class) || field.getType().isAssignableFrom(java.sql.Date.class) || field.getType().isAssignableFrom(LocalDate.class) || field.getType().isAssignableFrom(LocalDateTime.class)) {
 					//ak je to datum tak ho dajme do ignore, aby isiel zadat v GUI prazdny datum
 					alwaysCopyProperties.add(field.getName());
 				}
@@ -418,6 +426,23 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 		if (isExporting()) action = ProcessItemAction.GETONE;
 
 		for (T entity : page.getContent()) {
+			processFromEntity(entity, action);
+		}
+	}
+
+	/**
+	 * Vykona upravy vo vsetkych entitach v page objekte pred vratenim cez REST rozhranie
+	 * napr. vyvola potrebne editorFields nastavenia (from entity to editorFields)
+	 * @param entities - list entit
+	 * @param action - typ zmeny - create,edit,getall...
+	 */
+	public void processFromEntity(List<T> entities, ProcessItemAction action) {
+		if(entities == null) return;
+
+		//pri exporte potrebujeme vsetky data z editorFields, takze sa tvarime ako rezim GETONE
+		if (isExporting()) action = ProcessItemAction.GETONE;
+
+		for (T entity : entities) {
 			processFromEntity(entity, action);
 		}
 	}
@@ -955,6 +980,12 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 		setForceReload(false);
 		setImportedColumns(datatableRequest.getImportedColumns());
 
+		String updateByColumn = datatableRequest.getUpdateByColumn();
+		getThreadData().setUpdateByColumn(updateByColumn);
+
+		String importMode = datatableRequest.getImportMode();
+		getThreadData().setImportMode(importMode);
+
 		int rowCounter = 0;
 		if (isImporting && lastImportedRow!=null) rowCounter = lastImportedRow.intValue();
 		for (Long id : datatableRequest.getData().keySet()) {
@@ -1051,6 +1082,22 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 					throwError("datatables.error.system.js");
 				}
 
+				if (isImporting && "onlyNew".equals(importMode) && Tools.isNotEmpty(updateByColumn)) {
+					try {
+						List<T> itemsBy = findItemBy(updateByColumn, entity);
+						if (itemsBy.isEmpty()==false) {
+							//SKIP import, entity allready exists
+							Logger.debug(DatatableRestControllerV2.class, "import SKIP entity - allready exists, entity="+entity+", "+updateByColumn+"="+updateByColumn);
+							response.setForceReload(Boolean.TRUE);
+							return ResponseEntity.ok(response);
+						}
+					} catch (IllegalAccessException | NoSuchMethodException | InvocationTargetException | InstantiationException e) {
+						response.setError(String.format("Field: %s not found", updateByColumn));
+						Logger.error(DatatableRestControllerV2.class, e);
+						return ResponseEntity.ok(response);
+					}
+				}
+
 				beforeSave(entity);
 
 				ResponseEntity<T> re = add(entity);
@@ -1063,7 +1110,6 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 			} else if (datatableRequest.isUpdate()) {
 				beforeSave(entity);
 
-				String updateByColumn = datatableRequest.getUpdateByColumn();
 				ResponseEntity<T> re=null;
 				// Ak updatujeme na zaklade stlpca v DB
 				if (Tools.isNotEmpty(updateByColumn)) {
@@ -1128,7 +1174,7 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 
 			T entity = null;
 			//id==-1 je v situacii ked sa nic neselectne, napr. pre refresh akciu
-			if (id != -1) entity = getOne(id);
+			if (id != -1) entity = getOneItem(id);
 			if (entity != null || id==-1) {
 				boolean success = processAction(entity, action);
 				if (success == false) {
@@ -1139,6 +1185,7 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 
 		//If thread notify list != null, set list into response
 		if(hasNotify()) response.setNotify(getThreadData().getNotify());
+		response.setForceReload(isForceReload());
 
 		return ResponseEntity.ok(response);
 	}
@@ -1419,4 +1466,20 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
         }
         return false;
     }
+
+	/**
+	 * column name which is used to update the row with import
+	 * @return
+	 */
+	public String getUpdateByColumn() {
+		return getThreadData().getUpdateByColumn();
+	}
+
+	/**
+	 * mode of import (append, update, onlyNew)
+	 * @return
+	 */
+	public String getImportMode() {
+		return getThreadData().getImportMode();
+	}
 }

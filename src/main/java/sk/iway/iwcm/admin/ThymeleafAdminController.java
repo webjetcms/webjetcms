@@ -92,6 +92,19 @@ public class ThymeleafAdminController {
       return new ModelAndView(forward);
    }
 
+   @PostMapping(path = { "/admin/v9/{page}/", "/admin/v9/{page}/{subpage:[^.]*}" }, consumes = { MediaType.MULTIPART_FORM_DATA_VALUE })
+   public ModelAndView defaultHandlerPost(@PathVariable(required = false) String page,
+         @PathVariable(required = false) String subpage,
+         @RequestParam(required = false) final MultiValueMap<String, String> allParams,
+         final ModelMap model,
+         final RedirectAttributes redirectAttributes,
+         final HttpServletRequest request) {
+
+         Logger.debug(ThymeleafAdminController.class, "post loaded admin: {}", page);
+
+         return defaultHandler(page, subpage, allParams, model, redirectAttributes, request);
+   }
+
    /**
     * Vykona forward pre admin cast aplikacii, tie sa nachadzaju v /app/MENO_APP/admin/ adresari
     * Technicky vykona forward na app/default.pug kde sa do vnutra stranky dynamicky includne

@@ -1,6 +1,19 @@
 {
     "news": [
         {
+            "title": "Verze 2024.0",
+            "perex": "WebJET verze 2024.0 je shodná s verzí 2023.52",
+            "link": "http://docs.webjetcms.sk/v2023/#/CHANGELOG-2023?id=_202352"
+        },{
+            "title": "Verze 2023.52",
+            "perex": "WebJET verze 2023.52 obsahuje novou verzi **aktualizace s popisem změn**, **klonování struktury** integrované s funkcí zrcadlení (včetně možnosti překladů), přidává možnost **obnovit** web stránku, nebo **celá složka z koše**, přidává **editor typu HTML** a možnost nastavení typu editoru přímo pro šablonu, **aplikacím** lze **zapnout zobrazení pouze pro zvolené typy zařízení** mobil, tablet, PC a samozřejmě zlepšuje bezpečnost a komfort práce.",
+            "link": "http://docs.webjetcms.sk/v2023/#/CHANGELOG-2023?id=_202352"
+        },{
+            "title": "Verze 2023.40",
+            "perex": "Verze 2023.40 přidává možnost **vyhledávání v průzkumníku**/souborech, možnost použít **video banner**, zlepšuje uživatelské rozhraní, zrychluje načítání dat ve web stránkách. **Banner** přidává nastavení omezení pro **zobrazení pouze v zadaných web stránkách a složkách**. Nová aplikace **HTTP hlavičky** umožňuje nastavovat HTTP hlavičky pro zadané URL adresy. **Médiím** jsme přidali **volitelná pole**. Zrcadlení struktury podporuje **překlad i těla web stránky** a zlepšuje detekci změn. Do nového designu předělané aplikace **Monitorování serveru, SEO, Novinky, Diskuse**.",
+            "link": "http://docs.webjetcms.sk/v2023/#/CHANGELOG-2023?id=_202340"
+        },
+        {
             "title": "Verze 2023.18",
             "perex": "Verze 2023.18 je zaměřen na integraci kódu původní verze 8. Zrušena je možnost přepnutí do staré verze 8 odstraněny jsou části kódu, které jsou již předělány do nového designu, nebo nejsou nadále podporovány.",
             "link": "http://docs.webjetcms.sk/v2023/#/CHANGELOG-2023?id=_202318"
@@ -69,16 +82,6 @@
             "title": "Verze 2021.13",
             "perex": "2021.13 zlepšuje uživatelský zážitek zvýšením rychlosti zobrazení seznamu web stránek, možnost zadat ID stránky nebo adresáře pro její zobrazení (včetně zapamatování v URL adrese prohlížeče), možnost nastavení zobrazených sloupců v datatabulce, překlady v JavaScript souborech a množství dalších vylepšení v celém WebJETu.",
             "link": "http://docs.webjetcms.sk/v2021/#/CHANGELOG?id=_202113"
-        },
-        {
-            "title": "Verze 2021.11",
-            "perex": "2021.11 přidává zobrazení historie web stránky s možností editace, zobrazení a porovnání.",
-            "link": "http://docs.webjetcms.sk/v2021/#/CHANGELOG?id=_202111"
-        },
-        {
-            "title": "Verze 2021.10",
-            "perex": "2021.10 opravuje chybu velikosti dialogového okna v editoru stránek a opravuje několik gramatických chyb v popisech aplikací.",
-            "link": "http://docs.webjetcms.sk/v2021/#/CHANGELOG?id=_202110"
         }
     ]
 }

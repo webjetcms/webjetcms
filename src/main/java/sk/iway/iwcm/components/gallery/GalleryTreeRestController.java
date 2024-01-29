@@ -10,19 +10,14 @@ import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.common.DocTools;
-import sk.iway.iwcm.doc.DocDB;
 import sk.iway.iwcm.io.IwcmFile;
-import sk.iway.iwcm.system.ConfDetails;
-import sk.iway.iwcm.system.ConstantsV9;
 import sk.iway.iwcm.system.datatable.Datatable;
-import sk.iway.iwcm.system.multidomain.MultiDomainFilter;
 import sk.iway.iwcm.admin.jstree.JsTreeItem;
 import sk.iway.iwcm.admin.jstree.JsTreeMoveItem;
 import sk.iway.iwcm.admin.jstree.JsTreeRestController;
 import sk.iway.iwcm.system.spring.NullAwareBeanUtils;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -36,28 +31,17 @@ import javax.servlet.http.HttpServletRequest;
 public class GalleryTreeRestController extends JsTreeRestController<GalleryDimension> {
 
     private final GalleryDimensionRepository repository;
+    private final GalleryTreeService galleryTreeService;
 
-    public GalleryTreeRestController(GalleryDimensionRepository repository) {
+    public GalleryTreeRestController(GalleryDimensionRepository repository, GalleryTreeService galleryTreeService) {
         this.repository = repository;
+        this.galleryTreeService = galleryTreeService;
     }
 
     @Override
     protected void tree(Map<String, Object> result, JsTreeMoveItem item) {
         String url = item.getUrl();
         if (Tools.isEmpty(url)) url = Constants.getString("imagesRootDir");
-
-        Set<String> blacklistedNames = new HashSet<>();
-        if (Constants.getBoolean("multiDomainEnabled")) {
-            String domainAlias = MultiDomainFilter.getDomainAlias(DocDB.getDomain(getRequest()));
-            if (Tools.isNotEmpty(domainAlias)) {
-                //blacklistni ostatne aliasy
-                List<ConfDetails> aliases = ConstantsV9.getValuesStartsWith("multiDomainAlias:");
-                for (ConfDetails conf : aliases) {
-                    String alias = conf.getValue();
-                    if (Tools.isNotEmpty(alias) && alias.equals(domainAlias)==false) blacklistedNames.add(alias);
-                }
-            }
-        }
 
         if (Tools.isNotEmpty(Constants.getString("imagesRootDir")) && url.startsWith(Constants.getString("imagesRootDir"))==false) {
             result.put("result", false);
@@ -71,34 +55,7 @@ public class GalleryTreeRestController extends JsTreeRestController<GalleryDimen
             return;
         }
 
-        IwcmFile directory = new IwcmFile(Tools.getRealPath(url));
-        final String urlFinal = url;
-        List<IwcmFile> files = Arrays.asList(directory.listFiles(file -> {
-            if (!file.isDirectory()) {
-                return false;
-            }
-            //odstran domenove aliasy z inych domen
-            if (blacklistedNames.size()>0 && blacklistedNames.contains(file.getName())) return false;
-
-            //toto chceme vzdy
-            if ("gallery".equals(file.getName())) return true;
-            if (file.getVirtualPath().contains("gallery")) return true;
-
-            //ak ma /images/tento-priecinok podpriecinok gallery tiez ho pridaj (testuje sa len pre prvu uroven)
-            if ("/images".equals(urlFinal) && FileTools.isDirectory(urlFinal+"/"+file.getName()+"/gallery")) return true;
-
-            //ak je nastaveny GalleryDimension povazuj to tiez za galeriu
-            Optional<GalleryDimension> gallery = repository.findFirstByPathLikeAndDomainId(urlFinal+"/"+file.getName()+"%", CloudToolsForCore.getDomainId());
-            if (gallery.isPresent()) return true;
-
-            return false;
-        }));
-
-        files = FileTools.sortFilesByName(files);
-
-        String dir = getRequest().getParameter("dir");
-
-        List<GalleryJsTreeItem> items = files.stream().map(f -> new GalleryJsTreeItem(f, dir, repository)).collect(Collectors.toList());
+        List<GalleryJsTreeItem> items = galleryTreeService.getItems(url);
 
         result.put("result", true);
         result.put("items", items);

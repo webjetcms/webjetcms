@@ -1,4 +1,4 @@
-Feature('wj9-webpage-mirroring-translate');
+Feature('webpages.mirroring-translate');
 
 var randomText;
 var add_webButton = (locate('#datatableInit_wrapper').find('.btn.btn-sm.buttons-create.btn-success.buttons-divider'));
@@ -63,7 +63,7 @@ async function testTranslation(I, DT, DTE, useAutotranslator) {
 
     // CREATE NEW DOC IN SK VERSION
     I.say("Creating initial SK version");
-    I.click( locate("a.jstree-anchor").withText("preklad_sk") );
+    I.jstreeClick("preklad_sk");
     I.click(add_webButton);
     I.waitForVisible("#DTE_Field_title");
     I.fillField("#DTE_Field_title", docTitleSK);
@@ -133,11 +133,13 @@ async function testTranslation(I, DT, DTE, useAutotranslator) {
     }
 
     //Delete this doc's
-    await deleteDocWithCheck(I, DT, docTitleSK, docTitleEN);
+    await deleteDocWithCheck(I, DT, DTE, docTitleSK, docTitleEN);
 }
 
-async function deleteDocWithCheck(I, DT, docNameA, docNameB) {
-    I.click( locate("a.jstree-anchor").withText("preklad_sk") );
+async function deleteDocWithCheck(I, DT, DTE, docNameA, docNameB) {
+    DT.waitForLoader();
+    I.wait(0.5);
+    I.jstreeClick("preklad_sk");
     DT.filter("title", docNameA);
     I.see(docNameA);
 
@@ -145,10 +147,11 @@ async function deleteDocWithCheck(I, DT, docNameA, docNameB) {
     I.clickCss("td.dt-select-td.sorting_1");
     I.click(remove_webButton);
     I.click("Zmazať", "div.DTE_Action_Remove");
-    I.see("Nenašli sa žiadne vyhovujúce záznamy");
+    DTE.waitForLoader();
+    I.waitForText("Nenašli sa žiadne vyhovujúce záznamy");
 
     // Check that EN version i gone too
-    I.click( locate("a.jstree-anchor").withText("preklad_en") );
+    I.jstreeClick("preklad_en");
     DT.filter("title", docNameB);
     I.see("Nenašli sa žiadne vyhovujúce záznamy");
 }
@@ -224,10 +227,12 @@ function checkBodyEN(I, DT, DTE, title, values, skipFirst2 = false) {
 
 function openDoc(I, DT, DTE, docName, version) {
 
+    DT.waitForLoader();
+    I.wait(0.5);
     if(version == "SK") {
-        I.click( locate("a.jstree-anchor").withText("preklad_sk") );
+        I.jstreeClick("preklad_sk");
     } else if(version == "EN") {
-        I.click( locate("a.jstree-anchor").withText("preklad_en") );
+        I.jstreeClick("preklad_en");
     } else return; //uknown
 
     DT.filter("title", docName);

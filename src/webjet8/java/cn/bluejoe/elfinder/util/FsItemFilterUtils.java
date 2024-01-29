@@ -5,6 +5,7 @@ import java.util.List;
 
 import cn.bluejoe.elfinder.controller.executor.FsItemEx;
 import cn.bluejoe.elfinder.service.FsItemFilter;
+import sk.iway.iwcm.DB;
 
 public abstract class FsItemFilterUtils
 {
@@ -36,7 +37,7 @@ public abstract class FsItemFilterUtils
                 boolean accept = false;
                 try
                 {
-                    if(item.getPath().contains(keyword))
+                    if(item.getPath().toLowerCase().contains(keyword) || DB.internationalToEnglish(item.getName()).toLowerCase().contains(keyword))
                     {
                         accept = true;
                     }

@@ -33,7 +33,6 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import javax.servlet.jsp.PageContext;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.SocketException;
@@ -244,7 +243,8 @@ public class PathFilter implements Filter
 			setAccessControlAllowOrigin(path, res);
 			setXXssProtection(res);
 			setFeaturePolicy(res);
-			setResponseHeaders(path, res);
+			setXRobotsTagValue(path, res);
+			setResponseHeaders(path, req, res);
 
 			//blokovanie akcie /showdoc.do
 			if(path.startsWith("/showdoc.do") && !"*".equals(Constants.getString("showDocActionAllowedDocids")))
@@ -257,7 +257,7 @@ public class PathFilter implements Filter
 				{
 					Adminlog.add(Adminlog.TYPE_CLIENT_SPECIFIC, "Nepovolene pouzitie /showdoc.do docId:"+docId+" showDocActionAllowedDocids : "+ Constants.getString("showDocActionAllowedDocids"), -1, -1);
 					res.setStatus(HttpServletResponse.SC_NOT_FOUND);
-					req.getRequestDispatcher("/404.jsp").forward(req, res);
+					forwardSafely("/404.jsp", req, res);
 					return;
 				}
 			}
@@ -281,7 +281,7 @@ public class PathFilter implements Filter
 							{
 								Logger.debug(PathFilter.class, "DOC ID="+docId+" is not allowed for domain "+ CloudToolsForCore.getDomainName());
 								res.setStatus(HttpServletResponse.SC_NOT_FOUND);
-								req.getRequestDispatcher("/404.jsp").forward(req, res);
+								forwardSafely("/404.jsp", req, res);
 								return;
 							}
 						}
@@ -313,7 +313,7 @@ public class PathFilter implements Filter
 					//je to pokus o XSS: /404.html/'onmouseover=prompt(915761)
 					Adminlog.add(Adminlog.TYPE_XSS, "XSS path="+path, -1, -1);
 					res.setStatus(HttpServletResponse.SC_FORBIDDEN);
-					req.getRequestDispatcher("/403.jsp").forward(req, res);
+					forwardSafely("/403.jsp", req, res);
 					return;
 				}
 			}
@@ -322,7 +322,7 @@ public class PathFilter implements Filter
 			{
 				//utok typu /;/admin/help/search.jsp, povolene je len ;jsessionid
 				res.setStatus(HttpServletResponse.SC_NOT_FOUND);
-				req.getRequestDispatcher("/404.jsp").forward(req, res);
+				forwardSafely("/404.jsp", req, res);
 				return;
 			}
 
@@ -344,7 +344,7 @@ public class PathFilter implements Filter
             {
                Adminlog.add(Adminlog.TYPE_XSS, "Swagger path is not enabled (conf. swaggerEnabled=false), path="+path, -1, -1);
                res.setStatus(HttpServletResponse.SC_NOT_FOUND);
-               req.getRequestDispatcher("/404.jsp").forward(req, res);
+               forwardSafely("/404.jsp", req, res);
 					return;
             }
          }
@@ -352,7 +352,7 @@ public class PathFilter implements Filter
 			if (path.contains(".DS_Store") || path.contains("debug.") || path.contains("config.properties"))
 			{
 				res.setStatus(HttpServletResponse.SC_NOT_FOUND);
-				req.getRequestDispatcher("/404.jsp").forward(req, res);
+				forwardSafely("/404.jsp", req, res);
 				return;
 			}
 
@@ -396,7 +396,7 @@ public class PathFilter implements Filter
 			{
 				Logger.debug(PathFilter.class, "checkWebAccess=false, forbidden access, path="+path+" ip="+Tools.getRemoteIP(req));
 				res.setStatus(HttpServletResponse.SC_FORBIDDEN);
-				req.getRequestDispatcher("/403.jsp").forward(req, res);
+				forwardSafely("/403.jsp", req, res);
 				return;
 			}
 
@@ -449,7 +449,7 @@ public class PathFilter implements Filter
 									if (path.startsWith("/components") && path.contains("rest")==false)
 									{
 										res.setStatus(HttpServletResponse.SC_FORBIDDEN);
-										req.getRequestDispatcher("/403.jsp").forward(req, res);
+										forwardSafely("/403.jsp", req, res);
 										return;
 									}
                            res.setStatus(HttpServletResponse.SC_FORBIDDEN);
@@ -481,7 +481,7 @@ public class PathFilter implements Filter
                     //je to pokus o XSS: /404.html/'onmouseover=prompt(915761)
                     Adminlog.add(Adminlog.TYPE_XSS, "HTTP method not allowed: "+method, -1, -1);
                     res.setStatus(HttpServletResponse.SC_METHOD_NOT_ALLOWED);
-                    req.getRequestDispatcher("/403.jsp").forward(req, res);
+                    forwardSafely("/403.jsp", req, res);
                     return;
                 }
             }
@@ -600,7 +600,7 @@ public class PathFilter implements Filter
 					Logger.debug(PathFilter.class, "checkAdmin="+ret+" forwarding to 404.jsp");
 					//not found posielame aby sa admin cast tvarila akoze vobec neexistuje
 					res.setStatus(HttpServletResponse.SC_NOT_FOUND);
-					req.getRequestDispatcher("/404.jsp").forward(req, res);
+					forwardSafely("/404.jsp", req, res);
 					return;
 				}
 				else
@@ -631,7 +631,7 @@ public class PathFilter implements Filter
 						{
 						   Logger.info(PathFilter.class, "Struts token not valid, path="+path);
 							req.setAttribute("errorText", Prop.getInstance(req).getText("components.csrfError"));
-							req.getRequestDispatcher("/components/maybeError.jsp").forward(req, res);
+							forwardSafely("/components/maybeError.jsp", req, res);
 							return;
 						}
 					}
@@ -641,7 +641,7 @@ public class PathFilter implements Filter
 			if (!checkCSRFTokenAjax(path, req)) {
 				Logger.debug(PathFilter.class, "CSRF token missing - header param X-CSRF-Token");
 				res.setStatus(HttpServletResponse.SC_FORBIDDEN);
-				req.getRequestDispatcher("/403.jsp").forward(req, res);
+				forwardSafely("/403.jsp", req, res);
 				return;
 			}
 
@@ -723,7 +723,7 @@ public class PathFilter implements Filter
 					Logger.debug(PathFilter.class, "Is file like, forwarding to 404.jsp");
 					//not found posielame aby sa admin cast tvarila akoze vobec neexistuje
 					res.setStatus(HttpServletResponse.SC_NOT_FOUND);
-					req.getRequestDispatcher("/404.jsp").forward(req, res);
+					forwardSafely("/404.jsp", req, res);
 					return;
 				}
 
@@ -733,7 +733,7 @@ public class PathFilter implements Filter
 					Logger.debug(PathFilter.class, "Public node, forwarding to 404.jsp");
 					//not found posielame aby sa admin cast tvarila akoze vobec neexistuje
 					res.setStatus(HttpServletResponse.SC_NOT_FOUND);
-					req.getRequestDispatcher("/404.jsp").forward(req, res);
+					forwardSafely("/404.jsp", req, res);
 					return;
 				}
 
@@ -764,74 +764,10 @@ public class PathFilter implements Filter
 					Logger.debug(PathFilter.class, "Volane JSP z nepovoleneho adresara, path="+path);
 					//not found posielame aby sa admin cast tvarila akoze vobec neexistuje
 					res.setStatus(HttpServletResponse.SC_NOT_FOUND);
-					req.getRequestDispatcher("/404.jsp").forward(req, res);
+					forwardSafely("/404.jsp", req, res);
 					return;
 				}
 			}
-
-			if (path.startsWith("/components/_common/preload-") || path.startsWith("/components/_common/banner-") || path.startsWith("/components/_common/flvplayer"))
-			{
-				//moznost krasneho XSS:
-				//http://www.pss.sk/components/_common/banner-30.swf?bannerURL=http://letenky.aerodom.sk/images/ads/hotely.swf&click=javascript:alert(%221)%20loadlo%20externy%20banner%20s%20vlastnym%20AS%202)%20JS%20XSS%20ide%22)
-
-				String bannerURL = req.getParameter("bannerURL");
-				if (path.startsWith("/components/_common/flvplayer")) bannerURL = req.getParameter("file");
-				if (path.startsWith("/components/_common/preload")) bannerURL = req.getParameter("path");
-
-				if (Tools.isNotEmpty(bannerURL) && bannerURL.trim().toLowerCase().startsWith("http"))
-				{
-					Logger.debug(PathFilter.class, "povolZobrazenie=false, forwarding to 404.jsp");
-					req.getRequestDispatcher("/404.jsp").forward(req, res);
-					return;
-				}
-			}
-
-				/* toto uz vo WJ8 netreba, je to potencionalne nebezpecne
-				if (req.getParameter("useJsessionId")!=null)
-				{
-					String sid = req.getParameter("useJsessionId");
-
-					if (sid.equals(req.getSession().getId())==false)
-					{
-						Logger.println(this,"\n\nuseJsessionId: " + req.getSession().getId());
-						Logger.println(this,"request ID: "+req.getRequestedSessionId()+" valid="+req.isRequestedSessionIdValid()+" from cookie:"+req.isRequestedSessionIdFromCookie()+" from url:"+req.isRequestedSessionIdFromURL());
-
-						//zisti, ci mame session cookie
-						Cookie cookies[] = req.getCookies();
-						int i;
-						boolean hasCookie = false;
-						for (i=0; i<cookies.length; i++)
-						{
-							Logger.println(this,"cookie: " + cookies[i].getName()+"="+cookies[i].getValue());
-							if ("JSESSIONID".equals(cookies[i].getName()) && cookies[i].getValue().equals(sid))
-							{
-								hasCookie = true;
-								break;
-							}
-						}
-
-						if (!hasCookie)
-						{
-							SessionDetails sesDetails = holder.get(sid);
-							if (sesDetails!=null && sesDetails.getRemoteAddr().equals(Tools.getRemoteIP(req)))
-							{
-								Logger.println(this,"nastavujem session cookie na: "+sid);
-								//if an attacker types "useJSessionId=true\r\nANYTHING", ANYTHING would be considered
-								// an additional HTTP header row
-								Cookie c = new Cookie("JSESSIONID", sid.replaceAll("[\n\r]", ""));
-								c.setMaxAge(-1);
-								c.setPath("/");
-								res.addCookie(c);
-
-								//znova sa refreshni
-								Logger.println(this,"refreshnujem: " + path + "?"+req.getQueryString());
-								res.sendRedirect(Tools.sanitizeHttpHeaderParam(path+"?"+req.getQueryString()));
-								return;
-							}
-						}
-					}
-				}
-				*/
 
 			if (path.endsWith(".appcache"))
 			{
@@ -878,7 +814,7 @@ public class PathFilter implements Filter
 
 					Logger.debug(PathFilter.class, "Forwarding: "+path+".jsp");
 
-					req.getRequestDispatcher(path+".jsp").forward(req, res);
+					forwardSafely(path+".jsp", req, res);
 					return;
 				}
 			}
@@ -959,28 +895,11 @@ public class PathFilter implements Filter
 				}
 			}
 
-         setDownloadHeaders(path, req, res);
+         	setDownloadHeaders(path, req, res);
 			boolean staticHeadersSet = setStaticContentHeaders(path, user, req, res);
 			if (staticHeadersSet && IwcmFsDB.useDBStorage()==false && FileCache.useFileCache())
 			{
 				if (writeAndCacheFile(path, res)) return;
-			}
-
-			setXRobotsTagValue(path, res);
-
-			/*
-			 * if (path.endsWith(".jsp")) { Logger.println(this,"Virtual Path
-			 * Filter: " + path); }
-			 */
-			//Logger.println(this,"Virtual Path Filter: " + path);
-
-			//ak prehravame flv video
-			if ("/flvstreaminghttp/".equals(path) && req.getParameter("file")!=null && req.getParameter("file").endsWith(".flv"))
-			{
-				if (flvStreaming(req,res))
-				{
-					return;
-				}
 			}
 
 			//toto standardne Tomcat nepozna, pridame hlavicky podla specky
@@ -1023,7 +942,7 @@ public class PathFilter implements Filter
 				{
 					Logger.debug(PathFilter.class, "checkDomain=false, forwarding to 404.jsp");
 					res.setStatus(HttpServletResponse.SC_NOT_FOUND);
-					req.getRequestDispatcher("/404.jsp").forward(req, res);
+					forwardSafely("/404.jsp", req, res);
 					return;
 				}
 
@@ -1147,7 +1066,7 @@ public class PathFilter implements Filter
 					res.setContentType("text/xml; charset=utf-8");
 					res.setStatus(HttpServletResponse.SC_OK);
 					String customPage = WriteTagToolsForCore.getCustomPage("/components/sitemap/google-sitemap.jsp", req);
-					req.getRequestDispatcher(customPage).forward(req, res);
+					forwardSafely(customPage, req, res);
 					return;
 				}
 			}
@@ -1160,7 +1079,7 @@ public class PathFilter implements Filter
 					String customPage = WriteTagToolsForCore.getCustomPage(path, req);
 					if (customPage.equals(path)==false)
 					{
-						req.getRequestDispatcher(customPage).forward(req, res);
+						forwardSafely(customPage, req, res);
 						return;
 					}
 
@@ -1229,7 +1148,7 @@ public class PathFilter implements Filter
 				File jspFile = new File(Tools.getRealPath(jspPath));
 				if (jspFile.exists())
 				{
-					req.getRequestDispatcher(jspPath).forward(req, res);
+					forwardSafely(jspPath, req, res);
 					if (timer != null)
 					{
 						timer.diff("   Path filter - chain, path: " + path);
@@ -1376,7 +1295,7 @@ public class PathFilter implements Filter
 			{
 				res.setStatus(HttpServletResponse.SC_FORBIDDEN);
 				//ak to nie je rest posli ho aj na defaultnu 403 stranku
-				if (path==null || path.contains("/rest")==false) req.getRequestDispatcher("/403.jsp").forward(req, res);
+				if (path==null || path.contains("/rest")==false) forwardSafely("/403.jsp", req, res);
 			}
 			else
 			{
@@ -2076,74 +1995,6 @@ public class PathFilter implements Filter
 		return(false);
 	}
 
-
-	private boolean flvStreaming(HttpServletRequest req, HttpServletResponse res)
-	{
-		IwcmInputStream in = null;
-		OutputStream outStream = null;
-		try
-		{
-			String filename = Tools.getRealPath(req.getParameter("file"));
-			int position = Tools.getIntValue(req.getParameter("pos"), 0);
-
-			Logger.debug(PathFilter.class, "FLV streaming: pos="+position+" file="+req.getParameter("file"));
-
-			// Set content type
-			res.setContentType("flv-application/octet-stream");
-			// Set content size
-			IwcmFile file = new IwcmFile(filename);
-			res.setContentLength((int) file.length() - position);
-			// Open the file and output streams
-			in = new IwcmInputStream(file);
-			outStream = res.getOutputStream();
-			long countSkip = 0;
-			if (position > 0)
-			{
-				//hlavicka flv
-				outStream.write("FLV".getBytes());
-				outStream.write(1);
-				outStream.write(1);
-				outStream.write(0);
-				outStream.write(0);
-				outStream.write(0);
-				outStream.write(9);
-				outStream.write(0);
-				outStream.write(0);
-				outStream.write(0);
-				outStream.write(9);
-				countSkip = in.skip(position);	//kvoli FindBugs - warning SR_NOT_CHECKED
-				Logger.debug(this, "Skiped: "+countSkip);
-			}
-			byte[] buf = new byte[64000];
-			int count = 0;
-			int total = 0;
-			while ((count = in.read(buf)) >= 0)
-			{
-				total += count;
-				Logger.debug(PathFilter.class, "flvStreaming Sending data="+count+" total="+total);
-				outStream.write(buf, 0, count);
-			}
-			in.close();
-		}
-		catch (FileNotFoundException e)
-		{
-			Logger.error(PathFilter.class, "flvStreaming FileNotFoundException e="+e.getMessage());
-			sk.iway.iwcm.Logger.error(e);
-			return false;
-		}
-		catch (IOException e)
-		{
-			Logger.error(PathFilter.class, "flvStreaming IOException e="+e.getMessage());
-			sk.iway.iwcm.Logger.error(e);
-		}
-		catch (Exception e)
-		{
-			Logger.error(PathFilter.class, "flvStreaming Exception e="+e.getMessage());
-			sk.iway.iwcm.Logger.error(e);
-		}
-		return true;
-	}
-
     /**
      * Nastavi cache hlavicky podla konf. premennej cacheStaticContentSeconds a cacheStaticContentSuffixes
      * @param path
@@ -2380,22 +2231,22 @@ public class PathFilter implements Filter
 
 	/**
 	 * Nastavenie hlavicky X-Robots-Tag, viz https://developers.google.com/webmasters/control-crawl-index/docs/robots_meta_tag
-	 * @param path
+	 * @param url
 	 * @param response
 	 */
-	public static void setXRobotsTagValue(String path, HttpServletResponse response)
+	public static void setXRobotsTagValue(String url, HttpServletResponse response)
 	{
 		String xRobotsTagUrls = Constants.getString("xRobotsTagUrls");
 		if (Tools.isEmpty(xRobotsTagUrls)) return;
 
-		if (path.charAt(0)=='/') path = path.toLowerCase(); //aby sa nam NOT_SEARCHABLE_PAGE nezmenilo na male pismena
+		if (url.charAt(0)=='/') url = url.toLowerCase(); //aby sa nam NOT_SEARCHABLE_PAGE nezmenilo na male pismena
 
 		String[] paths = Tools.getTokens(xRobotsTagUrls, ",", true);
-		for (String xpath : paths)
+		for (String path : paths)
 		{
-			if (path.startsWith(xpath))
+			if (ResponseHeaderService.isPathCorrect(path, url))
 			{
-				String xRobotsTagValue = Constants.getString("xRobotsTagValue");
+				String xRobotsTagValue = Constants.getStringExecuteMacro("xRobotsTagValue");
 				if (Tools.isNotEmpty(xRobotsTagValue))
 				{
 					response.setHeader("X-Robots-Tag", xRobotsTagValue);
@@ -2450,19 +2301,19 @@ public class PathFilter implements Filter
 
 	/**
 	 * Nastavenie hlavicky Access-Control-Allow-Origin
-	 * @param path
+	 * @param url
 	 * @param response
 	 */
-	public static void setAccessControlAllowOrigin(String path, HttpServletResponse response)
+	public static void setAccessControlAllowOrigin(String url, HttpServletResponse response)
 	{
 		String accessControlAllowOriginUrls = Constants.getString("accessControlAllowOriginUrls");
 		if (Tools.isEmpty(accessControlAllowOriginUrls)) return;
 
 		String[] paths = Tools.getTokens(accessControlAllowOriginUrls, ",", true);
 		String accessControlAllowOriginValue = Constants.getStringExecuteMacro("accessControlAllowOriginValue");
-		for (String xpath : paths)
+		for (String path : paths)
 		{
-			if (path.startsWith(xpath))
+			if (ResponseHeaderService.isPathCorrect(path, url))
 			{
 				if (Tools.isNotEmpty(accessControlAllowOriginValue))
 				{
@@ -2521,7 +2372,21 @@ public class PathFilter implements Filter
 	 * Nastavi hlavicky pre konkretne volania podla konfiguracnej premennej responseHeaders
 	 * @param response
 	 */
-	private static void setResponseHeaders(String path, HttpServletResponse response) {
+	private static void setResponseHeaders(String path, HttpServletRequest request, HttpServletResponse response) {
+
+		if (path.startsWith("/files") || path.startsWith("/images") || path.startsWith("/shared")) {
+			String lngCode = Constants.getString("defaultLanguage");
+			//set last known language for files and images folder
+			if (path.contains("/en/")) lngCode = "en";
+			else if (path.contains("/de/")) lngCode = "de";
+			else if (path.contains("/cz/")) lngCode = "cz";
+			else if (path.contains("/sk/")) lngCode = "sk";
+			else lngCode = PageLng.getUserLng(request);
+
+			String isoCode = PageLng.getUserLngIso(lngCode);
+			ResponseHeaderService.setContentLanguageHeader(isoCode, true, request, response);
+		}
+
 		// parse and cache
 		if(responseHeaders == null) {
 			synchronized (PathFilter.class) {
@@ -2545,7 +2410,7 @@ public class PathFilter implements Filter
 			}
 		}
 
-		ResponseHeaderService.setResponseHeaders(path, response);
+		ResponseHeaderService.setResponseHeaders(path, request, response);
 	}
 
 	/**
@@ -2711,5 +2576,20 @@ public class PathFilter implements Filter
 
 	private static void setCustomPath(String path) {
 		PathFilter.customPath = path;
+	}
+
+	/**
+	 * Safely forward request dispatcher, need to use this if next statement is return
+	 * eg. after checkAdmin you must return from PathFilter even when /404.jsp has compilation errors
+	 * @param request
+	 * @param response
+	 * @param path
+	 */
+	private static void forwardSafely(String path, HttpServletRequest request, HttpServletResponse response){
+		try {
+		request.getRequestDispatcher(path).forward(request, response);
+		} catch (Exception ex) {
+			Logger.error(PathFilter.class, ex);
+		}
 	}
 }

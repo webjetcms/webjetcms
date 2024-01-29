@@ -2,11 +2,11 @@ package sk.iway.iwcm.helpers;
 
 import javax.servlet.http.HttpServletRequest;
 
-import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.doc.DocDetails;
 import sk.iway.iwcm.doc.GroupDetails;
 import sk.iway.iwcm.doc.TemplateDetails;
+import sk.iway.iwcm.users.UsersDB;
 
 /**
  *  RequestHelper.java
@@ -23,7 +23,7 @@ import sk.iway.iwcm.doc.TemplateDetails;
  */
 public class RequestHelper
 {
-	
+
 	HttpServletRequest request;
 
 	public RequestHelper(HttpServletRequest request)
@@ -31,27 +31,25 @@ public class RequestHelper
 		super();
 		this.request = request;
 	}
-	
+
 	public TemplateDetails getTemplate()
 	{
 		return (TemplateDetails)request.getAttribute("templateDetails");
 	}
-	
+
 	public DocDetails getDocument()
 	{
 		return (DocDetails)request.getAttribute("docDetails");
 	}
-	
+
 	public GroupDetails getGroup()
 	{
 		return (GroupDetails)request.getAttribute("pageGroupDetails");
 	}
-	
+
 	public Identity getUser()
 	{
-		if (request.getSession() == null)
-			return null;
-		return (Identity)request.getSession().getAttribute(Constants.USER_KEY);
+		return UsersDB.getCurrentUser(request);
 	}
 
 }

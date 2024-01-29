@@ -48,7 +48,7 @@ function Ok()
 		htmlCode = "!INCLUDE(/components/rating/rating_top_users.jsp, usersLength="+usersLength+")!";
 	} else if (ratingType == "rating_top_pages_new")
 	{
-		htmlCode = "!INCLUDE(/components/rating/rating_top_pages_new.jsp, range="+range+", docsLength="+docsLength+", period="+period+")!";
+		htmlCode = "!INCLUDE(/components/rating/rating_top_pages.jsp, range="+range+", docsLength="+docsLength+", period="+period+")!";
 	}
 
 	oEditor.FCK.InsertHtml(htmlCode);
@@ -163,7 +163,7 @@ function showMenu(select)
 							<iwcm:text key="components.rating.rating_doc_id"/>
 						</div>
 						<div class="col-xs-4">
-							<input type=text name=ratingDocId size=4 maxlength="5" value="<%=ResponseUtils.filter(pageParams.getValue("ratingDocId", ""))%>" class="numbers">
+							<input type="text" name="ratingDocId" size="8" maxlength="10" value="<%=ResponseUtils.filter(pageParams.getValue("ratingDocId", ""))%>" class="numbers">
 						</div>
 					</div>
 					<div id="range1" class="col-xs-8 form-group col-xs-offset-2">

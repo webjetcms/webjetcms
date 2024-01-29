@@ -19,6 +19,7 @@ public class UserBasicDtoConverter implements AttributeConverter<UserBasicDto, I
 
     @Override
     public UserBasicDto convertToEntityAttribute(Integer userId) {
+        if (userId == null || userId.intValue()<1) return null;
         UserDetails user = UsersDB.getUserCached(userId);
         if (user!=null)
         {

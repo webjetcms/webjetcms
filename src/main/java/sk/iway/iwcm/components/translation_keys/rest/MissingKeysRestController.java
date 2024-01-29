@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import sk.iway.iwcm.components.translation_keys.jpa.MissingKeysDto;
 import sk.iway.iwcm.i18n.Prop;
-import sk.iway.iwcm.system.ConstantsV9;
+import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.system.datatable.Datatable;
 import sk.iway.iwcm.system.datatable.DatatablePageImpl;
 import sk.iway.iwcm.system.datatable.DatatableRestControllerV2;
@@ -43,7 +43,7 @@ public class MissingKeysRestController extends DatatableRestControllerV2<Missing
             dto.setId(id++);
         }
 
-        for(String lng : ConstantsV9.getArray("languages"))
+        for(String lng : Constants.getArray("languages"))
             page.addOption("language", prop.getText("language." + lng.toLowerCase()), lng, false);
 
         return page;

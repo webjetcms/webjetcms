@@ -80,7 +80,7 @@ module.exports = function () {
       //aby sme vzdy v kazdom scenari mali prednastavenu velkost okna
       //odosli prihlasenie
       this.fillField("username", user);
-      this.fillField("password", secret("*********"));
+      this.fillField("password", secret("***REMOVED***"));
       this.click("login-submit");
       this.waitForText("Pomocník", 10);
     },
@@ -290,12 +290,14 @@ module.exports = function () {
     //zresetuje nastavenie datatabulky (poradie stlpcov, usporiadanie, zoznam stlpcov)
     dtResetTable(name = "datatableInit") {
       var container = "#"+name+"_wrapper";
+      this.wait(1); //must be here otherwise on webpages it will not reset sorting correctly after load
       this.dtWaitForLoader();
       this.click(container+" button.buttons-settings");
       this.click(container+" button.buttons-colvis");
       this.waitForVisible("div.dt-button-collection div.dropdown-menu.dt-dropdown-menu div.dt-button-collection div.dropdown-menu.dt-dropdown-menu");
-      this.click("Obnoviť");
+      this.clickCss(container+" div.colvispostfix_wrapper button.buttons-colvisRestore");
       this.waitForInvisible("div.dt-button-collection div.dropdown-menu.dt-dropdown-menu div.dt-button-collection div.dropdown-menu.dt-dropdown-menu");
+      this.dtWaitForLoader();
     },
 
     //-------------- FUNKCIE PRE JSTREE --------------
@@ -303,7 +305,7 @@ module.exports = function () {
       //pockaj na jstreeLoader
       this.jstreeWaitForLoader();
 
-      this.click(name, "#SomStromcek");
+      this.click(locate("#SomStromcek a.jstree-anchor").withText(name));
       //pockaj na nacitanie datatable
       this.dtWaitForLoader();
     },
@@ -339,13 +341,17 @@ module.exports = function () {
 
     // vytvorenie korenoveho adresara s dvomi podadresarmi
     createFolderStructure(randomNumber, alsoSubfolders=true) {
+      //reset DT sorting/columns
+      this.dtResetTable("datatableInit");
+
       // premenne
       var auto_name = 'name-autotest-' + randomNumber;
       var auto_subfolder_one = 'subone-autotest-' + randomNumber;
       var auto_subfolder_two = 'subtwo-autotest-' + randomNumber;
-      var add_button = (locate('.col-md-4.tree-col').find('.btn.btn-sm.buttons-create.btn-success.buttons-divider'));
+      var add_button = (locate('.tree-col').find('div.dt-buttons .btn.btn-sm.buttons-create.btn-success.buttons-divider'));
       // vytvorenie materskeho priecinka name-autotest
       this.say('Pridanie noveho priecinka ' + auto_name);
+      this.waitForElement(add_button, 10);
       this.click(add_button);
       this.dtWaitForEditor("groups-datatable");
       this.fillField('#DTE_Field_groupName', auto_name);
@@ -388,7 +394,7 @@ module.exports = function () {
       this.click(locate('.jstree-anchor').withText(auto_name));
       this.dtWaitForLoader();
       this.wait(1);
-      this.click(delete_button);
+      this.clickCss(delete_button);
       this.wait(1);
       this.waitForText('Zmazať', 10);
       this.wait(1);
@@ -444,8 +450,8 @@ module.exports = function () {
       var edit_webpage = (locate('#datatableInit_wrapper').find('.btn.btn-sm.buttons-selected.buttons-edit.btn-warning'));
       // editovanie web stranky
       this.say('Editovanie web stranky ' + auto_webPage);
-      this.waitForElement(locate('.even').withText(auto_webPage), 10);
-      this.forceClick(locate('.even').withText(auto_webPage).find('.dt-select-td.sorting_1'));
+      this.waitForElement(locate('#datatableInit_wrapper .dataTables_scrollBody .dt-row-edit').withText(auto_webPage), 10);
+      this.forceClick(locate('#datatableInit_wrapper .dataTables_scrollBody tr').withText(auto_webPage).find('.dt-select-td.sorting_1'));
       this.waitForText('1 riadok označený', 10);
       this.click(edit_webpage);
       this.dtWaitForEditor();
@@ -477,82 +483,67 @@ module.exports = function () {
     },
 
     deleteCreatedWebPage(randomNumber) {
+      this.dtWaitForLoader();
       // premenne
       var auto_webPage = 'webPage-autotest-' + randomNumber;
       var delete_webpage = (locate('#datatableInit_wrapper').find('.btn.btn-sm.buttons-selected.buttons-remove.btn-danger.buttons-divider'));
       // vymazanie webstranky
       this.say('Vymazanie web stranky ' + auto_webPage);
-      this.waitForElement(locate('.even').withText(auto_webPage), 10);
+      this.waitForElement(locate('#datatableInit .even').withText(auto_webPage), 10);
       //this.click(locate('.even').find('.dt-select-td.sorting_1'));
-      this.forceClick(locate('.even').withText(auto_webPage).find('.dt-select-td.sorting_1'));
-      this.waitForElement(locate('.even.selected').withText(auto_webPage), 10);
+      this.forceClick(locate('#datatableInit .even').withText(auto_webPage).find('.dt-select-td.sorting_1'));
+      this.waitForElement(locate('#datatableInit .even.selected').withText(auto_webPage), 10);
       this.waitForText('1 riadok označený', 10);
       this.click(delete_webpage);
+      this.dtWaitForEditor();
       this.waitForText('Zmazať', 10);
       this.click('Zmazať');
       this.dontSee('Chyba: niektoré polia neobsahujú správne hodnoty. Skontrolujte všetky polia na chybové hodnoty (aj v jednotlivých kartách).');
       this.wait(1);
-      this.waitForElement('.odd.is-default-page', 20);
-      this.dontSee(locate('.even').withText(auto_webPage));
+      this.waitForElement('#datatableInit .odd.is-default-page', 20);
+      this.dontSee(locate('#datatableInit .even').withText(auto_webPage));
       this.wait(1);
     },
 
     // ---------------------- Structure MIRRORING ---------------------------------------------------
     // vytvorenie zakladnej struktury adresarov v sk a en
-    wj9CreateMirroringFolder(randomNumber) {
+    wj9CreateMirroringFolder(randomNumber, alsoDe=false) {
       var auto_folder_sk = 'sk-mir-autotest-' + randomNumber;
       var auto_folder_en = 'en-mir-autotest-' + randomNumber;
-      var add_button = (locate('.col-md-4.tree-col').find('.btn.btn-sm.buttons-create.btn-success.buttons-divider'));
+      var auto_folder_de = 'de-mir-autotest-' + randomNumber;
+      var add_button = (locate('.tree-col').find('.btn.btn-sm.buttons-create.btn-success.buttons-divider'));
       var domainName = 'mirroring.tau27.iway.sk';
 
       // prepnutie na domenu mirroring.tau27.iway.sk
-      this.amOnPage("/admin/v9/webpages/web-pages-list/?groupid=1");
+      this.amOnPage("/admin/v9/webpages/web-pages-list/?groupid=9811");
       this.dtWaitForLoader();
 
-      this.clickCss("div.js-domain-toggler div.bootstrap-select button");
-      this.wait(1);
-      this.click(locate('.dropdown-item').withText("mirroring.tau27.iway.sk"));
-      this.waitForElement("#toast-container-webjet", 10);
-      this.clickCss(".toastr-buttons button.btn-primary");
-
-      // vytvorenie materskeho priecinka sk-autotest
-      this.say('Pridanie noveho priecinka ' + auto_folder_sk);
-      this.dtWaitForLoader();
-      this.click(add_button);
-      this.dtWaitForEditor("groups-datatable");
-      this.fillField('#DTE_Field_domainName', domainName);
-      this.wait(1);
-      this.fillField('#DTE_Field_groupName', auto_folder_sk);
-      this.wait(1);
-      //vyber korenovy adresar
-      this.groupSetRootParent();
-      //nastav poradie usporiadanie
-      this.clickCss("#pills-dt-groups-datatable-menu-tab");
-      this.fillField("#DTE_Field_sortPriority", "2000")
-      this.dtEditorSave();
-      this.wait(3);
-      // vytvorenie materskeho priecinka en-autotest
-      this.say('Pridanie noveho priecinka ' + auto_folder_en);
-      this.click(add_button);
-      this.dtWaitForEditor("groups-datatable");
-      this.fillField('#DTE_Field_groupName', auto_folder_en);
-      //vyber korenovy adresar
-      this.groupSetRootParent();
-      //nastav domenu
-      this.wait(3);
-      this.fillField('#DTE_Field_domainName', domainName);
-      //nastav poradie usporiadanie
-      this.clickCss("#pills-dt-groups-datatable-menu-tab");
-      this.fillField("#DTE_Field_sortPriority", "2010")
-      this.dtEditorSave();
-      this.wait(1);
-      // refresh stranky
-      this.refreshPage();
-      this.waitForVisible('#SomStromcek', 20);
+      // vytvorenie materskeho priecinka en-autotest/de-autotest
+      var folders = [auto_folder_sk, auto_folder_en];
+      if (alsoDe) folders = [auto_folder_sk, auto_folder_en, auto_folder_de];
+      var index = 0;
+      for (var folder of folders) {
+        this.say('Pridanie noveho priecinka ' + folder);
+        this.click(add_button);
+        this.dtWaitForEditor("groups-datatable");
+        this.fillField('#DTE_Field_groupName', folder);
+        //vyber korenovy adresar
+        this.groupSetRootParent();
+        //nastav domenu
+        this.wait(0.5);
+        this.waitForElement("div.DTE_Field_Name_domainName");
+        this.fillField('#DTE_Field_domainName', domainName);
+        //nastav poradie usporiadanie
+        this.clickCss("#pills-dt-groups-datatable-menu-tab");
+        this.fillField("#DTE_Field_sortPriority", ""+(2000+(index*10)));
+        this.dtEditorSave();
+        index++;
+      }
 
       //over zobrazenie
-      this.waitForText(auto_folder_sk, 10);
-      this.waitForText(auto_folder_en, 10);
+      this.waitForText(auto_folder_sk, 10, "#SomStromcek");
+      this.waitForText(auto_folder_en, 10, "#SomStromcek");
+      if (alsoDe) this.waitForText(auto_folder_de, 10, "#SomStromcek");
     }
   });
 }

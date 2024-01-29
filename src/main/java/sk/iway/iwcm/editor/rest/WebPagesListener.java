@@ -32,6 +32,7 @@ import sk.iway.iwcm.doc.GroupsJsTreeItem;
 import sk.iway.iwcm.doc.GroupsTreeService;
 import sk.iway.iwcm.doc.attributes.jpa.DocAtrDefRepository;
 import sk.iway.iwcm.editor.EditorDB;
+import sk.iway.iwcm.editor.service.GroupsService;
 import sk.iway.iwcm.editor.service.WebpagesService;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.system.datatable.DatatablePageImpl;
@@ -74,8 +75,8 @@ public class WebPagesListener {
 
             GroupsDB groupsDB = GroupsDB.getInstance();
 
-            GroupDetails system = groupsTreeService.getSystemGroupDetails();
-            GroupDetails trash = groupsTreeService.getTrashGroupDetails();
+            GroupDetails system = GroupsService.getSystemGroupDetails();
+            GroupDetails trash = GroupsService.getTrashGroupDetails();
 
             String showTab = "pills-folders-tab";
 

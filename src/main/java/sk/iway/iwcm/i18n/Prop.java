@@ -10,7 +10,6 @@ import sk.iway.iwcm.doc.DocDB;
 import sk.iway.iwcm.doc.DocDetails;
 import sk.iway.iwcm.io.IwcmFile;
 import sk.iway.iwcm.system.ConfDB;
-import sk.iway.iwcm.system.ConstantsV9;
 import sk.iway.iwcm.system.cluster.ClusterDB;
 import sk.iway.iwcm.system.multidomain.MultiDomainFilter;
 
@@ -725,7 +724,7 @@ public class Prop
 	 * @return
 	 */
 	public static IwayProperties getChangedProperties(String language, String prefix){
-		String[] languages = ConstantsV9.getArray("languages");
+		String[] languages = Constants.getArray("languages");
 		if (!ArrayUtils.contains(languages, language))
 			throw new IllegalArgumentException("Unsupported language: ['"+language+"']");
 
@@ -842,7 +841,7 @@ public class Prop
 	public static Set<MissingKeysDto> getMissingTexts() {
 		Set<MissingKeysDto> allMissingTexts = new HashSet<>();
 
-		String[] lngArr = ConstantsV9.getArray("languages");
+		String[] lngArr = Constants.getArray("languages");
 		for(String lng : lngArr)
 			if(missingTexts.containsKey(lng))
 				allMissingTexts.addAll(missingTexts.get(lng));

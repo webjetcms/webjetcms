@@ -278,13 +278,13 @@ public class WebpagesRestController extends DatatableRestControllerV2<DocDetails
      * Je to takto, lebo inak som nevedel preniest JSON data z editora priamo do
      * PreviewControllera
      */
-    @PostMapping(value="/preview/", consumes = MediaType.APPLICATION_JSON_VALUE)
+    @PostMapping(value="/preview/", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     public String preview(@RequestBody DocDetails entity, HttpServletRequest request) {
 
         entity.getEditorFields().toDocDetails(entity);
 
         setPreviewObject(entity, request);
-        return "ok";
+        return "{\"ok\": true}";
     }
 
     @Override
@@ -311,7 +311,14 @@ public class WebpagesRestController extends DatatableRestControllerV2<DocDetails
             addNotify(editorFacade.getNotify());
 
             return true;
+        } else if("recoverDoc".equals(action)) {
+            editorFacade.recoverWebpageFromTrash(entity);
+
+            addNotify(editorFacade.getNotify());
+
+            return true;
         }
+
         return false;
     }
 

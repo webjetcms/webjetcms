@@ -92,7 +92,7 @@ Scenario('cookie-manager testy-domeny-a-jazyka', async ({I, DT, DTE}) => {
     //zmaz z povodnej domeny
     I.click("div.js-domain-toggler div.bootstrap-select button");
     I.wait(1);
-    I.click(locate('.dropdown-item').withText("demotest.webjetcms.sk"));
+    I.click(locate('.dropdown-item').withText("webjet9.tau27.iway.sk"));
     I.waitForElement("#toast-container-webjet", 10);
     I.click(".toastr-buttons button.btn-primary");
 

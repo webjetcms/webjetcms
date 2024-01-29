@@ -192,7 +192,7 @@ public class SetCharacterEncodingFilter implements Filter
 			String path = request.getRequestURI();
 			if (ContextFilter.isRunning(request)) path = ContextFilter.removeContextPath(request.getContextPath(), path);
 
-			if (path.startsWith("/admin/elfinder-connector/") || path.startsWith("/admin/mobile-api/"))
+			if (path.startsWith("/admin/elfinder-connector/") || path.equals("/admin/elFinder/gethash.jsp"))
 			{
 				requestBean.setRequest(request);
 			}
@@ -953,7 +953,7 @@ public class SetCharacterEncodingFilter implements Filter
 			//nepodarilo sa prihlasenie - tok ostane rovnaky, ako predtym
 		}
 
-		Identity loggedUser = (Identity)request.getSession().getAttribute(Constants.USER_KEY);
+		Identity loggedUser = UsersDB.getCurrentUser(request);
 
 		Logger.debug(SetCharacterEncodingFilter.class, "logUserInViaNtlm() END, user="+loggedUser);
 

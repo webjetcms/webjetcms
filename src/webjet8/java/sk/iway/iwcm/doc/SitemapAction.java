@@ -1,20 +1,12 @@
 package sk.iway.iwcm.doc;
 
-import java.io.IOException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
-import org.apache.struts.action.Action;
-import org.apache.struts.action.ActionForm;
-import org.apache.struts.action.ActionForward;
-import org.apache.struts.action.ActionMapping;
 
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.DB;
@@ -32,43 +24,9 @@ import sk.iway.iwcm.Logger;
  *@created      $Date: 2004/02/16 16:44:23 $
  *@modified     $Date: 2004/02/16 16:44:23 $
  */
-public class SitemapAction extends Action
+public class SitemapAction
 {
 	public static final String SESSION_LINK_GROUPID="session_link_groupid";
-
-	/**
-	 *  Description of the Method
-	 *
-	 *@param  mapping               Description of the Parameter
-	 *@param  form                  Description of the Parameter
-	 *@param  request               Description of the Parameter
-	 *@param  response              Description of the Parameter
-	 *@return                       Description of the Return Value
-	 *@exception  IOException       Description of the Exception
-	 *@exception  ServletException  Description of the Exception
-	 */
-	@Override
-	public ActionForward execute(ActionMapping mapping,
-				ActionForm form,
-				HttpServletRequest request,
-				HttpServletResponse response)
-				throws IOException, ServletException
-	{
-		String forward = doTree(request);
-
-		if (request.getParameter("lng")!=null)
-		{
-			return (mapping.findForward("eng"));
-		}
-		if (forward.endsWith(".jsp"))
-		{
-			return (new ActionForward(forward));
-		}
-		else
-		{
-			return (mapping.findForward(forward));
-		}
-	}
 
 	public static String doTree(HttpServletRequest request)
 	{

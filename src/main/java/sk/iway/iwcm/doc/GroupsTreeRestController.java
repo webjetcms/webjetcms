@@ -3,6 +3,7 @@ package sk.iway.iwcm.doc;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import sk.iway.iwcm.Constants;
@@ -15,6 +16,7 @@ import sk.iway.iwcm.admin.jstree.JsTreeMoveItem;
 import sk.iway.iwcm.admin.jstree.JsTreeRestController;
 import sk.iway.iwcm.admin.layout.LayoutService;
 import sk.iway.iwcm.editor.facade.EditorFacade;
+import sk.iway.iwcm.editor.service.GroupsService;
 import sk.iway.iwcm.editor.service.WebpagesService;
 import sk.iway.iwcm.users.UsersDB;
 
@@ -28,7 +30,8 @@ import javax.servlet.http.HttpServletRequest;
 
 @RestController
 @RequestMapping(value = "/admin/rest/groups/tree")
-@PreAuthorize(value = "@WebjetSecurityService.hasPermission('menuWebpages')")
+//allow admin to access jstree from other apps like perex groups
+@PreAuthorize(value = "@WebjetSecurityService.isAdmin()")
 public class GroupsTreeRestController extends JsTreeRestController<DocGroupInterface> {
 
     private final GroupsTreeService groupsTreeService;
@@ -103,6 +106,18 @@ public class GroupsTreeRestController extends JsTreeRestController<DocGroupInter
 
         if (RequestBean.getAttribute("forceReloadTree")!=null) result.put("forceReloadTree", true);
 
+        //If user can edited only selected groups, he can't use root group (because root is everythig)
+        if( Tools.isNotEmpty(user.getEditableGroups()) ) { //Cant show all groups
+
+            //Special case -> if we want tree items for STAT section AND user have cmp_stat_seeallgroups right, we do not filter by perms but RESTURN ALL ITEMS
+            String referer = getRequest().getHeader("referer");
+            if(false == (referer != null && referer.contains("/apps/stat/admin/") && user.isEnabledItem("cmp_stat_seeallgroups")) ) {
+                //If root group is in list, remove it
+                if( Integer.valueOf( items.get(0).getId() ) == 0)
+                    items.remove(0);
+            }
+        }
+
         result.put("result", true);
         result.put("items", items);
     }
@@ -113,6 +128,7 @@ public class GroupsTreeRestController extends JsTreeRestController<DocGroupInter
      * @param item   - {@link JsTreeMoveItem} presunuta polozka
      */
     @Override
+    @PreAuthorize(value = "@WebjetSecurityService.hasPermission('menuWebpages')")
     protected void move(Map<String, Object> result, JsTreeMoveItem item) {
         JsTreeItem original = item.getNode().getOriginal();
         if (original == null) {
@@ -242,6 +258,7 @@ public class GroupsTreeRestController extends JsTreeRestController<DocGroupInter
     }
 
     @Override
+    @PreAuthorize(value = "@WebjetSecurityService.hasPermission('menuWebpages')")
     protected void save(Map<String, Object> result, DocGroupInterface item) {
         // DocDetails
         /*if (item.getClass().isAssignableFrom(DocDetails.class)) {
@@ -255,6 +272,7 @@ public class GroupsTreeRestController extends JsTreeRestController<DocGroupInter
     }
 
     @Override
+    @PreAuthorize(value = "@WebjetSecurityService.hasPermission('menuWebpages')")
     protected void delete(Map<String, Object> result, DocGroupInterface item) {
         // DocDetails
         /*if (item.getClass().isAssignableFrom(DocDetails.class)) {
@@ -275,11 +293,52 @@ public class GroupsTreeRestController extends JsTreeRestController<DocGroupInter
 
     @GetMapping("/trash")
     public GroupDetails getTrashGroupDetails() {
-        return groupsTreeService.getTrashGroupDetails();
+        return GroupsService.getTrashGroupDetails();
     }
 
     @GetMapping("/system")
     public GroupDetails getSystemGroupDetails() {
-        return groupsTreeService.getSystemGroupDetails();
+        return GroupsService.getSystemGroupDetails();
+    }
+
+    /**
+     * Retun default group option for groupTree (for current user).
+     * If given groupId is out of user perms, return first permitted group.
+     * IF user have right cmp_stat_seeallgroups, he can see all groups (in stat section ONLY).
+     * @param groupId - group that is default selected
+     * @return
+     */
+    @GetMapping("/defaultValue")
+    public GroupDetails gerDefaultGroupTreeOptionForUser(@RequestParam("groupId") int groupId) {
+        final Identity user = UsersDB.getCurrentUser(getRequest());
+        GroupsDB groupsDB = GroupsDB.getInstance();
+
+        //User can edit all groups -> so return group (no check needed)
+        //OR user have right cmp_stat_seeallgroups (in stat section ONLY)
+        String referer = getRequest().getHeader("referer");
+        if( Tools.isEmpty(user.getEditableGroups()) || (referer != null && referer.contains("/apps/stat/admin/") && user.isEnabledItem("cmp_stat_seeallgroups"))) {
+            if(groupId > 0) return groupsDB.findGroup(groupId);
+
+            GroupDetails rootGroup = new GroupDetails();
+            rootGroup.setGroupId(-1);
+            return rootGroup;
+        }
+
+        //Can handle default group ?
+        boolean parentEditable = GroupsDB.isGroupEditable(user, groupId);
+        boolean parentViewable = GroupsDB.isGroupViewable(user, groupId);
+
+        //Check if user have right for this group
+        //It cant be -1 (root group), because there is group restriction for you part of tree
+        if( (parentEditable || parentViewable) && groupId != -1) {
+            //User have right for this group)
+           return groupsDB.findGroup(groupId);
+        } else {
+            //Problem, user missing rights for this group ... return first permitted group
+            int[] permittedGroups = Tools.getTokensInt(user.getEditableGroups(), ",");
+
+            //Use first groupId
+            return groupsDB.findGroup( permittedGroups[0] );
+        }
     }
 }

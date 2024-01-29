@@ -34,8 +34,22 @@ public class UploadFileTools {
      * @param groupId
      * @param prefix
      * @return
+     * @deprecated pouzit {@link #getPageUploadSubDir(int, int, String, String)}
      */
-    public static String getPageUploadSubDir(int docId, int groupId, String prefix)
+    @Deprecated
+    public static String getPageUploadSubDir(int docId, int groupId, String prefix) {
+        return getPageUploadSubDir(docId, groupId, null, prefix);
+    }
+
+    /**
+     * Vrati subadresar pre upload obrazkov / suborov pre zadanu stranku, napr. /sk/produkty/webjet8 to sa nasledne prida k /images alebo /files a pouzije sa pre uload k "Aktualna stranka"
+     * @param docId
+     * @param groupId
+     * @param newPageTitle - nazov novej web stranky, pouzije sa ak docId<1
+     * @param prefix
+     * @return
+     */
+    public static String getPageUploadSubDir(int docId, int groupId, String newPageTitle, String prefix)
     {
         StringBuilder path = new StringBuilder();
         if (Constants.getBoolean("galleryUploadDirVirtualPath") && docId > 0)
@@ -75,34 +89,41 @@ public class UploadFileTools {
             path.append("/");
         }
 
-        if (Constants.getBoolean("elfinderCreateFolderForPages") && docId > 0)
+        if (Constants.getBoolean("elfinderCreateFolderForPages"))
         {
-            GroupDetails group = groupsDB.getGroup(groupId);
-            DocDetails doc = DocDB.getInstance().getBasicDocDetails(docId, false);
-            if (doc != null && group != null && group.getDefaultDocId()!=doc.getDocId())
-            {
-                String pageUrlName = null;
-
-                String url = doc.getVirtualPath();
-                if (Tools.isNotEmpty(url) && url.length()>5)
+            String pageUrlName = null;
+            if (docId > 0) {
+                GroupDetails group = groupsDB.getGroup(groupId);
+                DocDetails doc = DocDB.getInstance().getBasicDocDetails(docId, false);
+                if (doc != null && group != null && group.getDefaultDocId()!=doc.getDocId())
                 {
-                    if (url.endsWith("/"))
+                    String url = doc.getVirtualPath();
+                    if (Tools.isNotEmpty(url) && url.length()>5)
                     {
-                        int predposlednaLomka = url.substring(0, url.length()-1).lastIndexOf("/");
-                        if (predposlednaLomka>1) pageUrlName = url.substring(predposlednaLomka+1, url.length()-1);
+                        if (url.endsWith("/"))
+                        {
+                            int predposlednaLomka = url.substring(0, url.length()-1).lastIndexOf("/");
+                            if (predposlednaLomka>1) pageUrlName = url.substring(predposlednaLomka+1, url.length()-1);
+                        }
+                        else if (url.endsWith(".html"))
+                        {
+                            int poslednaLomka = url.lastIndexOf("/");
+                            if (poslednaLomka>1) pageUrlName = url.substring(poslednaLomka+1, url.length()-5);
+                        }
                     }
-                    else if (url.endsWith(".html"))
+
+                    if (Tools.isEmpty(pageUrlName))
                     {
-                        int poslednaLomka = url.lastIndexOf("/");
-                        if (poslednaLomka>1) pageUrlName = url.substring(poslednaLomka+1, url.length()-5);
+                        pageUrlName = DocTools.removeChars(doc.getTitle(), true);
                     }
                 }
-
-                if (Tools.isEmpty(pageUrlName))
-                {
-                    pageUrlName = DocTools.removeChars(doc.getTitle(), true);
+            } else {
+                if (Tools.isNotEmpty(newPageTitle)) {
+                    pageUrlName = DocTools.removeChars(newPageTitle, true);
                 }
+            }
 
+            if (Tools.isNotEmpty(pageUrlName)) {
                 if (path.toString().endsWith("/")==false) path.append("/");
                 path.append(pageUrlName);
             }
@@ -251,6 +272,6 @@ public class UploadFileTools {
      */
     public static String getPageUploadSubDir(int docId, int groupId)
     {
-        return getPageUploadSubDir(docId, groupId, null);
+        return getPageUploadSubDir(docId, groupId, null, null);
     }
 }

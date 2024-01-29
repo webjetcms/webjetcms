@@ -136,7 +136,7 @@ Scenario('Pristup a perex webstranky', async ({ I, DTE }) => {
      const fileName = await I.grabAttributeFrom('.elfinder-cwd-file.ui-corner-all.ui-selectee:nth-child(3) div.elfinder-cwd-filename', 'title'); // zober nazov oznaceneho obrazka
 
      I.switchTo();
-     I.click(locate('button.btn.btn-primary').withText('Potvrdiť'));
+     I.click(locate('#modalIframe button.btn.btn-primary').withText('Potvrdiť'));
      I.waitForValue('div.DTE_Field_Name_perexImage .form-control', '/images/gallery/test/' + fileName, 5);
 
      // Znacky

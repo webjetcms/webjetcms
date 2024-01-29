@@ -172,7 +172,7 @@ export function renderTd(row, td, rowData) {
                 }
                 if (typeof className != "undefined" && className != null && className.indexOf("show-html")!=-1) {
                     //console.log("allowing html, td=", td);
-                    text = escapeHtml(td);
+                    text = WJ.escapeHtml(td);
                 }
             } catch (e) {}
             //console.log("class: ", row.settings.aoColumns[row.col].className);
@@ -180,10 +180,6 @@ export function renderTd(row, td, rowData) {
         }
 
     }
-}
-
-export function escapeHtml(string) {
-    return WJ.escapeHtml(string);
 }
 
 export function isRangeOk(min,max,val){
@@ -285,6 +281,27 @@ export function renderText(td, type, rowData, row) {
         return renderTd(row, td, rowData);
     }
 
+}
+
+export function renderTextHtmlInput(td, type, rowData, row) {
+
+    if (td === "") { return "" }
+
+    if (type == "sort" || type == "filter" ) {
+        try {
+            //DT automatically escape entities, so for search we must escape it too
+            if (td != null) {
+                td = td.replaceAll("&", "&amp;");
+                td = td.replaceAll("<", "&lt;");
+                td = td.replaceAll(">", "&gt;");
+                td = td.replaceAll("\"", "&quot;");
+            }
+            return td;
+        } catch (e) {}
+        return td;
+    }
+
+    return renderTd(row, td, rowData);
 }
 
 export function renderSelect(td, type, rowData, row) {

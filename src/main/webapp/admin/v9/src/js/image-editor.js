@@ -11,7 +11,6 @@ export class ImageEditor extends Editor {
     //konstanta: <%=Constants.getInt("rootGroupId")%>
 
     #editorState = 0;
-    #imageName = $("#DTE_Field_imageName").val();
     #file = null;
 
     /* chunk config */
@@ -60,10 +59,10 @@ export class ImageEditor extends Editor {
         formatedBlobData.append('destinationFolder', adminUpload.getDestinationFolder());
         formatedBlobData.append('writeDirectlyToDestination', true);
         formatedBlobData.append('overwriteMode', 'overwrite');
-        formatedBlobData.append('name', this.#imageName);
+        formatedBlobData.append('name', this.getImageName());
         formatedBlobData.append('encoding', "base64");
 
-        this.#file = new File([imageBlob], this.#imageName, { type: 'image/jpeg' });
+        this.#file = new File([imageBlob], this.getImageName(), { type: 'image/jpeg' });
         this.#file.upload = { progess: 0 };
         $( document ).trigger('initAddedFileFromImageOutside', [this.#file]);
         this.postAgain(url, formatedBlobData, imageBlob);
@@ -144,5 +143,7 @@ export class ImageEditor extends Editor {
         this.#totalChunkCount = null;
         this.#convertSize = null;
         this.#progress = 0;
+
+        this.clearUndoStack();
     }
 }

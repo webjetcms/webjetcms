@@ -109,7 +109,7 @@ public String printFilesTree(String path, String parentElement, int level, Strin
 				}
 				else
 				{
-					out.append("var treeItem_"+level+"_"+i+" = new WebFXLoadTreeItem(\""+fileName+"\", \"/admin/skins/webjet6/left_files-tree.jsp?parentId="+i+"&path="+Tools.URLEncode(path+fileName)+"\", \"javascript:"+jsMethod +"\", null, \"/admin/images/dtree/folder.gif\", \"/admin/images/dtree/folderopen.gif\");");
+					out.append("var treeItem_"+level+"_"+i+" = new WebFXLoadTreeItem(\""+fileName+"\", \"/admin/dialog-select-dir-tree-ajax.jsp?parentId="+i+"&path="+Tools.URLEncode(path+fileName)+"\", \"javascript:"+jsMethod +"\", null, \"/admin/images/dtree/folder.gif\", \"/admin/images/dtree/folderopen.gif\");");
 					out.append(parentElement+".add(treeItem_"+level+"_"+i+");");
 				}
 			}
@@ -119,7 +119,7 @@ public String printFilesTree(String path, String parentElement, int level, Strin
 	return out.toString();
 }
 %>
-<%@ include file="/admin/skins/webjet6/layout_top.jsp" %>
+<%@ include file="/admin/layout_top_popup.jsp" %>
 <%@page import="sk.iway.iwcm.io.IwcmFile"%>
 <%@page import="java.io.IOException"%>
 
@@ -159,7 +159,10 @@ webFXTreeConfig.loadingText = "<iwcm:text key="groupslist.xtree.loading"/>";
 function folderClick(path)
 {
 	window.opener.setFileBrowserPath(path);
-	window.close();
+	setTimeout(() => {
+		//FF fix for gallery.js test
+		window.close();
+	}, 500);
 }
 
 var globalCtxNodePath = "";
@@ -248,4 +251,4 @@ var globalCtxNodePath = "";
 
 </script>
 
-<%@ include file="/admin/skins/webjet6/layout_bottom_left.jsp" %>
+<%@ include file="/admin/layout_bottom_popup.jsp" %>

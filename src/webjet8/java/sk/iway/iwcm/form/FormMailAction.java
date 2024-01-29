@@ -25,6 +25,7 @@ import sk.iway.iwcm.system.multidomain.MultiDomainFilter;
 import sk.iway.iwcm.system.stripes.CSRF;
 import sk.iway.iwcm.tags.WriteTag;
 import sk.iway.iwcm.users.UserDetails;
+import sk.iway.iwcm.users.UsersDB;
 import sk.iway.upload.DiskMultiPartRequestHandler;
 import sk.iway.upload.UploadedFile;
 
@@ -1132,7 +1133,7 @@ public class FormMailAction extends HttpServlet
 					int userId = -1;
 					try
 					{
-						Identity user = (Identity)request.getSession().getAttribute(Constants.USER_KEY);
+						Identity user = UsersDB.getCurrentUser(request);
 						if (user!=null)
 						{
 							userId = user.getUserId();
@@ -1180,7 +1181,7 @@ public class FormMailAction extends HttpServlet
 
 					if (allowInsert)
 					{
-						Identity user = (Identity)request.getSession().getAttribute(Constants.USER_KEY);
+						Identity user = UsersDB.getCurrentUser(request);
 						int editFormId = Tools.getIntValue(request.getParameter("_editFormId"), -1);
 						Logger.debug(FormMailAction.class, "editFormId="+editFormId);
 						if (user!=null && user.isAdmin()==true && editFormId>0)
@@ -1601,7 +1602,7 @@ public class FormMailAction extends HttpServlet
 							msg.setHeader("X-sender-ip", Tools.getRemoteIP(request));
 							msg.setHeader("X-sender-host", Tools.getRemoteHost(request));
 							msg.setHeader("X-server-name", Tools.getServerName(request));
-							Identity user = (Identity)request.getSession().getAttribute(Constants.USER_KEY);
+							Identity user = UsersDB.getCurrentUser(request);
 							if (user!=null)
 							{
 								msg.setHeader("X-sender-userid", Integer.toString(user.getUserId()));

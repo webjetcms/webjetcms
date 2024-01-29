@@ -26,6 +26,7 @@ import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.UserTools;
 import sk.iway.iwcm.components.users.AuthorizeUserService;
+import sk.iway.iwcm.components.users.groups_approve.GroupsApproveRepository;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.system.ModuleInfo;
 import sk.iway.iwcm.system.Modules;
@@ -52,12 +53,14 @@ public class UserDetailsController extends DatatableRestControllerV2<UserDetails
 
     private final UserDetailsService userDetailsService;
     private final UserDetailsRepository userDetailsRepository;
+    private final GroupsApproveRepository groupsApproveRepository;
 
     @Autowired
-    public UserDetailsController(UserDetailsRepository userDetailsRepository, UserDetailsService userDetailsService) {
+    public UserDetailsController(UserDetailsRepository userDetailsRepository, UserDetailsService userDetailsService, GroupsApproveRepository groupsApproveRepository) {
         super(userDetailsRepository);
         this.userDetailsRepository = userDetailsRepository;
         this.userDetailsService = userDetailsService;
+        this.groupsApproveRepository = groupsApproveRepository;
     }
 
     @Override
@@ -169,16 +172,21 @@ public class UserDetailsController extends DatatableRestControllerV2<UserDetails
 
         SpecSearch<UserDetailsEntity> specSearch = new SpecSearch<>();
         String permissions = params.get("searchEditorFields.permisions");
-        if (permissions!=null) {
+        if (permissions != null) {
             specSearch.addSpecSearchPasswordProtected(permissions, "userGroupsIds", predicates, root, builder);
         }
         String emails = params.get("searchEditorFields.emails");
-        if (emails!=null) {
+        if (emails != null) {
             specSearch.addSpecSearchPasswordProtected(emails, "userGroupsIds", predicates, root, builder);
         }
         int userGroupId = Tools.getIntValue(params.get("userGroupId"), -1);
-        if (userGroupId>0) {
+        if (userGroupId > 0) {
             specSearch.addSpecSearchPasswordProtected(userGroupId, "userGroupsIds", predicates, root, builder);
+        }
+
+        String permGroups = params.get("searchEditorFields.permGroups");
+        if(permGroups != null) {
+            specSearch.addSpecSearchIdInForeignTable(permGroups, "users_in_perm_groups", "user_id", "perm_group_id", "id", predicates, root, builder);
         }
 
         super.addSpecSearch(params, predicates, root, builder);
@@ -227,7 +235,7 @@ public class UserDetailsController extends DatatableRestControllerV2<UserDetails
 
         if(entity != null && entity.getEditorFields() == null) {
             UserDetailsEditorFields udef = new UserDetailsEditorFields();
-            udef.fromUserDetailsEntity(entity, loadSubQueries, getRequest());
+            udef.fromUserDetailsEntity(entity, loadSubQueries, getRequest(), groupsApproveRepository);
         }
 
         //pri exporte nastav prazdne heslo
@@ -319,5 +327,16 @@ public class UserDetailsController extends DatatableRestControllerV2<UserDetails
             addNotify(new NotifyBean(getProp().getText("components.users.auth_title"), getProp().getText("components.users.auth_success", userToApprove.getFullName(), userToApprove.getLogin()), NotifyType.SUCCESS, 15000));
         } else
             addNotify(new NotifyBean(getProp().getText("components.users.auth_title"), getProp().getText("components.users.auth_failed", userToApprove.getFullName(), userToApprove.getLogin()), NotifyType.ERROR));
+    }
+
+    @Override
+    public boolean beforeDelete(UserDetailsEntity entity) {
+        //Check that user is not trying delete user account, that is actually loged
+        if(entity.getId().intValue() == getUser().getUserId()) {
+            throwError("user.self_delete_error");
+            return false;
+        }
+
+        return true;
     }
 }

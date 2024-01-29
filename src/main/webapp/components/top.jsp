@@ -93,6 +93,9 @@ if ((new File(sk.iway.iwcm.Tools.getRealPath(iconLink))).isFile()==false)
 				var innerHeight = myWindow.innerHeight;
 				var innerWidth = myWindow.innerWidth;
 				var hasFullHeightTab = $("#componentsWindowTableMainDiv div.tab-pane-fullheight").length > 0;
+				var isInlineEditor = myWindow.location.href.indexOf("inlineEditorAdmin=true")!=-1;
+
+				//console.log("innerHeight=", innerHeight, "innerWidth=", innerWidth, "hasFullHeightTab=", hasFullHeightTab);
 
 				if (innerHeight >= 1300) minHeight = 1300;
 				else if (innerHeight >= 1200) minHeight = 1200;
@@ -108,6 +111,8 @@ if ((new File(sk.iway.iwcm.Tools.getRealPath(iconLink))).isFile()==false)
 				else if (innerWidth >= 1600) minWidth = 1600;
 				else if (innerWidth >= 1500) minWidth = 1500;
 				else if (innerWidth >= 1400) minWidth = 1400;
+				else if (innerWidth >= 1300) minWidth = 1300;
+				else if (innerWidth >= 1200) minWidth = 1200;
 
 				//console.log("window.parent.parent.innerHeight=", innerHeight, "innerWidth=", innerWidth);
 
@@ -118,18 +123,35 @@ if ((new File(sk.iway.iwcm.Tools.getRealPath(iconLink))).isFile()==false)
 					//780->480
 					var height = minHeight;
 
-					if (myWindow.location.href.indexOf("inlineEditorAdmin=true")!=-1) height = height - 150; //inline editor, it's iframed, so make window bigger
-					else height = height - 300;
+					if (isInlineEditor) height = height - 120; //inline editor, it's iframed, so make window bigger 80=28top+42botttom+free space
+					else height = Math.floor((height-150)*0.9);
 
 					//380 is default value, check for fullheight tab
 					if (height > 380 && hasFullHeightTab) {
 						//console.log("minHeight=", minHeight, "height=", height);
 
+						var heightTabs = height;
+						if (isInlineEditor) {
+							//console.log(window.parent.parent.$(".cke_dialog_title").outerHeight());
+							heightTabs = heightTabs - window.parent.parent.$(".cke_dialog_title").outerHeight() -2; //28 is height of toolbar header
+						}
+
 						$("#componentsWindowTableMainDiv").css("height", height+"px");
-						$("#componentsWindowTableMainDiv div.tab-pane-fullheight .tab-page").css("height", height+"px");
-						$("#componentsWindowTableMainDiv div.tab-pane-fullheight .tab-page").css("max-height", height+"px");
-						$("#componentsWindowTableMainDiv div.tab-pane-fullheight .tab-page-iframe, div.tab-pane-fullheight .tab-page-iframe iframe").css("height", height+"px");
-						$("#componentsWindowTableMainDiv div.tab-pane-fullheight .tab-page-iframe, div.tab-pane-fullheight .tab-page-iframe iframe").css("max-height", height+"px");
+						$("#componentsWindowTableMainDiv div.tab-pane-fullheight .tab-page").css("height", heightTabs+"px");
+						$("#componentsWindowTableMainDiv div.tab-pane-fullheight .tab-page").css("max-height", heightTabs+"px");
+
+						$("#componentsWindowTableMainDiv div.tab-pane-fullheight .tab-page-iframe, div.tab-pane-fullheight .tab-page-iframe iframe").css("height", heightTabs+"px");
+						$("#componentsWindowTableMainDiv div.tab-pane-fullheight .tab-page-iframe, div.tab-pane-fullheight .tab-page-iframe iframe").css("max-height", heightTabs+"px");
+
+						$("#componentsWindowTableMainDiv div.tab-pane-fullheight .tab-page-iframe, div.tab-pane-fullheight .tab-page-iframe iframe").each(function() {
+							var $this = $(this);
+							var marginTop = 0;
+							if (typeof $this.data("margin-top") != "undefined") marginTop = parseInt($this.data("margin-top"));
+							//console.log("marginTop", marginTop, "this=", this);
+							$this.css("height", (heightTabs - marginTop) + "px");
+							$this.css("max-height", (heightTabs - marginTop) + "px");
+						});
+
 
 						recommendedWidth = minWidth - 150;
 					}

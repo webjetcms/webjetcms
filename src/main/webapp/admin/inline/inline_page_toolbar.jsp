@@ -746,7 +746,7 @@
                         </div>
                         <div class="wj-row wj-full-width">
                             <div class="wj-row-label"><label for="perexImageId"><iwcm:text key="editor.mainImage"/></label></div>
-                            <div class="wj-row-input has-action"><form:input id="perexImageId" path="perexImage"/><i onclick="openImageDialogWindow('editorForm', 'perexImage');" class="wj-action-icon fa fa-picture-o">&nbsp;</i></div>
+                            <div class="wj-row-input has-action"><form:input id="perexImageId" path="perexImage"/><i onclick="openImageDialogWindow('editorForm', 'perexImage');" class="wj-action-icon fa fa-image">&nbsp;</i></div>
                         </div>
                         <div class="wj-row">
                             <div class="wj-row-headline"><iwcm:text key="components.news.title"/></div>

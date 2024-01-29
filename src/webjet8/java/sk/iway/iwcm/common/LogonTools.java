@@ -375,7 +375,7 @@ public class LogonTools {
 
                     for(String directory : new String[]{"/images","/files"})
                     {
-                        String path = Tools.replace(UploadFileTools.getPageUploadSubDir(-1, groupId, directory+domainAlias), "//", "/");
+                        String path = Tools.replace(UploadFileTools.getPageUploadSubDir(-1, groupId, null, directory+domainAlias), "//", "/");
                         //replace dvojiteho aliasu, niekedy sa to tam tak doplni a nemam energiu hladat preco a co by sa pokazilo potom
                         if (Tools.isNotEmpty(domainAlias))
                         {

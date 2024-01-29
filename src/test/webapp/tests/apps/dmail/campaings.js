@@ -16,7 +16,7 @@ Before(({ I, login }) => {
     }
 });
 
-Scenario('campaings-zakladne testy', async ({I, DTE}) => {
+Scenario('campaings-zakladne testy', ({I, DTE}) => {
 
     var entityName = entityNameOriginal+"-zt";
 
@@ -67,7 +67,7 @@ Scenario('campaings-zakladne testy', async ({I, DTE}) => {
     I.dontSee(entityName);
 });
 
-Scenario('campaings-XLS import testy', async ({I, DT, DTE}) => {
+Scenario('campaings-XLS import testy', ({I, DT, DTE}) => {
 
     var entityName = entityNameOriginal+"-xls";
 
@@ -116,7 +116,7 @@ Scenario('campaings-XLS import testy', async ({I, DT, DTE}) => {
     I.click("Zmazať", "div.DTE_Action_Remove");
  });
 
- Scenario('campaings-RAW import testy', async ({I, DTE}) => {
+ Scenario('campaings-RAW import testy', ({I, DT, DTE}) => {
 
     var entityName = entityNameOriginal+"-raw";
 
@@ -130,14 +130,14 @@ Scenario('campaings-XLS import testy', async ({I, DT, DTE}) => {
     I.click('Produktová stránka - B verzia');
     DTE.save();
 
-    I.fillField("input.dt-filter-subject", entityName);
-    I.pressKey('Enter', "input.dt-filter-subject");
+    DT.filter("subject", entityName);
     I.click(entityName);
     DTE.waitForEditor("campaingsDataTable");
     I.clickCss("#pills-dt-campaingsDataTable-receivers-tab");
 
     //First import WITHOUT set default custom name
     I.clickCss("#datatableFieldDTE_Field_recipientsTab_wrapper > div.dt-header-row.clearfix > div > div.col-auto > div > button.btn.btn-sm.buttons-create.btn-success.buttons-divider");
+    I.waitForElement("#datatableFieldDTE_Field_recipientsTab_modal");
     I.wait(1);
     var importEmails = "vipklient@balat.sk, admin@balat.sk"
     I.clickCss("#DTE_Field_recipientEmail")
@@ -215,9 +215,10 @@ Scenario('campaings-XLS import testy', async ({I, DT, DTE}) => {
     I.dontSee(entityName);
  });
 
- Scenario('testy skupiny pouzivatelov', async ({I, DTE}) => {
+ Scenario('testy skupiny pouzivatelov', ({I, DT, DTE}) => {
 
     var entityName = entityNameOriginal+"-ug";
+    DT.waitForLoader();
 
     /* PREPARE ENTITY */
     I.clickCss("div.dt-buttons button.buttons-create");
@@ -230,14 +231,15 @@ Scenario('campaings-XLS import testy', async ({I, DT, DTE}) => {
     DTE.save();
 
     //Try add users by group
-    I.fillField("input.dt-filter-subject", entityName);
-    I.pressKey('Enter', "input.dt-filter-subject");
+    DT.filter("subject", entityName);
     I.click(entityName);
     DTE.waitForEditor("campaingsDataTable");
     I.clickCss("#pills-dt-campaingsDataTable-groupsTab-tab");
     I.wait(1);
 
-    I.click(locate('label').withText('Bankári'));
+    I.waitForElement(locate('#pills-dt-campaingsDataTable-groupsTab label.form-check-label').withText('Bankári'), 5);
+    I.click(locate('#pills-dt-campaingsDataTable-groupsTab label.form-check-label').withText('Bankári'));
+    I.wait(1);
     DTE.save();
 
     I.click(entityName);
@@ -251,8 +253,11 @@ Scenario('campaings-XLS import testy', async ({I, DT, DTE}) => {
 
     I.clickCss("#pills-dt-campaingsDataTable-groupsTab-tab");
     I.click(locate('label').withText('Bankári'));
+    I.wait(0.5);
     I.click(locate('label').withText('Obchodní partneri'));
+    I.wait(0.5);
     I.click(locate('label').withText('VIP Klienti'));
+    I.wait(0.5);
     DTE.save();
 
     I.click(entityName);
@@ -264,12 +269,14 @@ Scenario('campaings-XLS import testy', async ({I, DT, DTE}) => {
     I.dontSee("Matej Pavlík");
 
     I.see("VIP Klient");
-    I.see("Obchodny Partner");
+    I.see("Meno Priezvisko");
 
     I.clickCss("#pills-dt-campaingsDataTable-groupsTab-tab");
     I.wait(1);
     I.click(locate('label').withText('Obchodní partneri'));
+    I.wait(0.5);
     I.click(locate('label').withText('VIP Klienti'));
+    I.wait(0.5);
     DTE.save();
 
     I.click(entityName);
@@ -354,8 +361,9 @@ Scenario('BUG pocty prijemcov', ({I, DTE}) => {
     I.dontSee(entityName);
 });
 
-Scenario('zobrazenie nahladu emailu', ({I}) => {
-    I.dtWaitForLoader();
+Scenario('zobrazenie nahladu emailu', ({I, DT}) => {
+    DT.waitForLoader();
+    DT.filter("subject", "test", "Začína na");
     I.click("Testovaci email");
     I.dtWaitForEditor("campaingsDataTable");
 
@@ -433,21 +441,25 @@ Scenario('Test sort in inner tables', async ({I, DT, DTE}) => {
 
         //sort by ID ASC
         I.click(locate('//*[@id="datatableFieldDTE_Field_recipientsTab_wrapper"]/div[2]/div/div/div[1]/div[1]/div/table/thead/tr[1]/th[1]'));
+        DT.waitForLoader();
         DT.checkTableCell("datatableFieldDTE_Field_recipientsTab", 1, 2, "recipient_A");
         DT.checkTableCell("datatableFieldDTE_Field_recipientsTab", 2, 2, "recipient_B");
 
         //sort by ID DESC
         I.click(locate('//*[@id="datatableFieldDTE_Field_recipientsTab_wrapper"]/div[2]/div/div/div[1]/div[1]/div/table/thead/tr[1]/th[1]'));
+        DT.waitForLoader();
         DT.checkTableCell("datatableFieldDTE_Field_recipientsTab", 1, 2, "recipient_B");
         DT.checkTableCell("datatableFieldDTE_Field_recipientsTab", 2, 2, "recipient_A");
 
         //sort by sendDate ASC
         I.click(locate('//*[@id="datatableFieldDTE_Field_recipientsTab_wrapper"]/div[2]/div/div/div[1]/div[1]/div/table/thead/tr[1]/th[4]'));
+        DT.waitForLoader();
         DT.checkTableCell("datatableFieldDTE_Field_recipientsTab", 1, 2, "recipient_A");
         DT.checkTableCell("datatableFieldDTE_Field_recipientsTab", 2, 2, "recipient_B");
 
         //sort by sendDate DESC
         I.click(locate('//*[@id="datatableFieldDTE_Field_recipientsTab_wrapper"]/div[2]/div/div/div[1]/div[1]/div/table/thead/tr[1]/th[4]'));
+        DT.waitForLoader();
         DT.checkTableCell("datatableFieldDTE_Field_recipientsTab", 1, 2, "recipient_B");
         DT.checkTableCell("datatableFieldDTE_Field_recipientsTab", 2, 2, "recipient_A");
 
@@ -463,23 +475,95 @@ Scenario('Test sort in inner tables', async ({I, DT, DTE}) => {
 
         //sort by sendDate DESC
         I.click(locate('//*[@id="datatableFieldDTE_Field_opensTab_wrapper"]/div[2]/div/div/div[1]/div[1]/div/table/thead/tr[1]/th[4]'));
+        DT.waitForLoader();
         DT.checkTableCell("datatableFieldDTE_Field_opensTab", 1, 2, "recipient_B");
         DT.checkTableCell("datatableFieldDTE_Field_opensTab", 2, 2, "recipient_A");
 
         //sort by sendDate ASC
         I.click(locate('//*[@id="datatableFieldDTE_Field_opensTab_wrapper"]/div[2]/div/div/div[1]/div[1]/div/table/thead/tr[1]/th[4]'));
+        DT.waitForLoader();
         DT.checkTableCell("datatableFieldDTE_Field_opensTab", 1, 2, "recipient_A");
         DT.checkTableCell("datatableFieldDTE_Field_opensTab", 2, 2, "recipient_B");
 
         //sort by ID ASC
         I.click(locate('//*[@id="datatableFieldDTE_Field_opensTab_wrapper"]/div[2]/div/div/div[1]/div[1]/div/table/thead/tr[1]/th[1]'));
+        DT.waitForLoader();
         I.wait(1);
         DT.checkTableCell("datatableFieldDTE_Field_opensTab", 1, 2, "recipient_A");
         DT.checkTableCell("datatableFieldDTE_Field_opensTab", 2, 2, "recipient_B");
 
         //sort by ID DESC
         I.click(locate('//*[@id="datatableFieldDTE_Field_opensTab_wrapper"]/div[2]/div/div/div[1]/div[1]/div/table/thead/tr[1]/th[1]'));
+        DT.waitForLoader();
         I.wait(1);
         DT.checkTableCell("datatableFieldDTE_Field_opensTab", 1, 2, "recipient_B");
         DT.checkTableCell("datatableFieldDTE_Field_opensTab", 2, 2, "recipient_A");
+});
+
+function addEmail(email, I, DTE) {
+    I.click("#datatableFieldDTE_Field_recipientsTab_wrapper button.buttons-create");
+    DTE.waitForEditor("datatableFieldDTE_Field_recipientsTab");
+    I.fillField("#DTE_Field_recipientEmail", email);
+    I.clickCss("#datatableFieldDTE_Field_recipientsTab_modal > div > div > div.DTE_Footer.modal-footer > div.DTE_Form_Buttons > button.btn.btn-primary");
+    I.waitForInvisible("#datatableFieldDTE_Field_recipientsTab_modal");
+    I.wait(2);
+}
+
+Scenario("Duplicity check", ({I, DT, DTE}) => {
+    I.amOnPage("/apps/dmail/admin/");
+    DT.waitForLoader();
+    I.click("button.buttons-create");
+    DTE.waitForEditor("campaingsDataTable");
+
+    I.click("#pills-dt-campaingsDataTable-receivers-tab");
+    //
+    I.say("Checking unsubscribed email");
+    addEmail("test@temp-mail.org", I, DTE);
+    I.see("Nenašli sa žiadne vyhovujúce záznamy", "#datatableFieldDTE_Field_recipientsTab_wrapper");
+
+    addEmail("test1@temp-mail.org", I, DTE);
+    I.see("Záznamy 1 až 1 z 1", "#datatableFieldDTE_Field_recipientsTab_wrapper");
+
+    //
+    I.say("Checking duplicity email");
+    addEmail("TEST1@temp-mail.org", I, DTE);
+    I.see("Záznamy 1 až 1 z 1", "#datatableFieldDTE_Field_recipientsTab_wrapper");
+
+    I.amOnPage("/apps/dmail/admin/?id=2120");
+    DTE.waitForEditor("campaingsDataTable");
+
+    I.click("#pills-dt-campaingsDataTable-receivers-tab");
+    //
+    I.say("Checking unsubscribed email");
+    addEmail("test@temp-mail.org", I, DTE);
+    I.see("Záznamy 1 až 1 z 1", "#datatableFieldDTE_Field_recipientsTab_wrapper");
+
+    addEmail("test1@temp-mail.org", I, DTE);
+    I.see("Záznamy 1 až 1 z 1", "#datatableFieldDTE_Field_recipientsTab_wrapper");
+
+    //
+    I.say("Checking duplicity email");
+    addEmail("TEST1@temp-mail.org", I, DTE);
+    I.see("Záznamy 1 až 1 z 1", "#datatableFieldDTE_Field_recipientsTab_wrapper");
+
+    I.amOnPage("/apps/dmail/admin/?id=2120");
+    DTE.waitForEditor("campaingsDataTable");
+
+    //
+    I.say("Selecting groups with multiple vipklient@balat.sk email");
+    I.click("#pills-dt-campaingsDataTable-groupsTab-tab");
+    I.checkOption("Bankári", "#pills-dt-campaingsDataTable-groupsTab");
+    I.checkOption("VIP Klienti", "#pills-dt-campaingsDataTable-groupsTab");
+    DTE.save();
+    I.click("Duplicity check campaign");
+    DTE.waitForEditor("campaingsDataTable");
+    I.click("#pills-dt-campaingsDataTable-receivers-tab");
+    DT.filter("recipientEmail", "vipklient");
+    I.see("Záznamy 1 až 1 z 1", "#datatableFieldDTE_Field_recipientsTab_wrapper");
+
+    //deselect groups
+    I.click("#pills-dt-campaingsDataTable-groupsTab-tab");
+    I.uncheckOption("Bankári", "#pills-dt-campaingsDataTable-groupsTab");
+    I.uncheckOption("VIP Klienti", "#pills-dt-campaingsDataTable-groupsTab");
+    DTE.save();
 });

@@ -1,6 +1,6 @@
 <%@page import="java.util.List"%><%
 sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
-%><%@ page pageEncoding="utf-8" import="sk.iway.iwcm.forum.*,java.util.*,sk.iway.iwcm.*" %>
+%><%@ page pageEncoding="utf-8" import="sk.iway.iwcm.forum.*,sk.iway.iwcm.components.forum.jpa.*,java.util.*,sk.iway.iwcm.*" %>
 <%@ page import="sk.iway.iwcm.doc.DocDB" %>
 <%@ page import="sk.iway.iwcm.doc.GroupDetails" %>
 <%@ page import="sk.iway.iwcm.doc.GroupsDB" %>
@@ -123,7 +123,7 @@ document.write('<style type="text/css" media="screen">	@import "/components/foru
 				%>
 			<td class="">
 				<%
-			      ForumBean fBean = null;
+			      DocForumEntity fBean = null;
 					if(sr.getParentId() >= 0)
 					{
 						fBean = ForumDB.getForumBean(request, ForumDB.getForumMessageParent(sr.getParentId(), sr.getDocId()), sortAscending);
@@ -132,7 +132,7 @@ document.write('<style type="text/css" media="screen">	@import "/components/foru
 					{
 						fBean = ForumDB.getForumBean(request, sr.getForumId(), sortAscending);
 					}
-					if (fBean==null) fBean = new ForumBean();
+					if (fBean==null) fBean = new DocForumEntity();
 
 					String flag = fBean.getFlag();
 					int forumId = sr.getForumId();

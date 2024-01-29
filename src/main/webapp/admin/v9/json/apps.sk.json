@@ -1,6 +1,35 @@
 {
     "apps": [
         {
+            "name": "Aktualizácia WebJETu",
+            "category": "REST backend + DT",
+            "icon": "far fa-cloud-download",
+            "link": "/admin/v9/settings/update/"
+        },{
+            "name": "Reštauračné menu",
+            "category": "REST backend + DT",
+            "icon": "far fa-utensils",
+            "link": "/apps/restaurant-menu/admin/meals/"
+        },
+        {
+            "name": "SEO",
+            "category": "REST backend + DT + grafy",
+            "icon": "fab fa-searchengin",
+            "link": "/apps/seo/admin/"
+        },
+        {
+            "name": "Novinky",
+            "category": "REST backend + DT",
+            "icon": "far fa-newspaper",
+            "link": "/apps/news/admin/"
+        },
+        {
+            "name": "Diskusia",
+            "category": "REST backend + DT",
+            "icon": "far fa-comments-alt",
+            "link": "/apps/forum/admin/"
+        },
+        {
             "name": "Číselníky",
             "category": "REST backend + DT",
             "icon": "far fa-th-list",

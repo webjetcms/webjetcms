@@ -43,7 +43,7 @@ public class GalleryEntity {
     private Long id;
 
     @Transient
-    @DataTableColumn(inputType = DataTableColumnType.GALLERY_IMAGE, title="editor.perex.image")
+    @DataTableColumn(inputType = DataTableColumnType.GALLERY_IMAGE, title="editor.perex.image", hiddenEditor = true)
     private String datatableImage;
 
     @Size(max = 255)

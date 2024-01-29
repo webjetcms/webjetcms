@@ -10,7 +10,11 @@ var codeceptShow = process.env.CODECEPT_SHOW;
 var browser = process.env.CODECEPT_BROWSER || "chromium";
 var restart = process.env.CODECEPT_RESTART || "context";
 var autoDelayEnabled = "true" == process.env.CODECEPT_AUTODELAY;
-if ("firefox"===browser) autoDelayEnabled = true;
+var pressKeyDelay = 13;
+if ("firefox"===browser) {
+  autoDelayEnabled = true;
+  pressKeyDelay = 30;
+}
 
 var showBrowser = true;
 if (typeof codeceptShow != "undefined" && "false" == codeceptShow) {
@@ -33,7 +37,7 @@ exports.config = {
       browser: browser,
       waitForNavigation: "networkidle",
       waitForTimeout: 30000,
-      pressKeyDelay: 10,
+      pressKeyDelay: pressKeyDelay,
       timeout: 30000, //toto je max cas ako dlho moze trvat akcia, kedze mame pressKeyDelay 50ms tak musi byt dostatocne dlhe, aby cez fillField vedelo napisat text, inak timeoutne funkcia
       restart: restart,
       keepCookies: true,
@@ -69,7 +73,7 @@ exports.config = {
     REST: {
       endpoint: url,
       defaultHeaders: {
-        'x-auth-token': '*********'
+        'x-auth-token': '***REMOVED***+Njg8'
       },
     },
     JSONResponse: {},

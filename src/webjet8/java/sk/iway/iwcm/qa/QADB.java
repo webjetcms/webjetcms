@@ -769,7 +769,7 @@ public class QADB
 
 	public static String addQuestion(QABean qa, HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException {
 		//ak ju chce vymazat, tak sa pozrieme, ci je to admin, a ak hej, tak ju vymazeme
-		Identity user = (Identity)request.getSession().getAttribute(Constants.USER_KEY);
+		Identity user = UsersDB.getCurrentUser(request);
 		boolean isAdmin = (user != null && user.isAdmin());
 		final String delete = "/components/qa/admin_list";
 		final String successAnswer = "/components/qa/admin_answer_result";
@@ -800,7 +800,7 @@ public class QADB
 				forward += "?qasend=xss";
 			else
 				forward += "&qasend=xss";
-			
+
 			SpringUrlMapping.redirect(Tools.sanitizeHttpHeaderParam(forward));
 		}
 

@@ -685,7 +685,7 @@ function disApprovePage(I, pageName) {
     I.switchTo("#approveFormId");
         I.fillField("textarea[name=notes]", "Zamietam");
         I.click("#tabMenu1 input.btn.red");
-        I.waitForText("Pripomienky k web stránke boli zaslané, stránka ešte nie je publikovaná na verejnej časti web stránky.", 10);
+        I.waitForText("Pripomienky k web stránke boli zaslané, stránka ešte nie je publikovaná na verejnej časti web stránky.", 50);
     I.switchTo();
 
     //Close tab
@@ -771,6 +771,7 @@ function setPageName(I, pageName) {
 function checkWaitingTab(I, DT, pageName, shouldBeThere) {
     I.say("checkWaitingTab "+pageName);
     I.click("#pills-waiting-tab");
+    DT.waitForLoader();
     DT.filter("title", pageName);
 
     if(shouldBeThere) {
@@ -779,5 +780,91 @@ function checkWaitingTab(I, DT, pageName, shouldBeThere) {
     } else {
         I.dontSee(pageName);
         I.see("Nenašli sa žiadne vyhovujúce záznamy");
+    }
+}
+
+Scenario('Testing of approving where user have NONE mode', async ({I, DT, DTE}) => {
+    let noneApprove = "I am tester with set mode NONE";
+    let mustApprove = "I am tester3 without any rights. I MUST be approved.";
+    let approver = "I am tester2 and I am APPROVER";
+
+    let parentPage = "Test_samo_schvalenia_none_parent";
+    let childPage = "Test_samo_schvalenia_none_child";
+
+    I.relogin('tester'); //right NONE so can do what he want
+    await updatePagesLogic(I, DTE, noneApprove, false, null);
+
+    I.relogin('tester3'); //dont have anz right, need approve
+    await updatePagesLogic(I, DTE, mustApprove, true, noneApprove);
+
+    I.relogin('tester'); //right NONE so can do what he want, BUT he cant see awaiting to approve changes
+    checkAwaiting(I, DT, false);
+
+    I.relogin('tester2'); //THIS is approver
+
+    //must see approving request's
+    checkAwaiting(I, DT, true);
+    I.click( locate("div.datatable-column-width > a").withText(parentPage) );
+    disApprovePage(I, parentPage);
+
+    checkAwaiting(I, DT, true);
+    I.click( locate("div.datatable-column-width > a").withText(childPage) );
+    disApprovePage(I, childPage);
+
+    await updatePagesLogic(I, DTE, approver, false, noneApprove);
+});
+
+async function checkAwaiting(I, DT, shouldBeThere) {
+    I.amOnPage("/admin/v9/webpages/web-pages-list/?groupid=59157");
+    I.click("#pills-waiting-tab");
+    DT.filter("title", "Test_samo_schvalenia_none_");
+    DT.filter("authorName", "Tester_L2 Playwright");
+
+    if(shouldBeThere) {
+        I.dontSee("Nenašli sa žiadne vyhovujúce záznamy");
+    } else {
+        I.see("Nenašli sa žiadne vyhovujúce záznamy");
+    }
+}
+
+async function updatePagesLogic(I, DTE, insertText, shouldBeApproved, controlText) {
+    //Parent
+    I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=73276");
+    I.dtWaitForEditor();
+    await updatePagesLogic2(I, DTE, insertText, shouldBeApproved, controlText);
+
+    //Child
+    I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=73277");
+    I.dtWaitForEditor();
+    await updatePagesLogic2(I, DTE, insertText, shouldBeApproved, controlText);
+}
+
+async function updatePagesLogic2(I, DTE, insertText, shouldBeApproved, controlText) {
+    //Check previous set text
+    if(controlText != null) {
+        I.switchTo("#cke_data");
+        I.switchTo("iframe.cke_reset");
+        I.see(controlText);
+        I.switchTo();
+        I.switchTo();
+    }
+
+    //close notification (if exists) about latest page change
+    I.clickIfVisible("#toast-container-webjet div.toast-warning button.toast-close-button")
+
+    //Fill page
+    await DTE.fillCkeditor(insertText);
+    DTE.save();
+
+    if(shouldBeApproved) {
+        //Must be generated approve notification
+        I.seeElement("div.toast-container div.toast");
+        I.see("Žiadosť o schválenie web stránky dostal: Tester2 Playwright2");
+        //close it
+        I.forceClickCss("div.toast-container .toast-close-button");
+    } else {
+        //Must NOT be generated approve notification
+        I.dontSeeElement("div.toast-container div.toast");
+        I.dontSee("Žiadosť o schválenie web stránky dostal: Tester2 Playwright2");
     }
 }

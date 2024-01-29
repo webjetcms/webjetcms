@@ -69,7 +69,6 @@ public class ImportStructureExcel extends ExcelImportJXL
 	int rootGroupId = 1;
 	GroupDetails rootGroup = null;
 	String basePath;
-	boolean createWebPages = true;
 
 	boolean foundStart = false;
 	boolean foundEnd = false;
@@ -118,15 +117,6 @@ public class ImportStructureExcel extends ExcelImportJXL
 		}
 		rootGroupId = groupId;
 		rootGroup = GroupDetails.getById(rootGroupId);
-
-		if ("yes".equals(request.getParameter("createPages")))
-		{
-			createWebPages = true;
-		}
-		else
-		{
-			createWebPages = false;
-		}
 
 		if ("true".equals(request.getParameter("levelAsPriority"))) levelAsPriority = true;
 		else levelAsPriority = false;
@@ -327,7 +317,7 @@ public class ImportStructureExcel extends ExcelImportJXL
 		}
 
 
-		if (group != null && createWebPages==true)
+		if (group != null)
 		{
 			String data = "";
 

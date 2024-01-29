@@ -11,7 +11,7 @@ sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
 <script type='text/javascript'>
 
 function Ok()
-{		
+{
 	var htmlCode = "";
    if(document.textForm.field.value == "last_update")
    {
@@ -67,7 +67,7 @@ function showHelp(select)
 }
 if (isFck)
 {
-	
+
 }
 else
 {
@@ -89,9 +89,8 @@ Prop prop = Prop.getInstance();
 %>
 <div class="tab-pane toggle_content tab-pane-fullheight">
 	<div class="tab-page" id="tabMenu1" style="display: block;">
-		<table border="0" cellspacing="0" cellpadding="5">
 		<form name=textForm>
-			<div class="col-sm-10">
+			<div class="">
 				<div class="col-sm-4">
 					<iwcm:text key="components.date.field"/>
 				</div>
@@ -108,13 +107,15 @@ Prop prop = Prop.getInstance();
 				</div>
 			</div>
 		</form>
-		</table>
-		<div id="options" style="display:none">
-		   <form name="checkForm">
-		   	<input type="checkbox" name="aktualizovane" checked value="yes">&nbsp;<iwcm:text key="components.date.display_updated" param1='<%=prop.getText("components.date.aktualizovane")%>'/>&nbsp;&nbsp;
-		  		<input type="checkbox" name="datum" checked value="yes">&nbsp;<iwcm:text key="components.date.display_date"/>&nbsp;&nbsp;
-		  		<input type="checkbox" name="cas" checked value="yes">&nbsp;<iwcm:text key="components.date.display_time"/>
-		   </form>
+		<div id="options" style="display:none; padding-top: 16px; clear: both;">
+			<div class="col-sm-4"></div>
+			<div class="col-sm-8">
+				<form name="checkForm">
+						<input type="checkbox" name="aktualizovane" checked value="yes">&nbsp;<iwcm:text key="components.date.display_updated" param1='<%=prop.getText("components.date.aktualizovane")%>'/>&nbsp;&nbsp;
+						<input type="checkbox" name="datum" checked value="yes">&nbsp;<iwcm:text key="components.date.display_date"/>&nbsp;&nbsp;
+						<input type="checkbox" name="cas" checked value="yes">&nbsp;<iwcm:text key="components.date.display_time"/>
+				</form>
+		   </div>
 		</div>
 	</div>
 </div>

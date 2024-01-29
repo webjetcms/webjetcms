@@ -1,21 +1,21 @@
 <%
 	sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
 %><%@ page pageEncoding="utf-8"
-	import="sk.iway.iwcm.*,sk.iway.iwcm.i18n.*,org.apache.commons.codec.binary.Base64"%><%@ 
+	import="sk.iway.iwcm.*,sk.iway.iwcm.i18n.*,org.apache.commons.codec.binary.Base64"%><%@
 taglib
-	prefix="iwcm" uri="/WEB-INF/iwcm.tld"%><%@ 
+	prefix="iwcm" uri="/WEB-INF/iwcm.tld"%><%@
 taglib prefix="iway"
-	uri="/WEB-INF/iway.tld"%><%@ 
+	uri="/WEB-INF/iway.tld"%><%@
 taglib prefix="bean"
-	uri="/WEB-INF/struts-bean.tld"%><%@ 
+	uri="/WEB-INF/struts-bean.tld"%><%@
 taglib prefix="html"
-	uri="/WEB-INF/struts-html.tld"%><%@ 
+	uri="/WEB-INF/struts-html.tld"%><%@
 taglib prefix="logic"
-	uri="/WEB-INF/struts-logic.tld"%><%@ 
+	uri="/WEB-INF/struts-logic.tld"%><%@
 taglib prefix="display"
-	uri="/WEB-INF/displaytag.tld"%><%@ 
+	uri="/WEB-INF/displaytag.tld"%><%@
 taglib prefix="stripes"
-	uri="http://stripes.sourceforge.net/stripes.tld"%><%@ 
+	uri="http://stripes.sourceforge.net/stripes.tld"%><%@
 taglib
 	prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
 <%
@@ -33,9 +33,6 @@ taglib
 	//
 	String flickr_encoded = pageParams.getValue("flickr_url", "");
 	String flickr_decoded = new String(b64.decode(flickr_encoded.getBytes()));
-	//
-	String google_plus_encoded = pageParams.getValue("google_plus_url", "");
-	String google_plus_decoded = new String(b64.decode(google_plus_encoded.getBytes()));
 	//
 	String instagram_encoded = pageParams.getValue("instagram_url", "");
 	String instagram_decoded = new String(b64.decode(instagram_encoded.getBytes()));
@@ -93,30 +90,30 @@ taglib
     background-image: url(/components/app-social_icon/temp51/twitter-hover.png);
 }
 
-.icon.iconGoogle{
+.icon.iconInstagram {
     background-color: transparent;
-    background-image: url(/components/app-social_icon/temp51/google.png);
+    background-image: url(/components/app-social_icon/temp51/instagram.png);
 }
 
-.icon.iconGoogle > .hover{
+.icon.iconInstagram > .hover{
     background-color: #ff0600;
-    background-image: url(/components/app-social_icon/temp51/google-hover.png);
+    background-image: url(/components/app-social_icon/temp51/instagram-hover.png);
 }
 
 #nextMenu > .inlineComponentEdit{ height:100%;}
 </style>
 <div class="row">
-	
+
 	<%
 		int pocet = 0;
-		if (!"".equals(google_plus_decoded)) pocet++;
+		if (!"".equals(instagram_decoded)) pocet++;
 		if (!"".equals(twitter_decoded)) pocet++;
 		if (!"".equals(facebook_decoded)) pocet++;
 
 
 		if (!"".equals(facebook_decoded))
 		{
-			
+
 			String facebook = prop.getText("components.app-social_icon.editor_components.facebook");
 	%>
 	<script>
@@ -134,36 +131,36 @@ taglib
 </div>
 	<%
 		}
-		
+
 	%>
 
 	<%
-		
-		if (!"".equals(google_plus_decoded))
+
+		if (!"".equals(instagram_decoded))
 		{
-			String google_plusText = prop.getText("components.app-social_icon.editor_components.google_plus");
+			String instagramText = prop.getText("components.app-social_icon.editor_components.instagram");
 	%>
 	<script>
 	$(document).ready(function(){
-   $('.iconGoogle').bind("mouseenter", function(){
-        $('.iconGoogle > .hover').stop().animate({height:"100%",opacity:"1"},200);
+   $('.iconInstagram').bind("mouseenter", function(){
+        $('.iconInstagram > .hover').stop().animate({height:"100%",opacity:"1"},200);
     });
-    $('.iconGoogle').bind("mouseleave", function(){
-         $('.iconGoogle > .hover').stop().animate({height:"0%",opacity:"0"},200);
+    $('.iconInstagram').bind("mouseleave", function(){
+         $('.iconInstagram > .hover').stop().animate({height:"0%",opacity:"0"},200);
         });
 	});
 	</script>
-<div class="col-sm-<%=(12/pocet)%>  icon iconGoogle">
-	<a class="hover" href="<%=google_plus_decoded%>"></a>
+<div class="col-sm-<%=(12/pocet)%>  icon iconInstagram">
+	<a class="hover" href="<%=instagram_decoded%>"></a>
 </div>
 	<%
 		}
-		
+
 	%>
 
 
 	<%
-		
+
 		if (!"".equals(twitter_decoded))
 		{
 			String twitterText = prop.getText("components.app-social_icon.editor_components.twitter");
@@ -183,7 +180,7 @@ taglib
 </div>
 	<%
 		}
-		
+
 	%>
 
 </div>

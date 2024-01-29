@@ -930,6 +930,8 @@ public class GroupDetails implements Cloneable, DocGroupInterface
 
 	public void setDomainName(String domainName)
 	{
+		//domainName should be always lowercase
+		if (domainName != null) domainName = domainName.toLowerCase();
 		this.domainName = domainName;
 	}
 

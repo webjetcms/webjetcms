@@ -73,6 +73,53 @@ if ("/components/messages/refresher-ac.jsp".equals(path) || "/none".equals(path)
     return;
 }
 
+/******* DEFAULT ROBOTS.TXT ***********/
+if ("/robots.txt".equals(path))
+{
+	sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/plain");
+	response.setStatus(HttpServletResponse.SC_OK);
+
+	IwcmFile file = new IwcmFile(Tools.getRealPath("/files/robots.txt"));
+	if (file.exists()) {
+	    text = FileTools.readFileContent(file.getVirtualPath());
+	    out.print(text);
+	    return;
+	}
+
+	String robotsNoindexDomains = Constants.getString("robotsNoindexDomains");
+	if(Tools.isNotEmpty(robotsNoindexDomains))
+	{
+		for(String robotsDomain : Tools.getTokens(robotsNoindexDomains, "|,", true))
+		{
+			if(Tools.getServerName(request).indexOf(robotsDomain) > -1)
+			{
+				out.println("User-agent: *");
+				out.println("Disallow: /");
+				return;
+			}
+		}
+	}
+	%>User-Agent: *
+<% if (Tools.isEmpty(Constants.getString("adminEnableIPs")) && Constants.getBoolean("adminLogonShowSimpleErrorMessage")==false && "full".equals(Constants.getString("clusterMyNodeType"))) {  %>Disallow: /admin
+<% }
+%>Disallow: /components
+Disallow: /thumb
+Sitemap: <%=Tools.getBaseHref(request)%>/sitemap.xml
+<%
+	return;
+}
+
+/******* DEFAULT SITEMAP.XML ***********/
+if ("/sitemap.xml".equals(path) || "/google-sitemap.jsp".equals(path))
+{
+	//tu mame natvrdo UTF-8 pretoze generujeme UTF-8 XML subor
+	response.setContentType("text/xml; charset=utf-8");
+	response.setStatus(HttpServletResponse.SC_OK);
+	String customPage = sk.iway.iwcm.tags.WriteTag.getCustomPage("/components/sitemap/google-sitemap.jsp", request);
+	pageContext.forward(customPage);
+	return;
+}
+
 //ochrana pred DOS utokom na neexistujuce stranky (OWASP DirBuster)
 String userIP = Tools.getRemoteIP(request);
 Cache c = Cache.getInstance();
@@ -142,53 +189,6 @@ if (DocTools.testXss(path))
 }
 
 String queryString = (String)request.getAttribute("path_filter_query_string");
-
-/******* DEFAULT ROBOTS.TXT ***********/
-if ("/robots.txt".equals(path))
-{
-	sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/plain");
-	response.setStatus(HttpServletResponse.SC_OK);
-
-	IwcmFile file = new IwcmFile(Tools.getRealPath("/files/robots.txt"));
-	if (file.exists()) {
-	    text = FileTools.readFileContent(file.getVirtualPath());
-	    out.print(text);
-	    return;
-	}
-
-	String robotsNoindexDomains = Constants.getString("robotsNoindexDomains");
-	if(Tools.isNotEmpty(robotsNoindexDomains))
-	{
-		for(String robotsDomain : Tools.getTokens(robotsNoindexDomains, "|,", true))
-		{
-			if(Tools.getServerName(request).indexOf(robotsDomain) > -1)
-			{
-				out.println("User-agent: *");
-				out.println("Disallow: /");
-				return;
-			}
-		}
-	}
-	%>User-Agent: *
-<% if (Tools.isEmpty(Constants.getString("adminEnableIPs")) && Constants.getBoolean("adminLogonShowSimpleErrorMessage")==false && "full".equals(Constants.getString("clusterMyNodeType"))) {  %>Disallow: /admin
-<% }
-%>Disallow: /components
-Disallow: /thumb
-Sitemap: <%=Tools.getBaseHref(request)%>/sitemap.xml
-<%
-	return;
-}
-
-/******* DEFAULT SITEMAP.XML ***********/
-if ("/sitemap.xml".equals(path) || "/google-sitemap.jsp".equals(path))
-{
-	//tu mame natvrdo UTF-8 pretoze generujeme UTF-8 XML subor
-	response.setContentType("text/xml; charset=utf-8");
-	response.setStatus(HttpServletResponse.SC_OK);
-	String customPage = sk.iway.iwcm.tags.WriteTag.getCustomPage("/components/sitemap/google-sitemap.jsp", request);
-	pageContext.forward(customPage);
-	return;
-}
 
 ExportDatDB expDB = new ExportDatDB();
 ExportDatBean exportDatBean = expDB.findFirstExportByUrlAddress(path);

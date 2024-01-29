@@ -68,24 +68,17 @@
 
 
 		<form method="get" name="textForm">
-			<div class="col-sm-10">
+			<div class="">
 				<label for="pageId">
-					<div class="col-sm-2 left leftCol">
 						<input type="radio" name="sendType" value="page" id="pageId" <%if (ResponseUtils.filter(pageParams.getValue("sendType", "")).compareTo("page") == 0)
 								out.print("checked='checked'");%>/>
-					</div>
-					<div class="col-sm-10 right">
 						<span class="types"><iwcm:text key="components.send_link.send_page"/></span>
-					</div>
 				</label>
+				<br/>
 				<label for="linkId">
-					<div class="col-sm-2 left leftCol">
 						<input type="radio" name="sendType" value="link" id="linkId" <%if (ResponseUtils.filter(pageParams.getValue("sendType", "")).compareTo("page") != 0)
 							out.print("checked='checked'");%>/>
-					</div>
-					<div class="col-sm-10 right">
 						<span class="types"><iwcm:text key="components.send_link.send_link"/></span>
-					</div>
 				</label>
 			</div>
 		</form>

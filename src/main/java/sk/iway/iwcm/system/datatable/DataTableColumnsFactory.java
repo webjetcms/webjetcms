@@ -37,6 +37,12 @@ public class DataTableColumnsFactory {
         if (dto != null) {
             Field[] declaredFields = AuditEntityListener.getDeclaredFieldsTwoLevels(dto);
 
+            //Get from WebjetAppStore annotation commonSettings attribute (true - we want commmon settings tab and fields, false - we don't want common settings tab nor fields)
+            boolean includeCommonSettings = true;
+            if(dto.isAnnotationPresent(sk.iway.iwcm.system.annotations.WebjetAppStore.class)) {
+                includeCommonSettings = dto.getAnnotation(sk.iway.iwcm.system.annotations.WebjetAppStore.class).commonSettings();
+            }
+
             for (Field declaredField : declaredFields) {
 
                 if (declaredField.isAnnotationPresent(sk.iway.iwcm.system.datatable.annotations.DataTableColumnNested.class)) {
@@ -57,6 +63,11 @@ public class DataTableColumnsFactory {
 
                 if (!declaredField.isAnnotationPresent(sk.iway.iwcm.system.datatable.annotations.DataTableColumn.class)) {
                     continue;
+                }
+
+                //If we dont want common settings, skip all fields with tab commonSettings
+                if(includeCommonSettings==false) {
+                    if("commonSettings".equals( declaredField.getAnnotation(sk.iway.iwcm.system.datatable.annotations.DataTableColumn.class).tab()) ) continue;
                 }
 
                 columns.add(new DataTableColumn(dto, declaredField, fieldPrefix));
@@ -173,6 +184,12 @@ public class DataTableColumnsFactory {
             return result;
         }
 
+        //Get from WebjetAppStore annotation commonSettings attribute (true - we want commmon settings tab and fields, false - we don't want common settings tab nor fields)
+        boolean includeCommonSettings = true;
+        if(dto.isAnnotationPresent(sk.iway.iwcm.system.annotations.WebjetAppStore.class)) {
+            includeCommonSettings = dto.getAnnotation(sk.iway.iwcm.system.annotations.WebjetAppStore.class).commonSettings();
+        }
+
         Field[] declaredFields = AuditEntityListener.getDeclaredFieldsTwoLevels(dto);
 
         for (Field declaredField : declaredFields) {
@@ -182,11 +199,31 @@ public class DataTableColumnsFactory {
 
             sk.iway.iwcm.system.datatable.annotations.DataTableColumn annotation = declaredField.getAnnotation(sk.iway.iwcm.system.datatable.annotations.DataTableColumn.class);
             String tab = annotation.tab();
+
+            //If we dont want common settings, skip all fields with tab commonSettings
+            if(includeCommonSettings==false && "commonSettings".equals(tab)) continue;
+
+            //If tab is not empty and tab is not already in result, add it
             if (Tools.isNotEmpty(tab) && result.stream().noneMatch(r -> r.getId().equals(tab))) {
                 result.add(new DataTableTab(annotation, result.isEmpty()));
             }
         }
 
         return result;
+    }
+
+    /**
+     * Returns translated app title from nameKey attribute of WebjetAppStore annotation
+     * @return
+     */
+    public String getTitle() {
+        if (dto == null) {
+            return null;
+        }
+        if(dto.isAnnotationPresent(sk.iway.iwcm.system.annotations.WebjetAppStore.class)) {
+            String key = dto.getAnnotation(sk.iway.iwcm.system.annotations.WebjetAppStore.class).nameKey();
+            return translate(key);
+        }
+        return null;
     }
 }

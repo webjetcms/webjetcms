@@ -53,6 +53,8 @@ module.exports = {
                I.click({ css: prefixSelector + ".DTED.show div.DTE_Footer.modal-footer button.btn-close-editor" });
           }
           this.waitForLoader(name);
+          //wait for fade animation
+          I.wait(0.5);
      },
 
      waitForEditor(name) {
@@ -141,5 +143,13 @@ module.exports = {
      I.pressKey('Backspace');
      I.wait(0.3);
      I.type(value, 50);
+   },
+
+   /**
+    * Clicks on checkbox 'div.custom-control.form-switch label' with text on Datatable Editor window
+    * @param {String} text
+    */
+   clickSwitchLabel(text) {
+     I.click(locate('div.modal.DTED.show div.custom-control.form-switch label').withText(text));
    },
 }

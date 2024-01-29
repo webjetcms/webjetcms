@@ -1,5 +1,5 @@
 <%@page import="java.util.List"%><% sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");%>
-<%@ page pageEncoding="utf-8" import="sk.iway.iwcm.forum.*,java.util.*,sk.iway.iwcm.*" %>
+<%@ page pageEncoding="utf-8" import="sk.iway.iwcm.forum.*,sk.iway.iwcm.components.forum.jpa.*,java.util.*,sk.iway.iwcm.*" %>
 <%@ taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm" %>
 <%@ taglib uri="/WEB-INF/iway.tld" prefix="iway" %>
 <%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
@@ -48,7 +48,7 @@
 
 	if ("mb_open".equals(type))
 	{
-		ForumGroupBean fgb = ForumDB.getForum(docId);
+		ForumGroupEntity fgb = ForumDB.getForum(docId);
 		if (fgb != null && fgb.isMessageBoard())
 		{
 			request.setAttribute("useTitleImage", pageParams.getValue("useTitleImage", ""));
@@ -137,14 +137,14 @@ if(!isAjaxCall)
 					<td><iwcm:text key="forum.subject"/></td>
 					<td><iwcm:text key="forum.date"/></td>
 				</tr>
-			<logic:iterate name="forum" id="field" type="sk.iway.iwcm.forum.ForumBean" indexId="index">
+			<logic:iterate name="forum" id="field" type="DocForumEntity" indexId="index">
 				<tr<% if (field.isDeleted()) out.print(" class='trDeleted'"); %>>
 					<td>
-						<logic:notEmpty name="field" property="autorEmail">
-							<a href="mailto:<bean:write name="field" property="autorEmail"/>"><bean:write name="field" property="autorFullName"/></a>
+						<logic:notEmpty name="field" property="authorEmail">
+							<a href="mailto:<bean:write name="field" property="authorEmail"/>"><bean:write name="field" property="authorName"/></a>
 						</logic:notEmpty>
-						<logic:empty name="field" property="autorEmail">
-							<bean:write name="field" property="autorFullName"/>
+						<logic:empty name="field" property="authorEmail">
+							<bean:write name="field" property="authorName"/>
 						</logic:empty>
 					</td>
 					<td>

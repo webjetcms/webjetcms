@@ -113,7 +113,7 @@ function addPageSize(checkbox)
 }
 function loadListIframe()
 {
-	var url = "/components/forum/admin_diskusia_zoznam.jsp";
+	var url = "/apps/forum/admin/";
 	 $("#componentIframeWindowTabList").attr("src", url);
 }
 </script>

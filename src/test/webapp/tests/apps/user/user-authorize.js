@@ -8,7 +8,7 @@ let password;
 let firstName = "firstName_";
 let lastName = "lastName_";
 
-var defaultPassword = "*********";
+var defaultPassword = "***REMOVED***";
 
 Before(({ I }) => {
     if (randomText == null) {
@@ -27,7 +27,7 @@ function loginIN(I, password, correctPassword=false, checkText=true, userName="t
     I.fillField("username", userName);
     if (correctPassword) I.fillField("password", secret(password));
     else I.fillField("password", "tralala");
-    I.click(".login-submit");
+    I.clickCss(".login-submit");
 
     if (checkText) {
         if (correctPassword) I.see("tento text sa zobrazí len prihlásenému používateľovi.");
@@ -146,9 +146,9 @@ Scenario('Admin auth @singlethread', async ({ I, DT, DTE }) => {
         DT.filter("lastName", lastName);
         I.see(userName);
 
-        I.click("td.dt-select-td.sorting_1");
+        I.clickCss("td.dt-select-td.sorting_1");
         I.wait(1);
-        I.click("button.btn-auth-user-with-gen");
+        I.clickCss("button.btn-auth-user-with-gen");
 
         I.wait(1);
         I.waitForElement("div.toast-message", 10);
@@ -174,42 +174,42 @@ Scenario('remove all old fexpost emails @singlethread', async ({ I, DT }) => {
 
 Scenario('delete cache objects to prevent logon form wrong password counting @singlethread', async ({ I }) => {
     I.amOnPage("/admin/v9/settings/cache-objects/");
-    I.click("button.btn-delete-all");
+    I.clickCss("button.btn-delete-all");
     I.waitForElement("div.toast-message");
-    I.click("div.toast-message button.btn-primary");
+    I.clickCss("div.toast-message button.btn-primary");
     I.closeOtherTabs();
 });
 
-//TODO - Temporally disabled test, untill problem with email box domain will be fixed
-// Scenario('Test email sending after adding to userGroup @singlethread', async ({ I, DT, DTE }) => {
-//     I.relogin("admin");
+Scenario('Test email sending after adding to userGroup @singlethread', async ({ I, DT, DTE }) => {
+    I.relogin("admin");
 
-//     let userName = "autotest_sendinguserGroupMails_" + randomText;
+    let userName = "autotest_sendinguserGroupMails_" + randomText;
 
-//     I.amOnPage("/admin/v9/users/user-list/");
-//     I.click("button.buttons-create");
-//     DTE.waitForEditor();
+    I.amOnPage("/admin/v9/users/user-list/");
+    I.clickCss("button.buttons-create");
+    DTE.waitForEditor();
 
-//     //Just because we need to fill it
-//     I.fillField("#DTE_Field_firstName", userName);
-//     I.fillField("#DTE_Field_lastName", "kokos");
-//     I.fillField("#DTE_Field_editorFields-login", userName);
-//     I.fillField("#DTE_Field_email", tempMailAddress);
-//     I.fillField("#DTE_Field_password", "password" + randomText);
+    //Just because we need to fill it
+    I.fillField("#DTE_Field_firstName", userName);
+    I.fillField("#DTE_Field_lastName", "kokos");
+    I.fillField("#DTE_Field_editorFields-login", userName);
+    I.fillField("#DTE_Field_email", tempMailAddress);
+    I.fillField("#DTE_Field_password", "password" + randomText);
 
-//     //Allow sending mail and add user group
-//     I.click("#pills-dt-datatableInit-groupsTab-tab");
-//     I.checkOption("#DTE_Field_editorFields-permisions_4");
-//     I.checkOption("#DTE_Field_editorFields-sendAllUserGroupsEmails_0");
+    //Allow sending mail and add user group
+    I.clickCss("#pills-dt-datatableInit-groupsTab-tab");
+    I.click("Redaktori", locate("#panel-body-dt-datatableInit-groupsTab label").withText("Redaktori"));
+    I.checkOption("#DTE_Field_editorFields-sendAllUserGroupsEmails_0");
 
-//     DTE.save();
+    DTE.save();
 
-//     //Open email - !! beware, can be false, depend is we call it allready
-//     await openTempEmail(I, true);
-//     I.see("Redaktori");
-//     I.see("Dobrý deň,");
-//     I.see("práve ste boli pridaný adminom do skupiny Redaktori.");
-// });
+    //Open email - !! beware, can be false, depend is we call it allready
+    await openTempEmail(I, true);
+    I.see("Redaktori");
+    I.see("Dobrý deň,");
+    I.see("práve ste boli pridaný adminom do");
+    I.see("skupiny Redaktori.");
+});
 
 async function prepareRegistrationForm(I, DTE, registrationType) {
     //Info about prepared upcoming scenario
@@ -256,8 +256,8 @@ function removeUser(I, DT) {
     DT.filter("firstName", firstName);
     DT.filter("lastName", lastName);
 
-    I.click("td.dt-select-td.sorting_1");
-    I.click("button.buttons-remove");
+    I.clickCss("td.dt-select-td.sorting_1");
+    I.clickCss("button.buttons-remove");
     I.click("Zmazať", "div.DTE_Action_Remove");
     I.dontSee(userName);
 }
@@ -272,7 +272,7 @@ async function openRegisterForm(I, DTE) {
     I.switchTo("iframe.wj_component");
     I.seeElement("div.inlineComponentButtons > a:nth-child(1)");
     I.wait(2);
-    I.click("div.inlineComponentButtons > a:nth-child(1)");
+    I.clickCss("div.inlineComponentButtons > a:nth-child(1)");
     I.switchTo();
 
     I.switchTo("iframe.cke_dialog_ui_iframe");
@@ -300,7 +300,7 @@ async function selectUserGroups(I, wantedGroupIds) {
 
 async function save(I, DTE) {
     I.switchTo();
-    I.click("a.cke_dialog_ui_button.cke_dialog_ui_button_ok");
+    I.clickCss("a.cke_dialog_ui_button.cke_dialog_ui_button_ok");
     I.wait(1);
 
     DTE.save();
@@ -317,7 +317,7 @@ function register(I, isEmailUsed, registrationType) {
     I.fillField("#usrEmail", tempMailAddress);
 
     //Submit
-    I.click("#bSubmitIdAjax");
+    I.clickCss("#bSubmitIdAjax");
     I.wait(1);
 
     if(!isEmailUsed) {
@@ -343,24 +343,24 @@ async function openTempEmail(I) {
 
 
     //Set domain
-    I.click("#domain");
+    I.clickCss("#domain");
     I.wait(1);
     I.click(locate("button.dropdown-item").withText("fexpost.com"));
     //email name
     I.fillField("#pre_button", "WebJetCMS");
-    I.click("#pre_copy");
+    I.clickCss("#pre_copy");
 
     I.wait(2);
     /*I.see("Inbox is protected by a PIN-code");
     I.fillField("#pin", tempMailPin);
-    I.click("#verify");
+    I.clickCss("#verify");
     I.wait(2);*/
 
     //Wait for mail 30 seconds
     I.waitForElement('div.mail', 30);
 
     //Open mail
-    I.click("div.mail");
+    I.clickCss("div.mail");
 }
 
 async function checkVerifyEmail(I, registrationType, phase=null) {
@@ -465,9 +465,9 @@ async function checkVerifyEmail_Three(I) {
 }
 
 async function removeEmail(I) {
-    I.click("#delete_mail");
+    I.clickCss("#delete_mail");
     I.see("Do you really want to delete mail?");
-    I.click("#confirm_mail");
+    I.clickCss("#confirm_mail");
     I.wait(2);
     I.see("Waiting for mails...");
     I.dontSeeElement("div.mail");
@@ -494,9 +494,12 @@ async function removeFexpostUsers(I, DT, DTE, emailAddress) {
 
     //If there is more that 0, delete them all
     if(numberOfUsers > 0) {
-        I.click("button.buttons-select-all");
-        I.click("button.buttons-remove");
+        I.clickCss("button.buttons-select-all");
+        I.clickCss("button.buttons-remove");
         DTE.waitForEditor();
+        //bug wrong filter, delete all users on first page
+        I.dontSee("vipklient", "div.DTE_Action_Remove");
+
         I.click("Zmazať", "div.DTE_Action_Remove");
         DTE.waitForLoader();
     }
@@ -519,19 +522,19 @@ async function deleteAllStroredEmails(I) {
     I.wait(1);
 
     //Set domain
-        I.click("#domain");
+        I.clickCss("#domain");
         I.wait(1);
         I.click(locate("button.dropdown-item").withText("fexpost.com"));
     //email name
         I.fillField("#pre_button", "WebJetCMS");
-        I.click("#pre_copy");
+        I.clickCss("#pre_copy");
 
     //If we see this eleent, there are email to delete
     let numberOfEmails = await I.grabNumberOfVisibleElements("#delete");
 
     if(numberOfEmails > 0) {
-        I.click("#delete");
-        I.click("#confirm");
+        I.clickCss("#delete");
+        I.clickCss("#confirm");
         I.wait(2);
     }
 

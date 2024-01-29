@@ -46,7 +46,7 @@ public class CountryRestController extends DatatableRestControllerV2<CountryDTO,
     @Override
     public Page<CountryDTO> getAllItems(Pageable pageable) {
         //Process params from request into FilterHeaderDto
-        FilterHeaderDto filter = StatService.processRequestToStatFilter(getRequest(), "searchdayDate");
+        FilterHeaderDto filter = StatService.processRequestToStatFilter(getRequest(), null);
 
         DatatablePageImpl<CountryDTO> page = new DatatablePageImpl<>(getDataAndConvertIntoPageItems(filter));
         return page;
@@ -55,7 +55,7 @@ public class CountryRestController extends DatatableRestControllerV2<CountryDTO,
     @Override
     public Page<CountryDTO> searchItem(Map<String, String> params, Pageable pageable, CountryDTO search) {
         //Process received params into FilterHeaderDto
-        FilterHeaderDto filter = StatService.processMapToStatFilter(params, "searchdayDate");
+        FilterHeaderDto filter = StatService.processMapToStatFilter(params, null);
 
         DatatablePageImpl<CountryDTO> page = new DatatablePageImpl<>(getDataAndConvertIntoPageItems(filter));
         return page;

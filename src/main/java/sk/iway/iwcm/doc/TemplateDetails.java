@@ -94,6 +94,13 @@ public class TemplateDetails {
     private String forward;
 
     @DataTableColumn(
+        inputType = DataTableColumnType.SELECT,
+        title = "admin.temp_group_list.inline_editing_mode",
+        tab = "basic"
+    )
+    private String inlineEditingMode;
+
+    @DataTableColumn(
             inputType = DataTableColumnType.SELECT,
             tab = "templatesTab",
             title = "temp_edit.header",
@@ -309,12 +316,14 @@ public class TemplateDetails {
         inputType = DataTableColumnType.DISABLED,
         title = "admin.temps_list.pocet_pouziti",
         renderFormat = "dt-format-number", //v DT to chceme ako cislo
+        sortAfter = "templatesGroupId",
         editor = {
             @DataTableColumnEditor(
                     type = "text",
                     attr = @DataTableColumnEditorAttr(key = "data-dt-field-hr", value = "before")
             )
-        }
+        },
+        className = "hide-on-create"
     )
     private int pocetPouziti;
 
@@ -700,5 +709,13 @@ public class TemplateDetails {
 
     public void setEditorFields(TemplateDetailEditorFields editorFields) {
         this.editorFields = editorFields;
+    }
+
+    public String getInlineEditingMode() {
+        return inlineEditingMode;
+    }
+
+    public void setInlineEditingMode(String inlineEditingMode) {
+        this.inlineEditingMode = inlineEditingMode;
     }
 }

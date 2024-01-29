@@ -53,7 +53,7 @@ public class GooglePositionRestController extends DatatableRestControllerV2<Goog
         int keywordId = Tools.getIntValue(getRequest().getParameter("keywordId"), -1);
         if(keywordId == -1) return new DatatablePageImpl<>( new ArrayList<>() );
 
-        Date[] dateRangeArr = StatService.processDateRangeString(getRequest().getParameter("searchdayDate"));
+        Date[] dateRangeArr = StatService.processDateRangeString(getRequest().getParameter("searchDayDate"));
         Page<GooglePositionEntity> items = googlePositionRepository.findAllByKeywordIdAndDayDateBetween(keywordId, dateRangeArr[0], dateRangeArr[1], pageable);
         return new DatatablePageImpl<>( items );
     }
@@ -63,7 +63,7 @@ public class GooglePositionRestController extends DatatableRestControllerV2<Goog
         int keywordId = Tools.getIntValue(getRequest().getParameter("keywordId"), -1);
         if(keywordId == -1) return new DatatablePageImpl<>( new ArrayList<>() );
 
-        Date[] dateRangeArr = StatService.processDateRangeString(getRequest().getParameter("searchdayDate"));
+        Date[] dateRangeArr = StatService.processDateRangeString(getRequest().getParameter("searchDayDate"));
         Page<GooglePositionEntity> items = googlePositionRepository.findAllByKeywordIdAndDayDateBetween(keywordId, dateRangeArr[0], dateRangeArr[1], pageable);
         return new DatatablePageImpl<>( items );
     }

@@ -276,11 +276,23 @@ public class GroupsRestController extends DatatableRestControllerV2<GroupDetails
             groupDetails = new GroupDetails();
         }
 
+        String systemGroupIds = null;
+        if (entity.getEditorFields().isForceDomainNameChange()) {
+            //we must read system group here before DB update and domain name change in requestBean
+            if (Constants.getBoolean("templatesUseDomainLocalSystemFolder")) {
+                GroupDetails system = groupsDB.getLocalSystemGroup();
+                if (system != null && Tools.isNotEmpty(system.getDomainName()) && oldGroupDetails != null && system.getDomainName().equalsIgnoreCase(oldGroupDetails.getDomainName())) {
+                    //read systemGroupIds for later use
+                    systemGroupIds = groupsDB.getSubgroupsIds(system.getGroupId());
+                }
+            }
+        }
+
         boolean forceReload = false;
         boolean forceReloadNewDomainName = false;
+        RequestBean rb = SetCharacterEncodingFilter.getCurrentRequestBean();
         if (Tools.isNotEmpty(entity.getDomainName()) && Constants.getBoolean("multiDomainEnabled")==true) {
             //nastav do RequestBeanu domenu nastavenu v entite
-            RequestBean rb = SetCharacterEncodingFilter.getCurrentRequestBean();
             if (rb.getDomain().equalsIgnoreCase(entity.getDomainName())==false) {
                 rb.setDomain(entity.getDomainName());
                 forceReloadNewDomainName = true;
@@ -420,6 +432,13 @@ public class GroupsRestController extends DatatableRestControllerV2<GroupDetails
             //updatni groups
             new SimpleQuery().execute("UPDATE groups SET domain_name=? WHERE group_id IN ("+groupIds+")",entity.getDomainName());
 
+            if (systemGroupIds!=null) {
+                Adminlog.add(Adminlog.TYPE_GROUP, "Force domain to system subgroups: " + systemGroupIds, -1, -1);
+
+                //updatni groups
+                new SimpleQuery().execute("UPDATE groups SET domain_name=? WHERE group_id IN ("+systemGroupIds+")", entity.getDomainName());
+            }
+
             //aktualizuj presmerovania
             if (oldGroupDetails!=null && Tools.isNotEmpty(oldGroupDetails.getDomainName()) && !entity.getDomainName().equals(oldGroupDetails.getDomainName()))
             {
@@ -428,52 +447,38 @@ public class GroupsRestController extends DatatableRestControllerV2<GroupDetails
                 new SimpleQuery().execute("UPDATE dictionary SET domain=? WHERE domain=?",entity.getDomainName(),oldGroupDetails.getDomainName());
             }
 
-            if (Constants.getBoolean("enableStaticFilesExternalDir") && oldGroupDetails != null && Tools.isNotEmpty(oldGroupDetails.getDomainName()) && Tools.isNotEmpty(entity.getDomainName()))
+            if (Constants.getBoolean("enableStaticFilesExternalDir") && Tools.isNotEmpty(Constants.getString("cloudStaticFilesDir")) && oldGroupDetails != null && Tools.isNotEmpty(oldGroupDetails.getDomainName()) && Tools.isNotEmpty(entity.getDomainName()))
             {
                 //premenuj adresar s domenovymi subormi (statickymi)
                 IwcmFile oldDir = new IwcmFile(FilePathTools.getDomainBaseFolder(oldGroupDetails.getDomainName()));
-                IwcmFile newDir = new IwcmFile(FilePathTools.getDomainBaseFolder(entity.getDomainName()));
+                if (oldDir.exists()) {
+                    IwcmFile newDir = new IwcmFile(FilePathTools.getDomainBaseFolder(entity.getDomainName()));
 
-                if (!oldDir.getAbsolutePath().equals(newDir.getAbsolutePath()))
-                {
-                    Adminlog.add(Adminlog.TYPE_GROUP, "Changed domain, old domain: '"+oldGroupDetails.getDomainName()+"', new domain: '"+entity.getDomainName()+"', files from "+oldDir.getAbsolutePath()+" to "+newDir.getAbsolutePath(), 0, 0);
+                    if (!oldDir.getAbsolutePath().equals(newDir.getAbsolutePath()))
+                    {
+                        Adminlog.add(Adminlog.TYPE_GROUP, "Changed domain, old domain: '"+oldGroupDetails.getDomainName()+"', new domain: '"+entity.getDomainName()+"', files from "+oldDir.getAbsolutePath()+" to "+newDir.getAbsolutePath(), 0, 0);
 
-                    //toto mozno nezbehne, kedze je to v roznych adresaroch, bude potrebne spravit move
-                    boolean renamed = oldDir.renameTo(newDir);
-                    if (!renamed) {
-                        boolean created = newDir.mkdirs();
-                        if (!created) {
-                            Logger.debug(GroupsRestController.class, "Can't create direcotry "+newDir.getAbsolutePath());
-                        }
+                        //toto mozno nezbehne, kedze je to v roznych adresaroch, bude potrebne spravit move
+                        boolean renamed = oldDir.renameTo(newDir);
+                        if (!renamed) {
+                            boolean created = newDir.mkdirs();
+                            if (!created) {
+                                Logger.debug(GroupsRestController.class, "Can't create direcotry "+newDir.getAbsolutePath());
+                            }
 
-                        try {
-                            FileTools.copyDirectory(oldDir, newDir);
-                            FileTools.deleteDirTree(oldDir);
-                        } catch (Exception e) {
-                            Logger.error(GroupsRestController.class, e);
+                            try {
+                                FileTools.copyDirectory(oldDir, newDir);
+                                FileTools.deleteDirTree(oldDir);
+                            } catch (Exception e) {
+                                Logger.error(GroupsRestController.class, e);
+                            }
                         }
                     }
                 }
             }
 
-            //premenovat aj domenu system adresara
-            if (Constants.getBoolean("templatesUseDomainLocalSystemFolder")) {
-                GroupDetails system = groupsDB.getLocalSystemGroup();
-                if (system != null && Tools.isNotEmpty(system.getDomainName()) && oldGroupDetails != null && system.getDomainName().equalsIgnoreCase(oldGroupDetails.getDomainName())) {
-                    //system.setDomainName(entity.getDomainName());
-                    //groupsDB.save(system);
-
-                    String systemGroupIds = groupsDB.getSubgroupsIds(system.getGroupId());
-
-                    Adminlog.add(Adminlog.TYPE_GROUP, "Force domain to system subgroups: " + systemGroupIds, system.getGroupId(), -1);
-
-                    //updatni groups
-                    new SimpleQuery().execute("UPDATE groups SET domain_name=? WHERE group_id IN ("+systemGroupIds+")", entity.getDomainName());
-                }
-            }
-
             //mame zmeny v domene, je najlepsie refreshnut celu GroupsDB
-            GroupsDB.getInstance(true);
+            groupsDB = GroupsDB.getInstance(true);
 
             if (Constants.isConstantsAliasSearch() && oldGroupDetails != null) {
                 //premenovat konf. premenne s domenovym prefixom
@@ -521,7 +526,7 @@ public class GroupsRestController extends DatatableRestControllerV2<GroupDetails
                 localSystem.setMenuType(GroupDetails.MENU_TYPE_HIDDEN);
                 localSystem.setLoggedMenuType(-1);
                 groupsDB.save(localSystem);
-                GroupsDB.getInstance(true);
+                groupsDB = GroupsDB.getInstance(true);
 
                 DocDetails ef = null;
                 if (Constants.getBoolean("groupCreateBlankWebpageAfterCreate"))
@@ -557,7 +562,7 @@ public class GroupsRestController extends DatatableRestControllerV2<GroupDetails
                         editorFacade.createEmptyWebPage(subgroup, prop.getText(key+".pagetitle"), true);
                     }
                 }
-                GroupsDB.getInstance(true);
+                groupsDB = GroupsDB.getInstance(true);
             }
         }
 
@@ -771,5 +776,16 @@ public class GroupsRestController extends DatatableRestControllerV2<GroupDetails
         return group;
     }
 
-
+    @Override
+    public boolean processAction(GroupDetails entity, String action) {
+        if ("recoverGroup".equals(action) && entity != null) {
+            boolean status = editorFacade.recoverGroupFromTrash(entity, getUser());
+            addNotify(editorFacade.getNotify());
+            //we must clear it to prevent duplicate notifications on multiple groups recovery
+            editorFacade.clearNotify();
+            setForceReload(true);
+            return status;
+        }
+        return false;
+    }
 }

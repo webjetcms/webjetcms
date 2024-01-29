@@ -112,16 +112,12 @@ public class MonitoringManager
 			String sql = "INSERT INTO monitoring (date_insert, node_name, db_active, db_idle, mem_free, mem_total, cache, sessions, cpu_usage, process_usage) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 			long free = rt.freeMemory();
 			long total = rt.totalMemory();
-			double cpuUsage = 0.0;
-			double processUsage = 0.0;
-			if(Constants.getBoolean("cpuMonitoringEnabled")){
-				CpuInfo cpu = new CpuInfo();	//ak nie je monitoring cpu aktivny, nevytvorim ani instanciu triedy a do databazy zapisujem 0.0
-				cpuUsage = cpu.getCpuUsage();
-				processUsage = cpu.getProcCpuUsage(true);
-				Logger.debug(null, "Vysledna cpuUsage: "+ cpuUsage);
-			}
+			CpuInfo cpu = new CpuInfo();	//ak nie je monitoring cpu aktivny, nevytvorim ani instanciu triedy a do databazy zapisujem 0.0
+			int cpuUsage = cpu.getCpuUsage();
+			int cpuUsageProcess = cpu.getCpuUsageProcess();
+			Logger.debug(null, "Vysledna cpuUsage: "+ cpuUsage);
 			new SimpleQuery().execute(sql, new Timestamp(Tools.getNow()), Constants.getString("clusterMyNodeName"),
-				numActive, numIdle, free, total, Cache.getInstance().getSize(), SessionHolder.getTotalSessionsPerNode(), cpuUsage, processUsage);
+				numActive, numIdle, free, total, Cache.getInstance().getSize(), SessionHolder.getTotalSessionsPerNode(), cpuUsage, cpuUsageProcess);
 			return true;
 		} catch (Exception e) {
 			return false;

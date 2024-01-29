@@ -6,7 +6,7 @@
             </h2>
             <p v-html="$changelog">
             </p>
-            <a href="http://docs.webjetcms.sk/v2023/#/CHANGELOG" target="_blank" class="btn btn-primary">{{$seeCompleteChangelog}}</a>
+            <a :href="'http://docs.webjetcms.sk/latest/'+$window.userLng+'/CHANGELOG'" target="_blank" class="btn btn-primary">{{$seeCompleteChangelog}}</a>
         </div>
 
         <div class="row">
@@ -60,7 +60,7 @@ export default {
             icon: "fas fa-images",
             iconColor: "#c000d5",
             number: "+"+this.$props.overviewbackdata.documentForumNumber,
-            link: "/components/forum/admin_diskusia_zoznam.jsp"
+            link: "/apps/forum/admin/"
         });
 
         if (WJ.hasPermission("cmp_stat") && window.statMode !== "none") items.push({

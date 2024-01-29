@@ -127,7 +127,7 @@ request.setAttribute("elfinderCommands", getFiles("/admin/elFinder/js/commands/"
 		#finder .ui-state-default { background: none; }
 		#finder .ui-widget-header { background: none; border: 0px; border-radius: 0px; border-bottom: 2px solid e5e5e5; background-color: #f5f5f5; }
 		#finder { border: 0px; }
-		#finder .elfinder-navbar { background: none; background-color: white; border-right: 1px solid #e5eef9;}
+		#finder .elfinder-navbar { background: none; background-color: white; border-right: 1px solid #e5eef9; min-width: 230px; }
 		#finder .elfinder-statusbar { background: none; background-color: #f5f5f5; border-top: 1px solid #e5eef9;}
 		#finder .elfinder-toolbar-button-separator  { padding-left: 8px; margin-left: 8px; border: 0px; background: none; }
 		#finder .elfinder-navbar .ui-state-hover { border-color: #ffd600; background: none; background-color: #ffd600; color: black; }
@@ -162,6 +162,15 @@ request.setAttribute("elfinderCommands", getFiles("/admin/elFinder/js/commands/"
 		.modal-header, .modal-body { padding: 5px; }
 
 		#elfinder-finder-cwd-thead { background-color: white; }
+
+		div.elfinder-button-search {
+			margin-top: 14px !important;
+		}
+		div.elfinder-button-search .ui-icon {
+			margin-top: -10px;
+		}
+		div.elfinder-button-search div.buttonset { margin-bottom: 0px !important; }
+		div.elfinder-button-search div.buttonset label { margin-bottom: 0px; }
 
 	</style>
 
@@ -299,7 +308,7 @@ request.setAttribute("elfinderCommands", getFiles("/admin/elFinder/js/commands/"
             $.ajax({
                 method: "POST",
                 url: "/admin/elFinder/gethash.jsp",
-                data: {url: url, docId: lastDocId, groupId: lastGroupId}
+                data: {url: url, docId: lastDocId, groupId: lastGroupId, title: getPageNavbar()}
             })
                 .done(function (msg) {
                     //console.log(msg);
@@ -425,5 +434,17 @@ request.setAttribute("elfinderCommands", getFiles("/admin/elFinder/js/commands/"
 					}, 2000);
 				}
 			} catch (e) {console.log(e);}
+		}
+
+		function getPageNavbar() {
+			try {
+				var navbar = window.parent.$("#DTE_Field_navbar").val();
+				if (typeof navbar == "undefined") navbar = window.parent.getCkEditorInstance().element.$.form.navbar?.value;
+				if (typeof navbar == "undefined") navbar = window.parent.getCkEditorInstance().element.$.form.title?.value;
+				return navbar;
+			} catch (e) {
+
+			}
+			return "";
 		}
 	</script>

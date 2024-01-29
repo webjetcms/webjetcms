@@ -36,6 +36,7 @@ import sk.iway.iwcm.system.datatable.DatatableRestControllerV2;
 import sk.iway.iwcm.system.datatable.NotifyBean;
 import sk.iway.iwcm.system.datatable.ProcessItemAction;
 import sk.iway.iwcm.system.datatable.NotifyBean.NotifyType;
+import sk.iway.iwcm.users.UserDetails;
 import sk.iway.iwcm.users.UserGroupDetails;
 import sk.iway.iwcm.users.UserGroupsDB;
 import sk.iway.iwcm.users.UsersDB;
@@ -93,19 +94,14 @@ public class CampaingsRestController extends DatatableRestControllerV2<Campaings
             entity.setSenderEmail(user.getEmail());
             entity.setId(id);
             entity.setCountOfSentMails(0);
+
+            //Delete previous temporaly saved emails
+            emailsRepository.deleteByCampainId((long)-user.getUserId());
         } else {
             entity = campaingsRepository.getById(id);
         }
 
         processFromEntity(entity, ProcessItemAction.GETALL);
-
-        //Delete temporaly saved emails (temporaly saved have reverse user id)
-        List<EmailsEntity> tempSavedEmails = emailsRepository.findAllByCreatedByUserId(-user.getUserId());
-
-        for(EmailsEntity email : tempSavedEmails) {
-            //If emails are temporaly but, under this one campain, dont delete them now
-            if(email.getCampainId()!=null && email.getCampainId().intValue()>0 && email.getCampainId().intValue() != entity.getId().intValue()) emailsRepository.delete(email);
-        }
 
         return entity;
     }
@@ -129,23 +125,16 @@ public class CampaingsRestController extends DatatableRestControllerV2<Campaings
                 handleEmails(selectedGroups, originalGroups, entity);
             }
         }
-
-        //Set count of recipients
-        entity.setCountOfRecipients(emailsRepository.getNumberOfCampaingEmails(entity.getId()));
 	}
 
     @Override
     public void afterSave(CampaingsEntity entity, CampaingsEntity saved) {
         Long oldCampaignId = entity.getId();
-        if (oldCampaignId == null) oldCampaignId = Long.valueOf(-1);
         int userId = getUser().getUserId();
-        int oldUserId = userId;
-        if (entity.getId()==null || entity.getId()<1L) {
-            //pri novej entite musime zmenit IDecka v databaze, ktore su ulozene ako -userId
-            oldUserId = -userId;
-        }
+        if (oldCampaignId == null) oldCampaignId = Long.valueOf(-userId);
+
         //update vykoname vzdy, co ked sa zmenil predmet, alebo odosielatel
-        emailsRepository.updateCampaingEmails(Integer.valueOf(userId), saved.getUrl(), saved.getSubject(), saved.getSenderName(), saved.getSenderEmail(), saved.getReplyTo(), saved.getCcEmail(), saved.getBccEmail(), saved.getSendAt(), saved.getAttachments(), saved.getId(), Integer.valueOf(oldUserId), oldCampaignId);
+        emailsRepository.updateCampaingEmails(Integer.valueOf(userId), saved.getUrl(), saved.getSubject(), saved.getSenderName(), saved.getSenderEmail(), saved.getReplyTo(), saved.getCcEmail(), saved.getBccEmail(), saved.getSendAt(), saved.getAttachments(), saved.getId(), oldCampaignId);
 
         //Set count of recipients
         saved.setCountOfRecipients(emailsRepository.getNumberOfCampaingEmails(saved.getId()));
@@ -236,8 +225,8 @@ public class CampaingsRestController extends DatatableRestControllerV2<Campaings
         //Now get all emails under campain actualy in DB - we need it to prevent duplicity
         Map<String, Integer> emailsTable = new Hashtable<>();
         if (entity.getId() != null && entity.getId().longValue()>0) {
-            for (String email : emailsRepository.getAllCampainEmails(entity.getId())) {
-                emailsTable.put(email, emailsTable.size() + 1);
+            for (String email : emailsRepository.getAllCampainEmails(getCampaignId(entity, getUser()))) {
+                emailsTable.put(email.toLowerCase(), emailsTable.size() + 1);
             }
         }
 
@@ -245,8 +234,8 @@ public class CampaingsRestController extends DatatableRestControllerV2<Campaings
 
         for(String recipientEmail : recpientEmails) {
             //Check duplicity (if this emial alreadry belongs to campain)
-            if(emailsTable.get(recipientEmail) != null) continue;
-            else emailsTable.put(recipientEmail, emailsTable.size() + 1);
+            if(emailsTable.get(recipientEmail.toLowerCase()) != null) continue;
+            else emailsTable.put(recipientEmail.toLowerCase(), emailsTable.size() + 1);
 
             EmailsEntity emailToAdd = new EmailsEntity(recipientEmail);
             boolean isValid = EmailsRestController.prepareEmailForInsert(entity, user.getUserId(), emailToAdd);
@@ -314,6 +303,18 @@ public class CampaingsRestController extends DatatableRestControllerV2<Campaings
         }
 
         return true;
+    }
+
+    /**
+     * Returns ID of campaign. If campaign is not saved yet, returns -ID of current user used as temporary ID for nested tables
+     * @param entity
+     * @param user
+     * @return
+     */
+    public static Long getCampaignId(CampaingsEntity entity, UserDetails user) {
+        if (entity != null && entity.getId() != null && entity.getId().longValue()>0) return entity.getId();
+        if (user == null) return 0L;
+        return Long.valueOf(-user.getUserId());
     }
 
 }

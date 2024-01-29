@@ -175,7 +175,7 @@
 	}
 	function editDoc()
 	{
-		previewWindow.location.href="/admin/editor.do?isPopup=true&docid="+document.textForm.docid.value;
+		previewWindow.location.href="/admin/v9/webpages/web-pages-list/?showOnlyEditor=true&showEditorFooterPrimary=true&docid="+document.textForm.docid.value;
 	}
 
 </script>
@@ -209,24 +209,19 @@
 					 <label><input type="radio" name="DSsel" class="DSsel" value="dynamic"><iwcm:text key="components.htmlbox.dynamicBlock"/></label>
 					 <label><input type="radio" name="DSsel" class="DSsel" value="static" checked="checked"><iwcm:text key="components.htmlbox.staticBlock"/></label>
 				 </span>
-		         <div id="otherSiteDiv" style="display:none;margin-top:-31px;">
-					 <div style="height: 35px;width:100%;">
-						 <div style="float:right;">
-							<iwcm:text key="components.popup.docid"/>:
-							<input type="text" name="docid" value="<%=pageParams.getValue("docid", "") %>" size="5" onblur="previewDocId();"/>
-							<input type="button" value="<iwcm:text key='components.tips.select'/>" name="bSelDoc" onClick='popupFromDialog("/admin/user_adddoc.jsp", 450, 340);' class="btn green" />
-							<input type="button" value="<iwcm:text key='button.edit'/>" name="bEditDoc" onClick='editDoc();' class="btn yellow" />
-						 </div>
-					 </div>
-					 <div style="width:100%;padding: 5px 0;">
-						 <span><iwcm:text key="components.htmlbox.insertType"/>:</span>
-						 <span><label><input type="radio" name="insertType" value="static" checked="checked"/> <iwcm:text key="components.htmlbox.insertType.static"/></label></span>
-						 <span><label><input type="radio" name="insertType" value="dynamic" id="insertType" /> <iwcm:text key="components.htmlbox.insertType.dynamic"/></label></span>
-					 </div>
-	         	</div>
+		         <span id="otherSiteDiv" style="display:none;">
+					<span><iwcm:text key="components.htmlbox.insertType"/>:</span>
+					<span><label><input type="radio" name="insertType" value="static" checked="checked"/> <iwcm:text key="components.htmlbox.insertType.static"/></label></span>
+					<span style="padding-right: 1em;"><label><input type="radio" name="insertType" value="dynamic" id="insertType" /> <iwcm:text key="components.htmlbox.insertType.dynamic"/></label></span>
+
+					<iwcm:text key="components.popup.docid"/>:
+					<input type="text" name="docid" value="<%=pageParams.getValue("docid", "") %>" size="5" onblur="previewDocId();"/>
+					<input type="button" value="<iwcm:text key='components.tips.select'/>" name="bSelDoc" onClick='popupFromDialog("/admin/user_adddoc.jsp", 450, 340);' class="btn green" />
+					<input type="button" value="<iwcm:text key='button.edit'/>" name="bEditDoc" onClick='editDoc();' class="btn yellow" />
+	         	</span>
 			</div>
-         	<div class="thumbSelector" style=" width:100%; overflow: auto; background:white;">
-         		<iframe id="previewWindow" name="previewWindow" align="top" style="width:100%; height:420px; background: white; border:0;" src="iframe2.jsp?dirDocId=<%=grpDet.getGroupId()%>"></iframe>
+         	<div class="thumbSelector tab-page-iframe" data-margin-top="85" style="width:100%; overflow: auto; background:white;">
+         		<iframe id="previewWindow" name="previewWindow" data-margin-top="85" style="width:100%; height:100%; background: white; border:0;" src="iframe2.jsp?dirDocId=<%=grpDet.getGroupId()%>"></iframe>
 	        </div>
 		</form>
 	</div>
@@ -272,9 +267,9 @@
 		</div>
 		<div>
 			<form name="textForm2">
-					<div class="thumbSelector" style=" width:100%; overflow: auto; background:white;">
+					<div class="thumbSelector tab-page-iframe" data-margin-top="70" style=" width:100%; height: 70%; overflow: auto; background:white;">
 						<iframe src="<%=WriteTag.getCustomPage("/components/htmlbox/html_temp-ajax.jsp",request)%>" name="dirPreview" id="dirPreview"
-							width="100%" height="400" align="left" marginwidth="0" marginheight="0" frameborder="0" scrolling="auto"></iframe>
+							width="100%" height="100%" data-margin-top="70" marginwidth="0" marginheight="0" frameborder="0" scrolling="auto"></iframe>
 					</div>
 			</form>
 		</div>
@@ -283,6 +278,10 @@
 <% if (pageParams.getIntValue("docid", -1) > 0) { %>
 	<script type="text/javascript">
 		editDoc();
+		$('#DSselector').hide();
+		$('#otherSiteDiv').show();
+		document.textForm.field.value="otherDocId";
+		$(document.textForm.insertType[1]).click();
 	</script>
 <%  } %>
 

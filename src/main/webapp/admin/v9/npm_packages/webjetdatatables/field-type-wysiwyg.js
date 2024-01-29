@@ -32,15 +32,21 @@ export function typeWysiwyg() {
                         </form>
                     </div>
                 </div>
-                <div class="wysiwyg" id="${id}-trPageBuilder">
+                <div class="wysiwyg wysiwyg-pageBuilder" id="${id}-trPageBuilder">
                     <iframe id="${id}-pageBuilderIframe" class="md-pageBuilder" src="about:blank"></iframe>
                 </div>
                 <div class="exit-inline-editor" id="${id}-editorTypeSelector">
                     ${WJ.translate("editor.type_select.label.js")}<br/>
-                    <select onchange="window.switchEditorType(this)">
+                    <select onchange="window.switchEditorType(this)" data-hide-disabled="true">
                         <option value="">${WJ.translate("editor.type_select.standard.js")}</option>
-                        <option value="pageBuilder" selected="selected">${WJ.translate("editor.type_select.page_builder.js")}</option>
+                        <option value="html">${WJ.translate("editor.type_select.html.js")}</option>
+                        <option value="pageBuilder">${WJ.translate("editor.type_select.page_builder.js")}</option>
                     </select>
+                    <br/>
+                    ${WJ.translate("pagebuilder.modal.tab.size")}:
+                    <a href="javascript:pbSetWindowSize('phone')" title="${WJ.translate('pagebuilder.modal.visibility.sm')}" data-toggle="tooltip"><span class="fa-regular fa-mobile"></span></a>
+                    <a href="javascript:pbSetWindowSize('tablet')" title="${WJ.translate('pagebuilder.modal.visibility.md')}" data-toggle="tooltip"><span class="fa-regular fa-tablet"></a>
+                    <a href="javascript:pbSetWindowSize('desktop')" title="${WJ.translate('pagebuilder.modal.visibility.xl')}" data-toggle="tooltip"><span class="fa-regular fa-desktop"></a>
                 </div>
                 `;
             let htmlCodeElement = $(htmlCode);
@@ -72,6 +78,9 @@ export function typeWysiwyg() {
                 //TODO: FormDB.getAllRegularExpression();
                 if (conf.wjeditor==null) {
                     window.createDatatablesCkEditor().then(module => {
+                        //allow to use module for Page Builder
+                        window.datatablesCkEditorModule = module;
+
                         const options = {
                             datatable: EDITOR.TABLE,
                             fieldid: id,
@@ -104,6 +113,8 @@ export function typeWysiwyg() {
                         //zrus spodny padding na tab-pane
                         $("#"+id).parents(".tab-pane").css("padding-bottom", "0px");
 
+                        WJ.initTooltip($('div.exit-inline-editor a[data-toggle*="tooltip"]'));
+
                         //console.log("editor constructed");
                     });
                     $("div.modal.DTED > div.modal-dialog").addClass("modal-xl");
@@ -126,7 +137,24 @@ export function typeWysiwyg() {
                 let editorType = select.value;
                 conf.wjeditor.switchEditingMode(editorType);
                 window.editorTypeForced = editorType;
-                window.WJ.setAdminSetting("editorTypeForced", editorType);
+                if ("html"!=editorType) window.WJ.setAdminSetting("editorTypeForced", editorType);
+            }
+
+            window.pbSetWindowSize = function(size) {
+                var iframeElement = null;
+
+                if ("pageBuilder"==window.editorTypeForced) iframeElement = $("iframe.md-pageBuilder");
+                else iframeElement = $("iframe.cke_wysiwyg_frame.cke_reset");
+
+                //console.log("iframeElement=", iframeElement, "size=", size);
+                var maxWidth = "";
+                if ('tablet'==size) {
+                    maxWidth = "991px";
+                } else if ('phone'==size) {
+                    maxWidth = "576px";
+                }
+                //console.log("Setting width: ", maxWidth);
+                iframeElement.css("max-width", maxWidth);
             }
 
             return htmlCodeElement;

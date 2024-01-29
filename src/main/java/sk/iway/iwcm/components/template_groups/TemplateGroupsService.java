@@ -167,6 +167,7 @@ public class TemplateGroupsService {
     public List<LabelValueDetails> getInlineEditors(Prop prop){
         List<LabelValueDetails> listOfInlineEditors = new ArrayList<>();
         listOfInlineEditors.add(new LabelValueDetails(prop.getText("editor.type_select.standard.js"), ""));
+        listOfInlineEditors.add(new LabelValueDetails(prop.getText("editor.type_select.html.js"), "html"));
         listOfInlineEditors.add(new LabelValueDetails(prop.getText("editor.type_select.page_builder.js"), "pageBuilder"));
         listOfInlineEditors.add(new LabelValueDetails(prop.getText("editor.type_select.grid_editor.js"), "gridEditor"));
 

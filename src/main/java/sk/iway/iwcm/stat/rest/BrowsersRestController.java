@@ -47,7 +47,7 @@ public class BrowsersRestController extends DatatableRestControllerV2<BrowsersDT
     @Override
     public Page<BrowsersDTO> getAllItems(Pageable pageable) {
         //Process params from request into FilterHeaderDto
-        FilterHeaderDto filter = StatService.processRequestToStatFilter(getRequest(), "searchdayDate");
+        FilterHeaderDto filter = StatService.processRequestToStatFilter(getRequest(), null);
 
         List<Column> columns = StatTableDB.getBrowser(MAX_ROWS, filter.getDateFrom(), filter.getDateTo(), filter.getRootGroupIdQuery(), filter.getFilterBotsOut());
         DatatablePageImpl<BrowsersDTO> page = new DatatablePageImpl<>(columnsToItems(columns));
@@ -57,7 +57,7 @@ public class BrowsersRestController extends DatatableRestControllerV2<BrowsersDT
     @Override
     public Page<BrowsersDTO> searchItem(Map<String, String> params, Pageable pageable, BrowsersDTO search) {
         //Process received params into FilterHeaderDto
-        FilterHeaderDto filter = StatService.processMapToStatFilter(params, "searchdayDate");
+        FilterHeaderDto filter = StatService.processMapToStatFilter(params, null);
 
         List<Column> columns = StatTableDB.getBrowser(MAX_ROWS, filter.getDateFrom(), filter.getDateTo(), filter.getRootGroupIdQuery(), filter.getFilterBotsOut());
         DatatablePageImpl<BrowsersDTO> page = new DatatablePageImpl<>(columnsToItems(columns));

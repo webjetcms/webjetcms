@@ -146,9 +146,15 @@ export class DatatableOpener {
 
                 let firstInputName = null;
                 let openEditor = false;
+                let autoSelect = false;
                 for (var i = 0; i < array.length; i += 1) {
                     if ("dt-open-editor=true"===array[i]) {
                         openEditor = true;
+                        autoSelect = true;
+                        continue;
+                    }
+                    if ("dt-select=true"===array[i]) {
+                        autoSelect = true;
                         continue;
                     }
 
@@ -163,7 +169,9 @@ export class DatatableOpener {
 
                     this.dataTable.one('draw.dt', (evt, settings) => {
                         setTimeout(()=> {
-                            $("#"+this.dataTable.DATA.id+"_wrapper div.dataTables_scrollHeadInner table thead .input-group button.buttons-select-all").trigger("click");
+                            if (autoSelect) {
+                                $("#"+this.dataTable.DATA.id+"_wrapper div.dataTables_scrollHeadInner table thead .input-group button.buttons-select-all").trigger("click");
+                            }
                             if (openEditor) {
                                 $("#"+this.dataTable.DATA.id+"_wrapper div.dt-buttons button.buttons-edit").trigger("click");
                             }

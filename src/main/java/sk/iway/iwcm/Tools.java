@@ -2118,13 +2118,16 @@ public class Tools
 		if (request == null) return null;
 
 		String serverName = request.getServerName();
-		String forwardHost = Tools.sanitizeHttpHeaderParam(request.getHeader("x-forwarded-host"));
-		if (Constants.getBoolean("serverBeyoundProxy") && Tools.isNotEmpty(forwardHost))
+		if (Constants.getBoolean("serverBeyoundProxy"))
         {
-            if (forwardHost.contains("<")==false && forwardHost.contains(">")==false && forwardHost.contains("\"")==false && forwardHost.contains("'")==false)
-            {
-                serverName = forwardHost;
-            }
+			String forwardHost = Tools.sanitizeHttpHeaderParam(request.getHeader("x-forwarded-host"));
+			if (Tools.isNotEmpty(forwardHost))
+			{
+				if (forwardHost.contains("<")==false && forwardHost.contains(">")==false && forwardHost.contains("\"")==false && forwardHost.contains("'")==false)
+				{
+					serverName = forwardHost;
+				}
+			}
         }
 
 		if (useAlias)

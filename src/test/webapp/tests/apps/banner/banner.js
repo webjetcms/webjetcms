@@ -17,13 +17,14 @@ Scenario('banner zakladne testy', async ({I, DataTables, DT, DTE}) => {
             I.fillField("div.DTE_Field_Name_bannerLocation input", '/images/gallery/chrysanthemum.jpg');
             I.fillField("div.DTE_Field_Name_bannerRedirect input", "/apps/bannerovy-system/");
             I.click({css: "#pills-dt-bannerDataTable-main-tab"});
-            I.fillField("#DTE_Field_bannerGroup", "autotest-group");
+            //FF autocomplete fix
+            DTE.appendField("bannerGroup", "autotest-group");
         },
         editSteps: function(I, options) {
             I.click({css: "#pills-dt-bannerDataTable-restrictions-tab"});
 
             I.say("Selecting page");
-            I.click("div.DTE_Field_Name_docIds button.btn-vue-jstree-add");
+            I.clickCss("div.DTE_Field_Name_docIds button.btn-vue-jstree-add");
             I.waitForVisible('#jsTree');
             I.click(locate('.jstree-node.jstree-closed').withDescendant('a.jstree-anchor').withText("Jet portal 4").find('.jstree-icon.jstree-ocl'));
             I.click(locate(".jstree-anchor").withText("Jet portal 4 - testovacia stranka"));
@@ -31,7 +32,7 @@ Scenario('banner zakladne testy', async ({I, DataTables, DT, DTE}) => {
 
             I.say("Selecting group");
 
-            I.click("div.DTE_Field_Name_groupIds button.btn-vue-jstree-add");
+            I.clickCss("div.DTE_Field_Name_groupIds button.btn-vue-jstree-add");
             I.waitForVisible('#jsTree');
             I.click(locate('.jstree-node.jstree-closed').withDescendant('a.jstree-anchor').withText("Aplikácie").find('.jstree-icon.jstree-ocl'));
             I.click(locate(".jstree-anchor").withText("Bannerový systém"));
@@ -49,7 +50,7 @@ Scenario('banner zakladne testy', async ({I, DataTables, DT, DTE}) => {
             I.say("check doc/group mapping");
             I.click({css: "button.buttons-refresh"});
             DT.waitForLoader();
-            I.click(options.testingData[0]);
+            I.click(locate("#bannerDataTable td.dt-row-edit div.datatable-column-width a").withText(options.testingData[0]));
             DTE.waitForEditor("bannerDataTable");
             I.click({css: "#pills-dt-bannerDataTable-restrictions-tab"});
             I.seeInField("div.DTE_Field_Name_docIds input.form-control", "/Jet portal 4/Jet portal 4 - testovacia stranka");
@@ -58,16 +59,16 @@ Scenario('banner zakladne testy', async ({I, DataTables, DT, DTE}) => {
 
             I.click({css: "button.buttons-refresh"});
             DT.waitForLoader();
-            I.click(options.testingData[0]);
+            I.click(locate("#bannerDataTable td.dt-row-edit div.datatable-column-width a").withText(options.testingData[0]));
             DTE.waitForEditor("bannerDataTable");
             I.click({css: "#pills-dt-bannerDataTable-restrictions-tab"});
-            I.click("div.DTE_Field_Name_docIds button.btn-vue-jstree-item-remove");
+            I.clickCss("div.DTE_Field_Name_docIds button.btn-vue-jstree-item-remove");
             I.dontSeeElement("div.DTE_Field_Name_docIds input.form-control");
             DTE.save();
 
             I.click({css: "button.buttons-refresh"});
             DT.waitForLoader();
-            I.click(options.testingData[0]);
+            I.click(locate("#bannerDataTable td.dt-row-edit div.datatable-column-width a").withText(options.testingData[0]));
             DTE.waitForEditor("bannerDataTable");
             I.click({css: "#pills-dt-bannerDataTable-restrictions-tab"});
             I.dontSeeElement("div.DTE_Field_Name_docIds input.form-control");
@@ -78,7 +79,7 @@ Scenario('banner zakladne testy', async ({I, DataTables, DT, DTE}) => {
             //
             I.say("show banner and click on it");
             I.amOnPage("/apps/bannerovy-system/autotest-banner.html");
-            I.click("div.banner-image a");
+            I.clickCss("div.banner-image a");
             I.see("Obsahový banner");
             I.see("Sekundárny nadpis");
 
@@ -86,10 +87,10 @@ Scenario('banner zakladne testy', async ({I, DataTables, DT, DTE}) => {
             I.say("execute job to write statistics");
             I.amOnPage("/admin/v9/settings/cronjob/");
             DT.filter("task", "sk.iway.iwcm.stat.StatWriteBuffer");
-            I.click("td.dt-select-td");
-            I.click("button.button-execute-task");
+            I.clickCss("td.dt-select-td");
+            I.clickCss("button.button-execute-task");
             I.waitForElement("#toast-container-webjet");
-            I.click("div.toastr-buttons button.btn.btn-primary");
+            I.clickCss("div.toastr-buttons button.btn.btn-primary");
             DT.waitForLoader();
             I.see("Úloha sk.iway.iwcm.stat.StatWriteBuffer bola spustená!");
 
@@ -110,7 +111,7 @@ Scenario('banner zakladne testy', async ({I, DataTables, DT, DTE}) => {
 Scenario('kontrola hide/show content banner stlpcov', ({I, DTE}) => {
     I.amOnPage("/apps/banner/admin/");
 
-    I.click("button.buttons-create");
+    I.clickCss("button.buttons-create");
     DTE.waitForEditor('bannerDataTable');
 
     // Go to advance tab and check if content banner fields are hiden
@@ -153,7 +154,7 @@ Scenario('zobrazenie banneru na web stranke', ({I}) => {
     I.see("Sekundárny nadpis");
 });
 
-Scenario('prepinanie domen', ({I}) => {
+Scenario('prepinanie domen', ({I, Document}) => {
     I.amOnPage("/apps/banner/admin/");
 
     I.see("Obsahový banner");
@@ -161,13 +162,7 @@ Scenario('prepinanie domen', ({I}) => {
     I.see("HTML Banner");
 
     //domenovy selektor
-    I.click("div.js-domain-toggler div.bootstrap-select button");
-    I.wait(1);
-    //I.click(locate('.dropdown-item').withText("test23.tau27.iway.sk"));
-    I.click({css: "#bs-select-1-1"});
-    I.waitForElement("#toast-container-webjet", 10);
-    I.click(".toastr-buttons button.btn-primary");
-    I.wait(1);
+    Document.switchDomain("test23.tau27.iway.sk");
 
     //toto pada I.dontSee("Obsahový banner");
     I.dontSee("Obrázkový banner");
@@ -245,15 +240,18 @@ Scenario('kampanovy banner', ({I, DT, DTE}) => {
     I.amOnPage("/apps/banner/admin/?id=124");
     DTE.waitForEditor("bannerDataTable");
     I.click({css: "#pills-dt-bannerDataTable-advanced-tab"});
-    I.dontSee("http://demotest.webjetcms.sk/apps/bannerovy-system/?utm_campaign");
+    I.dontSee("http://webjet9.tau27.iway.sk/apps/bannerovy-system/?utm_campaign");
     I.fillField("#DTE_Field_campaignTitle", "test");
-    I.see("http://demotest.webjetcms.sk/apps/bannerovy-system/?utm_campaign=test");
+    I.pressKey('Tab');
+    I.waitForElement("#campaignTitleUrlShowcase", 10);
+    I.waitForText("http://webjet9.tau27.iway.sk/apps/bannerovy-system/?utm_campaign=test", 10, "#campaignTitleUrlShowcase");
 
     I.amOnPage("/apps/banner/admin/?id=3602");
     DT.waitForLoader();
     DTE.waitForEditor("bannerDataTable");
     I.click({css: "#pills-dt-bannerDataTable-advanced-tab"});
-    I.see("http://demotest.webjetcms.sk/apps/bannerovy-system/?utm_campaign");
+    I.waitForElement("#campaignTitleUrlShowcase", 10);
+    I.waitForText("http://webjet9.tau27.iway.sk/apps/bannerovy-system/?utm_campaign", 10, "#campaignTitleUrlShowcase");
 });
 
 Scenario('Kontrola prava cmp_banner_seeall', ({I, DT}) => {
@@ -384,3 +382,94 @@ Scenario('test docid/groupid in request bean', ({ I, DTE }) => {
     I.switchTo();
 
 });
+
+Scenario('Test video in banner', ({I}) => {
+    //
+    I.say("Video banner MP4");
+        I.amOnPage("/apps/bannerovy-system/klasicky_video_banner_mp4.html");
+        I.seeElement("#wjInline-docdata > a > div.embed-responsive > video");
+
+    //
+    I.say("Video bannner YouTube");
+        I.amOnPage("/apps/bannerovy-system/klasicky_video_banner_yt.html");
+        //Check iframe video is there
+        I.seeElement("#wjInline-docdata > a > div.embed-responsive > iframe.video")
+
+    //
+    I.say("Obsahovy video banner MP4");
+        I.amOnPage("/apps/bannerovy-system/obsahovy_video_banner_mp4.html");
+        I.seeElement("#wjInline-docdata > div.jumbotron > video");
+
+     //
+     I.say("Obsahovy video banner YouTube");
+        I.amOnPage("/apps/bannerovy-system/obsahovy_video_banner_yt.html");
+        I.seeElement("#wjInline-docdata > div.jumbotron > iframe.video");
+});
+
+Scenario('Device type specific banner', ({I, DTE}) => {
+    let phoneId = "Phone";
+    let tabletId = "Tablet";
+    let pcId = "Pc";
+
+   selectDevices(I, DTE, [pcId]);
+
+    I.amOnPage("/test-stavov/device_specific_baner/?forceBrowserDetector=pc");
+        I.seeElement("#wjInline-docdata > a > img");
+    I.amOnPage("/test-stavov/device_specific_baner/?forceBrowserDetector=phone");
+        I.dontSeeElement("#wjInline-docdata > a > img");
+    I.amOnPage("/test-stavov/device_specific_baner/?forceBrowserDetector=tablet");
+        I.dontSeeElement("#wjInline-docdata > a > img");
+
+    selectDevices(I, DTE, [phoneId, tabletId]);
+
+    I.amOnPage("/test-stavov/device_specific_baner/?forceBrowserDetector=pc");
+        I.dontSeeElement("#wjInline-docdata > a > img");
+    I.amOnPage("/test-stavov/device_specific_baner/?forceBrowserDetector=phone");
+        I.seeElement("#wjInline-docdata > a > img");
+    I.amOnPage("/test-stavov/device_specific_baner/?forceBrowserDetector=tablet");
+        I.seeElement("#wjInline-docdata > a > img");
+});
+
+function selectDevices(I, DTE, selectDevices) {
+    let allDevices = ["Phone", "Tablet", "Pc"];
+    let checkboxPrefix = "#commonAdvancedSettingsDevice";
+
+    //Open page
+    I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=73822");
+    DTE.waitForEditor();
+
+    //Open banner setting
+    I.waitForElement(".cke_wysiwyg_frame.cke_reset", 30);
+    I.switchTo("iframe.cke_reset");
+    I.wait(1);
+    I.waitForElement("iframe.wj_component", 10);
+    I.switchTo("iframe.wj_component");
+    I.wait(1);
+        I.forceClick("div.inlineComponentButtons > a:nth-child(1)");
+    I.switchTo();
+
+    I.waitForElement("table.cke_dialog");
+
+    I.switchTo("iframe.cke_dialog_ui_iframe") //iframe
+    I.switchTo("#editorComponent") //iframe
+
+    I.clickCss("#tabLinkcommonAdvancedSettings");
+
+    //Check wanted, unchecke rest
+    allDevices.forEach((device) => {
+        if(selectDevices.includes(device)) {
+            I.checkOption(checkboxPrefix + device);
+        } else {
+            I.uncheckOption(checkboxPrefix + device);
+        }
+    });
+
+    I.switchTo("");
+
+    //OK the changes
+    I.clickCss("a.cke_dialog_ui_button.cke_dialog_ui_button_ok");
+
+    I.switchTo("");
+
+    DTE.save();
+}

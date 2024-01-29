@@ -173,6 +173,11 @@
                 }
             },
             _validateGroupPageClick(that, data) {
+                //If group is marked with this icon (no permitted group) after click on it, nothing happens - sekjurity
+                if(data.node.icon !== undefined && "fas fa-folder-times" == data.node.icon) {
+                    return false;
+                }
+
                 //kontrola, ci sa vybral adresar ked sa mal
                 if (that.click.indexOf("dt-tree-group")==0 && typeof(data.node.original.groupDetails)=="undefined") {
                     WJ.notifyError("Vyberte adresár", null, 5000);

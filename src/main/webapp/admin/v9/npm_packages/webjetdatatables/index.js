@@ -406,7 +406,7 @@ export const dataTableInit = options => {
                 }
             }
         });
-        $('#' + DATA.id + '_wrapper select.filter-input-prepend').each(function(index, element) {
+        $('#' + DATA.id + '_wrapper select.filter-input-prepend, #' + DATA.id + '_extfilter select.filter-input-prepend').each(function(index, element) {
             let $this = $(this);
             if ($this.hasClass("selectpickerbinded")) return;
             $this.addClass("selectpickerbinded");
@@ -818,6 +818,10 @@ export const dataTableInit = options => {
                 //def hodnota chodi ako String, pre true/false zmen na boolean
                 if ("true" === col.editor.def) col.editor.def = true;
                 else if ("false" === col.editor.def) col.editor.def = false;
+
+                if (col.editor.hasOwnProperty("attr") && col.editor.attr.hasOwnProperty("entityDecode")) {
+                    col.editor.entityDecode = ("true"===col.editor.attr.entityDecode);
+                }
 
                 DATA.fields.push(col.editor);
             }
@@ -1250,7 +1254,13 @@ export const dataTableInit = options => {
                     json = json.replace(/:\[false\]/gi, ":false");
                     //console.log("json 2: ", json);
                     return json
-                }
+                },
+                error: function (xhr, text, err) {
+                    //console.log("error, xhr=", xhr, "text=", text, "err=", err);
+                    if ("timeout"===text || "abort"===text) {
+                        WJ.notifyError(WJ.translate("session.logoff.info.js"), WJ.translate("datatables.error.network.js"));
+                    }
+                },
             },
             table: dataTableSelector,
             idSrc: DATA.editorId,
@@ -1651,7 +1661,7 @@ export const dataTableInit = options => {
                             var fieldName = tooltipText.replace("data:", "");
 
                             try {
-                                tooltipText = dtConfig.escapeHtml(EDITOR.field(fieldName).val());
+                                tooltipText = WJ.escapeHtml(EDITOR.field(fieldName).val());
                             } catch (error) {
                                 console.error("this=", this, "fieldName=", fieldName, " error:", error);
                             }
@@ -1661,6 +1671,7 @@ export const dataTableInit = options => {
                         if (tooltipText.length > 0 && !tooltipText.match("^data:")) {
                             //console.log("Tooltiptext=", tooltipText);
                             tooltipText = WJ.parseMarkdown(tooltipText);
+                            tooltipText = WJ.escapeHtml(tooltipText);
                             //console.log("Tooltiptext parsed=", tooltipText);
                             $(el).parents('[data-dte-e="input"]').after('<div class="col-sm-1 form-group-tooltip"><button type="button" tabindex="-1" class="btn btn-link btn-tooltip" data-toggle="tooltip" title="' + tooltipText + '" data-html="true"><i class="far fa-info-circle"></i></button></div>');
                         }
@@ -2455,7 +2466,7 @@ export const dataTableInit = options => {
                 {
                     targets: "dt-format-text-wrap",
                     render: function (td, type, rowData, row) {
-                        return dtConfig.renderText(td, type, rowData, row);
+                        return dtConfig.renderTextHtmlInput(td, type, rowData, row);
                     },
                     type: "html-input"
                 },
@@ -2885,7 +2896,21 @@ export const dataTableInit = options => {
                         var value = column.searchVal;
                         if (typeof value !== "undefined" && value !== "") {
                             isAnyColumnSearch = true;
-                            searchColumnParams.push({"name": "search" + column.name, "value": value});
+
+                            //If value for this columns is allreadz in map, repalce value (ext filter have bigger priority) -: OR add new value
+                            let extColumnsName = "search" + column.name.charAt(0).toUpperCase() + column.name.slice(1);
+                            let isThere = false;
+                            //console.log("Testing ext filter, searchColumnParams=", searchColumnParams);
+                            for(let obj of searchColumnParams) {
+                                if(extColumnsName == obj.name) {
+                                    isThere = true;
+                                    //update value
+                                    obj.value = value;
+                                    break;
+                                }
+                            }
+                            //add parameter
+                            if(!isThere) { searchColumnParams.push({"name": extColumnsName, "value": value}); }
                         }
                     }
                 }
@@ -2937,21 +2962,21 @@ export const dataTableInit = options => {
                 //console.log("initialData=", DATA.initialData, "autoPageLength=", DATA.autoPageLength);
                 if (DATA.autoPageLength<DATA.initialData.content.length) {
                     //reduce DATA.initialData.content to autoPageLength
-                    //console.log("Reducing initialData, length=", DATA.initialData.content.length, "autoPageLength=", DATA.autoPageLength);
+                    //console.log(DATA.id+" reducing initialData, length=", DATA.initialData.content.length, "autoPageLength=", DATA.autoPageLength);
                     var content = DATA.initialData.content;
                     var newContent = [];
                     for (var i=0; i<DATA.autoPageLength; i++) {
                         newContent.push(content[i]);
                     }
                     DATA.initialData.content = newContent;
-                } else if (DATA.autoPageLength>DATA.initialData.size && "groups-datatable"!=DATA.id) {
+                } else if (DATA.autoPageLength>DATA.initialData.size && "groups-datatable"!=DATA.id && (typeof DATA.initialData.forceData=="undefined" || false===DATA.initialData.forceData)) {
                     //in groups-datatable we are sending all data
-                    //console.log("Reseting initialData("+DATA.id+"), length=", DATA.initialData.size, "autoPageLength=", DATA.autoPageLength, "data=", DATA.initialData);
+                    //console.log(DATA.id+" reseting initialData, length=", DATA.initialData.size, "autoPageLength=", DATA.autoPageLength, "data=", DATA.initialData);
                     DATA.initialData = null
                 }
             }
             if (typeof DATA.initialData != "undefined" && DATA.initialData != null) {
-                //WJ.log("Initial data: ", DATA.initialData);
+                //console.log(DATA.id+" initial data: ", DATA.initialData);
 
                 var sourceData = DATA.initialData;
                 var totalElements = sourceData.totalElements;
@@ -2978,7 +3003,7 @@ export const dataTableInit = options => {
                 }, 200);
             }
             else {
-                //console.log("url=", url, "data=", restParams);
+                //console.log(DATA.id+" url=", url, "data=", restParams);
 
                 //finally, make the request
                 $.ajax({
@@ -3277,11 +3302,6 @@ export const dataTableInit = options => {
                 TABLE.wjEditFetch(row);
             });
 
-            $("#datatableImportModal input[name=dt-settings-import]").on("click", function (e) {
-                $("#dt-import-update-by-column").toggle("update" === e.target.value);
-            });
-
-
             ExportImport.bindImportButton(TABLE, DATA);
 
             ExportImport.bindExportButton(TABLE, DATA);
@@ -3326,7 +3346,7 @@ export const dataTableInit = options => {
      * @param {*} ids
      */
     function _executeAction(action, ids, customData = null) {
-        $(".dataTables_processing").show();
+        $("#"+DATA.id+"_wrapper .dataTables_processing").show();
 
         $.post({
             url: WJ.urlAddPath(DATA.url, "/action/" + action),
@@ -3335,9 +3355,14 @@ export const dataTableInit = options => {
                 customData: customData
             },
             success: function (json) {
-                //console.log("Done, data="+data);
+                //console.log("Done, json=", json);
                 if (typeof json.error != "undefined" && json.error != null && json.error!="") {
                     WJ.notifyError(json.error);
+                    WJ.dispatchEvent('WJ.DT.executeActionCancel', {
+                        action: action,
+                        ids: ids,
+                        tableId: DATA.id
+                    });
                     return;
                 }
                 if(typeof json.notify != "undefined" && json.notify != null) {
@@ -3347,7 +3372,20 @@ export const dataTableInit = options => {
                     //aby mal filesystem cas na zmenu (napr. obrazkov) pred reloadom
                     TABLE.ajax.reload();
                 }, 500);
-            }
+                WJ.dispatchEvent('WJ.DT.executeAction', {
+                    action: action,
+                    ids: ids,
+                    tableId: DATA.id
+                });
+            },
+            error: function (xhr, ajaxOptions, thrownError) {
+                //console.log("Error, xhr=", xhr, " ajaxOptions=", ajaxOptions, " thrownError=", thrownError);
+                WJ.dispatchEvent('WJ.DT.executeActionCancel', {
+                    action: action,
+                    ids: ids,
+                    tableId: DATA.id
+                });
+            },
         });
     };
 
@@ -3371,7 +3409,11 @@ export const dataTableInit = options => {
         } else {
             for (var i = 0; i < selectedRows.length; i++) {
                 var row = selectedRows[i];
-                ids.push(row.id);
+                var id = row.id;
+                if (typeof id == "undefined") {
+                    id = row[TABLE.DATA.columns[0].data];
+                }
+                ids.push(id);
             }
         }
 
@@ -3392,6 +3434,13 @@ export const dataTableInit = options => {
                 message: noteText,
                 success: function () {
                     _executeAction(action, ids, customData);
+                },
+                cancel: function () {
+                    WJ.dispatchEvent('WJ.DT.executeActionCancel', {
+                        action: action,
+                        ids: ids,
+                        tableId: DATA.id
+                    });
                 }
             });
         }

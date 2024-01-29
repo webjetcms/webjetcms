@@ -12,4 +12,7 @@ public interface GroupSchedulerDtoRepository extends JpaRepository<GroupSchedule
     Page<GroupSchedulerDto> findAllByGroupIdAndWhenToPublishIsNotNull(Pageable pageable, Long groupId);
 
     Page<GroupSchedulerDto> findAllByGroupIdAndWhenToPublishIsNull(Pageable pageable, Long groupId1);
+
+    //get latest scheduler/history for group
+    GroupSchedulerDto findFirstByGroupIdAndWhenToPublishNullOrderBySaveDateDesc(Long groupId);
 }

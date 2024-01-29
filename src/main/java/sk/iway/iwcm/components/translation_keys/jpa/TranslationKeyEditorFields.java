@@ -12,7 +12,7 @@ import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.editor.FieldType;
 import sk.iway.iwcm.editor.rest.Field;
 import sk.iway.iwcm.i18n.Prop;
-import sk.iway.iwcm.system.ConstantsV9;
+import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.system.datatable.ProcessItemAction;
 
 @Getter
@@ -74,7 +74,7 @@ public class TranslationKeyEditorFields {
         }
 
         //Hide redundant fields
-        String[] lngArr = ConstantsV9.getArray("languages");
+        String[] lngArr = Constants.getArray("languages");
         char lastUsedAlphabet = (char)(((int)'A') + lngArr.length);
         for(char alphabet = lastUsedAlphabet; alphabet <= LAST_ALPHABET; alphabet++) {
             try {

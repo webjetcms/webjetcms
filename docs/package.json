@@ -4,8 +4,14 @@
   "description": "dokumentacia WebJET 2021",
   "main": "index.html",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "sitemap": "node sitemapGenerator.js"
   },
   "author": "InterWay, a. s.",
-  "license": "ISC"
+  "license": "APACHE-2.0",
+  "dependencies": {
+    "fs": "0.0.1-security",
+    "path": "^0.12.7",
+    "xmlbuilder": "^15.1.1"
+  }
 }

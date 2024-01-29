@@ -114,7 +114,6 @@ public class SimpleQuery
 					ps.close();
 				if (db_conn != null)
 					db_conn.close();
-
 				//Return number of updated columns
 				return updateCount;
 			}
@@ -123,7 +122,6 @@ public class SimpleQuery
 			}
 		}
 	}
-
 
 	@SuppressWarnings("unchecked")
 	public int forInt(String sql, Object... parameters)
@@ -159,7 +157,6 @@ public class SimpleQuery
 
 		throw new IllegalStateException("Return value for SQL is neither a number, nor NULL");
 	}
-
 
 	@SuppressWarnings("unchecked")
 	public String forString(String sql, Object... parameters)
@@ -213,6 +210,16 @@ public class SimpleQuery
 		if (results.get(0) == null)
 			return BigDecimal.ZERO;
 		return (BigDecimal)results.get(0);
+	}
+
+	@SuppressWarnings("unchecked")
+	public Boolean forBoolean(String sql, Object...parameters)
+	{
+		List<Object> results = forList(sql, parameters);
+		if (results.isEmpty()) return false;
+		if (results.get(0) == null)
+			return false;
+		return (Boolean)results.get(0);
 	}
 
 	@SuppressWarnings("unchecked")

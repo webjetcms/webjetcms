@@ -276,8 +276,9 @@ Scenario("vyhladavanie zacina na/konci na", ({ I, DT }) => {
 Scenario('import nema moznost aktualizovat zaznam podla', async ({ I, DT, DTE }) => {
     I.click("button.btn-import-dialog");
     I.waitForElement("#datatableImportModal");
-    I.dontSeeElement("#import-settings");
-    I.dontSee("Nastavenia importu");
+    I.see("Importovať nové a aktualizovať existujúce", "#import-settings");
+    I.see("Importovať iba nové záznamy", "#import-settings");
+    I.dontSee("Aktualizovať existujúce záznamy", "#import-settings");
 });
 
 Scenario("BUG key with tab prefix/suffix", ({ I, DT, DTE }) => {

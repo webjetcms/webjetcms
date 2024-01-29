@@ -1,7 +1,7 @@
 <%@page import="java.util.Map"%><%@page import="java.util.List"%><%
 sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
-%><%@ page pageEncoding="utf-8" import="sk.iway.iwcm.forum.*,java.util.*,sk.iway.iwcm.*, sk.iway.iwcm.users.*,sk.iway.iwcm.doc.*" %>
-<%@page import="org.apache.commons.codec.binary.Base64"%><%@ page import="sk.iway.iwcm.i18n.Prop" %><%@ page import="sk.iway.iwcm.forum.ForumBean" %>
+%><%@ page pageEncoding="utf-8" import="sk.iway.iwcm.forum.*,sk.iway.iwcm.components.forum.jpa.*,java.util.*,sk.iway.iwcm.*, sk.iway.iwcm.users.*,sk.iway.iwcm.doc.*" %>
+<%@page import="org.apache.commons.codec.binary.Base64"%><%@ page import="sk.iway.iwcm.i18n.Prop" %><%@ page import="sk.iway.iwcm.components.forum.jpa.DocForumEntity" %>
 <%@ taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm" %>
 <%@ taglib uri="/WEB-INF/iway.tld" prefix="iway" %>
 <%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
@@ -30,11 +30,6 @@ session.setAttribute("forumMBOpenPageParams",pageParams);
 
 
 boolean sortAscending = pageParams.getBooleanValue("sortAscending", true);
-
-int allowedUserGroup = -1;
-if(request.getAttribute("allowedUserGroup") != null)
-	allowedUserGroup = sk.iway.iwcm.Tools.getIntValue((String)request.getAttribute("allowedUserGroup"), -1);
-
 int docId = Tools.getIntValue(request.getParameter("docid"), -1);
 int rootForumId = Tools.getIntValue(request.getParameter("rootForumId"),-1);
 if(isAjaxCall)
@@ -74,11 +69,10 @@ Identity user = (Identity)session.getAttribute(Constants.USER_KEY);
 Map<String, String> emoticons = new Hashtable<>();
 String outStr = "";
 String fTitle = "";
-int listSize = 0;
 UserDetails uDet = null;
 
-ForumBean baseForumBean = new ForumBean();
-ForumGroupBean forumGroupBean = ForumDB.getForum(docId);
+DocForumEntity baseForumBean = new DocForumEntity();
+ForumGroupEntity forumGroupBean = ForumDB.getForum(docId);
 
 try
 {
@@ -86,23 +80,27 @@ try
 	{
 		//listovanie v podtemach, testujem parameter inc, ak je +1 beriem nasled. polozku v zozname
 		//ak je -1, beriem predchadzajucu
-		ForumBean fb;
+		DocForumEntity fb;
 		boolean notFound = true;
 		int listIndex = 0;
 
-
-		List<ForumBean> topics = ForumDB.getForumTopics(docId);
-		listSize = topics.size();
-
 		baseForumBean = ForumDB.getForumBean(request, parentId, sortAscending);
-		if (baseForumBean != null && active)
+		if (baseForumBean != null)
 		{
-			active = baseForumBean.isActive();
-			fTitle = baseForumBean.getSubject();
-			pageContext.setAttribute("forumActive", "");
+			//!! - IMPORTANT check
+			//In case of deleted or not confirmed (or not approved) forum we will not show forum unless user is logged in and admin
+			if((baseForumBean.getDeleted() || !baseForumBean.getConfirmed()) && (user == null || !user.isAdmin())) {
+				%> <p><span class="forumClosed"><iwcm:text key="components.forum.not_exist_error"/>!</span></p> <%
+				return;
+			};
+
+			if(active) {
+				active = baseForumBean.isActive();
+				fTitle = baseForumBean.getSubject();
+				pageContext.setAttribute("forumActive", "");
+			} else pageContext.setAttribute("forumClosed", "");
 		}
-		else
-			pageContext.setAttribute("forumClosed", "");
+		else pageContext.setAttribute("forumClosed", "");
 	}
 
 	//definovanie emotikonov, ktore sa nahradia
@@ -118,7 +116,6 @@ catch(Exception ex)
 }
 
 int iMod = 1;
-
 List forum = null;
 String offset = "0";
 String end = ""+(pageSize);
@@ -134,12 +131,9 @@ if (docId > 0 && parentId > 0)
 		pageContext.setAttribute("emptyForum", "true");
 }
 
-Object rankVal;
-//Map usersRank = ForumDB.getForumRanks(allowedUserGroup);
-
 boolean canPostNewTopic = true;
 boolean isAdmin = false;
-if (active==false) canPostNewTopic = false;
+if (active==false || (baseForumBean != null && (baseForumBean.getDeleted() || !baseForumBean.getConfirmed()))) canPostNewTopic = false;
 if (forumGroupBean.isAdmin(user))
 {
 	canPostNewTopic = true;
@@ -172,10 +166,11 @@ if(!isAjaxCall)
 		if (!editwindow.opener) editwindow.opener = self;
 		if (window.focus) {editwindow.focus()}
 	}
-	function popupNewUpload(parent, docId)
+
+	function popupNewUpload(forumId, docId)
 	{
 		var options = "toolbar=no,scrollbars=no,resizable=yes,width=350,height=350;"
-		editwindow=window.open("/components/forum/new_file.jsp?parent="+parent+"&docid="+docId,'forumNew',options);
+		editwindow=window.open("/components/forum/new_file.jsp?forumId="+forumId+"&docid="+docId,'forumNew',options);
 		if (!editwindow.opener) editwindow.opener = self;
 		if (window.focus) {editwindow.focus()}
 	}
@@ -197,7 +192,7 @@ if(!isAjaxCall)
 		@import "/components/forum/forum_mb.css";
 	</style>
 
-	<% if (user != null && user.isAdmin()) { %>
+	<% if (isAdmin) { %>
 	<style type="text/css">
 	tr.trDeleted td, tr.trDeleted td a, tr.trDeleted td strong, tr.trDeleted td p, tr.trDeleted td span { color: red !important }
 	</style>
@@ -248,6 +243,13 @@ if(!isAjaxCall)
 			</nav>
 		</div>
 
+		<% if(forum != null && forum.size() > 0)
+			{
+				request.setAttribute("pagingList", forum);
+		%>
+				<jsp:include page="paging_component.jsp" />
+		<%	}%>
+
 	</div>
 
 <logic:present name="emptyForum">
@@ -279,7 +281,7 @@ if(!isAjaxCall)
 			</tr>
 		</thead>
 	</table-->
-	<logic:iterate offset="<%= offset%>" length="<%= end%>" name="forum" id="field" type="sk.iway.iwcm.forum.ForumBean" indexId="index">
+	<logic:iterate offset="<%= offset%>" length="<%= end%>" name="forum" id="field" type="DocForumEntity" indexId="index">
 
 	<%
 		String trClass = "";
@@ -300,11 +302,16 @@ if(!isAjaxCall)
 					<div class="col-md-3 col-xs-12 post-info post-info-left text-center">
 
 					<a name="post<%=field.getForumId()%>"></a>
-					<logic:notEmpty name="field" property="autorEmail">
-						<span class="name"><a href="mailto:<bean:write name="field" property="autorEmail"/>"><bean:write name="field" property="autorFullName"/></a></span>
+
+					<%if (!active || !field.getActive()) {%>
+						<img src="/components/forum/images/folder_locked_big.gif" style="border:0px;" align="absbottom"/>
+					<%}%>
+
+					<logic:notEmpty name="field" property="authorEmail">
+						<span class="name"><a href="mailto:<bean:write name="field" property="authorEmail"/>"><bean:write name="field" property="authorName"/></a></span>
 					</logic:notEmpty>
-					<logic:empty name="field" property="autorEmail">
-						<span class="name"><bean:write name="field" property="autorFullName"/></span>
+					<logic:empty name="field" property="authorEmail">
+						<span class="name"><bean:write name="field" property="authorName"/></span>
 					</logic:empty>
 					<br/>
 					<span class="postdetails">
@@ -312,7 +319,7 @@ if(!isAjaxCall)
 					uDet = null;
 					if (field.getUserId() > 0)
 					{
-						uDet = UsersDB.getUser(field.getUserId());
+						uDet = UsersDB.getUserCached(field.getUserId());
 
 						//FORUM RANK
 						String photo = null;
@@ -355,17 +362,16 @@ if(!isAjaxCall)
 								<span class="panel-title"><iwcm:text key="components.forum.bb.subject"/>: <bean:write name="field" property="subject"/></span>
 							</div>
 							<div class="col-md-4 col-xs-4 no-padding">
-
 									<div class="btn-toolbar topic-buttons" role="toolbar">
-										<%	if (user != null && user.getUserId() == field.getUserId() && uploadLimits!=null){%>
+										<%	if (field.canUpload(user, uploadLimits, forumGroupBean)){%>
 										<div class="btn-group">
-											<a class="btn btn-default" href="javascript:popupNewUpload(<bean:write name="field" property="forumId"/>, <%=docId%>);">
+											<a class="btn btn-default" href="javascript:popupNewUpload(<bean:write name="field" property="forumId"/>, <%=docId%>, <%=parentId%>);">
 												<iwcm:text key="components.forum.upload"/>
 											</a>
 										</div>
 										<% } %>
 
-										<%if (canPostNewTopic) {%>
+										<%if (field.canPost(forumGroupBean, user)) {%>
 										<div class="btn-group">
 											<span>
 												<a class="btn btn-info" href="javascript:openWJDialog('forum', '/components/forum/new.jsp?parent=<bean:write name="field" property="forumId"/>&parent2=<%=parentId%>&type=mb_open&rootForumId=<%=rootForumId%>&docid=<%=docId%>&isCite=true&pageNum=<%=pageNum%>');">
@@ -376,7 +382,7 @@ if(!isAjaxCall)
 										<% } %>
 
 										<%
-										 	if (user != null && (user.getUserId() == field.getUserId() || isAdmin) && field.isDeleted()==false){%>
+										 	if (field.canDelete(user, pageParams.getIntValue("delMinutes", 30), forumGroupBean)){%>
 										 	<div class="btn-group">
 										 		<span class="deleteMessage">
 										 			<a class="btn btn-danger" href="javascript:delMessage('<%=field.getForumId()%>');">
@@ -386,9 +392,7 @@ if(!isAjaxCall)
 										 	</div>
 										<% } %>
 
-
 									</div>
-
 							</div>
 						</div>
 						<div class="content">

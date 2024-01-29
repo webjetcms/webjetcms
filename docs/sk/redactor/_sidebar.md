@@ -1,0 +1,75 @@
+<div class="sidebar-section">Manuál pre redaktora</div>
+
+- [:point_left: Späť na Úvod](/?back)
+
+- Používanie administrácie
+  - [Prihlásenie a odhlásenie](/redactor/admin/logon.md)
+  - [Hlavné ovládacie prvky](/redactor/admin/README.md)
+  - [Úvodná obrazovka](/redactor/admin/welcome.md)
+- Datatabuľky
+  - [Základy práce s data tabuľkami](/redactor/datatables/README.md)
+  - [Export a import](/redactor/datatables/export-import.md)
+- Web stránky
+  - [Základná práca](/redactor/webpages/README.md)
+  - [Editácia web stránky](/redactor/webpages/editor.md)
+  - [História](/redactor/webpages/history.md)
+  - [Obnovenie z koša](/redactor/webpages/recover.md)
+  - [Page Builder](/redactor/webpages/pagebuilder.md)
+  - [Kontrola odkazov a prázdnych stránok](/redactor/webpages/linkcheck.md)
+  - [Import a export web stránok](/redactor/webpages/import-export.md)
+  - [Schvaľovanie zmien](/redactor/webpages/approve/README.md)
+  - [Zaheslované stránky](/redactor/zaheslovana-zona/README.md)
+  - [Klonovanie štruktúry](/redactor/apps/clone-structure/README.md)
+  - [Atribúty stránky](/redactor/webpages/doc-attributes/README.md)
+  - [Média](/redactor/webpages/media.md)
+  - [Značky](/redactor/webpages/perexgroups.md)
+- Aplikácie
+  - [AB testovanie](/redactor/apps/abtesting/README.md)
+  - [Anketa](/redactor/apps/inquiry/README.md)
+  - Bannerový systém
+    - [Zoznam bannerov](/redactor/apps/banner/README.md)
+    - [Štatistika bannerov](/redactor/apps/banner/banner-stat/README.md)
+  - [Číselníky](/redactor/apps/enumeration/README.md)
+  - [Export dát](/redactor/apps/export/README.md)
+  - [Formulár ľahko](/redactor/apps/formsimple/README.md)
+  - Formuláre
+    - [Zoznam formulárov](/redactor/apps/form/README.md)
+    - [Regulárne výrazy](/redactor/apps/form/regexps.md)
+  - Fórum/Diskusia
+    - [Nastavenie aplikácie](/redactor/apps/forum/README.md)
+    - [Zoznam diskusií](/redactor/apps/forum/forum-list.md)
+  - [Galéria](/redactor/apps/gallery/README.md)
+  - GDPR
+    - [Cookies manažér](/redactor/apps/gdpr/cookiesmanger.md)
+    - [Správa regulárnych výrazov](/redactor/apps/gdpr/regexps.md)
+    - [Vyhľadávanie](/redactor/apps/gdpr/search.md)
+    - [Mazanie dát](/redactor/apps/gdpr/data-deleting.md)
+    - [Integrácia Google Tag Manager](/redactor/apps/gdpr/gtm.md)
+  - Hromadný e-mail
+    - [Kampane](/redactor/apps/dmail/campaings/README.md)
+    - [Formulár pre prihlásenie](/redactor/apps/dmail/form/README.md)
+    - [Doménové limity](/redactor/apps/dmail/domain-limits/README.md)
+    - [Odhlásené e-maily](/redactor/apps/dmail/unsubscribed/README.md)
+    - [Ako funguje odosielanie emailov](/redactor/apps/dmail/campaings/how-sender-works.md)
+  - [Hodnotenie/Rating](/redactor/apps/rating/README.md)
+  - Kalendár udalostí
+    - [Zoznam udalostí](/redactor/apps/calendar/README.md)
+    - [Konfigurácia typov udalostí](/redactor/apps/calendar/calendar-types/README.md)
+  - [Mapa stránok](/redactor/apps/sitemap/README.md)
+  - [Menu (navigačné)](/redactor/apps/menu/README.md)
+  - [Navigačná lišta](/redactor/apps/navbar/README.md)
+  - [Novinky](/redactor/apps/news/README.md)
+  - [Otázky a odpovede](/redactor/apps/qa/README.md)
+  - Reštauračné menu
+    - [Reštauračné menu](/redactor/apps/restaurant-menu/README.md)
+    - [Jedlá](/redactor/apps/restaurant-menu/meals.md)
+    - [Tvorba menu](/redactor/apps/restaurant-menu/menu.md)
+  - [Proxy](/redactor/apps/proxy/README.md)
+  - Rezervácie
+    - [Zoznam rezervácii](/redactor/apps/reservation/reservations/README.md)
+    - [Zoznam rezervačných objektov](/redactor/apps/reservation/reservation-objects/README.md)
+  - [SEO](/redactor/apps/seo/README.md)
+  - [Štatistika](/redactor/apps/stat/README.md)
+  - [Tooltip](/redactor/apps/tooltip/README.md)
+  - [Zobrazenie súborov](/redactor/apps/site-browser/README.md)
+  - [Zrkadlenie štruktúry](/redactor/apps/docmirroring/README.md)

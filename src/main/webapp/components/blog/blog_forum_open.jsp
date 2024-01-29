@@ -1,6 +1,6 @@
 <%@page import="java.util.List"%><%
 sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
-%><%@ page pageEncoding="utf-8" import="sk.iway.iwcm.forum.*,java.util.*,sk.iway.iwcm.*,sk.iway.iwcm.doc.*" %>
+%><%@ page pageEncoding="utf-8" import="sk.iway.iwcm.forum.*,sk.iway.iwcm.components.forum.jpa.*,java.util.*,sk.iway.iwcm.*,sk.iway.iwcm.doc.*" %>
 <%@ taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm" %>
 <%@ taglib uri="/WEB-INF/iway.tld" prefix="iway" %>
 <%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
@@ -107,16 +107,16 @@ if (user!=null && user.isAdmin())
 		</div>
 	<% } else { %>
 		<table border="0" cellspacing="0" cellpadding="0" class="forumOpenTable">
-		<logic:iterate name="forum" id="field" type="sk.iway.iwcm.forum.ForumBean" indexId="index">
+		<logic:iterate name="forum" id="field" type="DocForumEntity" indexId="index">
 			<tr>
 				<td style="padding-left:<%=(20 * field.getLevel())%>px;" class="forumOpenTableHeader">
 						<b><bean:write name="field" property="subject"/></b><br />
 						<iwcm:text key="forum.author"/>:
-						<logic:notEmpty name="field" property="autorEmail">
-							<a href="mailto:<bean:write name="field" property="autorEmail"/>"><bean:write name="field" property="autorFullName"/></a>
+						<logic:notEmpty name="field" property="authorEmail">
+							<a href="mailto:<bean:write name="field" property="authorEmail"/>"><bean:write name="field" property="authorName"/></a>
 						</logic:notEmpty>
-						<logic:empty name="field" property="autorEmail">
-							<bean:write name="field" property="autorFullName"/>
+						<logic:empty name="field" property="authorEmail">
+							<bean:write name="field" property="authorName"/>
 						</logic:empty>
 				</td>
 				<td align="right" class="forumOpenTableHeader">

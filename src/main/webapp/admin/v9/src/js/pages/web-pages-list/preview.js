@@ -54,21 +54,20 @@ export class EditorPreview {
                     $.ajax({
                         url: "/admin/rest/web-pages/preview/",
                         data: json,
-                        //dataType: "json",
                         contentType: 'application/json',
                         method: "post",
                         success: function(response) {
                             //console.log("SUCCESS, response=", response, "previewWindow=", self.previewWindow);
-
-                            if (response=="ok") {
+                            if (response.ok===true) {
                                 //otvor okno s nahladom, otvarame vzdy takto, aby sa dostalo do popredia kliknutim na tlacidlo
                                 self.previewWindow = window.open(url, "webjetPreviewWindow");
                                 window.previewWindow = self.previewWindow;
                             } else {
-                                window.WJ.notifyError(WJ.translate("editor.preview.error.js"), textStatus);
+                                window.WJ.notifyError(WJ.translate("editor.preview.error.js"), response);
                             }
                         },
                         error: function(jqXHR, textStatus, errorThrown) {
+                            console.log("ERROR, textStatus=", textStatus, "errorThrown=", errorThrown);
                             window.WJ.notifyError(WJ.translate("editor.preview.error.js"), textStatus);
                         }
                     })

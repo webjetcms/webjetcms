@@ -213,8 +213,8 @@
     <void property="author"><string>jeeff</string></void>
     <void property="date"><string>15.10.2004</string></void>
     <void property="desc"><string>default miestnost pre chat</string></void>
-    <void property="mysql"><string>INSERT INTO chat_rooms (room_name, room_description, room_class, max_users, allow_similar_names, lng, moderator_name, moderator_username, moderator_password) VALUES ('pokec', 'VolnĂ˝ pokec', 'sk.iway.iwcm.components.chat.HtmlChatRoom', 50, 0, 'sk', NULL, NULL, NULL)</string></void>
-    <void property="mssql"><string>INSERT INTO chat_rooms (room_name, room_description, room_class, max_users, allow_similar_names, lng, moderator_name, moderator_username, moderator_password) VALUES ('pokec', 'VolnĂ˝ pokec', 'sk.iway.iwcm.components.chat.HtmlChatRoom', 50, 0, 'sk', NULL, NULL, NULL)</string></void>
+    <void property="mysql"><string>INSERT INTO chat_rooms (room_name, room_description, room_class, max_users, allow_similar_names, lng, moderator_name, moderator_username, moderator_password) VALUES ('pokec', 'Volny pokec', 'sk.iway.iwcm.components.chat.HtmlChatRoom', 50, 0, 'sk', NULL, NULL, NULL)</string></void>
+    <void property="mssql"><string>INSERT INTO chat_rooms (room_name, room_description, room_class, max_users, allow_similar_names, lng, moderator_name, moderator_username, moderator_password) VALUES ('pokec', 'Volny pokec', 'sk.iway.iwcm.components.chat.HtmlChatRoom', 50, 0, 'sk', NULL, NULL, NULL)</string></void>
    </object>
   </void>
   <void method="add">
@@ -5106,6 +5106,7 @@
 				UPDATE banner_stat_views SET domain_id=1;
 				ALTER TABLE banner_stat_views_day ADD domain_id INT DEFAULT 1;
 				UPDATE banner_stat_views_day SET domain_id=1;
+				UPDATE insert_script SET domain_id=1;
 				ALTER TABLE insert_script_gr ADD domain_id INT DEFAULT 1;
 				UPDATE insert_script_gr SET domain_id=1;
 			</string></void>
@@ -5131,7 +5132,6 @@
 				UPDATE banner_stat_views SET domain_id=1;
 				ALTER TABLE banner_stat_views_day ADD domain_id INT DEFAULT 1;
 				UPDATE banner_stat_views_day SET domain_id=1;
-				UPDATE insert_script SET domain_id=1;
 				ALTER TABLE insert_script_gr ADD domain_id INT DEFAULT 1;
 				UPDATE insert_script_gr SET domain_id=1;
 			</string></void>

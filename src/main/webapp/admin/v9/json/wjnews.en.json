@@ -1,6 +1,20 @@
 {
     "news": [
         {
+            "title": "Version 2024.0",
+            "perex": "WebJET version 2024.0 is identical to version 2023.52",
+            "link": "http://docs.webjetcms.sk/v2023/#/CHANGELOG-2023?id=_202352"
+        },
+        {
+            "title": "Version 2023.52",
+            "perex": "WebJET version 2023.52 contains a new version of **update with description of changes**, **structure cloning** integrated with the mirroring function (including the possibility of translations), adds the option to **restore** the website, or **the entire folder from the trash**, adds **HTML type editor** and the option to set the editor type directly for the template, **applications** can **turn on display only for selected types of devices** mobile, tablet, PC and of course improves safety and comfort of work.",
+            "link": "http://docs.webjetcms.sk/v2023/#/CHANGELOG-2023?id=_202352"
+        },{
+            "title": "Version 2023.40",
+            "perex": "Version 2023.40 adds **search in explorer**/files, possibility to use **video banner**, improves user interface, speeds up data loading in web pages. **Banner** adds restriction settings for **display only in specified web pages and folders**. The new **HTTP headers** application allows you to set HTTP headers for specified URLs. We added **optional fields** to **Media**. Mirroring the structure supports **translation of both the web page body** and improves change detection. Redesigned applications **Server monitoring, SEO, News, Discussion**.",
+            "link": "http://docs.webjetcms.sk/v2023/#/CHANGELOG-2023?id=_202340"
+        },
+        {
             "title": "Version 2023.18",
             "perex": "Version 2023.18 is focused on the integration of the original version 8 code. Deprecated is the option to switch to the old version 8 parts of the code that have already been redesigned or are no longer supported have been removed.",
             "link": "http://docs.webjetcms.sk/v2023/#/CHANGELOG-2023?id=_202318"
@@ -69,16 +83,6 @@
             "title": "Version 2021.13",
             "perex": "2021.13 improves the user experience by increasing the speed of displaying the list of web pages, the ability to enter the ID of the page or directory for its display (including remembering it in the browser's URL address), the ability to set the displayed columns in the data table, translations in JavaScript files and a number of other improvements in the entire WebJET.",
             "link": "http://docs.webjetcms.sk/v2021/#/CHANGELOG?id=_202113"
-        },
-        {
-            "title": "Version 2021.11",
-            "perex": "2021.11 adds a web page history display with the ability to edit, display and compare.",
-            "link": "http://docs.webjetcms.sk/v2021/#/CHANGELOG?id=_202111"
-        },
-        {
-            "title": "Version 2021.10",
-            "perex": "2021.10 fixes a dialog size bug in the page editor and fixes several grammar errors in app descriptions.",
-            "link": "http://docs.webjetcms.sk/v2021/#/CHANGELOG?id=_202110"
         }
     ]
 }

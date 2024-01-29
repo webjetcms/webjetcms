@@ -1,6 +1,8 @@
 package sk.iway.iwcm.components.gallery;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+
+import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.admin.jstree.JsTreeItem;
 import sk.iway.iwcm.admin.jstree.JsTreeItemState;
@@ -14,7 +16,7 @@ public class GalleryJsTreeItem extends JsTreeItem {
     @JsonProperty("galleryDimension")
     private GalleryDimension galleryDimension;
 
-    public GalleryJsTreeItem(IwcmFile f, String currentDir, GalleryDimensionRepository repository) {
+    public GalleryJsTreeItem(IwcmFile f, String currentDir, GalleryDimensionRepository repository, Identity user) {
         setId(f.getVirtualPath());
         setChildren(f.listFiles(IwcmFile::isDirectory).length > 0);
         setIcon("fas fa-folder");
@@ -50,6 +52,10 @@ public class GalleryJsTreeItem extends JsTreeItem {
         galleryDimension.setPath(f.getVirtualPath());
         setGalleryDimension(galleryDimension);
         setText(galleryDimension.getName());
+
+        if (GalleryDimenstionRestController.isFolderEditable(galleryDimension.getPath(), user)==false) {
+            setIcon("fas fa-folder-times");
+        }
     }
 
     public GalleryDimension getGalleryDimension() {

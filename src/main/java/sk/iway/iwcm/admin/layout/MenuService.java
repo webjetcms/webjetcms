@@ -208,6 +208,9 @@ public class MenuService {
             { "/components/banner/banner_stat.jsp", "/apps/banner/admin/banner-stat/"},
             { "/components/proxy/admin_list.jsp", "/apps/proxy/admin/"},
             { "/components/news/admin_news_list.jsp", "/apps/news/admin/"},
+            { "/components/restaurant_menu/admin_list_meals.jsp", "/apps/restaurant-menu/admin/meals/"},
+            { "/components/restaurant_menu/admin_new_menu.jsp", "/apps/restaurant-menu/admin/"},
+            { "/components/restaurant_menu/admin_list_menu.jsp", ""},
 
             //dmail
             { "/components/dmail/admin_campaigns.jsp", "/apps/dmail/admin/"},
@@ -509,13 +512,6 @@ public class MenuService {
                 List<MenuBean> thirdChildrens = new ArrayList<>();
                 List<ModuleInfo> subMenus = filterNoLink(m.getSubmenus(user), user);
 
-                if (m.getItemKey().equalsIgnoreCase("cmp_stat")) {
-                    ModuleInfo mi = new ModuleInfo();
-                    mi.setLeftMenuNameKey("components.stat.actual_users");
-                    mi.setLeftMenuLink("/apps/stat/admin/logon-current/");
-                    subMenus.add(mi);
-                }
-
                 if (subMenus.size()==1 && children.getHref().equals(getMenuLinkV9(subMenus.get(0)))) {
                     //v submenu je len 1 polozka a zhoduje sa s parentom, toto nebudeme renderovat
                 } else {
@@ -549,7 +545,7 @@ public class MenuService {
     }
 
     /**
-     * Odfiltruje menu polozky, ktore obsahuju prazdne javascript:void()
+     * Odfiltruje menu polozky, ktore obsahuju prazdne javascript:void() alebo na ktore pouzivatel nema pravo
      * @param list
      * @param user
      * @return
@@ -566,7 +562,7 @@ public class MenuService {
             if (m.getLeftMenuLink().contains("javascript:void()") || getMenuLinkV9(m).contains("javascript:void()"))
                 continue;
 
-            if (Tools.isNotEmpty(m.getItemKey()) && user.isDisabledItem(m.getItemKey()))
+            if (Tools.isNotEmpty(m.getItemKey()) && user.isEnabledItem(m.getItemKey())==false)
                 continue;
 
             if (Tools.isEmpty(getMenuLinkV9(m))) continue;

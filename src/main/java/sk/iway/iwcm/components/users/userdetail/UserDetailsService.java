@@ -96,7 +96,7 @@ public class UserDetailsService {
             List<JsTreeItem> allModuleItems = MenuService.getAllPermissions().stream().filter(item -> item.getId().endsWith("-leaf")==false).collect(Collectors.toList());
 
             Identity user = new Identity(UsersDB.getUser(userId));
-            UsersDB.loadDisabledItemsFromDB(user);
+            UsersDB.loadDisabledItemsFromDB(user, false);
 
             Set<String> disabledItemsKeys = user.getDisabledItemsTable().keySet();
 
@@ -157,6 +157,29 @@ public class UserDetailsService {
             fixEditorMiniEdit(userId);
         }
 
+        boolean saveok = savePassword(entity, userId);
+        if (saveok==false) return false;
+
+        if (Tools.isNotEmpty(entity.getApiKey()) && entity.getApiKey().equals(UserTools.PASS_UNCHANGED)==false) {
+            String apiKey = null;
+            //ak obsahuje len znak - chceme ho zmazat
+            if ("-".equals(entity.getApiKey())) {
+                apiKey = "";
+            } else {
+                //zahashuj token v databaze
+                String salt = PasswordSecurity.generateSalt();
+                String tokenHashed = PasswordSecurity.calculateHash(entity.getApiKey(), salt);
+
+                apiKey = salt+"|"+tokenHashed;
+            }
+
+            if (apiKey != null) (new SimpleQuery()).execute("UPDATE users SET api_key=? WHERE user_id=?", apiKey, entity.getId());
+        }
+
+        return true;
+    }
+
+    public static boolean savePassword(UserDetailsBasic entity, int userId) {
         if (Tools.isNotEmpty(entity.getPassword()) && entity.getPassword().equals(UserTools.PASS_UNCHANGED)==false) {
             //ulozit heslo
             Logger.debug(UserDetailsService.class, "Heslo je zmenene, ukladam");
@@ -189,23 +212,6 @@ public class UserDetailsService {
                 return false;
             }
         }
-
-        if (Tools.isNotEmpty(entity.getApiKey()) && entity.getApiKey().equals(UserTools.PASS_UNCHANGED)==false) {
-            String apiKey = null;
-            //ak obsahuje len znak - chceme ho zmazat
-            if ("-".equals(entity.getApiKey())) {
-                apiKey = "";
-            } else {
-                //zahashuj token v databaze
-                String salt = PasswordSecurity.generateSalt();
-                String tokenHashed = PasswordSecurity.calculateHash(entity.getApiKey(), salt);
-
-                apiKey = salt+"|"+tokenHashed;
-            }
-
-            if (apiKey != null) (new SimpleQuery()).execute("UPDATE users SET api_key=? WHERE user_id=?", apiKey, entity.getId());
-        }
-
         return true;
     }
 

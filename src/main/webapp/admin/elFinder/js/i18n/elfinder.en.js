@@ -465,7 +465,8 @@ if (elFinder && elFinder.prototype && typeof(elFinder.prototype.i18) == 'object'
 
             /************* WEBJET ******************/
             'cmdresize'    : 'Edit',
-            'cmdwjedit'      : 'Edit file'
+            'cmdwjedit'      : 'Edit file',
+			'wjSearchRecursive': 'In subfolders'
 		}
 	};
 }

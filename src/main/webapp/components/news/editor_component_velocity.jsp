@@ -602,7 +602,7 @@ function hideElements() {
 }
 
 function getInclude() {
-	var ignore = ['disabledItemsLeft', 'disabledItemsRight', 'filter[]', 'groupIdsSelect', 'filterValue', 'perexGroupSearch', '_sourcePage', '__fp'];
+	var ignore = ['disabledItemsLeft', 'disabledItemsRight', 'filter[]', 'groupIdsSelect', 'filterValue', 'perexGroupSearch', '_sourcePage', '__fp', 'device'];
 	var inc = "/components/news/news-velocity.jsp";
 	var params = {};
 

@@ -60,8 +60,16 @@ public class SpringUrlMapping// implements ApplicationListener<ContextRefreshedE
 		return redirect("/403");
 	}
 
+	public static void redirectTo403(HttpServletResponse response) throws IOException {
+		response.sendRedirect("/403");
+	}
+
 	public static String redirectTo404() {
 		return redirect("/404");
+	}
+
+	public static void redirectTo404(HttpServletResponse response) throws IOException {
+		response.sendRedirect("/404");
 	}
 
 	public static void redirectToLogon(HttpServletResponse response) throws IOException {

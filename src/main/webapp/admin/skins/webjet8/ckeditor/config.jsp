@@ -61,6 +61,17 @@ CKEDITOR.editorConfig = function( config )
 	config.pasteTools_removeFontStyles = true;
 	config.disableNativeSpellChecker = false;
 	config.editorAutomaticWordClean = <%=Constants.getBoolean("editorAutomaticWordClean")%>
+	config.clipboard_handleImages = false;
+
+	config.stylesSet = [
+		{ name: 'Paragraph',		element: 'p' },
+		{ name: 'Heading 1',		element: 'h1' },
+		{ name: 'Heading 2',		element: 'h2' },
+		{ name: 'Heading 3',		element: 'h3' },
+		{ name: 'Heading 4',		element: 'h4' },
+		{ name: 'Heading 5',		element: 'h5' },
+		{ name: 'Heading 6',		element: 'h6' }
+	];
 
 	config.fillEmptyBlocks = function( element ) {
 	    //if ( element.attributes[ 'class' ].indexOf( 'clear-both' ) != -1 )
@@ -80,17 +91,19 @@ CKEDITOR.editorConfig = function( config )
 	%>
 
 	<% if ("true".equals(Tools.getRequestParameter(request, "inline"))) { %>
-		config.extraPlugins = "floatingspace<% if ("cloud".equals(Constants.getInstallName()) || "webjet8".equals(Constants.getInstallName())) {%><% } %>,webjetmagicline,sharedspace<% if (hasFontAwesome) { %>,fontawesome<% } %>";
+		config.extraPlugins = "<% if (hasFontAwesome) { %>fontawesome<% } %>";
 		config.sharedSpaces = {
 		    top: 'wjInlineCkEditorToolbarElement'
 		}
-		config.removePlugins = 'maximize,resize';
+		config.removePlugins = 'maximize,resize,webjetfloatingtools';
 		config.forceEnterMode = true;
 	<% } else if ("standalone".equals(Tools.getRequestParameter(request, "toolbar"))) { %>
-		config.extraPlugins = "codemirror,webjetfloatingtools<% if (hasFontAwesome) { %>,fontawesome<% } %>";
+		config.extraPlugins = "codemirror<% if (hasFontAwesome) { %>,fontawesome<% } %>";
 		config.height = 600;
+		config.removePlugins = 'floatingspace,sharedspace'
 	<% } else { %>
-		config.extraPlugins = "codesnippet,codemirror,webjetfloatingtools,webjetmagicline<% if (hasFontAwesome) { %>,fontawesome<% } %>,webjettooltip";
+		config.extraPlugins = "codemirror,codesnippet<% if (hasFontAwesome) { %>,fontawesome<% } %>";
+		config.removePlugins = 'floatingspace,sharedspace';
 	<% } %>
 	config.magicline_color="#F7CA18";
 	config.magicline_triggers = { <%=Constants.getString("editorMagiclineElements")%> };

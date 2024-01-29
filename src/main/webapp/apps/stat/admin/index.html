@@ -84,6 +84,10 @@
                 let statType = getStatType();
                 if(statType == "days") {
                     statsDataTable.column(1).visible(true);
+                    statsDataTable.column(2).visible(false);
+                    statsDataTable.column(3).visible(false);
+                    statsDataTable.column(4).visible(false);
+                    statsDataTable.column(5).visible(false);
                 } else if(statType == "weeks") {
                     statsDataTable.column(1).visible(false);
                     statsDataTable.column(2).visible(true);
@@ -138,7 +142,7 @@
                 let filterBotsOut = $('#botFilterOut').is(':checked');
                 let statType = getStatType();
                 let tmpDefURL = "/admin/rest/stat/views/search/findByColumns?";
-                let searchDateValue = ChartTools.getDateRange(30);
+                let searchDateValue = ChartTools.getDateRange(null);
 
                 tmpDefURl = tmpDefURL + "searchDayDate=" + searchDateValue;
 
@@ -225,6 +229,9 @@
         label[for=botFilterOut]::after {
             content: "\f544" !important;
         }
+        div.dt-button-collection .dropdown-menu .btn-group:first-child {
+            display: none;
+        }
     </style>
     <div id="statsDataTable_extfilter">
         <div class="row datatableInit">
@@ -241,7 +248,7 @@
             <div class="col-auto" data-th-title="#{components.stat.filter.showOnlyFromGroup}" data-toggle="tooltip">
                 <input type="text" class="webjet-dte-jstree" id="rootDir" value="-1" data-th-data-text="#{components.stat.stats.root_dirs.all}" data-th-data-text-empty="#{components.stat.stats.root_dirs.all}"/>
             </div>
-            <div class="col-auto">
+            <div class="col-auto ext-filter-out">
                 <div class="btn btn-sm custom-control form-switch" data-toggle="tooltip" data-th-title="#{stat.withoutBots}">
                     <input id="botFilterOut" type="checkbox" class="form-check-input" value="true" />
                     <label for="botFilterOut" class="form-check-label is-icon-arrows-v"></label>

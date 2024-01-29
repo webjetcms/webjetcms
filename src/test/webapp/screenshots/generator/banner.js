@@ -38,3 +38,46 @@ Scenario('banner editor', ({ I, DTE, Document }) => {
     Document.screenshotElement("div.banner-html", "/redactor/apps/banner/banner-html.png");
     Document.screenshotElement("div.banner-content", "/redactor/apps/banner/banner-content.png");
 });
+
+Scenario('Video banner', ({ I, Document }) => {
+    I.amOnPage("/apps/bannerovy-system/klasicky_video_banner_yt.html");
+    I.seeElement("div.embed-responsive > iframe.video")
+    Document.screenshot("/redactor/apps/banner/banner-video.png", 1000, 800);
+});
+
+Scenario('Device type specific banner screens', ({ I, DTE, Document }) => {
+    //
+    I.amOnPage("/test-stavov/device_specific_baner/multi_devices_banner.html?forceBrowserDetector=pc");
+    Document.screenshot("/redactor/apps/banner/pc-only-banner.png");
+
+    //
+    I.amOnPage("/test-stavov/device_specific_baner/multi_devices_banner.html?forceBrowserDetector=phone");
+    Document.screenshot("/redactor/apps/banner/phone-tablet-only-banner.png");
+
+
+    I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=73932");
+    DTE.waitForEditor();
+
+    I.wait(4);
+    Document.screenshot("/redactor/apps/banner/multiple-devieces-banner-edit.png");
+
+        //Open banner setting
+        I.waitForElement(".cke_wysiwyg_frame.cke_reset", 30);
+        I.switchTo("iframe.cke_reset");
+        I.wait(1);
+        I.waitForElement("iframe.wj_component", 10);
+        I.switchTo("iframe.wj_component");
+        I.wait(1);
+            I.forceClick("div.inlineComponentButtons > a:nth-child(1)");
+        I.switchTo("");
+        I.switchTo("");
+
+        I.waitForElement("table.cke_dialog");
+
+        I.switchTo("#cke_121_iframe") //iframe
+        I.switchTo("#editorComponent") //iframe
+
+        I.click("#tabLinkcommonAdvancedSettings");
+
+    Document.screenshot("/redactor/apps/banner/banner-device-setting-tab.png");
+});

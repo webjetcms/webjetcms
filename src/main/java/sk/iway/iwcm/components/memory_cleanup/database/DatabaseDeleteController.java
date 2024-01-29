@@ -65,7 +65,7 @@ public class DatabaseDeleteController extends DatatableRestControllerV2<Database
     public Page<DatabaseDeleteBean> searchItem(Map<String, String> params, Pageable pageable, DatabaseDeleteBean search) {
 
         DatatablePageImpl<DatabaseDeleteBean> page;
-        String dateRange = params.get("searchfrom");
+        String dateRange = params.get("searchFrom");
         if (Tools.isNotEmpty(dateRange)) {
             Pair<Date, Date> dates = getCleanStatDateValue(dateRange);
             Prop prop = Prop.getInstance(getRequest());

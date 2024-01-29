@@ -125,7 +125,7 @@
             let rootDir = $('#rootDir').val();
             let filterEngine = $('#searchEngineSelect').val();
             let filterWebPage = $('#webPageSelect').val();
-            let searchDateValue = ChartTools.getDateRange(30);
+            let searchDateValue = ChartTools.getDateRange(null);
 
             if(type == ChartTools.ChartType.Bar) {
                 tmpDefURL += url + "/search/findByColumns?";

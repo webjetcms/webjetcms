@@ -262,7 +262,7 @@ public class ReservationEditorFields {
                     //Set to null, it means waiting for acceptation
                     originalEntity.setAccepted(null);
                     //Send mail
-                    reservationService.sendAcceptationEmail(originalEntity, reservationObject);
+                    reservationService.sendAcceptationEmail(originalEntity, reservationObject, request);
                 }
             }
         }

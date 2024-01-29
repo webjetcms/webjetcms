@@ -133,6 +133,10 @@
             width: 32px !important;
             button.dropdown-toggle {
                 position: absolute;
+                border-top-right-radius: 0 !important;
+                border-bottom-right-radius: 0 !important;
+                height: 30px;
+                line-height: 26px;
             }
         }
         .form-group button {

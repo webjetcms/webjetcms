@@ -426,6 +426,9 @@ public class Modules
 									sTmp = prop.getProperty("leftSubmenu"+s+"DefaultDisabled");
 									if ("true".equals(sTmp) || m.isDefaultDisabled()) subModule.setDefaultDisabled(true);
 
+									sTmp = prop.getProperty("leftSubmenu"+s+"Icon");
+									if (Tools.isNotEmpty(sTmp)) subModule.setMenuIcon(sTmp.trim());
+
 									setAvailable(subModule);
 									m.addSubmenu(subModule);
 								}
@@ -761,7 +764,6 @@ public class Modules
 		sub.setGroup("config");
 		sub.setShowInLeftMenu(true);
 		sub.setMenuIcon("wrench");
-		setAvailable(sub);
 		loadModule(sub);
 
 		sub = new ModuleInfo().setMenuOrder(7001);
@@ -773,14 +775,13 @@ public class Modules
 		sub.setGroup("config");
 		sub.setUserItem(true);
 		sub.setShowInLeftMenu(false);
-		setAvailable(sub);
 		loadModule(sub);
 
 		// Aktualizacia WebJETu
 		sub = new ModuleInfo().setMenuOrder(7300);
 		sub.setLeftMenuNameKey("admin.conf_editor.update_system");
 		sub.setNameKey("menu.config.rights.modUpdate");
-		sub.setPath("/admin/update/update.do");
+		sub.setPath("/admin/v9/settings/update/");
 		sub.setWjVersions("BPECDIM");
 		sub.setUserItem(true);
 		sub.setItemKey("modUpdate");
@@ -788,7 +789,6 @@ public class Modules
 		sub.setShowInLeftMenu(true);
 		sub.setGroup("config");
 		sub.setMenuIcon("refresh");
-		setAvailable(sub);
 		loadModule(sub);
 
 		// Editacia textov
@@ -819,7 +819,6 @@ public class Modules
 		sub.setGroup("config");
 		sub.setUserItem(true);
 		sub.setShowInLeftMenu(false);
-		setAvailable(sub);
 		loadModule(sub);
 
 		// Export do HTML
@@ -834,7 +833,6 @@ public class Modules
 		sub.setGroup("config");
 		sub.setShowInLeftMenu(true);
 		sub.setMenuIcon("disc");
-		setAvailable(sub);
 		loadModule(sub);
 
 		// Restartovat
@@ -849,7 +847,6 @@ public class Modules
 		sub.setGroup("config");
 		sub.setShowInLeftMenu(true);
 		sub.setMenuIcon("refresh");
-		setAvailable(sub);
 		loadModule(sub);
 
 		sub = new ModuleInfo().setMenuOrder(7320);
@@ -862,7 +859,6 @@ public class Modules
 		sub.setDefaultDisabled(true);
 		sub.setShowInLeftMenu(true);
 		sub.setGroup("config");
-		setAvailable(sub);
 		loadModule(sub);
 
 		// Vytvorit ZIP archiv
@@ -877,7 +873,6 @@ public class Modules
 		sub.setGroup("config");
 		sub.setShowInLeftMenu(true);
 		sub.setMenuIcon("size-actual");
-		setAvailable(sub);
 		loadModule(sub);
 
 		sub = new ModuleInfo("image_editor.title", "imageEditor", "/admin/v9/dist/views/apps/image-editor.html", null, true, false, null, modVersions.get("imageEditor"), 50);
@@ -1012,7 +1007,7 @@ public class Modules
 		//System.out.println("setAvailable, real="+ Tools.getRealPath(mi.getPath()));
 
 		mi.setAvailable(false);
-		if ((FileTools.exists(mi.getPath())) || mi.getLeftMenuLink().startsWith("javascript:") || mi.getPath().startsWith("javascript:") || mi.getPath().indexOf(".do")!=-1)
+		if ((FileTools.exists(mi.getPath())) || mi.getLeftMenuLink().startsWith("javascript:") || mi.getPath().startsWith("javascript:") || mi.getPath().indexOf(".do")!=-1 || mi.getPath().endsWith("/"))
 		{
 			if (mi.getRequireConstantsKey()!=null)
 			{

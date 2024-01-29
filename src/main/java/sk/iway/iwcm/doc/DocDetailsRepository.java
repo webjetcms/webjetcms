@@ -79,4 +79,10 @@ public interface DocDetailsRepository extends JpaRepository<DocDetails, Long>, J
     @Modifying
     @Query(value = "UPDATE DocDetails SET available = :available, syncStatus = 1, groupId = :groupId WHERE id = :docId")
     public void moveToTrash(@Param("available")boolean available, @Param("groupId")Integer groupId, @Param("docId")Integer docId);
+
+    //
+    @Transactional
+    @Modifying
+    @Query(value = "DELETE FROM DocDetails dd WHERE dd.id IN :docIds")
+    public void deleteByDocIdIn(@Param("docIds")List<Long> docIds);
 }

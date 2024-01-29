@@ -55,7 +55,7 @@ Scenario('Vyhladavanie v poliach @singlethread', ({ I, DT }) => {
     I.waitForElement(locate("button").withText("Zobraziť všetky"));
     I.click(locate("button").withText("Zobraziť všetky"));
     I.wait(5);
-    I.click("button.btn.colvis-postfix.btn-primary.dt-close-modal");
+    I.forceClick("button.btn.colvis-postfix.btn-primary.dt-close-modal");
 
     DT.waitForLoader();
 

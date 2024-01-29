@@ -278,7 +278,7 @@ export function getTitle(EDITOR, row = null) {
         //skus najst property, ktora sa pouziva na kliknutie
         $.each(EDITOR.TABLE.DATA.columns, function (key, col) {
             //console.log("key=", key, "col=", col, "row=", row);
-            if (col.className?.indexOf("dt-row-edit")!=-1) {
+            if (typeof col.className != "undefined" && col.className?.indexOf("dt-row-edit")!=-1) {
                 title = row[col.data];
                 try {
                     if ("[object Object]"==title && "group"==col.data) {
@@ -291,6 +291,7 @@ export function getTitle(EDITOR, row = null) {
     } catch (ex) {console.log(ex);}
     title = WJ.htmlToText(title);
     if (title != null && typeof title == "string") title = title.replaceAll("&#47;", "/");
+    if ("[object Object]"==title) title = "";
     //console.log("Returning title=", title);
     return title;
 }
@@ -324,7 +325,7 @@ export function resizeTabContent(EDITOR) {
     //console.log("Resizing editor, latest=", EDITOR.editorHeightLatest, " new=", editorHeight);
     if (editorHeight != EDITOR.editorHeightLatest) {
         EDITOR.editorHeightLatest = editorHeight;
-        //console.log("RESIZING, editorHeight=", editorHeight);
+        //console.log("RESIZING ", EDITOR.TABLE.DATA.id, ", editorHeight=", editorHeight);
         $("#"+editorId+"_modal div.dte-tab-autoheight").each(function( index ) {
             var $this = $(this);
             var offset = $this.data("dt-autoheight-offset");
@@ -343,13 +344,21 @@ export function resizeTabContent(EDITOR) {
  */
 function calculateAutoHeight(DATA) {
     const scrollBody = $('#' + DATA.id + '_wrapper').find('.dataTables_scrollBody');
-    //scrollBody.addClass('autoHeight');
+    const inIframe = $("html").hasClass("in-iframe-show-table");
 
     var vh = document.documentElement.clientHeight;
     var lyHeader = 0;
-    if ("fixed"==$(".ly-header").css("position")) lyHeader = $(".ly-header").outerHeight();
-    var breadcrumb = $('#' + DATA.id + '_wrapper').parent().find(".md-breadcrumb").outerHeight();
-    if (breadcrumb == undefined) breadcrumb = $(".md-breadcrumb").outerHeight();
+    var breadcrumb = 0;
+
+    if (inIframe==false) {
+        if ("fixed"==$(".ly-header").css("position")) lyHeader = $(".ly-header").outerHeight();
+        var breadcrumb = $('#' + DATA.id + '_wrapper').parent().find(".md-breadcrumb").outerHeight();
+        if (breadcrumb == undefined) breadcrumb = $(".md-breadcrumb").outerHeight();
+    } else {
+        //restaurant-menu has show-in-iframe class on breadcrumb because of the date selector
+        var breadcumbEl = $('#' + DATA.id + '_wrapper').parent().find(".md-breadcrumb");
+        if (breadcumbEl.length>0 && breadcumbEl.hasClass("show-in-iframe")) breadcrumb = breadcumbEl.outerHeight();
+    }
 
     var dtHeaderRow = $('#' + DATA.id + '_wrapper .dt-header-row').outerHeight();
     var dtFilterRow = $('#' + DATA.id + '_wrapper div.dataTables_scrollHeadInner').outerHeight();
@@ -358,12 +367,12 @@ function calculateAutoHeight(DATA) {
 
     var height = vh - lyHeader - breadcrumb - dtHeaderRow - dtFooterRow - dtFilterRow;
 
-    //console.log("vh=", vh, "lyHeader=", lyHeader, "breadcrumb=", breadcrumb, "dtHeaderRow=", dtHeaderRow, "dtFilterRow=", dtFilterRow, "dtFooterRow=", dtFooterRow, "height=", height);
+    //console.log(DATA.id+" vh=", vh, "lyHeader=", lyHeader, "breadcrumb=", breadcrumb, "dtHeaderRow=", dtHeaderRow, "dtFilterRow=", dtFilterRow, "dtFooterRow=", dtFooterRow, "height=", height);
 
     scrollBody.css("height", height + "px");
 
     //set also jstree height
-    breadcrumb = $(".tree-col .md-breadcrumb").outerHeight();
+    if (inIframe==false) breadcrumb = $(".tree-col .md-breadcrumb").outerHeight();
     dtHeaderRow = $('.tree-col .dt-header-row').outerHeight();
     height = vh - lyHeader - breadcrumb - dtHeaderRow;
 
@@ -741,4 +750,33 @@ export function filtrujemClick(button, TABLE, DATA, isDefaultSearch) {
         //console.log("Reataching selectpicker, input=", input);
         input.selectpicker('refresh');
     }
+}
+
+/**
+ * Returns empty data for DT, used by initialData option. It's used to prevent DT to call ajax on init.
+ * @param {boolean} forceData - set to true to force to use data without rows number check
+ * @returns
+ */
+export function getEmptyData(forceData=true) {
+    var emptyData = {
+        "content": [],
+        "pageable": "INSTANCE",
+        "options": null,
+        "notify": null,
+        "last": true,
+        "totalPages": 1,
+        "totalElements": 0,
+        "first": true,
+        "sort": {
+            "unsorted": true,
+            "sorted": false,
+            "empty": true
+        },
+        "numberOfElements": 0,
+        "size": 0,
+        "number": 0,
+        "empty": true,
+        "forceData": forceData
+    }
+    return emptyData;
 }

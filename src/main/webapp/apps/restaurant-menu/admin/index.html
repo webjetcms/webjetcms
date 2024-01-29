@@ -1,0 +1,236 @@
+<script data-th-inline="javascript">
+    let url = "/admin/rest/restaurant-menu/menu";
+    let columns = /*[(${layout.getDataTableColumns("sk.iway.iwcm.components.restaurant_menu.jpa.RestaurantMenuEntity")})]*/ '';
+    let actualAction = null;
+</script>
+<script>
+    var menuDataTable;
+
+    WJ.breadcrumb({
+        id: "meals",
+        tabs: [
+            {
+                url: '/apps/restaurant-menu/admin/meals',
+                title: '[[#{components.restaurant_menu.newMenu}]]',
+                active: true
+            },
+            {
+                url: '#dateRange',
+                title: '{filter}',
+                active: false
+            }
+        ]
+    });
+
+    window.openMealDetail =  function (mealId) {
+        if(mealId == undefined || mealId == null) return;
+        window.location.href="/apps/restaurant-menu/admin/meals/?id=" + mealId;
+    }
+
+    window.domReady.add(function () {
+
+        window.helpLink = "/redactor/apps/restaurant-menu/menu.md";
+
+        //presun filter do hlavicky
+        $("#pills-dateRange-tab").html("");
+        $("div#menuDataTable_extfilter").appendTo("#pills-dateRange-tab");
+
+        menuDataTable = WJ.DataTable({
+            url: WJ.urlUpdateParam(url, "menuType", $("#menuType button.active").data("menu-type")),
+            serverSide: true,
+            paging: false,
+            columns: columns,
+            id: "menuDataTable",
+            onXhr: function(xhr) {
+                //DT is not sortable, it's sorted by days, cathegory and sort priority server side
+                $(".dt-format-selector").removeClass("sorting_asc");
+                setTimeout(()=> {
+                    $(".dt-format-selector").removeClass("sorting_asc");
+                }, 200);
+            }
+        });
+        menuDataTable.hideButton("celledit");
+
+        $("#menuDataTable_extfilter").on("click", "button.filtrujem", function() {
+            setDateInfo();
+        });
+
+        $("#menuType button").on("click", function() {
+            $("#menuType button").removeClass("active");
+            $(this).addClass("active");
+
+            let menuType = $("#menuType button.active").data("menu-type");
+            menuDataTable.ajax.url(WJ.urlUpdateParam(menuDataTable.ajax.url(), "menuType", menuType));
+
+            //reload table values
+            menuDataTable.ajax.reload();
+
+            setDateInfo();
+        });
+
+        //On change meal cathegory
+        $(document).on('change', "#DTE_Field_editorFields-mealCathegory", function() {
+            let cathegory = $('#DTE_Field_editorFields-mealCathegory').val();
+
+            //Set MEALS options based on selected meal cathegory -> do BE request
+            $.ajax({
+                url: "/admin/rest/restaurant-menu/meals/getSelectValues?cathegory=" + cathegory,
+                success: function(result) {
+                    if(result != undefined && result != null) {
+                        let options = $("#DTE_Field_editorFields-selectedMealId option");
+                        let firstOptionToSelect = null;
+                        options.each(function() {
+                            let optionValue = Number($(this)[0].value);
+                            if(result.includes(optionValue)) {
+                                $($($(this)[0])[0]).removeAttr('disabled');
+                                //Save first option value
+                                if(firstOptionToSelect == null)
+                                    firstOptionToSelect = optionValue;
+                            } else {
+                                $($($(this)[0])[0]).attr('disabled','disabled');
+                            }
+                        });
+
+                        //If is there, select first option
+                        if(firstOptionToSelect != null)
+                            $("#DTE_Field_editorFields-selectedMealId").val(firstOptionToSelect);
+
+                        $("#DTE_Field_editorFields-selectedMealId").selectpicker('refresh');
+                    }
+                }
+            });
+
+            //Set max priority based on selected meal cathegory + actual date -> do BE request
+            if('create' == actualAction) {
+                let currentDate = getDateValue();
+                if(currentDate == null || !(currentDate instanceof Date)) currentDate = null;
+                $.ajax({
+                    url: url + "/getMaxPriority?cathegory=" + cathegory + "&dayDate=" + (currentDate != null ? currentDate.getTime() : ""),
+                    success: function(result) {
+                        if(result != undefined && result != null)
+                            $("#DTE_Field_priority").val(Number(result));
+                    }
+                });
+            }
+        });
+
+        /**
+         * Disable dayDate input in editor if action is create + put actual date from filter into input
+         */
+        menuDataTable.EDITOR.on('open', function (e, mode, action) {
+            //Save actual action
+            actualAction = action;
+
+            if(action == "create")
+                $("#DTE_Field_dayDate").val( $( "input.datepicker.min" ).val() );
+        });
+
+        //Set actual date into filter and trigger change
+        $("#DTE_Field_editorFields-selectedMealId").ready(function() {
+            setDateFilter(new Date());
+        });
+
+        /**
+         * Set date info into disabled input
+         */
+        function setDateInfo() {
+            let menuType = $("#menuType button.active").data("menu-type");
+            let currentDate = getDateValue();
+
+            //
+            if(currentDate == null) return;
+            let startDate = new Date(currentDate.getFullYear(), 0, 1);
+            var days = Math.floor((currentDate - startDate) / (24 * 60 * 60 * 1000));
+            var weekNumber = Math.ceil(days / 7);
+
+            let value = null;
+            if(menuType == "weeks")
+                value = weekNumber + WJ.translate("components.restaurant_menu.week.js") + " - " + currentDate.getFullYear();
+            else
+                value = WJ.translate("dayfull." + (currentDate.getDay() + 1)) + " - " + weekNumber + WJ.translate("components.restaurant_menu.week.js");
+
+            if(value != null) $('#dateStatus').val(value);
+        }
+    });
+
+    /**
+     * Change current day in filter
+     * @param {String} type - "remove" or "add" default 1 day (1 week if menuType is weeks)
+     */
+    function changeCurrentDay(type) {
+        let currentDate = getDateValue();
+
+        let menuType = $("#menuType button.active").data("menu-type");
+        let dayJump = 1;
+        if(menuType == "weeks") dayJump = 7;
+
+        if(type == "remove") currentDate.setDate( currentDate.getDate() - dayJump );
+        else if(type == "add") currentDate.setDate( currentDate.getDate() + dayJump );
+
+        setDateFilter(currentDate);
+    }
+
+    /**
+     * Get date from filter
+     * @returns {Date} - return null if date is not valid
+     */
+    function getDateValue() {
+        let dateValue = $( "input.datepicker.min" ).val();
+        if(dateValue != null && dateValue != undefined) {
+            let dateArr = dateValue.split(".");
+            if(dateArr.length == 3)
+                return new Date( dateArr[2] + "-" + dateArr[1] + "-" + dateArr[0] );
+        }
+        return null;
+    }
+
+    /**
+     * Set date into filter and trigger change
+     * @param {Date} currentDate
+     */
+    function setDateFilter(currentDate) {
+        let dd = String(currentDate.getDate()).padStart(2, '0');
+        let mm = String(currentDate.getMonth() + 1).padStart(2, '0'); //January is 0!
+        let yyyy = currentDate.getFullYear();
+        $( "input.datepicker.min" ).val(dd + "." + mm + "." + yyyy);
+        $("button.dt-filtrujem-dayDate").trigger('click');
+    }
+
+</script>
+
+<style>
+    input.datepicker.max { display: none; }
+    input.disabled { width: auto; font-weight: bold;}
+    li.disabled { display: none; }
+    tr.menuStyle_1 { background-color: #F3F3F6 !important; }
+    .datatableInit thead tr:nth-child(2) .dt-th-dayDate form { display: none; }
+</style>
+
+<div id="menuDataTable_extfilter">
+    <div class="row datatableInit">
+        <div class="col-auto">
+            <div class="col-auto dt-extfilter dt-extfilter-dayDate"></div>
+        </div>
+
+        <div class="col-auto">
+            <div class="btn-group status-info">
+                <button class="btn btn-sm btn-outline-secondary day-back" onclick="changeCurrentDay('remove')">
+                    <i class="fa-solid fa-arrow-left"></i>
+                </button>
+                <input type="text" id="dateStatus" class="form-control form-control-sm filter-input disabled" disabled/>
+                <button class="btn btn-sm btn-outline-secondary day-forward" onclick="changeCurrentDay('add')">
+                    <i class="fa-solid fa-arrow-right"></i>
+                </button>
+            </div>
+        </div>
+
+        <div class="col-auto">
+            <div class="btn-group btn-group-toggle" id="menuType">
+                <button id="menuTypeWeeks" class="btn btn-sm btn-outline-secondary active" data-th-title="#{components.stat.groupBy.weeks}"    data-toggle="tooltip" data-menu-type="weeks">[[#{components.basket.invoice.stats.weeks}]]</button>
+                <button id="menuTypeDays" class="btn btn-sm btn-outline-secondary" data-th-title="#{components.stat.groupBy.days}"     data-toggle="tooltip" data-menu-type="days">[[#{components.basket.invoice.stats.days}]]</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<table id="menuDataTable" class="datatableInit table"></table>

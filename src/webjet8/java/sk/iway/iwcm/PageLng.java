@@ -87,6 +87,7 @@ public class PageLng
    public static String getUserLngIso(final String lng)
    {
       String lngFixed = lng;
+      if (Tools.isEmpty(lngFixed)) lngFixed = "sk";
       if ("cz".equals(lng)) lngFixed = "cs";
 
       String country = getCountryFromLng(lngFixed);
