@@ -45,9 +45,9 @@
         <property name="artifact.pom" value="${artifact.dir}/${artifact.name}-${artifact.version}.pom" />
         <property name="artifact.url" value="http://maven.web.iway.local/artifactory/gradle-dev-local/" />
 
-        <property name="nexus.url" value="***REMOVED***" />
+        <property name="nexus.url" value="*********" />
         <property name="nexus.user" value="iw-webjet-dev" />
-        <property name="nexus.password" value="***REMOVED***" />
+        <property name="nexus.password" value="*********" />
     </target>
 
     <defaultexcludes add="**/prepros-6.config"/>
