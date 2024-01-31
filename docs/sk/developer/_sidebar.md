@@ -86,4 +86,4 @@
 - Deployment
   - [Deployment verzie na arfifactory/maven](/developer/install/deployment.md)
 - JavaDoc
-  - [WebJET CMS](/developer/javadoc/index.html)
+  - [WebJET CMS](/javadoc/index.html)

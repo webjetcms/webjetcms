@@ -1,0 +1,549 @@
+<?xml version="1.0"?>
+
+<project name="webjet9" default="deployRepoIwmspSk" basedir="../" xmlns:artifact="antlib:org.apache.maven.artifact.ant">
+
+    <path id="maven-ant-tasks.classpath" path="ant/maven-ant-tasks-2.1.3.jar" />
+    <typedef resource="org/apache/maven/artifact/ant/antlib.xml" uri="antlib:org.apache.maven.artifact.ant" classpathref="maven-ant-tasks.classpath" />
+
+    <description>
+        Build WebJET CMS archive for update
+    </description>
+
+    <!-- set global properties for this build -->
+    <property name="projectname" value="webjetcms"/>
+
+    <property name="root" value="build/updatezip" />
+    <property name="outdir" value="${root}/WebContent/"/>
+    <property name="wardir" value="build/libs/"/>
+    <property name="finalwar" value="${root}/finalwar"/>
+
+    <property name="compress" value="false"/>
+
+    <!-- Maven Central properties -->
+    <property name="ossrh-staging-repository-url" value="https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/" />
+    <!-- there server id in the Maven settings.xml -->
+    <property name="ossrh-server-id" value="ossrh" />
+
+    <target name="update-version">
+        <propertyfile comment="Build Information"
+                    file="${root}/../../src/main/webapp/WEB-INF/build.properties">
+            <entry key="build.date"
+                type="date"
+                pattern="dd.MM.yyyy H:mm:ss"
+                value="now"/>
+            <entry key="minor.number" type="int" operation="+" value="1" pattern="000"/>
+        </propertyfile>
+    </target>
+
+    <target name="define-artifact-properties">
+        <property name="artifact.group" value="com.webjetcms" />
+        <property name="artifact.name" value="webjetcms" />
+        <!-- verzia pre artifactory -->
+        <property name="artifact.version" value="2024.0-SNAPSHOT" />
+        <property name="artifact.type" value="jar" />
+        <property name="artifact.dir" value="${root}/artifacts" />
+        <property name="artifact.pom" value="${artifact.dir}/${artifact.name}-${artifact.version}.pom" />
+        <property name="artifact.url" value="http://maven.web.iway.local/artifactory/gradle-dev-local/" />
+
+        <property name="nexus.url" value="***REMOVED***" />
+        <property name="nexus.user" value="iw-webjet-dev" />
+        <property name="nexus.password" value="***REMOVED***" />
+    </target>
+
+    <defaultexcludes add="**/prepros-6.config"/>
+    <defaultexcludes add="**/*.md"/>
+    <defaultexcludes add="**/node_modules/**"/>
+    <defaultexcludes add="**/scss/**"/>
+    <defaultexcludes add="**/*-example.*"/>
+    <defaultexcludes add="jqTree.jsp"/>
+    <defaultexcludes add="poolman.xml"/>
+    <defaultexcludes add="web.xml"/>
+
+    <target name="setup" description="pripravi projekt pre distribuciu">
+        <exec executable="./gradlew">
+            <arg value="clean"/>
+        </exec>
+        <delete dir="src/main/webapp/admin/v9/dist"/>
+        <exec executable="./gradlew">
+            <arg value="npminstall"/>
+        </exec>
+        <exec executable="./gradlew">
+            <arg value="npmbuild"/>
+        </exec>
+        <exec executable="./gradlew">
+            <arg value="compileJava"/>
+            <arg value="--refresh-dependencies"/>
+            <arg value="--info"/>
+        </exec>
+        <exec executable="./gradlew">
+            <arg value="war"/>
+        </exec>
+        <exec executable="./gradlew">
+            <arg value="javadoc"/>
+        </exec>
+    </target>
+
+    <target name="updatezip" depends="setup,copyNodeModules" description="Pripravi update.zip s rozbalenou WebJET strukturou - bez jarpackaging">
+        <delete dir="${root}"/>
+
+        <unzip src="${wardir}${projectname}.war" dest="${outdir}">
+            <patternset>
+                <exclude name="components/aceintegration/**"/>
+                <exclude name="files/**"/>
+                <exclude name="images/**"/>
+                <exclude name="META-INF/**"/>
+                <exclude name="templates/**"/>
+
+                <exclude name="**/pug/**"/>
+                <exclude name="**/admin/v9/views/**"/>
+                <exclude name="**/*.pug"/>
+                <exclude name="**/*.zip"/>
+
+                <!--ukazkovy kod -->
+                <exclude name="**/sk/iway/demo8/**"/>
+                <exclude name="**/sk/iway/basecms/**"/>
+                <exclude name="**/apps/basecms/**"/>
+                <exclude name="**/apps/contact/**"/>
+
+            </patternset>
+        </unzip>
+
+        <propertyfile comment="Build Information"
+                  file="${outdir}/WEB-INF/build.properties">
+            <entry key="build.date"
+                type="date"
+                pattern="dd.MM.yyyy H:mm:ss"
+                value="now"/>
+        </propertyfile>
+
+        <mkdir dir="${root}/artifacts/"/>
+
+    </target>
+
+    <target name="makejars" depends="define-artifact-properties,updatezip,compile" description="pripravi WJ jarka">
+        <delete file="${artifact.dir}/${artifact.name}-${artifact.version}.jar" />
+        <jar compress="${compress}" jarfile="${artifact.dir}/${artifact.name}-${artifact.version}.jar" defaultexcludes="true">
+            <fileset dir="${root}/WebContent/WEB-INF/classes">
+                <include name="com/**"/>
+                <include name="cn/**"/>
+                <include name="cvu/**"/>
+                <include name="it/**"/>
+                <include name="mp4/**"/>
+                <include name="net/**"/>
+                <include name="org/**"/>
+                <include name="sk/*"/>
+                <include name="sk/updater/**"/>
+                <include name="sk/iway/*.class"/>
+                <include name="sk/iway/iwcm/**"/>
+                <include name="sk/iway/cloud/**"/>
+                <include name="sk/iway/css/**"/>
+                <include name="sk/iway/displaytag/**"/>
+                <include name="sk/iway/helpdesk/formatter/**"/>
+                <include name="sk/iway/helpdesk/upload/**"/>
+                <include name="sk/iway/mobileapp/**"/>
+                <include name="sk/iway/spirit/**"/>
+                <include name="sk/iway/tags/**"/>
+                <include name="sk/iway/upload/**"/>
+                <include name="sk/iway/webjet/**"/>
+
+                <exclude name="**/*Test.class"/>
+                <exclude name="**/*Test$1.class"/>
+                <exclude name="**/*Test$2.class"/>
+            </fileset>
+            <zipfileset dir="${root}/WebContent/WEB-INF/classes" prefix="META-INF/resources/WEB-INF/classes">
+                <include name="text*.properties"/>
+            </zipfileset>
+            <zipfileset dir="${root}/WebContent/WEB-INF" prefix="META-INF/resources/WEB-INF">
+                <include name="app.tld"/>
+                <include name="iway.tld"/>
+                <include name="iwcm.tld"/>
+                <include name="vue.tld"/>
+                <include name="displaytag.tld"/>
+                <include name="pd4ml.tld"/>
+                <include name="datetime.tld"/>
+            </zipfileset>
+        </jar>
+
+        <delete file="${artifact.dir}/${artifact.name}-${artifact.version}-sources.jar" />
+        <jar compress="${compress}" jarfile="${artifact.dir}/${artifact.name}-${artifact.version}-sources.jar" defaultexcludes="true">
+            <fileset dir="${root}/src-delombok">
+                <include name="com/**"/>
+                <include name="cn/**"/>
+                <include name="cvu/**"/>
+                <include name="it/**"/>
+                <include name="mp4/**"/>
+                <include name="net/**"/>
+                <include name="org/**"/>
+                <include name="sk/*"/>
+                <include name="sk/updater/**"/>
+                <include name="sk/iway/*.class"/>
+                <include name="sk/iway/iwcm/**"/>
+                <include name="sk/iway/cloud/**"/>
+                <include name="sk/iway/css/**"/>
+                <include name="sk/iway/displaytag/**"/>
+                <include name="sk/iway/helpdesk/formatter/**"/>
+                <include name="sk/iway/helpdesk/upload/**"/>
+                <include name="sk/iway/mobileapp/**"/>
+                <include name="sk/iway/spirit/**"/>
+                <include name="sk/iway/tags/**"/>
+                <include name="sk/iway/upload/**"/>
+                <include name="sk/iway/webjet/**"/>
+            </fileset>
+        </jar>
+
+        <delete file="${artifact.dir}/${artifact.name}-${artifact.version}-admin.jar" />
+        <jar compress="${compress}" jarfile="${artifact.dir}/${artifact.name}-${artifact.version}-admin.jar" defaultexcludes="true">
+            <zipfileset dir="${root}/WebContent/" prefix="META-INF/resources/">
+                <include name="admin/**"/>
+            </zipfileset>
+            <zipfileset dir="${root}/WebContent/" prefix="META-INF/resources/">
+                <include name="WEB-INF/sql/autoupdate.xml"/>
+                <include name="WEB-INF/sql/autoupdate-webjet9.xml"/>
+                <include name="WEB-INF/sql/blank_web.sql"/>
+                <include name="WEB-INF/sql/blank_web_mssql.sql"/>
+                <include name="WEB-INF/sql/blank_web_oracle.sql"/>
+                <include name="WEB-INF/sql/stopwords.csv"/>
+            </zipfileset>
+        </jar>
+
+        <delete file="${artifact.dir}/${artifact.name}-${artifact.version}-components.jar" />
+        <jar compress="${compress}" jarfile="${artifact.dir}/${artifact.name}-${artifact.version}-components.jar" defaultexcludes="true">
+            <zipfileset dir="${root}/WebContent/" prefix="META-INF/resources/">
+                <include name="components/**"/>
+                <include name="apps/**"/>
+                <include name="403.jsp"/>
+                <include name="404.jsp"/>
+                <include name="500.jsp"/>
+                <include name="WEB-INF/mime.types"/>
+                <include name="WEB-INF/build.properties"/>
+                <include name="WEB-INF/struts-config.xml"/>
+            </zipfileset>
+        </jar>
+
+        <delete file="${artifact.dir}/${artifact.name}-${artifact.version}-javadoc.jar" />
+        <jar compress="${compress}" jarfile="${artifact.dir}/${artifact.name}-${artifact.version}-javadoc.jar" defaultexcludes="true">
+            <zipfileset dir="${root}/../../docs/javadoc">
+                <include name="**/*"/>
+            </zipfileset>
+        </jar>
+
+        <delete file="${artifact.dir}/${artifact.name}-${artifact.version}-libs.jar" />
+        <delete dir="${root}/libs"/>
+        <mkdir dir="${root}/libs"/>
+        <unzip dest="${root}/libs">
+            <fileset dir="${outdir}WEB-INF/lib/">
+                <include name="wj*.jar"/>
+            </fileset>
+        </unzip>
+        <!--unzip src="${outdir}WEB-INF/lib/wjdaisydiff-1.0-SNAPSHOT.jar" dest="${root}/libs"/-->
+        <jar compress="${compress}" jarfile="${artifact.dir}/${artifact.name}-${artifact.version}-libs.jar" defaultexcludes="true">
+            <zipfileset dir="${root}/libs">
+                <include name="**/*"/>
+            </zipfileset>
+        </jar>
+
+    </target>
+
+    <target name="finalwar" depends="define-artifact-properties,makejars">
+        <delete dir="${finalwar}"/>
+        <unzip src="${wardir}${projectname}.war" dest="${finalwar}"/>
+
+        <delete includeemptydirs="true">
+            <fileset dir="${finalwar}/WEB-INF/classes">
+                <exclude name="*.xml"/>
+                <exclude name="META-INF/**"/>
+            </fileset>
+            <fileset dir="${finalwar}/WEB-INF/lib">
+                <include name="webjet-*.jar"/>
+            </fileset>
+            <fileset dir="${finalwar}">
+                <include name="admin/**"/>
+                <include name="apps/**"/>
+                <include name="components/**"/>
+
+                <!--exclude name="components/aceintegration/**"/>
+                <exclude name="apps/contact/**"/ -->
+            </fileset>
+        </delete>
+
+        <copy todir="${finalwar}/WEB-INF/lib/" overwrite="true">
+            <fileset dir="${root}/artifacts/">
+                <include name="webjet-${artifact.version}*.jar"/>
+                <exclude name="*-sources.jar"/>
+            </fileset>
+        </copy>
+
+        <!-- dokopiruj ukazkove komponenty a triedy -->
+        <copy todir="${finalwar}/components/" overwrite="true">
+            <fileset dir="${root}/../../src/main/webapp/components/">
+                <include name="aceintegration/**"/>
+            </fileset>
+        </copy>
+        <copy todir="${finalwar}/apps/" overwrite="true">
+            <fileset dir="${root}/../../src/main/webapp/apps/">
+                <include name="contact/**"/>
+            </fileset>
+        </copy>
+        <copy todir="${finalwar}/WEB-INF/classes/sk/iway/" overwrite="true">
+            <fileset dir="${root}/WebContent/WEB-INF/classes/sk/iway">
+                <include name="basecms/**"/>
+                <include name="demo8/**"/>
+            </fileset>
+        </copy>
+
+        <delete file="${root}/${projectname}.war"/>
+        <zip destfile="${root}/${projectname}.war">
+            <zipfileset dir="${finalwar}" prefix="">
+                <exclude name="apps/**"/>
+                <exclude name="components/**"/>
+                <exclude name="files/**"/>
+                <exclude name="images/**"/>
+                <exclude name="static-files/**"/>
+                <exclude name="templates/**"/>
+
+                <exclude name="**/poolman*.xml"/>
+            </zipfileset>
+        </zip>
+
+    </target>
+
+    <target name="compile" depends="updatezip" description="skompiluje vsetky triedy vratane tych vo WJ8">
+        <ant antfile="compile.xml" inheritAll="false" target="compile" dir="ant" useNativeBasedir="true"/>
+        <!-- dokopiruj log4j.properties -->
+    </target>
+
+    <target name="makepom" depends="define-artifact-properties,makejars" description="vytvori POM subor">
+
+        <exec executable="./gradlew">
+            <arg value="writePom"/>
+            <arg value="-Dwjgroup=${artifact.group}"/>
+            <arg value="-Dwjname=${artifact.name}"/>
+            <arg value="-Dwjversion=${artifact.version}"/>
+        </exec>
+
+    </target>
+
+    <target name="copyNodeModules" description="Skopiruje subory z node_modules do JS adresarov pre ich priame pouzitie">
+
+        <!-- zxcvbn-ts kniznica pre prihlasovaciu obrazovku -->
+        <copy file="src/main/webapp/admin/v9/node_modules/@zxcvbn-ts/core/dist/zxcvbn-ts.js" todir="src/main/webapp/admin/skins/webjet8/assets/js/zxcvbn/core/" encoding="utf-8" preservelastmodified="true" overwrite="true"/>
+        <copy file="src/main/webapp/admin/v9/node_modules/@zxcvbn-ts/language-common/dist/zxcvbn-ts.js" todir="src/main/webapp/admin/skins/webjet8/assets/js/zxcvbn/language-common/" encoding="utf-8" preservelastmodified="true" overwrite="true"/>
+        <copy file="src/main/webapp/admin/v9/node_modules/@zxcvbn-ts/language-en/dist/zxcvbn-ts.js" todir="src/main/webapp/admin/skins/webjet8/assets/js/zxcvbn/language-en/" encoding="utf-8" preservelastmodified="true" overwrite="true"/>
+
+    </target>
+
+    <target name="createUpdateZip" depends="define-artifact-properties"  description="Vytvori update.zip pre aktualizaciu v starom rezime WJ">
+        <exec executable="ant/mount-license.sh">
+        </exec>
+        <echo message="Sleeping for 60 seconds"/>
+        <sleep seconds="60"/>
+        <delete file="${artifact.dir}/archive.zip"/>
+
+        <!-- skopiruj logback.xml do buildu -->
+        <copy file="${root}/../../src/main/resources/logback.xml" todir="${outdir}WEB-INF/classes"/>
+
+        <zip destfile="${artifact.dir}/archive.zip">
+            <zipfileset dir="${outdir}" prefix="">
+                <include name="**/**"/>
+
+                <exclude name="WEB-INF/web.xml"/>
+                <exclude name="WEB-INF/classes/sk/iway/demo8/**"/>
+                <exclude name="**/sk/**/*JUnit*"/>
+                <exclude name="**/sk/**/*Test.class*"/>
+                <exclude name="**/sk/**/*Test$*"/>
+                <exclude name="**/sk/**/tests/**"/>
+                <exclude name="**/components/sharepoint/**"/>
+
+                <!--ukazkovy kod -->
+                <exclude name="**/sk/iway/demo8/**"/>
+                <exclude name="**/sk/iway/basecms/**"/>
+                <exclude name="**/apps/basecms/**"/>
+                <exclude name="**/apps/contact/**"/>
+            </zipfileset>
+            <zipfileset dir="src/main/resources/META-INF/" prefix="WEB-INF/classes/META-INF">
+                <include name="persistence-webjet.xml"/>
+                <include name="aop-ajc.xml"/>
+            </zipfileset>
+        </zip>
+        <mkdir dir="/Volumes/TomcatLicense/webapps/license/WEB-INF/archive/WebJET/${artifact.version}"/>
+        <copy file="${artifact.dir}/archive.zip" todir="/Volumes/TomcatLicense/webapps/license/WEB-INF/archive/WebJET/${artifact.version}" preservelastmodified="true" overwrite="true">
+        </copy>
+        <copy todir="/Volumes/Webapps-AU20/docs.webjetcms.sk/json/" preservelastmodified="true" overwrite="true">
+            <fileset dir="${outdir}admin/v9/json/">
+                <include name="wjnews*.json"/>
+            </fileset>
+        </copy>
+    </target>
+
+    <target name="createUpdateZipJar" depends="define-artifact-properties"  description="Vytvori update.zip ako JARARCHIVE pre aktualizaciu v starom rezime WJ">
+        <exec executable="ant/mount-license.sh">
+        </exec>
+        <echo message="Sleeping for 60 seconds"/>
+        <!--sleep seconds="60"/-->
+        <delete file="${artifact.dir}/archive-jar.zip"/>
+
+        <!-- skopiruj logback.xml do buildu -->
+        <copy file="${root}/../../src/main/resources/logback.xml" todir="${outdir}WEB-INF/classes"/>
+
+        <zip destfile="${artifact.dir}/archive-jar.zip">
+            <zipfileset dir="${outdir}WEB-INF/lib" prefix="WEB-INF/lib">
+                <include name="**/**"/>
+            </zipfileset>
+            <zipfileset dir="${artifact.dir}" prefix="WEB-INF/lib">
+                <include name="webjet-${artifact.version}-components.jar"/>
+                <include name="webjet-${artifact.version}-admin.jar"/>
+                <include name="webjet-${artifact.version}.jar"/>
+            </zipfileset>
+            <zipfileset dir="${outdir}WEB-INF/fonts" prefix="WEB-INF/fonts">
+                <include name="**/**"/>
+            </zipfileset>
+            <zipfileset dir="${outdir}" prefix="">
+                <include name="*.jsp"/>
+            </zipfileset>
+            <zipfileset dir="src/main/resources/META-INF/" prefix="WEB-INF/classes/META-INF">
+                <include name="persistence-webjet.xml"/>
+                <include name="aop-ajc.xml"/>
+            </zipfileset>
+        </zip>
+        <mkdir dir="/Volumes/TomcatLicense/webapps/license/WEB-INF/archive/WebJET/${artifact.version}"/>
+        <copy file="${artifact.dir}/archive-jar.zip" todir="/Volumes/TomcatLicense/webapps/license/WEB-INF/archive/WebJET/${artifact.version}" preservelastmodified="true" overwrite="true">
+        </copy>
+        <copy todir="/Volumes/Webapps-AU20/docs.webjetcms.sk/json/" preservelastmodified="true" overwrite="true">
+            <fileset dir="${outdir}admin/v9/json/">
+                <include name="wjnews*.json"/>
+            </fileset>
+        </copy>
+    </target>
+
+    <!-- POZOR: bude to padat pri uplne prvom deploymente, je potrebne v nexuse rucne uploadnut jeden artifakt aby si to spravilo subor sk/iway/webjet/maven-metadata.xml kde si znaci verzie, potom deployment ide -->
+    <!-- https://maven.apache.org/plugins/maven-deploy-plugin/file-deployment.html -->
+    <target name="deployRepoIwmspSk" depends="define-artifact-properties,makejars,makepom" description="Deployne JAR subory na nexus server https://repo.iwmsp.sk">
+
+        <artifact:deploy file="${artifact.dir}/${artifact.name}-${artifact.version}.jar" uniqueVersion="false">
+
+            <remoteRepository url="${nexus.url}">
+                <authentication username="${nexus.user}" password="${nexus.password}" />
+            </remoteRepository>
+
+            <attach file="${artifact.dir}/${artifact.name}-${artifact.version}-sources.jar" classifier="sources"/>
+
+            <attach file="${artifact.dir}/${artifact.name}-${artifact.version}-admin.jar" classifier="admin" type="jar" />
+            <attach file="${artifact.dir}/${artifact.name}-${artifact.version}-components.jar" classifier="components" type="jar" />
+
+            <pom file="${artifact.pom}" />
+
+        </artifact:deploy>
+
+        <antcall target="createUpdateZip"/>
+        <antcall target="createUpdateZipJar"/>
+
+    </target>
+
+    <target name="fixSrc">
+        <replace file="${root}/../../src/webjet8/java/sk/iway/iwcm/database/nestedsets/JpaNode.java" token="@JsonSerialize //(using = WrappedNodeSerializer" value="@JsonSerialize(using = WrappedNodeSerializer"/>
+        <replace file="${root}/../../src/webjet8/java/sk/iway/iwcm/database/nestedsets/JpaNode.java" token="//import sk.iway.iwcm.database.nestedsets.JpaNode.WrappedNodeSerializer;" value="import sk.iway.iwcm.database.nestedsets.JpaNode.WrappedNodeSerializer;"/>
+    </target>
+
+    <target name="prepareAllJars" depends="define-artifact-properties,makejars,makepom" description="Pripravi vsetky JAR subory">
+
+    </target>
+
+    <target name="deployStaging" depends="define-artifact-properties" description="deploy version to Maven staging repository">
+        <exec executable="mvn">
+            <arg value="-e"/>
+            <arg value="-X"/>
+            <arg value="gpg:sign-and-deploy-file"/>
+            <arg value="-Dgpg.keyname=0x36F2327F"/>
+            <arg value="-Durl=${ossrh-staging-repository-url}"/>
+            <arg value="-DrepositoryId=ossrh"/>
+            <arg value="-DpomFile=${artifact.pom}"/>
+            <arg value="-Dfile=${artifact.dir}/${artifact.name}-${artifact.version}.jar"/>
+        </exec>
+        <antcall target="deployStagingImpl">
+            <param name="classifier" value="admin"/>
+        </antcall>
+        <antcall target="deployStagingImpl">
+            <param name="classifier" value="components"/>
+        </antcall>
+        <antcall target="deployStagingImpl">
+            <param name="classifier" value="javadoc"/>
+        </antcall>
+        <antcall target="deployStagingImpl">
+            <param name="classifier" value="sources"/>
+        </antcall>
+        <antcall target="deployStagingImpl">
+            <param name="classifier" value="libs"/>
+        </antcall>
+    </target>
+
+    <target name="deployStagingImpl">
+        <echo message="-------------------> Deploying classifier: ${classifier}"/>
+        <exec executable="mvn">
+            <arg value="gpg:sign-and-deploy-file"/>
+            <arg value="-Dgpg.keyname=0x36F2327F"/>
+            <arg value="-Durl=${ossrh-staging-repository-url}"/>
+            <arg value="-DrepositoryId=ossrh"/>
+            <arg value="-DpomFile=${artifact.pom}"/>
+            <arg value="-Dfile=${artifact.dir}/${artifact.name}-${artifact.version}-${classifier}.jar"/>
+            <arg value="-Dclassifier=${classifier}"/>
+        </exec>
+    </target>
+
+    <target name="generateSignatures" depends="define-artifact-properties" description="Vygeneruje asc, md5 a sha1 subory">
+        <delete includeemptydirs="true">
+            <fileset dir="${artifact.dir}">
+                <include name="*.md5"/>
+                <include name="*.sha1"/>
+                <include name="*.asc"/>
+            </fileset>
+        </delete>
+
+        <antcall target="generateSignatureImpl">
+            <param name="signExt" value=".jar"/>
+        </antcall>
+
+        <antcall target="generateSignatureImpl">
+            <param name="signExt" value=".pom"/>
+        </antcall>
+
+        <antcall target="generateSignatureImpl">
+            <param name="signExt" value="-admin.jar"/>
+        </antcall>
+
+        <antcall target="generateSignatureImpl">
+            <param name="signExt" value="-components.jar"/>
+        </antcall>
+
+        <antcall target="generateSignatureImpl">
+            <param name="signExt" value="-sources.jar"/>
+        </antcall>
+
+        <antcall target="generateSignatureImpl">
+            <param name="signExt" value="-javadoc.jar"/>
+        </antcall>
+
+        <antcall target="generateSignatureImpl">
+            <param name="signExt" value="-libs.jar"/>
+        </antcall>
+    </target>
+
+    <target name="generateSignatureImpl" description="Vygeneruje asc, md5 a sha1 subory">
+        <echo message="-------------------> Generate signature for: ${artifact.dir}/${artifact.name}-${artifact.version}${signExt}"/>
+        <exec executable="shasum" output="${artifact.dir}/${artifact.name}-${artifact.version}${signExt}.sha1">
+            <arg value="-a"/>
+            <arg value="1"/>
+            <arg value="${artifact.dir}/${artifact.name}-${artifact.version}${signExt}"/>
+        </exec>
+        <exec executable="md5" output="${artifact.dir}/${artifact.name}-${artifact.version}${signExt}.md5">
+            <arg value="${artifact.dir}/${artifact.name}-${artifact.version}${signExt}"/>
+        </exec>
+        <exec executable="gpg">
+            <arg value="-ab"/>
+            <arg value="--yes"/>
+            <arg value="--local-user"/>
+            <arg value="0x36F2327F"/>
+            <arg value="${artifact.dir}/${artifact.name}-${artifact.version}${signExt}"/>
+        </exec>
+    </target>
+
+</project>

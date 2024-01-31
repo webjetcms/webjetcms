@@ -11,9 +11,6 @@ import java.util.Date;
 import java.util.List;
 import java.util.StringTokenizer;
 
-import de.innosystec.unrar.Archive;
-import de.innosystec.unrar.io.ReadOnlyAccessFile;
-import de.innosystec.unrar.rarfile.FileHeader;
 import sk.iway.Password;
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.DBPool;
@@ -39,12 +36,16 @@ import sk.iway.iwcm.findexer.Word;
 import sk.iway.iwcm.io.IwcmFile;
 import sk.iway.iwcm.io.IwcmFsDB;
 import sk.iway.iwcm.io.IwcmInputStream;
-import sk.iway.iwcm.io.IwcmOutputStream;
 import sk.iway.iwcm.system.zip.ZipEntry;
 import sk.iway.iwcm.system.zip.ZipInputStream;
 import sk.iway.iwcm.users.UserDetails;
 
 public class FileIndexerTools {
+
+    private FileIndexerTools() {
+        //Utility class
+    }
+
     /**
      * Vymazanie suboru z indexu
      * @param url
@@ -391,7 +392,7 @@ public class FileIndexerTools {
             return data;
         }
 
-        byte buff[] = data.getBytes(Constants.FILE_ENCODING);
+        byte[] buff = data.getBytes(Constants.FILE_ENCODING);
         int size = buff.length;
         int i;
         boolean replaced = false;
@@ -471,9 +472,9 @@ public class FileIndexerTools {
                 {
                     data = FileTools.readFileContent(url);
                 }
-                else if(".zip".equals(ext) || ".rar".equals(ext))
+                else if(".zip".equals(ext))
                 {
-                    data = getArchiveData(url, realPath, data, ext);
+                    data = getArchiveData(url, realPath, ext);
                 }
             }
         }
@@ -499,9 +500,9 @@ public class FileIndexerTools {
         return data;
     }
 
-    private static String getArchiveData(String zipUrl, String realPath, String data, String ext)
+    private static String getArchiveData(String zipUrl, String realPath, String ext)
     {
-        data = "";
+        String data = "";
 
         String tempUrl = "/WEB-INF/tmp/fileindexer/"+ Password.generatePassword(5)+(new Date().getTime())+"/";
         String realTempUrl = Tools.getRealPath(tempUrl);
@@ -538,7 +539,7 @@ public class FileIndexerTools {
                 }
                 zis.close();
             }
-            else if(".rar".equals(ext))
+            /*else if(".rar".equals(ext))
             {
                 File rarFile=new File(realTempUrl);
                 if(rarFile.mkdirs() == false)
@@ -564,7 +565,7 @@ public class FileIndexerTools {
                     outStream.close();
                 }
                 readOnlyAccessFile.close();
-            }
+            }*/
             IwcmFile tempDir = new IwcmFile(realTempUrl);
             data = getTempDirData(tempDir);
         }

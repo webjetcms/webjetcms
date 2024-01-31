@@ -62,6 +62,7 @@ src/main/webapp/templates/usti-nad-labem
 
 #javadoc je generovany, nema zmysel ho mat v gite
 /docs/developer/javadoc
+/docs/javadoc
             
 
 # Licensed DT Editor

@@ -20,7 +20,7 @@ NotifyBean notify = new NotifyBean(prop.getText("editor.approve.notifyTitle"), g
 addNotify(notify);
 ```
 
-konštruktor [NotifyBean](../javadoc/sk/iway/iwcm/system/datatable/NotifyBean.html) triedy má nasledovné parametre:
+konštruktor [NotifyBean](../../../javadoc/sk/iway/iwcm/system/datatable/NotifyBean.html) triedy má nasledovné parametre:
 
 - ```String title``` - titulok notifikácie
 - ```String text``` - text notifikácie
@@ -29,7 +29,7 @@ konštruktor [NotifyBean](../javadoc/sk/iway/iwcm/system/datatable/NotifyBean.ht
 
 ## Pridanie tlačidla
 
-Do notifikácie je možné pridať tlačidlo na vykonanie akcie (napr. načítanie poslednej stránky z histórie). Pomocou API metódy [NotifyBean.addButton](../javadoc/sk/iway/iwcm/system/datatable/NotifyBean.html) môžete pridať tlačidlo (objekt typu [NotifyButton](../javadoc/sk/iway/iwcm/system/datatable/NotifyButton.html)). Po kliknutí na tlačidlo sa vykoná zadaná JavaScript funkcia (vkladá sa ako atribút ```onlick``` na tlačidle). Definovanie volanej funkcie musíte implementovať priamo v danej stránke.
+Do notifikácie je možné pridať tlačidlo na vykonanie akcie (napr. načítanie poslednej stránky z histórie). Pomocou API metódy [NotifyBean.addButton](../../../javadoc/sk/iway/iwcm/system/datatable/NotifyBean.html) môžete pridať tlačidlo (objekt typu [NotifyButton](../../../javadoc/sk/iway/iwcm/system/datatable/NotifyButton.html)). Po kliknutí na tlačidlo sa vykoná zadaná JavaScript funkcia (vkladá sa ako atribút ```onlick``` na tlačidle). Definovanie volanej funkcie musíte implementovať priamo v danej stránke.
 
 Príklad:
 

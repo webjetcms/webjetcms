@@ -570,7 +570,7 @@ public interface GroupSchedulerDtoRepository extends JpaRepository<GroupSchedule
 
 #### Podporné metódy
 
-Okrem všeobecnej metódy ```addSpecSearch``` (ktorá interne volá nasledovné špeciálne metódy) je možné použiť metódy z triedy [SpecSearch](../javadoc/sk/iway/iwcm/system/datatable/SpecSearch.html):
+Okrem všeobecnej metódy ```addSpecSearch``` (ktorá interne volá nasledovné špeciálne metódy) je možné použiť metódy z triedy [SpecSearch](../../../javadoc/sk/iway/iwcm/system/datatable/SpecSearch.html):
 
 **Hľadanie podľa mena/priezviska**
 

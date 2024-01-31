@@ -130,7 +130,6 @@ dependencies {
     implementation("org.apache.lucene:lucene-highlighter:3.6.2")
     implementation("org.apache.lucene:lucene-memory:3.6.2")
     implementation("org.apache.lucene:lucene-analyzers:3.6.2")
-    implementation("org.mapstruct:mapstruct-processor:1.3.0.Final")
     implementation("org.mariadb.jdbc:mariadb-java-client:2.7.5")
     implementation("com.drewnoakes:metadata-extractor:2.18.0")
     implementation("com.oracle.database.jdbc:ojdbc8:19.8.0.0")
@@ -140,7 +139,6 @@ dependencies {
     implementation("org.apache.poi:poi-ooxml:5.2.2")
     implementation("org.apache.poi:poi-scratchpad:5.2.2")
     implementation("org.apache.poi:poi:5.2.2")
-    implementation("sk.iway:sg-cdb:1.0.4")
     implementation("org.springframework:spring-aop:${springVersion}")
     implementation("org.springframework:spring-beans:${springVersion}")
     implementation("org.springframework:spring-context:${springVersion}")
@@ -163,14 +161,13 @@ dependencies {
     implementation("net.sf.trove4j:trove4j:2.1.0")
     implementation("net.sf.uadetector:uadetector-core:0.9.22")
     implementation("net.sf.uadetector:uadetector-resources:2014.10")
-    implementation("sk.iway:unrar:1.0")
     implementation("org.apache.velocity.tools:velocity-tools-generic:3.1")
     implementation("org.apache.velocity:velocity-engine-core:2.3")
     implementation("org.json:json:20231013")
     implementation("cryptix:cryptix:3.2.0")
     implementation("com.sun.mail:javax.mail:1.6.2")
     implementation("org.springframework:spring-messaging:${springVersion}")
-    implementation("com.google.crypto.tink:tink:1.10.+")
+    implementation("com.google.crypto.tink:tink:1.12.0")
     implementation("com.google.protobuf:protobuf-java:3.21.7")
     implementation("ch.qos.logback:logback-core:1.3.14")
     implementation("ch.qos.logback:logback-classic:1.3.14")
@@ -473,51 +470,54 @@ task('generateJacocoReport', type: JacocoReport) {
 }
 
 //generovanie javadoc dokumentacie
-//TODO: generovat pocas buildu, aby sa dali generovat aj triedy, ktore tu nemame, napr. Constants
-task generateJavadocs(type: Javadoc) {
-  source = sourceSets.main.allJava
-  destinationDir = file('docs/developer/javadoc')
+//generovat pocas buildu, aby sa dali generovat aj triedy, ktore tu nemame, napr. Constants
+javadoc {
   failOnError = false
   title = "WebJET CMS"
+  destinationDir = file('docs/javadoc')
+  options.addStringOption('Xdoclint:none', '-quiet')
+  options.addStringOption('Xmaxerrs', '65536')
+  options.addStringOption('Xmaxwarns', '65536')
   include (
-        'sk/iway/iwcm/Constants.java',
-        'sk/iway/iwcm/Identity.java',
-        'sk/iway/iwcm/users/UserDetails.java',
-        'sk/iway/iwcm/Tools.java',
-        'sk/iway/iwcm/Tools.java',
-        'sk/iway/iwcm/i18n/Prop.java',
-
-        //Doc
-        'sk/iway/iwcm/common/DocTools.java',
-        'sk/iway/iwcm/doc/',
-        'sk/iway/iwcm/editor/rest/',
-        'sk/iway/iwcm/editor/service/',
-        'sk/iway/iwcm/editor/facade/',
-        'sk/iway/iwcm/editor/util/',
-
-        //datatable
-        'sk/iway/iwcm/system/datatable/',
-        'sk/iway/iwcm/system/datatable/json/',
-        'sk/iway/iwcm/system/datatable/spring/',
-
-        //ninja
-        'sk/iway/iwcm/doc/ninja/',
-
-        //upload a excel
-        'sk/iway/iwcm/admin/AbstractUploadListener.java',
-        'sk/iway/iwcm/admin/xls/AbstractExcelImportService.java'
+        'sk/iway/iwcm/'
+  )
+  exclude (
+    '/de/innosystec/unrar/unpack/ComprDataIO.java',
+    'sun/reflect/generics/',
+    'sk/iway/iwcm/common/FileIndexerTools.java'
   )
 }
 
 publishing {
     publications {
         maven(MavenPublication) {
-            groupId = 'sk.iway'
-            artifactId = 'webjet'
+            groupId = System.getProperty("wjgroup")
+            artifactId = System.getProperty("wjname")
             version = System.getProperty("wjversion")
 
             pom {
                 name = 'webjet'
+                description = 'WebJET CMS - Web Content Management in Java/Spring'
+                url = 'https://www.webjetcms.com'
+                licenses {
+                    license {
+                        name = 'The Apache License, Version 2.0'
+                        url = 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+                    }
+                }
+                developers {
+                    developer {
+                        name = 'Lubos Balat'
+                        email = 'info@webjet.eu'
+                        organization = 'InterWay, a. s.'
+                        organizationUrl = 'https://www.interway.sk'
+                    }
+                }
+                scm {
+                    connection = 'scm:git:git://github.com/webjetcms/webjetcms.git'
+                    developerConnection = 'scm:git:ssh://github.com:/webjetcms/webjetcms.git'
+                    url = 'https://github.com/webjetcms/webjetcms/tree/master'
+                }
             }
 
             from components.java
@@ -543,9 +543,9 @@ task writePom() {
                 if (verA[i].equals("+")) verA[i] = "0"
                 if (verB[i].equals("+")) verB[i] = "0"
                 def numA = 0;
-                try { numA = verA[i].toInteger(); } catch (Exception ex) {}
+                try { numA = verA[i].replace("-SNAPSHOT", "").toInteger(); } catch (Exception ex) {}
                 def numB = 0;
-                try { numB = verB[i].toInteger(); } catch (Exception ex) {}
+                try { numB = verB[i].replace("-SNAPSHOT", "").toInteger(); } catch (Exception ex) {}
 
                 if (numA != numB) {
                     return numA <=> numB
@@ -599,12 +599,13 @@ task writePom() {
             def groupId = it.get("groupId").first().value().first()
             def artifactName = artifactId.value().first()
             def version = it.get("version").first().value().first()
-            println "Checking: groupId: "+groupId+" artifactId:"+artifactName+" version="+version+" scope="+it.get("scope")
+            //println "Checking: groupId: "+groupId+" artifactId:"+artifactName+" version="+version+" scope="+it.get("scope")
 
             def artifactVersion = resolvedVersionMap.get(artifactName)
             Node versionNode = it.get("version").first()
             if (artifactVersion!=null) {
                 def mostRecent = mostRecentVersion([artifactVersion, version]);
+                //println "artifact version=" + artifactVersion + " mostRecent=" + mostRecent
                 if (mostRecent.equals(version)==false) {
                     println "---> changing version: " + version + "->" + artifactVersion + " mostRecent=" + mostRecent
                     versionNode.value = mostRecent
@@ -628,7 +629,7 @@ task writePom() {
         }
 
         // zapis pom subor
-        def printWriter = new PrintWriter(new FileWriter("build/updatezip/artifacts/webjet-"+wjversion+".pom"));
+        def printWriter = new PrintWriter(new FileWriter("build/updatezip/artifacts/webjetcms-"+wjversion+".pom"));
         printWriter.println('<?xml version="1.0" encoding="UTF-8"?>');
         XmlNodePrinter xmlNodePrinter = new XmlNodePrinter(printWriter)
         xmlNodePrinter.with {

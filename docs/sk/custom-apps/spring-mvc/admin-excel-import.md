@@ -96,7 +96,7 @@ Import prebieha automaticky mapovaním stĺpca v Excel súbore na meno atribútu
 
 ```id name zip street city phone contact```
 
-Trieda pre spracovanie importu rozširuje [AbstractExcelImportService](../../developer/javadoc/sk/iway/iwcm/admin/xls/AbstractExcelImportService.html), ktorý zabezpečuje samotný import.
+Trieda pre spracovanie importu rozširuje [AbstractExcelImportService](../../../javadoc/sk/iway/iwcm/admin/xls/AbstractExcelImportService.html), ktorý zabezpečuje samotný import.
 
 V prípade potreby je možné prepísať niektoré metódy, ukážka v metóde ```beforeRow``` generuje náhodné telefónne číslo a upravuje formát bunky PSČ, ktorá aj keď je v Excel súbore označená ako Text importuje sa niekedy ako číslo.
 

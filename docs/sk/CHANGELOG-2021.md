@@ -98,7 +98,7 @@ Upozornenie: z dôvodu veľkého počtu zmien v jar knižniciach bude počas akt
 
 - Doplnená dokumentácia k uloženiu [pracovnej verzie web stránky](redactor/webpages/README.md).
 - Pre-generované fotky obrazovky dokumentácie k web stránkam.
-- Pripravený základ pre generovanie [JavaDoc dokumentácie](developer/javadoc/index.html). Upravené ```docsify``` pre otváranie JavaDoc dokumentácie do nového okna.
+- Pripravený základ pre generovanie [JavaDoc dokumentácie](../javadoc/index.html). Upravené ```docsify``` pre otváranie JavaDoc dokumentácie do nového okna.
 - Web stránky - doplnená dokumentácia pre [programátora k API](developer/apps/webpages/api.md).
 - Vytvorená dokumentácia [hlavných ovládacích prvkov](redactor/admin/README.md) administrácie a [prihlasovania a odhlasovania](redactor/admin/logon.md).
 - Vytvorená dokumentácia pre [výberové pole s možnosťou editácie](developer/datatables-editor/field-select-editable.md).

@@ -8,7 +8,7 @@ Pozrite si manuál pre [web dizajnéra](../../../frontend/page-builder/README.md
 
 ## Implementačné detaily
 
-Režim je aktivovaný nastavením atribútu ```editingMode=pagebuilder``` na objekte [DocEditorFields](../../javadoc/sk/iway/iwcm/doc/DocEditorFields.html). V atribúte ```editingModeLink``` je odkaz, ktorý sa načíta do iframe. Nastavuje ich metóda ```setEditingMode```.
+Režim je aktivovaný nastavením atribútu ```editingMode=pagebuilder``` na objekte [DocEditorFields](../../../../javadoc/sk/iway/iwcm/doc/DocEditorFields.html). V atribúte ```editingModeLink``` je odkaz, ktorý sa načíta do iframe. Nastavuje ich metóda ```setEditingMode```.
 
 Tento odkaz obsahuje URL parameter ```inlineEditorAdmin=true```, podľa neho môžete v kóde nájsť miesta implementujúce funkciu Page Builder. Keď je tento parameter zadaný nevykoná sa presmerovanie stránky (ak má stránka nastavený atribút ```externalLink```).
 
@@ -16,7 +16,7 @@ Technicky je karta Obsah v editore zložená z dvoch ```div``` elementov, jeden 
 
 ## Nová stránka
 
-Page Builder sa otvára v iframe ako zobrazená web stránka, čo komplikuje zobrazenie pre novú web stránku. V takom prípade sa otvorí hlavná stránka adresára, pričom samozrejme sa nastavia prázdne dáta. Po uložení už vznikne korektne nová web stránka, ktorá sa môže editovať. Nastavenie URL adresy pre hlavnú stránku sa deje v [DocEditorFields.setEditingMode](../../javadoc/sk/iway/iwcm/doc/DocEditorFields.html).
+Page Builder sa otvára v iframe ako zobrazená web stránka, čo komplikuje zobrazenie pre novú web stránku. V takom prípade sa otvorí hlavná stránka adresára, pričom samozrejme sa nastavia prázdne dáta. Po uložení už vznikne korektne nová web stránka, ktorá sa môže editovať. Nastavenie URL adresy pre hlavnú stránku sa deje v [DocEditorFields.setEditingMode](../../../../javadoc/sk/iway/iwcm/doc/DocEditorFields.html).
 
 ## Optimalizácia rýchlosti načítania
 

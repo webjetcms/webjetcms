@@ -1,0 +1,239 @@
+<?xml version="1.0"?>
+
+<project name="webjet8" default="compile" >
+
+    <!-- pred spustenim compile je potrebne spustit:
+        ant updatezip
+        ant download
+
+        proces je nasledovny:
+        - src sa rozbali to src-cp1250
+        - skonvertuje sa do src-utf8
+        - spravi sa delombok (extrapolovanie lombok anotacii, kedze aspectj robi lombok problem)
+        - skompiluju sa cez javac vsetky triedy, pretoze aspectj ma problem s mapperom
+        - do jar suboru WebContent/WEB-INF/generated-sources/mapper-impl.jar sa skopiruju vsetky **Mapper** triedy
+        - src-delombok sa skopiruje do src-aspectj a zmazu sa vsetky **Mapper** triedy (tie sa pouziju z mapper-impl.jar pri aspectj kompilacii)
+        - vykona sa aspectj kompilacia zo src-aspectj do WebContent/WEB-INF/classes adresara
+        - do vysledneho WebContent/WEB-INF/classes adresara sa rozbali mapper-impl.jar so skompilovanymi MapperImpl.class triedami
+    -->
+
+  <property environment="env"/>
+  <property name="root" location="../build/updatezip"/>
+
+  <taskdef
+      resource="org/aspectj/tools/ant/taskdefs/aspectjTaskdefs.properties">
+    <classpath>
+      <pathelement location="./aspectj/aspectjtools-1.9.19.jar"/>
+    </classpath>
+  </taskdef>
+
+  <target name="cleanup">
+    <delete dir="${root}/WebContent/WEB-INF/generated-sources" />
+    <delete dir="${root}/WebContent/WEB-INF/classes" />
+  </target>
+
+  <target name="prepareSrc">
+    <delete dir="${root}/src-utf8" />
+    <mkdir dir="${root}/src-utf8" />
+    <delete dir="${root}/src-delombok" />
+    <mkdir dir="${root}/src-delombok" />
+    <delete dir="${root}/src-aspectj" />
+    <delete dir="${root}/resources-saved" />
+    <mkdir dir="${root}/resources-saved" />
+
+    <!-- zachovaj .properties subory z classes adresara -->
+    <copy todir="${root}/resources-saved/" overwrite="true">
+      <fileset dir="${root}/../../src/main/webapp/WEB-INF/classes/">
+          <include name="text*.properties"/>
+      </fileset>
+    </copy>
+
+  </target>
+
+  <target name="delombok" depends="prepareSrc">
+
+    <exec executable="./gradlew" dir="../">
+        <arg value="delombok"/>
+    </exec>
+
+    <copy todir="${root}/src-delombok/" overwrite="true">
+      <fileset dir="${root}/../../build/generated/sources/delombok/java/main">
+          <include name="**/*"/>
+      </fileset>
+    </copy>
+
+    <copy todir="${root}/src-delombok/" overwrite="true">
+      <fileset dir="${root}/../../src/main/aspectj">
+          <include name="**/*"/>
+      </fileset>
+    </copy>
+
+  </target>
+
+  <target name="compileMapstruct" depends="delombok">
+
+    <!-- toto je finka kvoli tomu, ze nejde skompilovat cez aspectj veci co su cez Mapstruct
+         tuna teda vsetko skompilijem cez standardny javac, zmazem vsetko okrem packages mapper a mappers
+         a vyrobim z toho JAR pre compile task -->
+
+    <delete dir="${root}/WebContent/WEB-INF/generated-sources" />
+    <mkdir dir="${root}/WebContent/WEB-INF/generated-sources" />
+
+    <delete dir="${root}/WebContent/WEB-INF/classes/" />
+    <mkdir dir="${root}/WebContent/WEB-INF/classes/" />
+
+    <javac
+      includeAntRuntime="false"
+      source="17"
+      target="17"
+      srcdir="${root}/src-delombok/"
+      destdir="${root}/WebContent/WEB-INF/classes/"
+      encoding="utf-8"
+      debug="true"
+      fork="true"
+      memoryinitialsize="512m"
+      memorymaximumsize="1024m"
+      deprecation="off"
+    >
+
+     <!--toto uz netreba, parsne si to z jarka mapstruct aj lombok z META-INF/services/javax.annotation.processing.Processor compilerarg line="-processorpath ${root}/WebContent/WEB-INF/lib/mapstruct-processor-1.3.0.Final.jar"/-->
+     <compilerarg line="-s ${root}/WebContent/WEB-INF/generated-sources"/>
+
+     <classpath>
+        <fileset dir="${root}/WebContent/WEB-INF/lib/" >
+          <include name="*.jar" />
+        </fileset>
+        <fileset dir="./servlet-api" >
+          <include name="*.jar" />
+        </fileset>
+        <fileset dir="./libs" >
+            <include name="*.jar" />
+        </fileset>
+     </classpath>
+
+    </javac>
+
+    <delete>
+      <fileset dir="${root}/src-utf8">
+        <include name="**/*.class"/>
+      </fileset>
+    </delete>
+
+
+    <delete dir="${root}/src-aspectj" />
+    <mkdir dir="${root}/src-aspectj" />
+
+    <copy todir="${root}/src-aspectj" >
+       <fileset dir="${root}/src-delombok" includes="**"/>
+    </copy>
+
+    <delete includeemptydirs="true">
+      <fileset dir="${root}/src-aspectj">
+        <include name="**/mapper/**"/>
+        <include name="**/mappers/**"/>
+        <include name="**/*Mapper*"/>
+      </fileset>
+    </delete>
+
+    <delete includeemptydirs="true">
+      <fileset dir="${root}/WebContent/WEB-INF/classes/">
+        <include name="**/*"/>
+        <exclude name="**/mapper/**"/>
+        <exclude name="**/mappers/**"/>
+        <exclude name="**/*Mapper*"/>
+      </fileset>
+    </delete>
+
+    <jar destfile="${root}/WebContent/WEB-INF/generated-sources/mapper.jar" basedir="${root}/WebContent/WEB-INF/classes"/>
+
+    <jar compress="false" destfile="${root}/WebContent/WEB-INF/generated-sources/mapper-impl.jar">
+      <fileset dir="${root}/WebContent/WEB-INF/classes/">
+       <include name="**/mapper/*Impl.class"/>
+       <include name="**/mappers/*Impl.class"/>
+       <include name="**/*MapperImpl.class"/>
+      </fileset>
+    </jar>
+
+  </target>
+
+
+ <target name="compile" depends="compileMapstruct">
+
+    <defaultexcludes echo="false" add="**/sk/**/*JUnit*"/>
+    <defaultexcludes echo="false" add="**/sk/**/*Test.class*"/>
+    <defaultexcludes echo="false" add="**/sk/**/*Test$*"/>
+    <defaultexcludes echo="false" add="**/components/sharepoint/**"/>
+
+    <!-- angular zalezitosti -->
+    <defaultexcludes echo="false" add="**/src/**"/>
+    <defaultexcludes echo="false" add="**/dll/**"/>
+    <defaultexcludes echo="false" add="**/coverage/**"/>
+    <defaultexcludes echo="false" add="/components/**/config/**"/>
+    <defaultexcludes echo="false" add="**/.vscode/**"/>
+    <defaultexcludes echo="false" add="**/.github/**"/>
+    <defaultexcludes echo="false" add="**/*.log"/>
+    <defaultexcludes echo="false" add="**/README.md"/>
+    <defaultexcludes echo="false" add="**/.editorconfig"/>
+    <defaultexcludes echo="false" add="**/.git*"/>
+    <defaultexcludes echo="false" add="**/.nvmrc"/>
+    <defaultexcludes echo="false" add="**/.travis.yml"/>
+    <defaultexcludes echo="false" add="**/Dockerfile"/>
+    <defaultexcludes echo="false" add="**/*.vbs"/>
+    <defaultexcludes echo="false" add="**/karma.conf.js"/>
+    <defaultexcludes echo="false" add="**/netlify.toml"/>
+    <defaultexcludes echo="false" add="**/protractor.conf.js"/>
+    <defaultexcludes echo="false" add="**/tsconfig*"/>
+    <defaultexcludes echo="false" add="**/typedoc.json"/>
+    <defaultexcludes echo="false" add="**/webpack.config.js"/>
+    <defaultexcludes echo="false" add="**/package.json"/>
+    <defaultexcludes echo="false" add="**/tslint.json"/>
+    <defaultexcludes echo="false" add="**/firebase.json"/>
+    <defaultexcludes echo="false" add="**/*.psd"/>
+
+    <iajc
+        source="17"
+        target="17"
+        encoding="utf-8"
+        debug="true"
+        destDir="${root}/WebContent/WEB-INF/classes/"
+        >
+
+      <sourceroots>
+        <pathelement location="${root}/src-aspectj/"/>
+      </sourceroots>
+
+      <classpath>
+        <fileset dir="${root}/WebContent/WEB-INF/lib/" >
+          <include name="*.jar" />
+        </fileset>
+        <fileset dir="./servlet-api" >
+              <include name="*.jar" />
+        </fileset>
+        <fileset dir="./libs" >
+          <include name="*.jar" />
+        </fileset>
+        <fileset dir="${root}/WebContent/WEB-INF/generated-sources/">
+          <include name="*.jar" />
+        </fileset>
+     </classpath>
+
+   </iajc>
+
+   <!-- dokopiruj do classes Impl triedy mappera -->
+   <unzip src="${root}/WebContent/WEB-INF/generated-sources/mapper-impl.jar" dest="${root}/WebContent/WEB-INF/classes/"/>
+
+     <copy todir="${root}/WebContent/WEB-INF/classes/META-INF" >
+        <fileset dir="${root}/../../src/main/resources/META-INF" includes="**"/>
+   </copy>
+
+   <copy todir="${root}/WebContent/WEB-INF/classes/" >
+        <fileset dir="${root}/src-delombok/" includes="*.properties"/>
+        <fileset dir="${root}/src-delombok/" includes="*.xml"/>
+        <fileset dir="${root}/resources-saved/" includes="*.*"/>
+   </copy>
+
+   <delete dir="${root}/WebContent/WEB-INF/generated-sources" />
+
+  </target>
+
+</project>

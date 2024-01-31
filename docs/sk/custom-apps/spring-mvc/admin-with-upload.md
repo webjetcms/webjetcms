@@ -8,7 +8,7 @@ Ukážková Spring MVC aplikácia v administrácii s nahratím súboru na backen
 
 V administrácii sa zobrazenie stránky realizuje pomocou [AdminThymeleafController](../../developer/frameworks/README.md). Formulár/dáta pre MVC aplikáciu sú do modelu vložené pomocou počúvania [udalosti pre zobrazenie stránky v administrácii](../../developer/frameworks/thymeleaf.md#vloženie-vlastných-objektov-do-modelu).
 
-Spracovanie nahratého súboru je komplikovanejšie, ak potrebujete využiť aj súbor odporúčame rozšíriť triedu [AbstractUploadListener](../../developer/javadoc/sk/iway/iwcm/admin/AbstractUploadListener.html), ktorá zjednodušuje spracovanie nahratého súboru.
+Spracovanie nahratého súboru je komplikovanejšie, ak potrebujete využiť aj súbor odporúčame rozšíriť triedu [AbstractUploadListener](../../../javadoc/sk/iway/iwcm/admin/AbstractUploadListener.html), ktorá zjednodušuje spracovanie nahratého súboru.
 
 Trieda ```AbstractUploadListener``` zabezpečí spracovanie ```multipart requestu``` v konštruktore volaním ```super.processForm(event);``` a nastavenie atribútov zadaného beanu (formuláru). Volanie ```getForm()``` získa objekt formuláru a volanie ```getBindingResult()``` získa prípadné chybové správy - overenie povinných polí atď.
 
