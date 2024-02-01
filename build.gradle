@@ -626,6 +626,12 @@ task writePom() {
                 println "----> removing: "+artifactName
                 i.remove();
             }
+
+            //remove sk.iway artifacts, they are packages to webjet-VERSION-libs.jar
+            if (groupId.startsWith("sk.iway")) {
+                println "----> removing: "+artifactName
+                i.remove();
+            }
         }
 
         // zapis pom subor

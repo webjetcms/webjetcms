@@ -429,6 +429,7 @@
 
             <attach file="${artifact.dir}/${artifact.name}-${artifact.version}-admin.jar" classifier="admin" type="jar" />
             <attach file="${artifact.dir}/${artifact.name}-${artifact.version}-components.jar" classifier="components" type="jar" />
+            <attach file="${artifact.dir}/${artifact.name}-${artifact.version}-libs.jar" classifier="libs" type="jar" />
 
             <pom file="${artifact.pom}" />
 
@@ -444,7 +445,7 @@
         <replace file="${root}/../../src/webjet8/java/sk/iway/iwcm/database/nestedsets/JpaNode.java" token="//import sk.iway.iwcm.database.nestedsets.JpaNode.WrappedNodeSerializer;" value="import sk.iway.iwcm.database.nestedsets.JpaNode.WrappedNodeSerializer;"/>
     </target>
 
-    <target name="prepareAllJars" depends="define-artifact-properties,makejars,makepom" description="Pripravi vsetky JAR subory">
+    <target name="prepareAllJars" depends="define-artifact-properties,makejars,makepom" description="Prepare all JAR files for deployment">
 
     </target>
 
@@ -489,7 +490,7 @@
         </exec>
     </target>
 
-    <target name="generateSignatures" depends="define-artifact-properties" description="Vygeneruje asc, md5 a sha1 subory">
+    <!--target name="generateSignatures" depends="define-artifact-properties" description="Vygeneruje asc, md5 a sha1 subory">
         <delete includeemptydirs="true">
             <fileset dir="${artifact.dir}">
                 <include name="*.md5"/>
@@ -528,7 +529,7 @@
     </target>
 
     <target name="generateSignatureImpl" description="Vygeneruje asc, md5 a sha1 subory">
-        <echo message="-------------------> Generate signature for: ${artifact.dir}/${artifact.name}-${artifact.version}${signExt}"/>
+        <echo message="-> Generate signature for: ${artifact.dir}/${artifact.name}-${artifact.version}${signExt}"/>
         <exec executable="shasum" output="${artifact.dir}/${artifact.name}-${artifact.version}${signExt}.sha1">
             <arg value="-a"/>
             <arg value="1"/>
@@ -539,11 +540,11 @@
         </exec>
         <exec executable="gpg">
             <arg value="-ab"/>
-            <arg value="--yes"/>
-            <arg value="--local-user"/>
+            <arg value="-     -yes"/>
+            <arg value="-     -local-user"/>
             <arg value="0x36F2327F"/>
             <arg value="${artifact.dir}/${artifact.name}-${artifact.version}${signExt}"/>
         </exec>
-    </target>
+    </target-->
 
 </project>
