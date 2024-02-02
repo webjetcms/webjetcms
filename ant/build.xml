@@ -38,12 +38,10 @@
     <target name="define-artifact-properties">
         <property name="artifact.group" value="com.webjetcms" />
         <property name="artifact.name" value="webjetcms" />
-        <!-- verzia pre artifactory -->
-        <property name="artifact.version" value="2024.0-SNAPSHOT" />
+        <property name="artifact.version" value="2024.0.3" />
         <property name="artifact.type" value="jar" />
         <property name="artifact.dir" value="${root}/artifacts" />
         <property name="artifact.pom" value="${artifact.dir}/${artifact.name}-${artifact.version}.pom" />
-        <property name="artifact.url" value="http://maven.web.iway.local/artifactory/gradle-dev-local/" />
 
         <property name="nexus.url" value="*********" />
         <property name="nexus.user" value="iw-webjet-dev" />
@@ -99,7 +97,7 @@
                 <exclude name="**/*.pug"/>
                 <exclude name="**/*.zip"/>
 
-                <!--ukazkovy kod -->
+                <!-- example code -->
                 <exclude name="**/sk/iway/demo8/**"/>
                 <exclude name="**/sk/iway/basecms/**"/>
                 <exclude name="**/apps/basecms/**"/>
@@ -120,7 +118,7 @@
 
     </target>
 
-    <target name="makejars" depends="define-artifact-properties,updatezip,compile" description="pripravi WJ jarka">
+    <target name="makejars" depends="define-artifact-properties,updatezip,compile" description="prepare all jar files">
         <delete file="${artifact.dir}/${artifact.name}-${artifact.version}.jar" />
         <jar compress="${compress}" jarfile="${artifact.dir}/${artifact.name}-${artifact.version}.jar" defaultexcludes="true">
             <fileset dir="${root}/WebContent/WEB-INF/classes">
@@ -227,6 +225,7 @@
             </zipfileset>
         </jar>
 
+        <!-- merge all wj*.jar into one libs.jar file -->
         <delete file="${artifact.dir}/${artifact.name}-${artifact.version}-libs.jar" />
         <delete dir="${root}/libs"/>
         <mkdir dir="${root}/libs"/>
@@ -235,7 +234,6 @@
                 <include name="wj*.jar"/>
             </fileset>
         </unzip>
-        <!--unzip src="${outdir}WEB-INF/lib/wjdaisydiff-1.0-SNAPSHOT.jar" dest="${root}/libs"/-->
         <jar compress="${compress}" jarfile="${artifact.dir}/${artifact.name}-${artifact.version}-libs.jar" defaultexcludes="true">
             <zipfileset dir="${root}/libs">
                 <include name="**/*"/>
@@ -244,7 +242,7 @@
 
     </target>
 
-    <target name="finalwar" depends="define-artifact-properties,makejars">
+    <target name="finalwar" depends="define-artifact-properties,makejars" description="Prepare expanded war version for update directly from WebJET CMS">
         <delete dir="${finalwar}"/>
         <unzip src="${wardir}${projectname}.war" dest="${finalwar}"/>
 
@@ -255,6 +253,8 @@
             </fileset>
             <fileset dir="${finalwar}/WEB-INF/lib">
                 <include name="webjet-*.jar"/>
+                <include name="wj*.jar"/>
+                <include name="*.zip"/>
             </fileset>
             <fileset dir="${finalwar}">
                 <include name="admin/**"/>
@@ -273,7 +273,7 @@
             </fileset>
         </copy>
 
-        <!-- dokopiruj ukazkove komponenty a triedy -->
+        <!-- add example files -->
         <copy todir="${finalwar}/components/" overwrite="true">
             <fileset dir="${root}/../../src/main/webapp/components/">
                 <include name="aceintegration/**"/>
@@ -307,12 +307,11 @@
 
     </target>
 
-    <target name="compile" depends="updatezip" description="skompiluje vsetky triedy vratane tych vo WJ8">
+    <target name="compile" depends="updatezip" description="compile all classes">
         <ant antfile="compile.xml" inheritAll="false" target="compile" dir="ant" useNativeBasedir="true"/>
-        <!-- dokopiruj log4j.properties -->
     </target>
 
-    <target name="makepom" depends="define-artifact-properties,makejars" description="vytvori POM subor">
+    <target name="makepom" depends="define-artifact-properties,makejars" description="create POM file for deployment">
 
         <exec executable="./gradlew">
             <arg value="writePom"/>
@@ -323,7 +322,7 @@
 
     </target>
 
-    <target name="copyNodeModules" description="Skopiruje subory z node_modules do JS adresarov pre ich priame pouzitie">
+    <target name="copyNodeModules" description="Copy files from node_modules to JS directories for their direct use on logon page">
 
         <!-- zxcvbn-ts kniznica pre prihlasovaciu obrazovku -->
         <copy file="src/main/webapp/admin/v9/node_modules/@zxcvbn-ts/core/dist/zxcvbn-ts.js" todir="src/main/webapp/admin/skins/webjet8/assets/js/zxcvbn/core/" encoding="utf-8" preservelastmodified="true" overwrite="true"/>
@@ -332,7 +331,7 @@
 
     </target>
 
-    <target name="createUpdateZip" depends="define-artifact-properties"  description="Vytvori update.zip pre aktualizaciu v starom rezime WJ">
+    <target name="createUpdateZip" depends="define-artifact-properties"  description="Create update.zip for update directly from WebJET CMS in old/expanded mode (no jar packaging)">
         <exec executable="ant/mount-license.sh">
         </exec>
         <echo message="Sleeping for 60 seconds"/>
@@ -354,7 +353,7 @@
                 <exclude name="**/sk/**/tests/**"/>
                 <exclude name="**/components/sharepoint/**"/>
 
-                <!--ukazkovy kod -->
+                <!-- example code -->
                 <exclude name="**/sk/iway/demo8/**"/>
                 <exclude name="**/sk/iway/basecms/**"/>
                 <exclude name="**/apps/basecms/**"/>
@@ -375,7 +374,7 @@
         </copy>
     </target>
 
-    <target name="createUpdateZipJar" depends="define-artifact-properties"  description="Vytvori update.zip ako JARARCHIVE pre aktualizaciu v starom rezime WJ">
+    <target name="createUpdateZipJar" depends="define-artifact-properties"  description="Create update ZIP in jar packaging format for update directly from WebJET CMS }jar packaging enabled)">
         <exec executable="ant/mount-license.sh">
         </exec>
         <echo message="Sleeping for 60 seconds"/>
@@ -415,9 +414,9 @@
         </copy>
     </target>
 
-    <!-- POZOR: bude to padat pri uplne prvom deploymente, je potrebne v nexuse rucne uploadnut jeden artifakt aby si to spravilo subor sk/iway/webjet/maven-metadata.xml kde si znaci verzie, potom deployment ide -->
+    <!-- ATTENTION: it will fail during the very first deployment, it is necessary to manually upload one artifact in the nexus to create the file sk/iway/webjet/maven-metadata.xml where the versions are known, then the deployment goes -->
     <!-- https://maven.apache.org/plugins/maven-deploy-plugin/file-deployment.html -->
-    <target name="deployRepoIwmspSk" depends="define-artifact-properties,makejars,makepom" description="Deployne JAR subory na nexus server https://repo.iwmsp.sk">
+    <target name="deployRepoIwmspSk" depends="define-artifact-properties,makejars,makepom" description="Deploy JAR files to nexus server https://repo.iwmsp.sk">
 
         <artifact:deploy file="${artifact.dir}/${artifact.name}-${artifact.version}.jar" uniqueVersion="false">
 
@@ -440,7 +439,7 @@
 
     </target>
 
-    <target name="fixSrc">
+    <target name="fixSrc" description="Fix for VS Code source files - there is problem with annotation in VS Code, so we must revert changes before deployment">
         <replace file="${root}/../../src/webjet8/java/sk/iway/iwcm/database/nestedsets/JpaNode.java" token="@JsonSerialize //(using = WrappedNodeSerializer" value="@JsonSerialize(using = WrappedNodeSerializer"/>
         <replace file="${root}/../../src/webjet8/java/sk/iway/iwcm/database/nestedsets/JpaNode.java" token="//import sk.iway.iwcm.database.nestedsets.JpaNode.WrappedNodeSerializer;" value="import sk.iway.iwcm.database.nestedsets.JpaNode.WrappedNodeSerializer;"/>
     </target>
@@ -490,7 +489,7 @@
         </exec>
     </target>
 
-    <!--target name="generateSignatures" depends="define-artifact-properties" description="Vygeneruje asc, md5 a sha1 subory">
+    <!--target name="generateSignatures" depends="define-artifact-properties" description="Generate asc, md5 and sha1 files">
         <delete includeemptydirs="true">
             <fileset dir="${artifact.dir}">
                 <include name="*.md5"/>
@@ -528,7 +527,7 @@
         </antcall>
     </target>
 
-    <target name="generateSignatureImpl" description="Vygeneruje asc, md5 a sha1 subory">
+    <target name="generateSignatureImpl" description="Generate asc, md5 and sha1 files">
         <echo message="-> Generate signature for: ${artifact.dir}/${artifact.name}-${artifact.version}${signExt}"/>
         <exec executable="shasum" output="${artifact.dir}/${artifact.name}-${artifact.version}${signExt}.sha1">
             <arg value="-a"/>

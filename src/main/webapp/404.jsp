@@ -138,19 +138,32 @@ if (count404Limit < 150) count404Limit = 150;
 
 if (count404.intValue()>count404Limit && "iwcm.interway.sk".equals(request.getServerName())==false)
 {
-	System.out.println("404 attack, KEY="+KEY+" count="+count404);
+	String ip = Tools.getRemoteIP(request);
+	if (Tools.isNotEmpty(ip)) {
+		String enabledIPs = Constants.getString("spamProtectionDisabledIPs");
+		if(Tools.isNotEmpty(enabledIPs)) {
+			if (Tools.checkIpAccess(request, "spamProtectionDisabledIPs")) {
+				//disable count for this IP
+				count404 = Integer.valueOf(0);
+			}
+		}
+	}
 
-	response.setStatus(HttpServletResponse.SC_NOT_FOUND);
-	out.println("<html><body>"+text+"</body></html>");
+	if (count404.intValue()>count404Limit) {
+		System.out.println("404 attack, KEY="+KEY+" count="+count404);
 
-	try
-	{
-		if (ua != null && ua.indexOf("DirBuster")!=-1) session.invalidate();
-		else if (request.getServerName().indexOf("cms")==-1) session.invalidate();
-		else session.setMaxInactiveInterval(300);
-	} catch (Exception e) {}
+		response.setStatus(HttpServletResponse.SC_NOT_FOUND);
+		out.println("<html><body>"+text+"</body></html>");
 
-	return;
+		try
+		{
+			if (ua != null && ua.indexOf("DirBuster")!=-1) session.invalidate();
+			else if (request.getServerName().indexOf("cms")==-1) session.invalidate();
+			else session.setMaxInactiveInterval(300);
+		} catch (Exception e) {}
+
+		return;
+	}
 }
 
 //niekedy nam moze prist request vratane ;jsessionid a teda dochadza len k zlemu dekodovaniu URL

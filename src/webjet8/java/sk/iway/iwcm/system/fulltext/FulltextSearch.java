@@ -3,13 +3,18 @@ package sk.iway.iwcm.system.fulltext;
 import java.io.File;
 import java.io.IOException;
 import java.io.Writer;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
+import java.util.Scanner;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
+
+import io.github.duckasteroid.cdb.CdbMake;
 
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.IndexWriter;
@@ -24,10 +29,12 @@ import org.apache.lucene.util.Version;
 
 import sk.iway.iwcm.Cache;
 import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.DB;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.AdminTools;
 import sk.iway.iwcm.database.ComplexQuery;
+import sk.iway.iwcm.database.Mapper;
 import sk.iway.iwcm.database.SimpleQuery;
 import sk.iway.iwcm.system.fulltext.indexed.Documents;
 import sk.iway.iwcm.system.fulltext.indexed.Forums;
@@ -256,5 +263,88 @@ public class FulltextSearch
 		Set<String> result = new HashSet<>(stopwords);
 		Cache.getInstance().setObject("FulltextSearch.stopwords." + language, result, 5);
 		return result;
+	}
+
+	/**
+	 * Vytvori cdb subor podla lem z databazy
+	 *
+	 * @param language
+	 */
+	public static void indexLemmas(String language)
+	{
+		final CdbMake cdb = new CdbMake();
+		try
+		{
+			File file = new File(LuceneUtils.LUCENE_INDEX + File.separatorChar + "lemmas" + File.separatorChar + language + ".cdb");
+			cdb.start(file);
+			new ComplexQuery().setSql("select form,lemma from lemma where language = ?").setParams(language)
+						.list(new Mapper<Void>()
+						{
+							int count = 0;
+
+							@Override
+							public Void map(ResultSet rs) throws SQLException
+							{
+								try
+								{
+									cdb.add(DB.internationalToEnglish(rs.getString("form")).getBytes(),
+												DB.internationalToEnglish(rs.getString("lemma")).getBytes());
+									if (count % 1000 == 0)
+									{
+										Logger.println(FulltextSearch.class, "Indexed " + count + " lemmas.");
+									}
+									count++;
+								}
+								catch (Exception e)
+								{
+									sk.iway.iwcm.Logger.error(e);
+								}
+								return null;
+							}
+						});
+			cdb.finish();
+		}
+		catch (IOException e1)
+		{
+			sk.iway.iwcm.Logger.error(e1);
+		}
+	}
+
+	/**
+	 * Vytvori cdb subor podla thesarus slovnika v UTF-8
+	 *
+	 * @param language
+	 */
+	public static void indexSynonyms(String language)
+	{
+		final CdbMake cdb = new CdbMake();
+		try
+		{
+			File file = new File(LuceneUtils.LUCENE_INDEX + File.separatorChar + "synonyms" + File.separatorChar + language + ".cdb");
+			cdb.start(file);
+			Scanner scanner = new Scanner(new File(LuceneUtils.LUCENE_INDEX + File.separatorChar + "synonyms" + File.separatorChar
+						+ "thesarus_" + language + ".txt"), "UTF-8");
+			int count = 0;
+			while (scanner.hasNext())
+			{
+				String[] synonyms = scanner.nextLine().split(";");
+				byte[] base = synonyms[0].getBytes();
+				for (int i = 0; i < synonyms.length; i++)
+				{
+					String s = synonyms[i];
+					cdb.add(s.getBytes(), base);
+				}
+				if (count % 1000 == 0)
+				{
+					Logger.println(FulltextSearch.class, "Indexed " + count + " synonyms.");
+				}
+				count++;
+			}
+			cdb.finish();
+		}
+		catch (IOException e1)
+		{
+			sk.iway.iwcm.Logger.error(e1);
+		}
 	}
 }

@@ -737,8 +737,8 @@ DELETE FROM enumeration_data WHERE parent_enumeration_data_id IS NOT NULL;
 DELETE FROM enumeration_data WHERE string1 like '%testTest%';
 DELETE FROM enumeration_data WHERE string1 like 'string1%';
 OPTIMIZE TABLE enumeration_data;
-UPDATE enumeration_type SET child_enumeration_type_id=NULL WHERE name like '%AutoTest%';
-DELETE FROM enumeration_type WHERE name like '%AutoTest%';
+UPDATE enumeration_type SET child_enumeration_type_id=NULL WHERE name like '%AutoTest%' AND enumeration_type_id>2283;
+DELETE FROM enumeration_type WHERE name like '%AutoTest%' AND enumeration_type_id>2283;
 OPTIMIZE TABLE enumeration_type;
 ```
 

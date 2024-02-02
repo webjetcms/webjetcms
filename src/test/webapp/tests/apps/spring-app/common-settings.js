@@ -1,4 +1,4 @@
-Feature('spring-app.common-settings');
+Feature('apps.spring-app.common-settings');
 
 Before(({ I, login }) => {
     login('admin');
@@ -17,8 +17,8 @@ function checkCommonSettingsTab(I, DTE, searchText, appId, shouldBeVisible) {
     I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=79733");
     DTE.waitForEditor();
 
-    I.click("#pills-dt-datatableInit-content-tab");
-    I.click("a.cke_button__components");
+    I.clickCss("#pills-dt-datatableInit-content-tab");
+    I.clickCss("a.cke_button__components");
 
     //1. iframe
     I.waitForElement("div.cke_dialog_body > table.cke_dialog_contents > tbody > tr > td.cke_dialog_contents_body > div > table > tbody > tr > td > iframe", 5);
@@ -37,7 +37,7 @@ function checkCommonSettingsTab(I, DTE, searchText, appId, shouldBeVisible) {
 
     if(shouldBeVisible) {
         I.seeElement("#pills-dt-component-datatable-commonSettings-tab");
-        I.click("#pills-dt-component-datatable-commonSettings-tab");
+        I.clickCss("#pills-dt-component-datatable-commonSettings-tab");
 
     } else {
         I.dontSeeElement("#pills-dt-component-datatable-commonSettings-tab");

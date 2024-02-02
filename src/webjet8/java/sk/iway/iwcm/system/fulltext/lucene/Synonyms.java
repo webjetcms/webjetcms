@@ -1,5 +1,18 @@
 package sk.iway.iwcm.system.fulltext.lucene;
 
+import static sk.iway.iwcm.system.fulltext.cdb.CdbUtils.encode;
+
+import java.nio.ByteBuffer;
+import java.util.HashMap;
+import java.util.Map;
+
+import io.github.duckasteroid.cdb.Cdb;
+
+import org.apache.commons.pool.impl.GenericObjectPool;
+
+import sk.iway.iwcm.system.fulltext.cdb.CdbFactory;
+import sk.iway.iwcm.system.fulltext.cdb.CdbUtils;
+
 /**
  *  Synonyms.java
  *
@@ -11,9 +24,10 @@ package sk.iway.iwcm.system.fulltext.lucene;
  *@created      Date: 5.5.2011 14:12:42
  *@modified     $Date: 2004/08/16 06:26:11 $
  */
+@SuppressWarnings("rawtypes")
 public class Synonyms
 {
-	//private static final Map<String, GenericObjectPool> pools = new HashMap<String, GenericObjectPool>();
+	private static final Map<String, GenericObjectPool> pools = new HashMap<>();
 
 	protected Synonyms() {
 		//utility class
@@ -27,9 +41,10 @@ public class Synonyms
 	 * @param length
 	 * @return
 	 */
+	@SuppressWarnings("unchecked")
 	public static char[] get(String language, char[] form,int offset,int length)
 	{
-		/*synchronized (pools)
+		synchronized (pools)
 		{
 			if (!pools.containsKey(language))
 			{
@@ -40,18 +55,19 @@ public class Synonyms
 			{
 				GenericObjectPool pool = pools.get(language);
 				Cdb cdb = (Cdb)pool.borrowObject();
-				byte[] bytes = cdb.find(encode(form, offset, length));
+				ByteBuffer bytes = cdb.find(ByteBuffer.wrap(encode(form, offset, length)));
+
 				pool.returnObject(cdb);
-				if (bytes != null)
+				if (bytes != null && bytes.hasArray())
 				{
-					return CdbUtils.decode(bytes);
+					return CdbUtils.decode(bytes.array());
 				}
 			}
 			catch (Exception e)
 			{
 				sk.iway.iwcm.Logger.error(e);
 			}
-		}*/
+		}
 		return null;
 	}
 }

@@ -29,7 +29,9 @@ Ak sa mení verzia, aktualizujte ju v:
 - ```download``` - pomocná úloha na stiahnutie jar archívov, ktoré sa nemodifikujú (```struts, daisydiff, jtidy, swagger```)
 - ```makepom``` - vygenerovanie ```POM``` súboru, ten sa generuje gradle úlohou ```writePom``` na základe definovaných závislostí v ```build.gradle```. Úloha zabezpečuje získanie správnej verzie aj z definícií verzie typu ```5.3.+``` a odstránenie závislostí na WebJETe samotnom (ktorý pochádza zo závislostí na v8).
 - ```finalwar``` - vytvorí v priečinku ```build/updatezip/finalwar``` novú štruktúru so skompilovanými triedami vrátane ```AspectJ```. Vytvorí JAR archívy ```WEB-INF/lib/webjet-VERZIA.jar``` s Java triedami, JSP súbormi admin časti a aplikáciami vo forme ```JarPackaging```.
-- ```deploy``` - samotný uloženie artifaktov na ```artrifactory``` server, obsahuje definíciu závislostí
+- ```prepareAllJars``` - pripraví všetky JAR súbory na publikovanie do repozitárov.
+- ```deployRepoIwmspSk``` - samotný uloženie artifaktov na server ```repo.iwmsp.sk```.
+- ```deployStaging``` - deploy verzie na https://repo1.maven.org/maven2/com/webjetcms/webjetcms/, pred spustením je potrebné volať úlohu ```prepareAllJars```, vykonať v projekte z ```github```.
 
 Postup vygenerovania novej verzie:
 

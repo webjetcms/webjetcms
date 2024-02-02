@@ -18,9 +18,9 @@ Vysvetlenie použitých piktogramov:
 
 ## 2024
 
-- [ ] Prechod na Java 17 - WebJET od verzie 2024.0 bude vyžadovať Java verzie 17.
+- [x] Prechod na Java 17 - WebJET od verzie 2024.0 bude vyžadovať Java verzie 17. (#54425)
 - [ ] Výmena sady ikon z `FontAwesome` za sadu `Tabler Icons`.
-- [ ] Publikovanie JAR súborov do `Maven Central`.
+- [x] Publikovanie JAR súborov do `Maven Central` (#43144).
 - [ ] Nová verzia aplikácie Nákupný košík/`eshop`, ukážková verzia web stránky, integrácia cez API na online fakturačné systémy, aktualizované integrácie na platobné brány.
 - [x] Prekladové kľúče - možnosť importovať len neexistujúce kľúče (#56061).
 - [ ] `quill` - pridať možnosť nastaviť položky menu vrátane farieb.

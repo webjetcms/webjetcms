@@ -95,7 +95,8 @@ module.exports = {
       I.click(locate('.dropdown-item').withText(domain));
       I.waitForElement("#toast-container-webjet", 10);
       I.waitForElement(".toastr-buttons button.btn-primary", 10);
-      I.forceClick({css: ".toastr-buttons button.btn-primary"});
+      I.waitForText("Pre zmenu domény je potrebné znovu načítať stránku", 10, ".toastr-message");
+      I.forceClick({css: "#toast-container-webjet .toastr-buttons button.btn-primary"});
   },
 
   /**

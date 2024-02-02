@@ -1,12 +1,21 @@
 package sk.iway.iwcm.system.fulltext.lucene;
 
+import java.nio.ByteBuffer;
 import java.util.Arrays;
+import java.util.Hashtable;
+import java.util.Map;
 
+import io.github.duckasteroid.cdb.Cdb;
+
+import org.apache.commons.pool.impl.GenericObjectPool;
 import org.apache.lucene.analysis.cz.CzechStemmer;
 import org.apache.lucene.analysis.de.GermanMinimalStemmer;
 import org.apache.lucene.analysis.en.EnglishMinimalStemmer;
 
+import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.system.fulltext.cdb.CdbFactory;
+import sk.iway.iwcm.system.fulltext.cdb.CdbUtils;
 
 /**
  * Lemmas.java
@@ -19,9 +28,10 @@ import sk.iway.iwcm.Tools;
  *@created Date: 4.5.2011 15:40:45
  *@modified $Date: 2004/08/16 06:26:11 $
  */
+@SuppressWarnings("rawtypes")
 public class Lemmas
 {
-	//private static final Map<String, GenericObjectPool> pools = new Hashtable<>();
+	private static final Map<String, GenericObjectPool> pools = new Hashtable<>();
 
 	protected Lemmas() {
 		//utility class
@@ -54,11 +64,14 @@ public class Lemmas
 	 * @param length
 	 * @return
 	 */
+	@SuppressWarnings("unchecked")
 	public static char[] get(String language, char[] form,int offset,int length)
 	{
-		if ("sk".equals(language)){
+		if (Constants.getBoolean("luceneIndexingSkAlgorithmicStemming") && "sk".equals(language)){
 			return SlovakStemmer.stem(new String(form,offset,length)).toCharArray();
-		}else if ("cz".equals(language)) {
+		}
+
+		if ("cz".equals(language)) {
 			//pre CZ nemame Lemmas, mame len stemmer, ale lepsie ako nic
 			CzechStemmer stemmer = new CzechStemmer();
 			int baseLength = stemmer.stem(form, length);
@@ -81,6 +94,33 @@ public class Lemmas
 			if (baseLength<1) return form;
 			char[] stemmed = Arrays.copyOf(form, baseLength);
 			return stemmed;
+		}
+
+		synchronized (pools)
+		{
+			if (!pools.containsKey(language))
+			{
+				GenericObjectPool pool = new GenericObjectPool(new CdbFactory(language,CdbFactory.Type.Lemmas));
+				pools.put(language, pool);
+			}
+			try
+			{
+				GenericObjectPool pool = pools.get(language);
+				Cdb cdb = (Cdb)pool.borrowObject();
+				ByteBuffer bytes = cdb.find( ByteBuffer.wrap(CdbUtils.encode(form, offset, length)) );
+
+				pool.returnObject(cdb);
+				if (bytes != null && bytes.hasArray())
+				{
+					return CdbUtils.decode(bytes.array());
+				}else{
+					return SlovakStemmer.stem(new String(form,offset,length)).toCharArray();
+				}
+			}
+			catch (Exception e)
+			{
+				//sk.iway.iwcm.Logger.error(e);
+			}
 		}
 		return form;
 	}

@@ -139,6 +139,7 @@ dependencies {
     implementation("org.apache.poi:poi-ooxml:5.2.2")
     implementation("org.apache.poi:poi-scratchpad:5.2.2")
     implementation("org.apache.poi:poi:5.2.2")
+    implementation("io.github.duckasteroid.cdb:sg-cdb-library:1.0.3")
     implementation("org.springframework:spring-aop:${springVersion}")
     implementation("org.springframework:spring-beans:${springVersion}")
     implementation("org.springframework:spring-context:${springVersion}")

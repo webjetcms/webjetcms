@@ -106,6 +106,9 @@
         <fileset dir="./servlet-api" >
           <include name="*.jar" />
         </fileset>
+        <fileset dir="./mapstruct" >
+          <include name="*.jar" />
+        </fileset>
         <fileset dir="./libs" >
             <include name="*.jar" />
         </fileset>
