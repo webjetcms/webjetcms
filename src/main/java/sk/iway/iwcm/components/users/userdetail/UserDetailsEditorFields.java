@@ -210,7 +210,9 @@ public class UserDetailsEditorFields extends BaseEditorFields {
             StringBuilder sb = new StringBuilder("");
             for(GroupsApproveEntity group : groups) {
                 getModeText(group.getApproveMode(), sb, prop);
-                sb.append(" ").append(group.getGroup().getFullPath()).append("<br />");
+                sb.append(" ");
+                if (Tools.isNotEmpty(group.getGroup().getDomainName())) sb.append(group.getGroup().getDomainName()).append(":");
+                sb.append(group.getGroup().getFullPath()).append("<br />");
             }
             groupsApproveShow = sb.toString();
         }

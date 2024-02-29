@@ -40,7 +40,13 @@ block content
                 const urlParams = new URLSearchParams(queryString);
                 let dir = urlParams.get('dir')
                 //console.log("dir=", dir);
-                if (dir == null) dir = "[(${baseDir})]";
+                if (dir == null) {
+                    dir = "[(${baseDir})]";
+                }
+                //dir always must be without end slash
+                if (dir.length>2 && dir.endsWith("/")) {
+                    dir = dir.substring(0, dir.length-1);
+                }
                 window.treeInitialJson = [(${treeInitialJson})];
 
                 window.getJstreeUrl = function() {
@@ -325,7 +331,7 @@ block content
                         element: "#dt-upload",
                         uploadType: "image",
                         acceptedFiles: ".jpg,.jpeg,.mp4,.gif,.png",
-                        destinationFolder: "/images/gallery",
+                        destinationFolder: dir,
                         writeDirectlyToDestination: true
                     });
                     window.addEventListener("WJ.AdminUpload.success", function(e) {
@@ -358,6 +364,18 @@ block content
                             var virtualPath = node.original.virtualPath;
                             setGalleryTablePath(virtualPath);
                         }
+                    });
+
+                    //fired for treeInitialJson selected node - set galleyDimension object and upload path
+                    window.addEventListener('WJ.treeInitialJson.selectedNode', (e) => {
+                        //console.log("WJ.treeInitialJson.selectedNode", e);
+                        var node = e.detail;
+                        //console.log("node=", node);
+                        setGalleryTablePath(dir);
+
+                        var isEditable = true;
+                        if (typeof node.icon != "undefined" && node.icon.indexOf("folder-times")!=-1) isEditable = false;
+                        setCurrentGalleryDimension(node.galleryDimension, isEditable);
                     });
 
                     function setGalleryTablePath(virtualPath) {
@@ -473,6 +491,7 @@ block content
                         //zresetuj image editor instance
                         if (imageEditorInstance != null) imageEditorInstance.resetData();
                     });
+
                 });
 
             include ../../partials/datatables-upload

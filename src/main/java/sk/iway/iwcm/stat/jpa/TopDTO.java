@@ -21,7 +21,8 @@ public class TopDTO {
 	@DataTableColumn(
         inputType = DataTableColumnType.DATE,
         title="editor.date",
-        visible = false
+        visible = false,
+        className = "not-export"
     )
 	private Date dayDate;
 
@@ -54,7 +55,8 @@ public class TopDTO {
     @DataTableColumn(
         inputType = DataTableColumnType.NUMBER,
         title="webpages.doc_id",
-        visible = false
+        hidden = true,
+        className = "not-export"
     )
 	private Integer docId;
 }

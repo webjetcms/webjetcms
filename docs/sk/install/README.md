@@ -36,6 +36,34 @@ Pričom aktuálne existujú nasledovné verzie WebJET 2021:
 - ```2021.40``` - stabilizovaná verzia 2021.40, nepribúdajú do nej denné zmeny
 - ```2021.13``` - stabilizovaná verzia 2021.13, nepribúdajú do nej denné zmeny
 
+## Zmeny pri prechode na GitHub/Maven Central verziu
+
+- V Maven Central je zmenené meno balíkov z `sk.iway` na `com.webjetcms` a pridaná je časť `libs`, ktorá kombinuje všetky `sk.iway` závislosti. V `build.gradle` upravte:
+
+```gradle
+repositories {
+    mavenCentral()
+    maven {
+        url "https://pd4ml.tech/maven2/"
+    }
+    flatDir {
+       dirs 'libs'
+   }
+}
+
+ext {
+    webjetVersion = "2024.0.3";
+}
+
+dependencies {
+    implementation("com.webjetcms:webjetcms:${webjetVersion}")
+    implementation("com.webjetcms:webjetcms:${webjetVersion}:admin")
+    implementation("com.webjetcms:webjetcms:${webjetVersion}:components")
+    implementation("com.webjetcms:webjetcms:${webjetVersion}:libs")
+    ...
+}
+```
+
 ## Zmeny pri prechode na 2023.18-SNAPSHOT/2023.40
 
 - Vo vašom projekte zmažte súbor `src/main/webapp/WEB-INF/struts-config.xml` aby sa použil aktuálny súbor z WebJETu (z jar súboru).

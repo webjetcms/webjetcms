@@ -998,6 +998,17 @@ public class StatDB extends DB
 	public static long getBrowserId(HttpServletRequest request, HttpServletResponse response, BrowserDetector browser)
 	{
 		long browserId = 0;
+		HttpSession session = request.getSession();
+
+		/**
+		 * ak je to vyhladavaci stroj, priradi mu jeho ID v tabulke seo_engines
+		 */
+		if (browser == null) browser = BrowserDetector.getInstance(request);
+		if (!browser.isStatUserAgentAllowed())
+		{
+			browserId = SeoManager.getSearchEngineId(browser.getBrowserName() + " " + browser.getBrowserVersion());
+			if (session != null) session.setAttribute("statFromBrowserId", Long.valueOf(browserId));
+		}
 
 		if (Tools.canSetCookie("statisticke", request.getCookies())==false)
 		{
@@ -1024,8 +1035,6 @@ public class StatDB extends DB
 
 			return browserId;
 		}
-
-		HttpSession session = request.getSession();
 
 		if (session != null)
 		{
@@ -1061,17 +1070,6 @@ public class StatDB extends DB
 				{
 					sk.iway.iwcm.Logger.error(ex);
 				}
-			}
-
-			/**
-			 * ak je to vyhladavaci stroj, priradi mu jeho ID v tabulke seo_engines
-			 */
-			if (browser == null) browser = BrowserDetector.getInstance(request);
-			if (!browser.isStatUserAgentAllowed())
-			{
-				browserId = SeoManager.getSearchEngineId(browser.getBrowserName() + " " + browser.getBrowserVersion());
-				session.setAttribute("statFromBrowserId", Long.valueOf(browserId));
-				return (browserId);
 			}
 		}
 

@@ -453,7 +453,7 @@ export function renderJson(td, type, rowData, row) {
         else if (item != null && typeof item.virtualPath != "undefined") itemFullPath = item.virtualPath;
 
         if (fullPath == "") fullPath = itemFullPath;
-        else fullPath += ", "+itemFullPath;
+        else fullPath += "\n"+itemFullPath;
     });
 
     if (type == "sort" || type == "filter" ) {

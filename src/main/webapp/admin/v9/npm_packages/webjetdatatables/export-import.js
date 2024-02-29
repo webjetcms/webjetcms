@@ -3,7 +3,7 @@ var Buffer = require('buffer/').Buffer;
 
 export function bindExportButton(TABLE, DATA) {
 
-    //console.log("bindExportButton");
+    //console.log("bindExportButton, TABLE=", TABLE, "DATA=", DATA);
 
     async function getDataToExport(serverSide, TABLE, pageVal, searchVal, orderVal, fromLastExport, searchIds) {
         //console.log("getDataToExport, serverSide=", serverSide);
@@ -25,13 +25,11 @@ export function bindExportButton(TABLE, DATA) {
         if (typeof maxRows == "undefined") maxRows = 50000;
 
         if (serverSide==false) {
-            if ("all"==pageVal) {
-                restParams.push({ name: "page", value: 0});
-                restParams.push({ name: "size", value: maxRows});
-            } else {
-                restParams.push({ name: "page", value: TABLE.page.info().page});
-                restParams.push({ name: "size", value: TABLE.page.info().length});
-            }
+            //get data from datatable
+            var localData = {
+                "content": TABLE.rows().data()
+            };
+            return localData;
         } else {
             for (let i = 0; i < DATA.urlLatestParams.length; i++) {
                 let param = DATA.urlLatestParams[i];
@@ -69,7 +67,7 @@ export function bindExportButton(TABLE, DATA) {
             }
         } catch (e) {console.log(e);}
 
-        //console.log("restParams=", restParams);
+        //console.log("restParams=", restParams, "url=", url);
 
         const data = await $.get({
             "dataType": 'json',
@@ -145,7 +143,7 @@ export function bindExportButton(TABLE, DATA) {
         }
     });
 
-    $('#datatableExportModal').off("click", ".btn-primary");
+    //NO checked by tableId $('#datatableExportModal').off("click", ".btn-primary");
     $('#datatableExportModal').on("click", ".btn-primary", function () {
         //console.log("EXPORT MODAL CLICK, id=", window.datatableExportModal.tableId, "tableID=", TABLE.DATA.id);
 
@@ -320,8 +318,10 @@ export function bindExportButton(TABLE, DATA) {
                                         valueArr.forEach( (v, i) => {
                                             //console.log("ITERATING className=", className, "v=", v);
 
-                                            if (className.indexOf("dt-tree-dir")!=-1) stringData.push(v.virtualPath);
-                                            else stringData.push(v.fullPath);
+                                            var domainName = (v.domainName && v.domainName != '' && className.indexOf('alldomains')!=-1 ? v.domainName+':' : '');
+
+                                            if (className.indexOf("dt-tree-dir")!=-1) stringData.push(domainName+v.virtualPath);
+                                            else stringData.push(domainName+v.fullPath);
 
                                             iterated = true;
                                         });
@@ -368,7 +368,7 @@ export function bindExportButton(TABLE, DATA) {
                 //console.log("formatedData2=", formatedData);
             }
             //console.log(".exportujem btn=", $( ".exportujem" ));
-            $(".exportujem").click();
+            $(".exportujem").trigger("click");
             WJ.notifySuccess(exportToastrTitle, WJ.translate('datatables.export.ready.js'), 5000);
             setTimeout(function () {
                 //je to cez timeout, aby to nepadalo neskor, ze tam chce zrusit ajax indikator
@@ -397,7 +397,7 @@ export function bindExportButton(TABLE, DATA) {
 
 export function bindImportButton(TABLE, DATA) {
 
-    $("#datatableImportModal").off("click", ".btn-primary");
+    ////NO checked by tableId $("#datatableImportModal").off("click", ".btn-primary");
     $("#datatableImportModal").on("click", ".btn-primary", async () => {
         //console.log("IMPORT MODAL CLICK, id=", window.datatableImportModal.tableId, "tableID=", TABLE.DATA.id);
 

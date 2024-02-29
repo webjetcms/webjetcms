@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 
+import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.stat.ChartType;
 import sk.iway.iwcm.stat.Column;
 import sk.iway.iwcm.stat.FilterHeaderDto;
@@ -97,7 +98,9 @@ public class TopRestController extends DatatableRestControllerV2<TopDTO, Long> {
         //Create last chart value as combination of the rest
         TopDTO item = new TopDTO();
         item.setVisits(accVisits);
-        item.setName("Other");
+
+        Prop prop = Prop.getInstance();
+        item.setName(prop.getText("components.stat.other"));
 
         //Set this last value into list
         items.add(item);

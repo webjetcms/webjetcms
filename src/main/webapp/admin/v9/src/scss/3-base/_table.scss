@@ -1063,11 +1063,16 @@ div.dt-button-collection div.btn-group button:last-child {
         width: 1.25em;
     }
 
-    td.dt-style-text-wrap .datatable-column-width {
+    td.dt-style-text-wrap .datatable-column-width, td.dt-style-json .datatable-column-width {
         width: 450px;
     }
 
-    td:not(.dt-style-text-wrap) .datatable-column-width {
+    td.dt-style-json .datatable-column-width {
+        white-space: pre;
+        overflow: visible;
+    }
+
+    td:not(.dt-style-text-wrap):not(.dt-style-json) .datatable-column-width {
         white-space: nowrap;
         -o-text-overflow: ellipsis;
         text-overflow: ellipsis;

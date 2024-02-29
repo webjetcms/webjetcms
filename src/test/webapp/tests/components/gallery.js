@@ -122,6 +122,21 @@ Scenario('galeria v stranke', ({ I }) => {
     I.see("autora fotky", "small p a");
 });
 
+function testGalleryTree(dir, imageName, I) {
+    if (dir.startsWith("/admin/v9/")==false) I.amOnPage("/admin/v9/apps/gallery/?dir="+dir);
+    I.say("testGalleryTree, dir="+dir+", imageName="+imageName);
+
+    if (dir.endsWith("/")) {
+        dir = dir.substring(0, dir.length-1);
+    }
+    var i = dir.lastIndexOf("/");
+    var name = dir.substring(i+1);
+
+    I.waitForElement(locate("a.jstree-anchor.jstree-clicked").withText(name), 10);
+    I.seeElement(locate("a.jstree-anchor.jstree-clicked").withText(name));
+    I.waitForText(imageName, 10, "table.datatableInit td.dt-row-edit");
+}
+
 Scenario('otvorenie galerie s URL parametrom', async({ I }) => {
     I.say("Testujem presmerovanie");
     await I.executeScript(function() {
@@ -130,10 +145,15 @@ Scenario('otvorenie galerie s URL parametrom', async({ I }) => {
     I.seeInCurrentUrl("/admin/v9/apps/gallery/?dir=/images/gallery/user/");
 
     I.say("Testujem zobrazenie stromovej struktury a obrazku");
-    I.waitForElement(locate("a.jstree-anchor.jstree-clicked").withText("user"), 10);
-    I.seeElement(locate("a.jstree-anchor.jstree-clicked").withText("user"));
+    testGalleryTree("/admin/v9/apps/gallery/?dir=/images/gallery/user/", "demo.jpg", I);
     I.waitForText("demo.jpg", 10, "table.datatableInit td.dt-row-edit");
     I.see("demo.jpg", "table.datatableInit td.dt-row-edit");
+
+    //BUG: on second level it's not working
+    testGalleryTree("/images/gallery/test/second-level", "2023-52.jpg", I);
+
+    //BUG: therewas bug with the URL parametr with endsWith /
+    testGalleryTree("/images/gallery/test/second-level/", "2023-52.jpg", I);
 });
 
 Scenario('multidomain zobrazenie', async({ I, DT }) => {

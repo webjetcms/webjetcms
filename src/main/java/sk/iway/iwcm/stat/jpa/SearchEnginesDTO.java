@@ -20,8 +20,7 @@ public class SearchEnginesDTO {
 
     @DataTableColumn(
         inputType = DataTableColumnType.NUMBER,
-        title="stat_searchengines.order",
-        visible = true
+        title="stat_searchengines.order"
     )
 	private Integer order;
 
@@ -29,7 +28,8 @@ public class SearchEnginesDTO {
 	@DataTableColumn(
         inputType = DataTableColumnType.DATE,
         title="editor.date",
-        visible = false
+        visible = false,
+        className = "not-export"
     )
 	private Date dayDate;
 

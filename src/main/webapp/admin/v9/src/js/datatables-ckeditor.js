@@ -121,7 +121,7 @@ export class DatatablesCkEditor {
 			var fileLoader = e.data.fileLoader;
 			var formData = new FormData();
 
-			fileLoader.uploadUrl = "/admin/web-pages/upload/?__sfu=0&groupId="+e.editor.element.$.form.groupId.value+"&docId="+e.editor.element.$.form.docId.value;
+			fileLoader.uploadUrl = "/admin/web-pages/upload/?__sfu=0&groupId="+e.editor.element.$.form.groupId.value+"&docId="+e.editor.element.$.form.docId.value+"&title="+encodeURIComponent($("#DTE_Field_title").val());
 
 			fileLoader.xhr.open( 'POST', fileLoader.uploadUrl, true );
 			formData.append( 'uploadFile', fileLoader.file, fileLoader.fileName );
@@ -494,6 +494,7 @@ export class DatatablesCkEditor {
 
 						//console.log("SHOW EVENT: "+urlElement);
 
+						var dialog = this;
 						setTimeout( function()
 						{
 							try
@@ -504,6 +505,12 @@ export class DatatablesCkEditor {
 								if (wjLinkIframe && wjLinkIframe.$)
 								{
 									//console.log("Idem updatnut");
+
+									var phone = dialog.getContentElement("info", "telNumber").getValue();
+									//console.log("phone=", phone);
+									if (phone != "") {
+										dialog.getContentElement("info", "url").setValue("tel:"+phone);
+									}
 
 									wjLinkIframe.$.contentWindow.refreshValuesFromCk();
 
@@ -527,11 +534,18 @@ export class DatatablesCkEditor {
 							//prepneme na URL typ inak nam to nesetne dobre z kotvy
 							this.getContentElement("info", "linkType").setValue("url");
 							var url = this.getContentElement("info", "url").getValue();
-							//kontrolujeme / lebo tiktok ma @ v URL, cize www.tiktik.com/@username
+							//kontrolujeme / lebo tiktok ma @ v URL, cize www.tiktok.com/@username
 							if (url.indexOf("@")!=-1 && url.indexOf("mailto:")==-1 && url.indexOf("/")==-1)
 							{
 								url = "mailto:"+url;
 								this.getContentElement("info", "url").setValue(url);
+							}
+
+							//console.log("url=", url);
+
+							if (url.indexOf(":")!=-1 && url.indexOf("http")==-1) {
+								//console.log("Setting protocol to none");
+								this.getContentElement("info", "protocol").setValue("");
 							}
 
 							//ak ako URL je zadane #nazov vytvori sa kotva

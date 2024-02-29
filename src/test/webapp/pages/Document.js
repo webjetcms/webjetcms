@@ -96,7 +96,10 @@ module.exports = {
       I.waitForElement("#toast-container-webjet", 10);
       I.waitForElement(".toastr-buttons button.btn-primary", 10);
       I.waitForText("Pre zmenu domény je potrebné znovu načítať stránku", 10, ".toastr-message");
-      I.forceClick({css: "#toast-container-webjet .toastr-buttons button.btn-primary"});
+      I.wait(0.5);
+      var btn = locate("#toast-container-webjet .toastr-buttons button.btn-primary").withText("Potvrdiť");
+      I.waitForElement(btn);
+      I.click(btn);
   },
 
   /**

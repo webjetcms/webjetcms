@@ -19,9 +19,10 @@ public class ErrorDTO {
 
     //Hidden, used just for filter
     @DataTableColumn(
-            inputType = DataTableColumnType.DATE,
-            title="editor.date",
-            visible = false
+        inputType = DataTableColumnType.DATE,
+        title="editor.date",
+        visible = false,
+        className = "not-export"
     )
     private Date dayDate;
 

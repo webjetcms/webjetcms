@@ -217,6 +217,7 @@ function initClosure() {
     var somStromcek = $('#SomStromcek');
     var jsTreeMoveUrl = somStromcek.data("rest-move-url");
     var jsTreeParamName = somStromcek.data("rest-param-name");
+    var treeInitialJsonFired = false;
 
     function getJstreeUrl() {
         if (typeof window.getJstreeUrl=="function") return window.getJstreeUrl();
@@ -317,6 +318,13 @@ function initClosure() {
                             setTimeout(()=> {
                                 $('#datatableInit_wrapper .dt-header-row .buttons-create').addClass("disabled");
                             }, 500);
+                        }
+
+                        if (treeInitialJsonFired==false) {
+                            treeInitialJsonFired = true;
+                            setTimeout(()=> {
+                                WJ.dispatchEvent("WJ.treeInitialJson.selectedNode", window.selectedNode);
+                            }, 100);
                         }
                     }
 

@@ -582,8 +582,8 @@ function refreshValuesFromCk()
             if ("link"==window.parent.CKEDITOR.dialog.getCurrent().getName() && "txtUrl"==wjCkMapping[i].wj && value!="")
             {
                 var protocol = window.parent.CKEDITOR.dialog.getCurrent().getValueOf(wjCkMapping[i].tab, "protocol");
-                //console.log("protocol: " + protocol );
-				if (value.indexOf("/")==0 || (value.indexOf("@")!=-1&&value.indexOf("/")==-1)) {
+                //console.log("protocol: ", protocol, "value=", value );
+				if (value.indexOf("/")==0 || (value.indexOf("@")!=-1&&value.indexOf("/")==-1) || value.indexOf(":")>0) {
 					//do not append protocol
 				} else {
 					if (value.indexOf(".")!=-1) value = protocol + value;

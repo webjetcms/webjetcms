@@ -776,3 +776,106 @@ Scenario('Nastavenie editorAutoFillPublishStart @singlethread', ({ I, DT, DTE, D
      I.clickCss("#pills-dt-datatableInit-perex-tab");
      I.seeInField("#DTE_Field_publishStartDate", date);
 });
+
+async function testLink(link, fixedLink, I, DT, DTE) {
+
+     if (fixedLink==null) fixedLink = link;
+
+     await DTE.fillCkeditor("<p>Test</p>");
+
+     //
+     I.say('Adding link to the text');
+     I.clickCss('#trEditor');
+     I.pressKey(["CommandOrControl", "A"]);
+
+     I.clickCss('.cke_button_icon.cke_button__link_icon');
+     I.waitForText('Informácie o odkaze', 10);
+     I.wait(1);
+     I.switchTo();
+     I.switchTo('#wjLinkIframe');
+
+     I.waitForLoader(".WJLoaderDiv");
+     I.waitForElement("#txtUrl", 10);
+     I.fillField("#txtUrl", link);
+     I.switchTo();
+     I.click(locate('.cke_dialog_ui_button').withText('OK'));
+
+     var htmlCode = await I.executeScript(function () {
+          return window.ckEditorInstance.getData();
+     });
+
+     I.say("Html code="+htmlCode);
+
+     I.assertContain(htmlCode, fixedLink);
+     I.assertNotContain(htmlCode, "http://"+fixedLink);
+
+     //
+     I.say("Reopen window and check the link");
+     I.clickCss('.cke_button_icon.cke_button__link_icon');
+     I.waitForText('Informácie o odkaze', 10);
+
+     I.switchTo('#wjLinkIframe');
+
+     I.waitForLoader(".WJLoaderDiv");
+     I.switchTo();
+     I.switchTo('#wjLinkIframe');
+     I.waitForElement("#txtUrl", 10);
+     I.seeInField("#txtUrl", fixedLink);
+     I.dontSeeInField("#txtUrl", "http://"+fixedLink);
+     I.switchTo();
+     I.click(locate('.cke_dialog_ui_button').withText('Zrušiť'));
+
+     //
+     I.say("Verify link from HTML code");
+     await DTE.fillCkeditor('<p><a href="'+fixedLink+'">Test</a></p>');
+
+     I.waitForElement(locate('.cke_path_item').withText('a'), 10);
+     I.click(locate('.cke_path_item').withText('a'));
+
+     I.clickCss('.cke_button_icon.cke_button__link_icon');
+     I.waitForText('Informácie o odkaze', 10);
+
+     I.switchTo('#wjLinkIframe');
+
+     I.waitForLoader(".WJLoaderDiv");
+     I.switchTo();
+     I.switchTo('#wjLinkIframe');
+     I.waitForElement("#txtUrl", 10);
+     I.seeInField("#txtUrl", fixedLink);
+     I.dontSeeInField("#txtUrl", "http://"+fixedLink);
+     I.switchTo();
+     I.amAcceptingPopups();
+     I.click(locate('.cke_dialog_ui_button').withText('Zrušiť'));
+
+     return htmlCode;
+}
+
+Scenario('Various link types', async ({ I, DT, DTE, Document }) => {
+     I.amOnPage("/admin/v9/webpages/web-pages-list/?groupid=67");
+     DT.waitForLoader();
+     I.clickCss("#datatableInit_wrapper button.buttons-create");
+     DTE.waitForEditor();
+     I.waitForElement("#pills-dt-datatableInit-basic-tab.active", 10);
+     I.click("#pills-dt-datatableInit-content-tab");
+
+     I.say("Testing phone links");
+     //await testLink("tel:090312366", I, DT, DTE);
+
+     I.say("Testing web links");
+     await testLink("www.interway.sk", "http://www.interway.sk", I, DT, DTE);
+     await testLink("http://docs.webjetcms.sk", null, I, DT, DTE);
+     await testLink("https://docs.webjetcms.sk", null, I, DT, DTE);
+     await testLink("docs.webjetcms.sk", "http://docs.webjetcms.sk", I, DT, DTE);
+
+     await testLink("/sk/", null, I, DT, DTE);
+     await testLink("/sk/podstranka.html", null, I, DT, DTE);
+     await testLink("/files/file.pdf", null, I, DT, DTE);
+
+     I.say("Testing email links");
+     await testLink("info@webjetcms.sk", "mailto:info@webjetcms.sk", I, DT, DTE);
+     await testLink("mailto:info@webjetcms.sk", null, I, DT, DTE);
+
+     I.say("Testing tiktok links");
+     await testLink("https://www.tiktok.com/@webjetcms", null, I, DT, DTE);
+     await testLink("www.tiktok.com/@webjetcms", "http://www.tiktok.com/@webjetcms", I, DT, DTE);
+});

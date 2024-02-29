@@ -239,3 +239,7 @@ Scenario("stat-groupTree-perms", async ({ I }) => {
     I.amOnPage("/admin/v9/webpages/web-pages-list/");
     I.dontSeeElement( locate("div#SomStromcek > ul.jstree-container-ul > li.jstree-node > a.jstree-anchor").withText("Koreňový priečinok") );
 });
+
+Scenario("logoff", ({ I }) => {
+    I.logout();
+});

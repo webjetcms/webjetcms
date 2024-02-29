@@ -21,7 +21,8 @@ public class DocNewDTO {
     @DataTableColumn(
         inputType = DataTableColumnType.DATE,
         title="editor.date",
-        visible = false
+        visible = false,
+        className = "not-export"
     )
 	private Date dayDate;
 

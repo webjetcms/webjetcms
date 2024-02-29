@@ -44,7 +44,7 @@ import sk.iway.upload.UploadedFile;
  */
 public class UploadFileAction {
 
-	private static final String fileNotAllowed = "/admin/FCKeditor/editor/dialog/editor_upload_iframe.jsp";
+	private static final String FILE_NOT_ALLOWED = "/admin/FCKeditor/editor/dialog/editor_upload_iframe.jsp";
 
 	/**
 	 * Save image that was drag&drop inside opened web page editor (uploadType=ckeditor).
@@ -64,8 +64,9 @@ public class UploadFileAction {
 		//povolenie pre blog alebo wiki
 		if (UsersDB.checkUserPerms(user, "admin|editableGroupsNotEmpty") == false) return "logon_admin";
 
-		Integer groupId = Tools.getIntValue(request.getParameter("groupId"), -1);
-		Integer docId = Tools.getIntValue(request.getParameter("docId"), -1);
+		int groupId = Tools.getIntValue(request.getParameter("groupId"), -1);
+		int docId = Tools.getIntValue(request.getParameter("docId"), -1);
+		String title = request.getParameter("title");
 		FileItem file = multipartFile.getFileItem();
 		String fileURL = "";
 		String realPath = null;
@@ -74,7 +75,7 @@ public class UploadFileAction {
 		long fileSize = multipartFile.getSize();
 
 		//Check file size for upload, upload type id fix ckeditor, we dont use this method for other upload type's
-		if (!isFileAllowed("ckeditor", file, user, request, fileSize)) return fileNotAllowed;
+		if (!isFileAllowed("ckeditor", file, user, request, fileSize)) return FILE_NOT_ALLOWED;
 
 		if (file != null) {
 			//Retrieve the file name
@@ -103,7 +104,7 @@ public class UploadFileAction {
 				//adresar odvodime podla posledne editovanej stranky
 				Logger.debug(UploadFileAction.class, "UPLOAD docId="+docId+" groupId="+groupId);
 
-				String subDir = UploadFileTools.getPageUploadSubDir(docId, groupId);
+				String subDir = UploadFileTools.getPageUploadSubDir(docId, groupId, title, null);
 				if (ContextFilter.isRunning(request) && subDir.startsWith(request.getContextPath()))
 					subDir = ContextFilter.removeContextPath(request.getContextPath(), subDir);
 

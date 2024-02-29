@@ -57,7 +57,7 @@ public class LogonUserDTO {
     @DataTableColumn(
         inputType = DataTableColumnType.DATE,
         title="stat_usrlogon.last_logon",
-        visible = false
+        visible = true
     )
 	private Date dayDate;
 

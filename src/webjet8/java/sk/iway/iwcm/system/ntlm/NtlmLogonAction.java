@@ -277,11 +277,15 @@ public class NtlmLogonAction
 
 		fn = "o:"+fn+" 1:"+fn1+" 2:"+fn2+" 3:"+fn3+" 4:"+fn4+" 5:"+fn5;
 		Logger.debug(NtlmLogonAction.class, "RECODED: fn="+fn);*/
-		user.setFirstName(new String(user.getFirstName().getBytes(), "windows-1250"));
-		user.setLastName(new String(user.getLastName().getBytes(), "windows-1250"));
-		user.setAdress(new String(user.getAdress().getBytes(), "windows-1250"));
-		user.setCity(new String(user.getCity().getBytes(), "windows-1250"));
-		user.setCompany(new String(user.getCompany().getBytes(), "windows-1250"));
+		String recode = Constants.getString("ntlmLogonAction.charsetEncoding");
+		if (Tools.isNotEmpty(recode)) {
+			//weird backward compatibility where user details are wrongly encoded
+			user.setFirstName(new String(user.getFirstName().getBytes(), recode));
+			user.setLastName(new String(user.getLastName().getBytes(), recode));
+			user.setAdress(new String(user.getAdress().getBytes(), recode));
+			user.setCity(new String(user.getCity().getBytes(), recode));
+			user.setCompany(new String(user.getCompany().getBytes(), recode));
+		}
 
 		UserDetails adminUser = null;
 		int defaultAdminUserId = Constants.getInt("NTLMDefaultAdminUserId");

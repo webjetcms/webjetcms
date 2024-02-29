@@ -2539,6 +2539,16 @@ public class GroupsDB extends DB
 			//not a number, continue
 		}
 
+		int domainSeparatorIndex = path.indexOf(":");
+		if (domainSeparatorIndex>0) {
+			String domain = path.substring(0, domainSeparatorIndex);
+			RequestBean rb = SetCharacterEncodingFilter.getCurrentRequestBean();
+			if (rb != null) {
+				rb.setDomain(domain);
+			}
+			path = path.substring(domainSeparatorIndex+1);
+		}
+
 		if (path.contains("/")==false) {
 			return null;
 		}

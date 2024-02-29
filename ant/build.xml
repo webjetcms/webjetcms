@@ -38,7 +38,7 @@
     <target name="define-artifact-properties">
         <property name="artifact.group" value="com.webjetcms" />
         <property name="artifact.name" value="webjetcms" />
-        <property name="artifact.version" value="2024.0.3" />
+        <property name="artifact.version" value="2024.0-SNAPSHOT" />
         <property name="artifact.type" value="jar" />
         <property name="artifact.dir" value="${root}/artifacts" />
         <property name="artifact.pom" value="${artifact.dir}/${artifact.name}-${artifact.version}.pom" />
@@ -448,7 +448,7 @@
 
     </target>
 
-    <target name="deployStaging" depends="define-artifact-properties" description="deploy version to Maven staging repository">
+    <target name="deployStaging" depends="define-artifact-properties,prepareAllJars" description="deploy version to Maven staging repository">
         <exec executable="mvn">
             <arg value="-e"/>
             <arg value="-X"/>
@@ -474,6 +474,9 @@
         <antcall target="deployStagingImpl">
             <param name="classifier" value="libs"/>
         </antcall>
+
+        <echo message="Continue on https://s01.oss.sonatype.org/#stagingRepositories"/>
+        <echo message="Verify on https://repo1.maven.org/maven2/com/webjetcms/webjetcms/"/>
     </target>
 
     <target name="deployStagingImpl">
