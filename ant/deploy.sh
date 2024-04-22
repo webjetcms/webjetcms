@@ -13,6 +13,9 @@ ant fixSrc
 #ant deploy
 ant -Dcompress=true deployRepoIwmspSk
 
+#GITHUB: just run ant deployStaging
+#then close repo and deploy it
+
 cd ..
 
 gradlew war
