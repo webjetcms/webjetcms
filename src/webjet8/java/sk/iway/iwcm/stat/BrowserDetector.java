@@ -4,6 +4,9 @@ import sk.iway.iwcm.*;
 import sk.iway.iwcm.components.seo.SeoManager;
 
 import javax.servlet.http.HttpServletRequest;
+
+import org.apache.struts.util.ResponseUtils;
+
 import java.io.Serializable;
 import java.util.StringTokenizer;
 
@@ -440,12 +443,12 @@ public class BrowserDetector implements Serializable
 
    public String getBrowserName()
    {
-      return browserName != null ? browserName : "";
+      return browserName != null ? ResponseUtils.filter(browserName) : "";
    }
 
    public String getBrowserPlatform()
    {
-      return browserPlatform;
+      return ResponseUtils.filter(browserPlatform);
    }
 
    public float getBrowserVersion()
@@ -461,7 +464,7 @@ public class BrowserDetector implements Serializable
 
    public String getUserAgentString()
    {
-      return userAgentString;
+      return ResponseUtils.filter(userAgentString);
    }
 
    private float toFloat(String s)
@@ -477,7 +480,7 @@ public class BrowserDetector implements Serializable
 
    public String getBrowserSubplatform()
    {
-      return browserSubplatform;
+      return ResponseUtils.filter(browserSubplatform);
    }
 
    public boolean isAmp() {
@@ -522,7 +525,7 @@ public class BrowserDetector implements Serializable
 
 	public String getBrowserDeviceType()
 	{
-		return browserDeviceType;
+		return ResponseUtils.filter(browserDeviceType);
 	}
 
 	public int getBrowserUaId()
@@ -546,6 +549,6 @@ public class BrowserDetector implements Serializable
 	 */
 	public String getCountry()
 	{
-		return country;
+		return ResponseUtils.filter(country);
 	}
 }

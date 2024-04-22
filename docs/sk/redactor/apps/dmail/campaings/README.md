@@ -70,11 +70,14 @@ Pri uložení kampane sa spočíta reálny zoznam príjemcov a už odoslaných e
 
 ## Karta - Príjemcovia
 
-V karte Príjemcovia vidíme prehľad všetkých príjemcov, ktorý budu dostavať email-y kampane. Príjemcov je možné tlačidlami v tabuľke pridať, duplikovať alebo zmazať. Pri vkladaní záznamu cez tlačidlo ```+``` je možné zadať viaceré emailové adresy oddelené čiarkou, bodkočiarkou alebo novým riadkom.
+V karte Príjemcovia vidíme prehľad všetkých príjemcov, ktorý budu dostavať email-y kampane. Príjemcov je možné v tabuľke pridať, upraviť, duplikovať alebo zmazať.
 
 ![](receivers.png)
 
-Poznámka: zoznam príjemcov je ošetrený proti duplicitám e-mailov. Pri importe/zadaní už existujúceho e-mailu bude tento preskočený. Rovnako do kampane nie je možné pridať e-mailovú adresu, ktorá je v zozname [Odhlásené e-maily](../unsubscribed/README.md).
+**Upozornenie,** zoznam príjemcov je ošetrený proti určitým nevyhovujúcim hodnotám:
+- ochrana proti duplicite, kontroluje sa duplicita v zadaných emailoch ako aj s tými, ktoré už existujú v kampani
+- ochrana proti nevhodnému emailu, email musí spĺňať štandardný formát **meno@domena.sk** (špeciálna výnimka pri [Import z xlsx](#import-z-xlsx))
+- ochrana proti odhláseným emailom, nie možné pridať príjemcu, ktorého emailová adresa je v zozname [Odhlásené e-maily](../unsubscribed/README.md)
 
 ### Stav E-mailu
 
@@ -88,26 +91,47 @@ Dôležitý je stĺpec "Stav E-mailu" ktorý môže obsahovať hodnoty:
 
 ### Manuálne pridanie
 
-Manuálne pridanie emailov do kampane vykonáte kliknutím na tlačidlo "Pridať". Povinné je pole "E-mail", do ktorej musíte zadať jeden alebo viac emailov oddelený čiarkou, bodkočiarkou alebo novým riadkom. Zadané e-maily sa následné pridajú medzi príjemcov kampane.
+Manuálne pridanie emailov do kampane vykonáte kliknutím na tlačidlo "Pridať". Povinné je pole "E-mail", do ktorej musíte zadať jeden alebo viac emailov oddelených **čiarkou, bodkočiarkou, medzerou alebo novým riadkom**. Môžete využiť viaceré typy oddelenia súčasne, ako napr. "test1@test.sk, test2@test.sk; test3@test.sk  test4@test.sk". Zadané e-maily sa následné pridajú medzi príjemcov kampane.
 
 Pole "Meno" je voliteľné. Ak ho nevyplníte, tak sa meno príjemcu získa z databázy používateľov na základe zhody emailu (ak existuje). Ak sa takýto email v databáze nenachádza, vloží sa ako meno hodnota "- -". Ak pole "Meno" vyplníte, tak sa nastaví všetkým emailov, ktoré práve vkladáte prostredníctvom poľa "E-mail".
 
 ![](raw-import.png)
 
+Manuálne pridanie ponúka možnosť **Preskočiť chybné záznamy**. Ak zadáte ako E-mail ```Test1@test.sk, Test2@test.sk; Test13Wrong Test4@test.sk Test2@test.sk``` a možnosť Preskočiť chybné záznamy **je vypnutá**, tak sa pridávanie príjemcov zastaví na prvej nevyhovujúcej hodnote a zobrazí sa chyba:
+
+![](recipients_editor_err.png)
+
+Uloženie skončilo na treťom emaily ```Test13Wrong``` kvôli hodnote v nesprávnom formáte. Predchádzajúce dva emaily boli vyhovujúce a uložili sa (pre zobrazenie môžete znova načítať údaje v tabuľke).
+
+![](recipients_A.png)
+
+**Ak je možnosť zapnutá**, tak sa nevyhovujúce hodnoty preskočia a zobrazí sa notifikácia s informáciou ktoré hodnoty a prečo sa neuložili:
+
+![](recipients_notification.png)
+
+Nakoľko zo zadaných piatich boli iba 3 emaily vyhovujúce, tak sa pridali iba traja príjemcovia ku kampani.
+
+![](recipients_B.png)
+
 ### Import z xlsx
 
-Hromadným spôsobom môžete importovať príjemcov môžete z xlsx súboru štandardným importom.
+Hromadný spôsob k pridaniu/aktualizácií príjemcov je cez štandardný import príjemcov z xlsx súboru.
 
 ![](xlsx-import.png)
 
-V exceli v prvom riadku je potrebné mať definované nasledovné názvy:
+V súbore v prvom riadku je potrebné mať definované nasledovné názvy:
 
 - ```Meno|recipientName``` - meno a priezvisko príjemcu
 - ```E-mail|recipientEmail``` - emailová adresa príjemcu
 
 ![](xlsx-import-example.png)
 
-Poznámka: korektný súbor pre import získate jednoducho exportom príjemcov. Následne môžete zmazať stĺpec ID a vyplniť mená a email adresy pre import príjemcov.
+Korektný súbor pre import získate jednoducho exportom príjemcov. Následne môžete zmazať stĺpec ID a vyplniť mená a email adresy pre import príjemcov.
+
+**Upozornenie:**
+
+- Import z xlxs súboru nepodporuje pridanie viacerých emailov v jednej bunke ako v prípade manuálneho pridania. V bunke musí byť vždy len jedna emailová adresa.
+- Import z xlxs súboru podporuje výnimku formátu emailu. Pri manuálnom pridaní musí mať každý mail formát **meno@domena.sk**. Ak však kopírujete emaily napr z outlook-u, skopírovaná hodnota môže mať formát ```"Ján Tester <jan_tester@test.com>"```. V prípade, že hodnota obsahuje znaky ```<>``` **(presne v tomto poradí)**, použije sa hodnota medzi nimi. V tomto prípade by to bola práve hodnota ```jan_tester@test.com```. Táto hodnota musí mať formát **meno@domena.sk**.
 
 ## Karta - Otvorenia
 

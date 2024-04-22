@@ -1202,6 +1202,15 @@ export const dataTableInit = options => {
             button.disable();
         };
 
+        //funkcia pre enable/disable tlacitka ked nie je nic oznacene
+        $.fn.dataTable.Buttons.showIfRowUnselected = function (button, dt) {
+            dt.on('select.dt.DT deselect.dt.DT', function () {
+                button.enable(!dt.rows({selected: true}).any());
+            });
+
+            button.enable();
+        };
+
         //funkcia pre enable/disable tlacitka iba ked je JEDEN RIADOK selectnuty
         $.fn.dataTable.Buttons.showIfOneRowSelected = function (button, dt) {
             dt.on('select.dt.DT deselect.dt.DT', function () {
@@ -2106,6 +2115,9 @@ export const dataTableInit = options => {
                             //toto nechceme zobrazovat v moznosti parovania importu
                             return;
                         }
+
+                        //skip non exportable columns
+                        if(typeof col.className != "undefined" && col.className.indexOf("not-export") != -1) return;
 
                         //editorFields.nieco nemozeme pouzit, lebo podla toho nevieme hladat
                         if (data.indexOf(".")!=-1) return;

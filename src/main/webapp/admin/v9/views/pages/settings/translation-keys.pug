@@ -27,6 +27,9 @@ block content
                 extends: 'remove',
                 editor: translationKeysTable.EDITOR,
                 text: '<i class="fas fa-database"></i>',
+                init: function ( dt, node, config ) {
+                    $.fn.dataTable.Buttons.showIfRowUnselected(this, dt);
+                },
                 action: function (e, dt, node) {
                     translationKeysTable.executeAction("reload", true);
                 },

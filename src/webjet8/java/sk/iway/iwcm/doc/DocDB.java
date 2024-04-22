@@ -6798,7 +6798,7 @@ public class DocDB extends DB
 		List<GroupDetails> searchGroupsArray;
 		StringBuilder searchGroups = null;
 
-			searchGroupsArray = groupsDB.getGroupsTree(groupId, true, false);
+			searchGroupsArray = groupsDB.getGroupsTree(groupId, true, true);
 			for (GroupDetails group : searchGroupsArray)
 			{
 				if (group != null)
@@ -6815,11 +6815,11 @@ public class DocDB extends DB
 			}
 
 		if(searchGroups!=null){
-		return  searchGroups.toString();
-			}
-			else{
-				return "";
-			}
+			return  searchGroups.toString();
+		}
+		else{
+			return "";
+		}
 
 	}
 

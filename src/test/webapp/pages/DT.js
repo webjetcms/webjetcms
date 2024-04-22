@@ -151,5 +151,20 @@ module.exports = {
         for (col=1; col<values.length; col++) {
             this.checkTableCell(name, row, col, values[col-1]);
         }
+    },
+
+    /**
+     * Delete all rows in datatable selecting all and clicking remove button
+     * WARNING: use DT.filter before this function to select only rows you want to delete
+     * @param {String} name
+     */
+    deleteAll(name = "datatableInit") {
+        var container = "#"+name+"_wrapper";
+
+        I.clickCss(container + " div.dataTables_scrollHeadInner button.buttons-select-all");
+        I.clickCss(container + " div.dt-buttons button.buttons-remove");
+        I.waitForVisible("#" + name + "_modal", 200);
+        I.click("Zmazať", "div.DTE_Action_Remove");
+        I.waitForInvisible("div.DTE_Processing_Indicator", 200);
     }
 }

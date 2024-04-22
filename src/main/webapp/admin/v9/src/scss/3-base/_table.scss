@@ -1433,3 +1433,8 @@ div.dataTables_scrollBody > table {
     //ak je renderovany perexGroups ako select nastav riadkovanie
     white-space: pre-line;
 }
+
+.div.dataTables_processing {
+    //in inner tables search button in header is over loader
+    z-index: 9;
+}

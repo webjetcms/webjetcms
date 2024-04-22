@@ -11,9 +11,11 @@ import org.springframework.web.bind.annotation.RestController;
 
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.database.SimpleQuery;
 import sk.iway.iwcm.system.googleauth.GoogleAuthenticator;
 import sk.iway.iwcm.system.googleauth.GoogleAuthenticatorKey;
 import sk.iway.iwcm.system.googleauth.GoogleAuthenticatorQRGenerator;
+import sk.iway.iwcm.system.stripes.CSRF;
 
 @RestController
 public class UsersRestServiceController {
@@ -44,17 +46,22 @@ public class UsersRestServiceController {
     @GetMapping(path={"/admin/users/2factorauth"})
     public String getGauth( HttpServletRequest request )
     {
-        //TODO: nie som si isty, ci je dobre nejako takto verejne ukazovat 2FA token, predpokladam, ze ked niekto ziska token vie k nemu generovat kody
         UserDetails user = UsersDB.getCurrentUser(request.getSession());
-        return user.getMobileDevice();
+        String currentCode = new SimpleQuery().forString("SELECT mobile_device FROM users WHERE user_id = ?", user.getUserId());
+        if (Tools.isNotEmpty(currentCode)) return "true";
+        return "";
     }
 
     /* Nastavi / vynyluje key MobileDevice usera*/
     @PostMapping(path={"/admin/users/2factorauth"})
-    public void setGauth( @RequestParam(value="secret", defaultValue="") String secret, HttpServletRequest request )
+    public String setGauth( @RequestParam(value="secret", defaultValue="") String secret, HttpServletRequest request )
     {
-        //TODO: toto je cele zle, lebo ak ma user zapnutu 2FA tak zavolanim tohto URL ju moze utocnik vymazat/nastavit ako potrebuje
+        //toto je cele zle, lebo ak ma user zapnutu 2FA tak zavolanim tohto URL ju moze utocnik vymazat/nastavit ako potrebuje
         UserDetails user = UsersDB.getCurrentUser(request.getSession());
+
+        if (CSRF.verifyTokenAndDeleteIt(request) == false) {
+            return "CSRF token is not valid";
+        }
 
         if (Tools.isEmpty(secret) )
             user.setMobileDevice(null);
@@ -62,5 +69,7 @@ public class UsersRestServiceController {
             user.setMobileDevice(secret);
 
         UsersDB.saveUser(user);
+
+        return "";
     }
 }

@@ -451,6 +451,7 @@ export function bindImportButton(TABLE, DATA) {
                     formData['importedColumns'] = importedColumns;
                     formData['importMode'] = importMode;
                     formData["updateByColumn"] = updateByColumn;
+                    formData["skipWrongData"] = skipWrongData;
 
                     dzchunkindex += 1;
                     //console.log("countedData"+dzchunkindex+"=", countedData);
@@ -490,7 +491,7 @@ export function bindImportButton(TABLE, DATA) {
                     if (response.notify) {
                         response.notify.forEach((item, index) => {
                             //console.log("iterating, item=", item);
-                            WJ.notify(item.type, item.title, item.text, item.timeout, item.buttons);
+                            WJ.notify(item.type, item.title, item.text, item.timeout, item.buttons, true);
                         });
                     }
                     //console.log("finishCounter="+finishCounter+" formData['dztotalchunkcount']="+formData['dztotalchunkcount']);
@@ -514,6 +515,7 @@ export function bindImportButton(TABLE, DATA) {
         //const deleteAndNew = $('input[id=dt-settings-delete-and-new]:checked').is(":checked");
         const importMode = $("#datatableImportModal input[name=dt-settings-import]:checked").val();
         const updateByColumn = $('#dt-settings-update-by-column').val();
+        const skipWrongData = $('#skip-wrong-data').is(":checked");
 
         const formData = {};
         let countedData = new Array();
@@ -530,12 +532,16 @@ export function bindImportButton(TABLE, DATA) {
             WJ.notifyError(WJ.translate('datatables.upload.file.error.js'));
             return;
         }
-        if (importMode !== "update") {
+
+        //FIX - in onlyNew we can't nullify ID (because we use it for pairing by ID)
+        if(importMode === "append") {
             action = 'create';
             //zresetuj ID hodnotu v datach
             mainData.forEach(data => data[DATA.columns[0].data] = 0);
-        } else {
+        } else if(importMode === "update") {
             action = 'edit';
+        } else if(importMode === "onlyNew") {
+            action = 'create';
         }
 
         let fileName = $("#insert-file").val();

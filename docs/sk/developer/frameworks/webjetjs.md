@@ -30,13 +30,14 @@ WebJET v súbore webjet.js zapúzdruje API použitých knižníc. Cieľom je, ab
 
 Pre notifikácie používame knižnicu [toastr](https://github.com/CodeSeven/toastr), pripravené sú nasledovné JS funkcie:
 
-**WJ.notify(type, title, text, timeOut = 0, buttons = null)** - zobrazí toast notifikáciu (ekvivalent ```window.alert```), parametre:
+**WJ.notify(type, title, text, timeOut = 0, buttons = null, appendToExisting=false)** - zobrazí toast notifikáciu (ekvivalent ```window.alert```), parametre:
 
 - ```type``` (String) - typ zobrazenej notifikácie, možnosti: ```success, info, warning, error```
 - ```title``` (String) - titulok zobrazenej notifikácie
 - ```text``` (String) - text zobrazenej notifikácie, nepovinné
 - ```timeout``` (int) - čas, po ktorom sa notifikácia schová, nepovinné, hodnota 0 znamená, že sa notifikácia bude zobrazovať, pokiaľ ju používateľ nezatvorí
 - ```buttons``` (json) - pole tlačidiel zobrazených pod textom notifikácie
+- ```appendToExisting``` (boolean) - po nastavení na `true` je text pridaný do existujúcej notifikácie rovnakého typu. Ak ešte neexistuje, vytvorí sa nová notifikácia.
 
 Pripravené sú aj skrátené verzie, odporúčame používať tie:
 

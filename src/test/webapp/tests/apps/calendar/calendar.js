@@ -61,8 +61,8 @@ Scenario('testy zaloziek', async ({I, DT, DTE}) => {
     I.see("Rodina");
 
     I.clickCss("#pills-dt-calendarEventsDataTable-notification-tab");
-    I.seeElement("#DTE_Field_editorFields-notifyEmailsUserGroups_4:checked");
-    I.seeElement("#DTE_Field_editorFields-notifyEmailsUserGroups_7:checked");
+    I.seeCheckboxIsChecked("Obchodní partneri");
+    I.seeCheckboxIsChecked("VIP Klienti");
 
     //un-check
     DTE.clickSwitchLabel("Obchodní partneri");
@@ -77,10 +77,10 @@ Scenario('testy zaloziek', async ({I, DT, DTE}) => {
     DTE.waitForEditor("calendarEventsDataTable");
 
     I.clickCss("#pills-dt-calendarEventsDataTable-notification-tab");
-    I.dontSeeElement("#DTE_Field_editorFields-notifyEmailsUserGroups_4:checked");
-    I.dontSeeElement("#DTE_Field_editorFields-notifyEmailsUserGroups_7:checked");
-    I.seeElement("#DTE_Field_editorFields-notifyEmailsUserGroups_0:checked");
-    I.seeElement("#DTE_Field_editorFields-notifyEmailsUserGroups_5:checked");
+    I.dontSeeCheckboxIsChecked("Obchodní partneri");
+    I.dontSeeCheckboxIsChecked("VIP Klienti");
+    I.seeCheckboxIsChecked("Bankári");
+    I.seeCheckboxIsChecked("Redaktori");
 
     DTE.save();
 

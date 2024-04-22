@@ -305,12 +305,26 @@ public class DocTools {
      */
     private static String getRequestString(HttpServletRequest request, String name)
     {
-
+        String nameOrig = name;
         String ret = (String) request.getAttribute(name);
+
+        boolean filter = true;
+        //default false for request objects, we expect it to be inserted as HTML code
+        if (ret != null) filter = false;
+        if (name.startsWith("unfilter.")) {
+            filter = false;
+            name = name.substring("unfilter.".length());
+        } else if (name.startsWith("filter.")) {
+            filter = true;
+            name = name.substring("filter.".length());
+        }
+
+        //try again request attribute without prefix
+        if (ret == null && name.equals(nameOrig)==false) ret = (String) request.getAttribute(name);
 
         if (ret == null && name.startsWith("header.") && name.length()>8 && request.getHeader(name.substring(7))!=null)
         {
-            ret = ResponseUtils.filter(request.getHeader(name.substring(7)));
+            ret = request.getHeader(name.substring(7));
         }
         if (ret == null && "remoteIP".equals(name)) ret = Tools.getRemoteIP(request);
         if (ret == null && "remoteHost".equals(name)) ret = Tools.getRemoteHost(request);
@@ -388,6 +402,13 @@ public class DocTools {
         }
 
         if (ret == null) ret = "";
+
+        if (filter) {
+            ret = ResponseUtils.filter(ret);
+            ret = Tools.replace(ret, "\n", " ");
+            ret = Tools.replace(ret, "\r", " ");
+            ret = Tools.replace(ret, "&amp;", "&");
+        }
 
         return (ret);
     }

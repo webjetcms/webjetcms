@@ -222,7 +222,6 @@ function saveAttributes(that)
 		</iwcm:menu>
 </table>
 <script type="text/javascript">
-<!--
 showFileName(document.getElementById("messageAsAttachId"));
 function showFileName(chck)
 {
@@ -230,7 +229,11 @@ function showFileName(chck)
 	//if(chck.checked) $(".attFileName").show();
 	//else $(".attFileName").hide();
 }
-//-->
+$("table.formAttributes input").on("keyup keydown", function(e) {
+	//console.log("keyup, e=", e.keyCode);
+	if (e.keyCode>=37 && e.keyCode<=40) e.stopPropagation();
+	else if (e.keyCode == 9 || e.keyCode == 13) e.stopPropagation();
+});
 </script>
 <%
 String recipients = attributes.get("recipients");

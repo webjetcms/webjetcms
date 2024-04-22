@@ -17,6 +17,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.validation.BeanPropertyBindingResult;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.Errors;
 import org.springframework.validation.ObjectError;
@@ -29,6 +30,7 @@ import sk.iway.iwcm.database.ActiveRecordBase;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.system.ConstantsV9;
 import sk.iway.iwcm.system.adminlog.AuditEntityListener;
+import sk.iway.iwcm.system.datatable.NotifyBean.NotifyType;
 import sk.iway.iwcm.system.datatable.spring.DomainIdRepository;
 import sk.iway.iwcm.system.jpa.JpaTools;
 import sk.iway.iwcm.system.spring.NullAwareBeanUtils;
@@ -130,31 +132,7 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 		if (isForceReload()) setForceReload(forceReload);
 		if (notify!=null) addNotify(notify);
 
-		List<String> alwaysCopyProperties = new ArrayList<>();
-
-		Field[] declaredFields = AuditEntityListener.getDeclaredFieldsTwoLevels(entity.getClass());
-		for (Field field : declaredFields) {
-			if (field.isAnnotationPresent(sk.iway.iwcm.system.datatable.annotations.DataTableColumn.class)) {
-				sk.iway.iwcm.system.datatable.annotations.DataTableColumn annotation = field.getAnnotation(sk.iway.iwcm.system.datatable.annotations.DataTableColumn.class);
-				boolean[] hiddenEditor = annotation.hiddenEditor();
-				if (hiddenEditor.length > 0) {
-					//ak je hiddenEditor preskoc
-					if (hiddenEditor[0]==true) continue;
-				}
-				boolean alwaysCopy = false;
-				if (annotation.alwaysCopyProperties().length>0) {
-					alwaysCopy = annotation.alwaysCopyProperties()[0];
-					//implicit false value
-					if (alwaysCopy==false) continue;
-				}
-				if (alwaysCopy || field.getType().isAssignableFrom(Date.class) || field.getType().isAssignableFrom(java.sql.Date.class) || field.getType().isAssignableFrom(LocalDate.class) || field.getType().isAssignableFrom(LocalDateTime.class)) {
-					//ak je to datum tak ho dajme do ignore, aby isiel zadat v GUI prazdny datum
-					alwaysCopyProperties.add(field.getName());
-				}
-			}
-		}
-
-		NullAwareBeanUtils.copyProperties(entity, one, alwaysCopyProperties, (String[]) null);
+		copyEntityIntoOriginal(entity, one);
 
 		//musime z editoFields najskor prepisat hodnoty do entity
 		T processed = processToEntity(one, ProcessItemAction.CREATE);
@@ -720,10 +698,17 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 			@SuppressWarnings("unchecked")
 			DatatableRequest<Long, T> target = (DatatableRequest<Long, T>) binder.getTarget();
 			if (target != null) {
+				//clear thread data
+				getThreadData().setInvalidImportedRows(null);
+				getThreadData().setInvalidImportedRowsErrors(null);
+				getThreadData().clearNotifyList();
+
 				Map<Long, T> data = target.getData();
 				BindingResult bindingResult = binder.getBindingResult();
 				Identity currentUser = UsersDB.getCurrentUser(request);
 				if (data != null) {
+					Set<Long> invalidImportedRows = new HashSet<>();
+					setSkipWrongData( target.isSkipWrongData() );
 					for (Map.Entry<Long, T> galleryEntityEntry : data.entrySet()) {
 						Long key = galleryEntityEntry.getKey();
 						T value = galleryEntityEntry.getValue();
@@ -742,7 +727,26 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 
 						setImportedColumns(target.getImportedColumns());
 
-						validateEditor(request, target, currentUser, bindingResult, key, value);
+						//Use separe binding result
+						BeanPropertyBindingResult entityBindingResult = new BeanPropertyBindingResult(binder.getTarget(), binder.getObjectName());
+						validateEditor(request, target, currentUser, entityBindingResult, key, value);
+
+						//If we DON'T WANT skip wrong data, push error back into main binding result
+						if(isSkipWrongData() == false) {
+							bindingResult.addAllErrors(entityBindingResult);
+						} else {
+							//We skipped wrong data, but use errors for user notification
+							if(entityBindingResult.getErrorCount() > 0) {
+								invalidImportedRows.add(key);
+
+								addImportedColumnError( entityBindingResult.getFieldErrors().get(0), key.intValue() );
+							}
+						}
+					}
+
+					//Set which rows are invalid
+					if(isSkipWrongData() == true) {
+						setInvalidImportedRows(invalidImportedRows);
 					}
 				}
 
@@ -963,9 +967,16 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 		boolean isImporting = isImporting();
 		Integer lastImportedRow = getLastImportedRow();
 		List<NotifyBean> notifyListBeforeClear = getThreadData().getNotify();
+
+		//SKIP wrong data support variables
+		boolean skipWrongData = datatableRequest.isSkipWrongData();
+		Set<Long> invalidImportedRows = getInvalidImportedRows();
+		TreeMap<Integer, String> invalidImportedRowsErrors = getThreadData().getInvalidImportedRowsErrors();
+
 		clearThreadData();
 		if (isImporting) {
 			setImporting(true);
+			setSkipWrongData(skipWrongData);
 			//pri importe moze vykonat converter nastavenie nejakych notifikacii, pre istotu takto zachovame
 			if (notifyListBeforeClear!=null && notifyListBeforeClear.isEmpty()==false) addNotify(notifyListBeforeClear);
 		}
@@ -990,6 +1001,13 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 		if (isImporting && lastImportedRow!=null) rowCounter = lastImportedRow.intValue();
 		for (Long id : datatableRequest.getData().keySet()) {
 			rowCounter++;
+
+			//This row was marked as invalid, skip it
+			if(isImporting() && skipWrongData == true && invalidImportedRows.contains(id)) {
+				//Mark row
+				setLastImportedRow(rowCounter);
+				continue;
+			}
 
 			T entity = datatableRequest.getData().get(id);
 
@@ -1089,7 +1107,7 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 							//SKIP import, entity allready exists
 							Logger.debug(DatatableRestControllerV2.class, "import SKIP entity - allready exists, entity="+entity+", "+updateByColumn+"="+updateByColumn);
 							response.setForceReload(Boolean.TRUE);
-							return ResponseEntity.ok(response);
+							continue;
 						}
 					} catch (IllegalAccessException | NoSuchMethodException | InvocationTargetException | InstantiationException e) {
 						response.setError(String.format("Field: %s not found", updateByColumn));
@@ -1100,12 +1118,18 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 
 				beforeSave(entity);
 
-				ResponseEntity<T> re = add(entity);
-				response.add(re.getBody());
+				try {
+					ResponseEntity<T> re = add(entity); //This method throws ConstraintViolationException
+					response.add(re.getBody());
 
-				afterSave(entity, re.getBody());
+					afterSave(entity, re.getBody());
 
-				if (isDuplicate) afterDuplicate(entity, id);
+					if (isDuplicate) afterDuplicate(entity, id);
+				} catch (ConstraintViolationException ex) {
+					//Ignore error if skipWrongData is true
+					if(skipWrongData == true) continue;
+					throw ex;
+				}
 
 			} else if (datatableRequest.isUpdate()) {
 				beforeSave(entity);
@@ -1136,6 +1160,33 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 				}
 			}
 		}
+
+		//We skipped worng data, prepare and show errors notification
+		if(skipWrongData == true) {
+
+			if(invalidImportedRowsErrors == null) {
+				invalidImportedRowsErrors = new TreeMap<>();
+			}
+
+			if(getThreadData().getInvalidImportedRowsErrors() != null) {
+				invalidImportedRowsErrors.putAll( getThreadData().getInvalidImportedRowsErrors() );
+			}
+
+			if(invalidImportedRowsErrors.size() > 0) {
+				StringBuilder allInsertErrors = new StringBuilder("");
+
+				for (Map.Entry<Integer, String> set : invalidImportedRowsErrors.entrySet()) {
+					allInsertErrors.append(set.getValue()).append("<br> <br>");
+				}
+
+				NotifyBean error = new NotifyBean(Prop.getInstance().getText("datatables.error.title.js"), allInsertErrors.toString(), NotifyType.ERROR);
+				getThreadData().addNotify(error);
+			}
+		}
+
+		//!! CLear SKIP wrong data support variables
+		getThreadData().setInvalidImportedRows(null);
+		getThreadData().setInvalidImportedRowsErrors(null);
 
 		if (isForceReload()) {
 			response.setForceReload(Boolean.TRUE);
@@ -1204,7 +1255,10 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 	public ResponseEntity<T> add(@Valid @RequestBody T entity) {
 		// validacia
 		Set<ConstraintViolation<T>> violations = validator.validate(entity);
+
+		//Error will be always thrown, but prepare error message for user is we skipping wrong data
 		if (!violations.isEmpty()) {
+			addImportedColumnError(violations);
 			throw new ConstraintViolationException("Invalid data", violations);
 		} else {
 			T newT = this.insertItem(entity);
@@ -1481,5 +1535,132 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 	 */
 	public String getImportMode() {
 		return getThreadData().getImportMode();
+	}
+
+	/**
+	 * Set invalid imported rows
+	 * @param invalidImportedRows
+	 */
+	private void setInvalidImportedRows(Set<Long> invalidImportedRows) {
+		getThreadData().setInvalidImportedRows(invalidImportedRows);
+	}
+
+	/**
+	 * Get invalid imported rows
+	 * @return
+	 */
+	public Set<Long> getInvalidImportedRows() {
+		return getThreadData().getInvalidImportedRows();
+	}
+
+	/**
+	 * Set skip wrong data.
+	 * TRUE - wrong data during import will be skipped and process will continue
+	 * @param skipWrongData
+	 */
+	private void setSkipWrongData(boolean skipWrongData) {
+		getThreadData().setSkipWrongData(skipWrongData);
+	}
+
+	/**
+	 * Get skip wrong data.
+	 * TRUE - wrong data during import will be skipped and process will continue
+	 * @return
+	 */
+	public boolean isSkipWrongData() {
+		return getThreadData().isSkipWrongData();
+	}
+
+	/**
+	 * List of violated constraints during import (invalid rows during import) will be prepared and ADDED inside of threadData.InvalidImportedRowsErrors
+	 * This set of processed error's are used for Warning notification (FOR user). So user can by notified which rows are invalid and WHY.
+	 * @param violations - Set of ConstraintViolation
+	 */
+	private void addImportedColumnError(Set<ConstraintViolation<T>> violations) {
+		if(violations == null || violations.size() < 1) return;
+		ConstraintViolation<?> firstViolation = violations.iterator().next();
+		String propertyName = firstViolation.getPropertyPath().toString();
+		int dot = propertyName.indexOf(".");
+		if (dot > 0 && propertyName.startsWith("editorFields") == false) propertyName = propertyName.substring(0, dot);
+
+		String errCause = firstViolation.getMessageTemplate();
+		if(Tools.isNotEmpty(errCause) && errCause.startsWith("{") && errCause.endsWith("}")) {
+			//For example {javax.validation.constraints.NotBlank.message}
+			errCause = errCause.substring(1, errCause.length() - 1);
+			errCause = Prop.getInstance().getText( errCause );
+		} else {
+			errCause = firstViolation.getMessage();
+		}
+
+		StringBuilder errExplanation = new StringBuilder(propertyName);
+		int lastImportedRow = getLastImportedRow() == null ? 0 : getLastImportedRow().intValue();
+
+		errExplanation.append(" - ").append(firstViolation.getInvalidValue() == null ? "EMPTY" : firstViolation.getInvalidValue().toString()).append(" - ").append(errCause);
+		String errMsg = Prop.getInstance().getText("datatable.error.importRow", String.valueOf(lastImportedRow) , errExplanation.toString());
+
+		TreeMap<Integer, String> rowsErrors = getThreadData().getInvalidImportedRowsErrors();
+		if(rowsErrors == null) rowsErrors = new TreeMap<>();
+		rowsErrors.put(lastImportedRow, errMsg);
+		getThreadData().setInvalidImportedRowsErrors(rowsErrors);
+	}
+
+
+	/**
+	 * This error will be prepared and ADDED inside of threadData.InvalidImportedRowsErrors.
+	 * This set of processed error's are used for Warning notification (FOR user). So user can by notified which rows are invalid and WHY.
+	 * @param err - FieldError
+	 * @param rowNumber - imported row number
+	 */
+	private void addImportedColumnError(org.springframework.validation.FieldError err, Integer rowNumber) {
+		String propertyName = err.getField();
+		if(propertyName.startsWith("errorField.")) propertyName = propertyName.replace("errorField.", "");
+		int dot = propertyName.indexOf(".");
+		if (dot > 0 && propertyName.startsWith("editorFields") == false) propertyName = propertyName.substring(0, dot);
+
+		StringBuilder errExplanation = new StringBuilder();
+		errExplanation.append(propertyName);
+		errExplanation.append(" - ").append( err.getRejectedValue() == null ? "EMPTY" : err.getRejectedValue().toString() );
+		errExplanation.append(" - ").append( err.getDefaultMessage() );
+
+		int lastImportedRow = getLastImportedRow() == null ? 0 : getLastImportedRow().intValue();
+		String errMsg = Prop.getInstance().getText("datatable.error.importRow", String.valueOf(lastImportedRow + rowNumber + 1) , errExplanation.toString());
+
+		TreeMap<Integer, String> rowsErrors = getThreadData().getInvalidImportedRowsErrors();
+		if(rowsErrors == null) rowsErrors = new TreeMap<>();
+		rowsErrors.put(lastImportedRow + rowNumber + 1, errMsg);
+		getThreadData().setInvalidImportedRowsErrors(rowsErrors);
+	}
+
+	/**
+	 * Copy fields from provided entity into original entity
+	 * @param entity
+	 * @param one
+	 */
+	private void copyEntityIntoOriginal(T entity, T one) {
+		List<String> alwaysCopyProperties = new ArrayList<>();
+
+		Field[] declaredFields = AuditEntityListener.getDeclaredFieldsTwoLevels(entity.getClass());
+		for (Field field : declaredFields) {
+			if (field.isAnnotationPresent(sk.iway.iwcm.system.datatable.annotations.DataTableColumn.class)) {
+				sk.iway.iwcm.system.datatable.annotations.DataTableColumn annotation = field.getAnnotation(sk.iway.iwcm.system.datatable.annotations.DataTableColumn.class);
+				boolean[] hiddenEditor = annotation.hiddenEditor();
+				if (hiddenEditor.length > 0) {
+					//ak je hiddenEditor preskoc
+					if (hiddenEditor[0]==true) continue;
+				}
+				boolean alwaysCopy = false;
+				if (annotation.alwaysCopyProperties().length>0) {
+					alwaysCopy = annotation.alwaysCopyProperties()[0];
+					//implicit false value
+					if (alwaysCopy==false) continue;
+				}
+				if (alwaysCopy || field.getType().isAssignableFrom(Date.class) || field.getType().isAssignableFrom(java.sql.Date.class) || field.getType().isAssignableFrom(LocalDate.class) || field.getType().isAssignableFrom(LocalDateTime.class)) {
+					//ak je to datum tak ho dajme do ignore, aby isiel zadat v GUI prazdny datum
+					alwaysCopyProperties.add(field.getName());
+				}
+			}
+		}
+
+		NullAwareBeanUtils.copyProperties(entity, one, alwaysCopyProperties, (String[]) null);
 	}
 }

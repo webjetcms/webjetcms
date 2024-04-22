@@ -181,7 +181,7 @@ public class QuestionsAnswersEntity implements Serializable{
         title="[[#{components.qa.answer.exist}]]",
 		hiddenEditor = true
     )
-	private Boolean answerCheck = false;
+	private Boolean answerCheck;
 
 	@Column(name = "sort_priority")
 	@DataTableColumn(
@@ -257,10 +257,14 @@ public class QuestionsAnswersEntity implements Serializable{
 
 	@Transient
     @DataTableColumnNested
-	private QuestionsAnswersEditorFields editorFields = null;
+	private QuestionsAnswersEditorFields editorFields = null; //NOSONAR
+
+	public Boolean getAnswerCheck() {
+		return isAnswerCheck();
+	}
 
 	public Boolean isAnswerCheck() {
-		if (Tools.isNotEmpty(getAnswer()) || Tools.isNotEmpty(getAnswerToEmail()) || Boolean.TRUE.equals(publishOnWeb) ){
+		if (Tools.isNotEmpty(getAnswer()) || Tools.isNotEmpty(getAnswerToEmail()) || Boolean.TRUE.equals(publishOnWeb) || getAnswerDate() != null) {
 			return Boolean.TRUE;
 		}
 		return Boolean.FALSE;

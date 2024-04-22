@@ -1,9 +1,9 @@
 Feature('editor-locking');
 
 
-Scenario('editor locking hlasenia', ({ I, login, DT, DTE, Document }) => {
+Scenario('editor locking hlasenia', ({ I, DT, DTE, Document }) => {
 
-    login('admin');
+    I.relogin('admin');
 
     //Prihlásený ako - Playwright
     I.amOnPage("/apps/qa/admin/");
@@ -14,9 +14,7 @@ Scenario('editor locking hlasenia', ({ I, login, DT, DTE, Document }) => {
     DTE.waitForEditor("qaDataTable");
 
     //Odhlás sa
-    I.amOnPage("/logoff.do?forward=/admin/");
-
-    login('tester2');
+    I.relogin('tester2');
 
     I.amOnPage("/apps/qa/admin/");
     I.fillField("input.dt-filter-question", "Koľko nôh ma pavúk ?");

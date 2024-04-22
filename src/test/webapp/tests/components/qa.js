@@ -46,7 +46,7 @@ Scenario('zakladne testy', async ({I, DataTables, DTE}) => {
     });
 });
 
-Scenario('from struts to Spring', async ({I, DataTables, DTE}) => {
+Scenario('from struts to Spring', async ({I, DTE}) => {
     I.amOnPage("/apps/otazky-odpovede/");
     I.wait(1);
     I.waitForElement("#fromName1");
@@ -102,5 +102,45 @@ Scenario('from struts to Spring', async ({I, DataTables, DTE}) => {
     I.clickCss("button.buttons-remove");
     I.click("Zmazať", "div.DTE_Action_Remove");
     I.see(question, "div.DTE_Action_Remove");
+    I.see("Nenašli sa žiadne vyhovujúce záznamy");
+});
+
+Scenario('BUG - test AnswerCheck + copy answer feature', async ({I, DT, DTE}) => {
+    let copyValue = "copyValue_" + randomNumber;
+    let question = "bugTest_" + randomNumber + "_autotest";
+
+    I.amOnPage("/apps/qa/admin/");
+    I.clickCss("button.buttons-create");
+    DTE.waitForEditor("qaDataTable");
+    I.clickCss("#pills-dt-qaDataTable-answer-tab");
+    DTE.fillQuill("question", question);
+
+    I.say("Check aut copy of answerToEmail to answer field.");
+    DTE.fillQuill("answerToEmail", copyValue);
+    I.checkOption("#DTE_Field_publishOnWeb_0");
+
+    const answer_a = await I.grabHTMLFrom("#DTE_Field_answer > div.ql-container > div.ql-editor");
+    I.assertEqual("<p>" + copyValue + "</p>", answer_a);
+
+    DTE.fillQuill("answerToEmail", copyValue + "_change");
+    I.uncheckOption("#DTE_Field_publishOnWeb_0");
+    I.checkOption("#DTE_Field_publishOnWeb_0");
+
+    //Should be same as before
+    const answer_b = await I.grabHTMLFrom("#DTE_Field_answer > div.ql-container > div.ql-editor");
+    I.assertEqual("<p>" + copyValue + "</p>", answer_b);
+
+    DTE.fillQuill("answer", "");
+    DTE.save();
+
+    I.say("Check AnswerCheck status");
+    DT.filter("question", question);
+    DT.filter("answer", copyValue + "_change");
+    I.seeElement( locate("#qaDataTable > tbody > tr > td").withText("Áno") );
+
+    I.clickCss("button.buttons-select-all");
+    I.clickCss("button.buttons-remove");
+    I.waitForElement("div.DTE_Action_Remove");
+    I.click("Zmazať", "div.DTE_Action_Remove");
     I.see("Nenašli sa žiadne vyhovujúce záznamy");
 });

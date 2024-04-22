@@ -78,11 +78,21 @@ public class QuestionsAnswersRestController extends DatatableRestControllerV2<Qu
     public void beforeSave(QuestionsAnswersEntity entity) {
         //For new entity set question and answer date
         if (entity.getQuestionDate()==null) entity.setQuestionDate(new Date());
-        entity.setAnswerDate(new Date());
+
         if (Tools.isEmpty(entity.getHash())) entity.setHash(Password.generatePassword(16));
         if (entity.getSortPriority()==null) entity.setSortPriority(questionsAnswersService.getNewPriority(entity.getGroupName()));
+
         //ak sa vytvara otazka v admine nema toto nastavene, takze nastavime na true
         if (entity.getAllowPublishOnWeb()==null) entity.setAllowPublishOnWeb(Boolean.TRUE);
+
+        //set email answer to database
+        if(Tools.isNotEmpty(entity.getAnswerToEmail()) && Tools.isEmpty(entity.getAnswer())) {
+            entity.setAnswer(entity.getAnswerToEmail());
+        }
+
+        if(Tools.isNotEmpty(entity.getAnswerToEmail()) || Tools.isNotEmpty(entity.getAnswer())) {
+            entity.setAnswerDate(new Date());
+        }
     }
 
     @Override

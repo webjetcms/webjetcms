@@ -34,6 +34,9 @@ block content
                 extends: 'remove',
                 editor: missingKeysTable.EDITOR,
                 text: '<i class="fal fa-dumpster"></i>',
+                init: function ( dt, node, config ) {
+                    $.fn.dataTable.Buttons.showIfRowUnselected(this, dt);
+                },
                 action: function (e, dt, node) {
                     missingKeysTable.executeAction("deleteAllCacheObjects", true, "[[\#{missing-keys.deleteAll.confirm}]]");
                 },

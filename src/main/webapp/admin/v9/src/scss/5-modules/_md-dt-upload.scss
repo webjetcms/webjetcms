@@ -261,7 +261,7 @@
 #toast-container-upload {
 
     max-height: 270px;
-    overflow: scroll;
+    overflow: auto;
 
 
     [data-upload-status="progress"] {

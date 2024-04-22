@@ -31,16 +31,6 @@ import java.util.List;
 public final class GoogleAuthenticatorKey {
 
     /**
-     * The format string to generate the URL of a Google-provided QR bar code.
-     *
-     * @deprecated Use GoogleAuthenticatorQRGenerator instead.
-     */
-    @Deprecated
-    private static final String QR_FORMAT =
-            "https://chart.googleapis.com/chart?chs=200x200&chld=M%%7C0&cht=qr&"
-                    + "chl=otpauth://totp/%s@%s%%3Fsecret%%3D%s";
-
-    /**
      * The secret key in Base32 encoding.
      */
     private final String key;
@@ -68,24 +58,6 @@ public final class GoogleAuthenticatorKey {
         key = secretKey;
         verificationCode = code;
         this.scratchCodes = new ArrayList<>(scratchCodes);
-    }
-
-    /**
-     * Returns the URL of a Google-provided QR barcode to be loaded into the
-     * Google Authenticator application. The user scans this bar code with the
-     * application on their smart phones or manually enter the secret manually.
-     *
-     * @param user   the user to assign the secret key to.
-     * @param host   the host to assign the secret key to.
-     * @param secret the secret key in Base32 encoding.
-     * @return the URL of a Google-provided QR barcode to be loaded into the
-     * Google Authenticator application.
-     * @deprecated Use GoogleAuthenticatorQRGenerator##getOtpAuthURL instead.
-     */
-    @SuppressWarnings("deprecation, unused")
-    @Deprecated
-    public static String getQRBarcodeURL(String user, String host, String secret) {
-        return String.format(QR_FORMAT, user, host, secret);
     }
 
     /**

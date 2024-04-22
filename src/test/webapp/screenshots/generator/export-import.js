@@ -27,5 +27,47 @@ Scenario('import-users', ({ I, Document }) => {
     I.wait(1);
     I.click("Aktualizovať existujúce záznamy");
     Document.screenshot("/redactor/datatables/import-dialog.png", 1280, 500);
-
 });
+
+Scenario('Import skip wrong data', ({ I, Document }) => {
+    let fileName = 'screenshots/generator/wrong-empty-data-user-list.xlsx';
+
+    I.relogin("tester");
+    I.amOnPage("/admin/v9/users/user-list/");
+
+    I.say("IF SkipWrong IS NOT checked, import will fail");
+    insertFile(I, fileName, false);
+    I.waitForText("Chyba: niektoré polia neobsahujú správne hodnoty. Skontrolujte všetky polia na chybové hodnoty (aj v jednotlivých kartách).");
+    I.waitForText("email - Nesprávna emailová adresa. Zadajte email vo formáte meno@domena.");
+
+    Document.screenshotElement("div.DTE_Action_Edit", "/redactor/datatables/import_error.png");
+    I.clickCss("#datatableImportModal > div > div > div.modal-footer > button.btn-outline-secondary");
+
+    I.say("IF SkipWrong IS checked, import will NOT fail");
+    insertFile(I, fileName, true);
+    I.dontSee("Chyba: niektoré polia neobsahujú správne hodnoty. Skontrolujte všetky polia na chybové hodnoty (aj v jednotlivých kartách).");
+    I.dontSee("email - Nesprávna emailová adresa. Zadajte email vo formáte meno@domena.");
+    I.dontSee("editorFields.login - Povinné pole. Zadajte aspoň jeden znak.");
+    I.waitForInvisible("#datatableImportModal");
+
+    I.waitForElement("#toast-container-webjet");
+    I.moveCursorTo('#toast-container-webjet');
+    Document.screenshotElement("#toast-container-webjet", "/redactor/datatables/import_err_notification.png");
+}); 
+
+function insertFile(I, fileName, skipWrong) {
+    I.clickCss("button.btn-import-dialog");
+    I.waitForElement("#datatableImportModal");
+
+    I.wait(1);
+    I.attachFile('#insert-file', fileName);
+    I.waitForEnabled("#submit-import", 5);
+
+    if(skipWrong === true) {
+         I.checkOption( locate("#datatableImportModal").find("#skip-wrong-data") );
+    } else {
+         I.uncheckOption( locate("#datatableImportModal").find("#skip-wrong-data") );
+    }
+
+    I.click("#submit-import");
+}

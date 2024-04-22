@@ -18,6 +18,7 @@ import lombok.Getter;
 import lombok.Setter;
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.database.ActiveRecordRepository;
 import sk.iway.iwcm.system.datatable.DataTableColumnType;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditor;
@@ -26,7 +27,7 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
 @MappedSuperclass
 @Getter
 @Setter
-public class UserDetailsBasic {
+public class UserDetailsBasic extends ActiveRecordRepository {
 
     @Id
     @Column(name = "user_id")

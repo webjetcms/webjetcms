@@ -1,5 +1,7 @@
 #!/bin/sh
 
+echo "WARNING: CHECK VERSION IN build.xml"
+
 date
 
 ./mount-license.sh

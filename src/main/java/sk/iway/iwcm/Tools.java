@@ -312,7 +312,13 @@ public class Tools
 	public static boolean isEmail(String email)
 	{
 		if (Tools.isEmpty(email)) return false;
-		return email.matches("^[a-zA-Z0-9]+[a-zA-Z0-9._\\-+=#$%&]*[a-zA-Z0-9]+@[a-zA-Z0-9]+[a-zA-Z0-9._-]*[a-zA-Z0-9]+\\.[a-zA-Z]{2,16}$");
+
+		int at = email.indexOf('@');
+		if (at == -1) return false;
+		if (at == 1) return email.matches("^[a-zA-Z0-9]@[a-zA-Z0-9]+[a-zA-Z0-9._-]*\\.[a-zA-Z]{2,16}$");
+		if (at == 2) return email.matches("^[a-zA-Z0-9]+[a-zA-Z0-9]+@[a-zA-Z0-9]+[a-zA-Z0-9._-]*\\.[a-zA-Z]{2,16}$");
+
+		return email.matches("^[a-zA-Z0-9]+[a-zA-Z0-9._\\-+=#$%&]*[a-zA-Z0-9]+@[a-zA-Z0-9]+[a-zA-Z0-9._-]*\\.[a-zA-Z]{2,16}$");
 	}
 
 	/**

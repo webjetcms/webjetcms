@@ -244,6 +244,7 @@ public class MenuService {
             { "/components/data_deleting/admin_deleting_audit.jsp", "/admin/v9/settings/database-delete/"},
             { "/components/data_deleting/admin_deleting_cache.jsp", "/admin/v9/settings/cache-objects/"},
             { "/components/data_deleting/admin_deleting_persistentcache.jsp", "/admin/v9/settings/persistent-cache-objects/"},
+            { "/components/data_deleting/admin_deleting_imgcache.jsp", ""},
             { "/admin/prop_search.jsp", "/admin/v9/settings/translation-keys/"},
             { "javascript:WJ.openPopupDialog('/admin/prop_edit.jsp?key=&lng=&value=');", ""},
             { "/admin/prop_export-import.jsp", ""},

@@ -39,6 +39,8 @@ import sk.iway.iwcm.system.context.ContextFilter;
 
 public class PdfTools {
 
+    private static String ORIGINAL_JAVA_VERSION = null;
+
     private PdfTools() {
 
     }
@@ -178,6 +180,8 @@ public class PdfTools {
          data = data.replaceAll("media=\"all\"", "media=\"screen\"");
          data = data.replaceAll("class=\"printButton\"", "class=\"printButton\" style=\"display:none;\"");
 
+
+         fixJavaVersion();
          PD4ML pd4ml = new PD4ML();
 
          //doplnena moznost pre zabezpecenie PDF dokumentu
@@ -384,7 +388,7 @@ public class PdfTools {
              {
                  if (base == null)
                  {
-                     pd4ml.render(new StringReader(data),  output);
+                    pd4ml.render(new StringReader(data),  output);
                  }
                  else if ("true".equals(request.getParameter(SetCharacterEncodingFilter.PDF_PRINT_PARAM)) && "true".equals(request.getParameter(SetCharacterEncodingFilter.PDF_PRINT_PARAM+"No"))==false)
                  {
@@ -426,7 +430,26 @@ public class PdfTools {
              pd4ml.render(new StringReader(data), output);
          }
 
+        revertOriginalJavaVersion();
+
          //toto sa nam proste nejako straca...
          if (request != null && Tools.isNotEmpty(editorDomainName)) request.getSession().setAttribute("preview.editorDomainName", editorDomainName);
+    }
+
+    private static void fixJavaVersion() {
+        if (ORIGINAL_JAVA_VERSION == null) {
+            ORIGINAL_JAVA_VERSION = System.getProperty("java.version");
+        }
+        //FIX pd4ml wrong Java version detection based on 2nd digit
+        String[] versions = Tools.getTokens(ORIGINAL_JAVA_VERSION, ".");
+        //replace second digit with number 8
+        if (versions.length > 1) {
+            versions[1] = "8";
+            System.setProperty("java.version", Tools.join(versions, "."));
+        }
+    }
+
+    private static void revertOriginalJavaVersion() {
+        if (ORIGINAL_JAVA_VERSION != null) System.setProperty("java.version", ORIGINAL_JAVA_VERSION);
     }
 }

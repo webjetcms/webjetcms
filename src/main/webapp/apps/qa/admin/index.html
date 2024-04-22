@@ -40,6 +40,26 @@ window.domReady.add(function () {
         fetchOnEdit: true,
         fetchOnCreate: true
     });
+
+    var eventsBinded = false;
+    qaDataTable.EDITOR.on('open', function (e, mode, action) {
+        if (!eventsBinded) {
+            eventsBinded = true;
+            //publishOnWeb - change
+            $("#DTE_Field_publishOnWeb_0").on("change", function(e) {
+                //publishOnWeb - true
+                if ($('#DTE_Field_publishOnWeb_0').is(":checked")) {
+                    let answer = qaDataTable.EDITOR.field("answer").val();
+                    let answerToEmail = qaDataTable.EDITOR.field("answerToEmail").val();
+
+                    //if Answer is empty AND AnswerToEmail is not empty -> then copy value
+                    if( (!answer || answer.length === 0) && (answerToEmail && answerToEmail.length > 0) ) {
+                        qaDataTable.EDITOR.field("answer").set(answerToEmail);
+                    }
+                }
+             });
+        }
+    });
 });
 </script>
 <style type="text/css">

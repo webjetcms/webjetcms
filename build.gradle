@@ -214,6 +214,7 @@ dependencies {
     testImplementation group: 'org.springframework.boot', name: 'spring-boot-starter-web', version: '2.7.6'
     testImplementation group: 'org.springframework', name: 'spring-test', version: "${springVersion}"
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.8.2'
+    testImplementation 'org.junit.jupiter:junit-jupiter-params:5.8.2'
     testImplementation 'org.hamcrest:hamcrest:2.2'
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.8.2'
     testRuntimeOnly 'org.glassfish:javax.el:3.0.0'

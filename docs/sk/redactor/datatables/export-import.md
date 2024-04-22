@@ -39,3 +39,18 @@ Po kliknutí na ikonu Importovať ![](import-icon.png ":no-zoom") sa otvorí dia
 Kliknutím na tlačidlo Importovať sa spustí import z vybraného Excel súboru.
 
 Väčšina tabuliek pri aktualizácii existujúceho záznamu umožňuje **importovať stĺpce čiastkovo**. V Exceli môžete zmazať stĺpce, ktoré chcete v databáze zachovať bez zmeny. Následne pri importe sa v existujúcich záznamoch prenesú len zmeny z ponechaných stĺpcov v Exceli.
+
+### Preskočiť chybné záznamy
+
+Import ponúka možnosť preskočenia chybných záznamov. Ak je táto možnosť  **vypnutá**, a importované dáta obsahujú chybu, import sa preruší a bude zobrazené chybové hlásenie. Nevýhoda je pri importovaní veľkého množstva záznamov, kde jedna chyba preruší importovanie ďalších záznamov.
+
+Všetky vyhovujúce záznamy pred chybným záznamom sa uložili.
+
+![](import_error.png)
+
+
+Ak je táto možnosť **zapnutá**, import sa pri nájdenej chybe nezastaví, ale pokračuje ďalej. Chybné hodnoty aj s číslom riadku sa zobrazia v notifikácii:
+
+![](import_err_notification.png)
+
+Notifikácií sa môže zobraziť viac, nakoľko dáta sa spracovávajú po častiach - odosielajú sa postupne po 25 záznamoch, pre každý sa môže zobraziť chybové hlásenie. Viac technických informácií nájdete v sekcii [Konverzia z Excelu](../../developer/datatables/export-import.md#konverzia-z-excelu).

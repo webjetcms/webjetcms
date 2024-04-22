@@ -123,7 +123,11 @@ public class FormsController extends DatatableRestControllerV2<FormsEntity, Long
 
         //html kod necitame v entite, musime ziskat takto
         String html = (new SimpleQuery()).forString("SELECT html FROM forms WHERE id=?", id);
-        return CryptoFactory.decrypt(html);
+        html = CryptoFactory.decrypt(html);
+        if (html.contains("<body")==false) {
+            html = Tools.replace(html, "\n", "\n<br/>");
+        }
+        return html;
     }
 
     @Override

@@ -180,6 +180,15 @@ public class UserDetailsService {
     }
 
     public static boolean savePassword(UserDetailsBasic entity, int userId) {
+
+        //entity.getId is null for new users, saved ID is in userId parameter
+        if (entity.getId()==null || entity.getId()<1) {
+            if (Tools.isEmpty(entity.getPassword()) || UserTools.PASS_UNCHANGED.equals(entity.getPassword())) {
+                //set random password for new users
+                entity.setPassword(Password.generatePassword(10));
+            }
+        }
+
         if (Tools.isNotEmpty(entity.getPassword()) && entity.getPassword().equals(UserTools.PASS_UNCHANGED)==false) {
             //ulozit heslo
             Logger.debug(UserDetailsService.class, "Heslo je zmenene, ukladam");
@@ -202,7 +211,7 @@ public class UserDetailsService {
                 PasswordsHistoryBean.insertAndSaveNew(userId, hash, salt);
 
                 //uloz do DB
-                (new SimpleQuery()).execute("UPDATE users SET password=?, password_salt=? WHERE user_id=?", hash, salt, entity.getId());
+                (new SimpleQuery()).execute("UPDATE users SET password=?, password_salt=? WHERE user_id=?", hash, salt, userId);
 
                 //zaauditovat zmenu hesla
                 Adminlog.add(Adminlog.TYPE_USER_CHANGE_PASSWORD, userId, "SaveUserAction - user ("+entity.getLogin()+") successfully changed password", -1, -1);
@@ -434,7 +443,7 @@ public class UserDetailsService {
             user.setPosition(form2.getPosition());
             user.setParentId(form2.getParentId());
 
-            user.setDisabledItemsTable(new Hashtable<String, String>());
+            user.setDisabledItemsTable(new Hashtable<>());
 
         } else if (form instanceof UserDetailsSelfEntity) {
             UserDetailsSelfEntity form2 = (UserDetailsSelfEntity)form;
@@ -491,10 +500,10 @@ public class UserDetailsService {
                 if(PasswordsHistoryDB.getInstance().existsPassword(password, userId))
                     errorText += "- "+prop.getText("logon.change_password.used_in_history")+".<br/>";
 
-                errors.rejectValue("errorField.password", null, errorText);
+                errors.rejectValue("errorField.password", "403", errorText);
             }
         } else if (Tools.isEmpty(entity.getPassword())) {
-            errors.rejectValue("errorField.password", null, prop.getText("javax.validation.constraints.NotBlank.message"));
+            errors.rejectValue("errorField.password", "403", prop.getText("javax.validation.constraints.NotBlank.message"));
         }
     }
 }

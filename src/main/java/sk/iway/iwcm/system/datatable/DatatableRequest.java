@@ -39,6 +39,9 @@ public class DatatableRequest<K, V>
 	private boolean deleteOldData;
 	private String importMode;
 
+	//if true, wrong data will be skipped during import
+	private boolean skipWrongData;
+
 	//set of columns in excel import (filled in export-import.js during xlsx parsing)
 	private Set<String> importedColumns;
 

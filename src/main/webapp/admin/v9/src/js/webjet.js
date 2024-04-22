@@ -195,12 +195,31 @@ const WJ = (() => {
         }
     }
 
-    function toastNotify(type, title, text, timeOut = 0, buttons = null) {
+    function toastNotify(type, title, text, timeOut = 0, buttons = null, appendToExisting = false) {
         if (title === '' && text === '') {
             return false
         }
 
         if (title === '') title = "&nbsp;";
+
+        if (appendToExisting) {
+            var found = false;
+            try {
+                $('#toast-container-webjet .toast-'+type).each(function() {
+                    var $this = $(this);
+                    var currentTitle = $this.find(".toast-title").html();
+                    if (currentTitle === title) {
+                        var $message = $this.find(".toast-message");
+                        var newMessage = $message.html();
+                        if (newMessage.endsWith("<br>")===false) newMessage += "<br>";
+                        newMessage += text;
+                        $message.html(newMessage);
+                        found=true;
+                    }
+                });
+            } catch (e) {}
+            if (found === true) return;
+        }
 
         const options = {
             closeButton: true,
@@ -1001,8 +1020,8 @@ const WJ = (() => {
         openPopupDialog: (url, width, height) => {
             return openPopupDialog(url, width, height);
         },
-        notify: (type, title, text, timeOut, buttons) => {
-            return toastNotify(type, title, text, timeOut, buttons)
+        notify: (type, title, text, timeOut, buttons, appendToExisting=false) => {
+            return toastNotify(type, title, text, timeOut, buttons, appendToExisting)
         },
         notifySuccess: (title, text, timeOut, buttons) => {
             return toastNotify('success', title, text, timeOut, buttons)

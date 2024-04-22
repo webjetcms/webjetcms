@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 
 import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.Expression;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 import javax.servlet.http.HttpServletRequest;
@@ -24,6 +25,7 @@ import sk.iway.Password;
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.common.DocTools;
 import sk.iway.iwcm.common.UserTools;
 import sk.iway.iwcm.components.users.AuthorizeUserService;
 import sk.iway.iwcm.components.users.groups_approve.GroupsApproveRepository;
@@ -54,6 +56,9 @@ public class UserDetailsController extends DatatableRestControllerV2<UserDetails
     private final UserDetailsService userDetailsService;
     private final UserDetailsRepository userDetailsRepository;
     private final GroupsApproveRepository groupsApproveRepository;
+
+    private static final String PERM_EDIT_ADMINS = "users.edit_admins";
+    private static final String PERM_EDIT_PUBLIC_USERS = "users.edit_public_users";
 
     @Autowired
     public UserDetailsController(UserDetailsRepository userDetailsRepository, UserDetailsService userDetailsService, GroupsApproveRepository groupsApproveRepository) {
@@ -97,7 +102,7 @@ public class UserDetailsController extends DatatableRestControllerV2<UserDetails
 	public void beforeSave(UserDetailsEntity entity) {
 
         Identity user = UsersDB.getCurrentUser(getRequest());
-        Boolean isCurrentUserAdmin = user.isEnabledItem("users.edit_admins");
+        Boolean isCurrentUserAdmin = user.isEnabledItem(PERM_EDIT_ADMINS);
 
         //If the user does not have admin permission but trying set admin permission throw error
         if(!isCurrentUserAdmin.booleanValue() && entity.getAdmin().booleanValue()) {
@@ -160,14 +165,15 @@ public class UserDetailsController extends DatatableRestControllerV2<UserDetails
         Identity user = UsersDB.getCurrentUser(getRequest());
 
         //Check user permissions and return for this user editable entities
-        if(!user.isEnabledItem("users.edit_admins")  && user.isEnabledItem("users.edit_public_users")) {
-            predicates.add(builder.isFalse(root.get("admin")));
-        } else if(user.isEnabledItem("users.edit_admins")  && !user.isEnabledItem("users.edit_public_users")) {
-            predicates.add(builder.isTrue(root.get("admin")));
-        } else if(!user.isEnabledItem("users.edit_admins")  && !user.isEnabledItem("users.edit_public_users")) {
+        Expression<Boolean> colAdmin = root.get("admin");
+        if(!user.isEnabledItem(PERM_EDIT_ADMINS)  && user.isEnabledItem(PERM_EDIT_PUBLIC_USERS)) {
+            predicates.add(builder.isFalse(colAdmin));
+        } else if(user.isEnabledItem(PERM_EDIT_ADMINS)  && !user.isEnabledItem(PERM_EDIT_PUBLIC_USERS)) {
+            predicates.add(builder.isTrue(colAdmin));
+        } else if(!user.isEnabledItem(PERM_EDIT_ADMINS)  && !user.isEnabledItem(PERM_EDIT_PUBLIC_USERS)) {
             //If user doesnt have admin and public perm in same time
-            predicates.add(builder.isFalse(root.get("admin")));
-            predicates.add(builder.isTrue(root.get("admin")));
+            predicates.add(builder.isFalse(colAdmin));
+            predicates.add(builder.isTrue(colAdmin));
         }
 
         SpecSearch<UserDetailsEntity> specSearch = new SpecSearch<>();
@@ -198,16 +204,34 @@ public class UserDetailsController extends DatatableRestControllerV2<UserDetails
 
         if ("remove".equals(target.getAction())) return;
 
-		if ("random".equals(entity.getPassword()))
+		if ("random".equals(entity.getPassword()) || "*".equals(entity.getPassword()))
 		{
 			//vygeneruj heslo
-			entity.setPassword(Password.generatePassword(5));
+			entity.setPassword(Password.generateStringHash(5)+Password.generatePassword(5));
 		}
 
         Prop prop = Prop.getInstance(request);
 
-        //pri importe moze byt v exceli prazdne heslo, nastav teda na unchanged
-        if (isImporting() && Tools.isEmpty(entity.getPassword())) entity.setPassword(UserTools.PASS_UNCHANGED);
+        //Import setting
+        if(isImporting()) {
+            if(Tools.isEmpty(entity.getPassword())) entity.setPassword(UserTools.PASS_UNCHANGED);
+
+            if (entity.getEditorFields()==null) {
+                UserDetailsEditorFields udef = new UserDetailsEditorFields();
+                udef.fromUserDetailsEntity(entity, false, getRequest(), groupsApproveRepository);
+            }
+
+            //Generate default login
+            if(entity.getEditorFields()!=null && Tools.isEmpty(entity.getEditorFields().getLogin())) {
+                String autoLogin = Tools.isEmpty(entity.getUserGroupsIds()) == true ? "" : entity.getUserGroupsIds() + "-";
+                autoLogin += entity.get__rowNum__() + "-" + Password.generatePassword(4);
+                if( Tools.isNotEmpty(entity.getLastName()) ) autoLogin = DocTools.removeCharsDir( entity.getLastName() ).toLowerCase() + "-" + autoLogin;
+                entity.getEditorFields().setLogin(autoLogin);
+            }
+
+            //By default not admin
+            if(entity.getAdmin() == null) entity.setAdmin(false);
+        }
 
         boolean allowWeakPassword = false;
         if (entity.getEditorFields()!=null && Boolean.TRUE.equals(entity.getEditorFields().getAllowWeakPassword())) allowWeakPassword = true;
@@ -312,9 +336,10 @@ public class UserDetailsController extends DatatableRestControllerV2<UserDetails
      * @param generatePass
      */
     public void auth(Long userId, boolean generatePass) {
+        String title = getProp().getText("components.users.auth_title");
         //The ID must be > 0
         if(userId == null || userId < 0) {
-            addNotify(new NotifyBean(getProp().getText("components.users.auth_title"), getProp().getText("components.users.auth_failed.id_invalid"), NotifyType.ERROR));
+            addNotify(new NotifyBean(title, getProp().getText("components.users.auth_failed.id_invalid"), NotifyType.ERROR));
             return;
         }
 
@@ -324,9 +349,9 @@ public class UserDetailsController extends DatatableRestControllerV2<UserDetails
         //Show notification about auth status
         if(authorization) {
             setForceReload(true);
-            addNotify(new NotifyBean(getProp().getText("components.users.auth_title"), getProp().getText("components.users.auth_success", userToApprove.getFullName(), userToApprove.getLogin()), NotifyType.SUCCESS, 15000));
+            addNotify(new NotifyBean(title, getProp().getText("components.users.auth_success", userToApprove.getFullName(), userToApprove.getLogin()), NotifyType.SUCCESS, 15000));
         } else
-            addNotify(new NotifyBean(getProp().getText("components.users.auth_title"), getProp().getText("components.users.auth_failed", userToApprove.getFullName(), userToApprove.getLogin()), NotifyType.ERROR));
+            addNotify(new NotifyBean(title, getProp().getText("components.users.auth_failed", userToApprove.getFullName(), userToApprove.getLogin()), NotifyType.ERROR));
     }
 
     @Override

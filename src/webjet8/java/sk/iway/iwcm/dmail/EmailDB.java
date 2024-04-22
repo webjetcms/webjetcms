@@ -1156,7 +1156,7 @@ public class EmailDB
 	 * @param campaignId
 	 * @return pocet zmazanych emailov
 	 */
-	private static int deleteUnsubscribedEmailsFromCampaign(int campaignId)
+	public static int deleteUnsubscribedEmailsFromCampaign(int campaignId)
 	{
 		int pocetZmazanych = 0;
 		List<EmailUnsubscribedBean> emails = getUnsubscribedEmail(null);

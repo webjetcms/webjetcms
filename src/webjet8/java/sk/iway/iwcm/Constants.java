@@ -1074,7 +1074,7 @@ public class Constants {
 		// /admin/FCKeditor/editor/skins/webjet/fck_dialog.css,
 		// /admin/css/tabpane-luna.css je tam kvoli zalozkam na frontende (docman)
 		setString("allowAdminUrls",
-				"^/admin/$, /admin/images/, /admin/m/images/, /admin/logon.jsp, ^/admin/m/$, /admin/m/logon.jsp, /admin/m/content/logon_body.jsp, /admin/index.jsp, /admin/logon.do, /admin/approve.jsp, /admin/skins/webjet6/css/, /admin/skins/webjet6/images/, /admin/skins/webjet6/logon, /admin/css/, /admin/m/css/, /admin/scripts/, /admin/m/jscripts/, /admin/license.jsp, /admin/licence.do, /admin/setup, /admin/FCKeditor/editor_set_user.jsp, /components/messages/refresher-ac.jsp, /admin/multiplefileupload.do, /admin/mem, /admin/FCKeditor/editor/skins/webjet/fck_dialog.css, /admin/css/tabpane-luna.css, /admin/imageeditor/load_image.jsp, /admin/skins/webjet8/assets/, /admin/mobile-api/,/components/_common/fulltext_preview.jsp,^/admin/logon$,^/admin/logon/$,^/admin/logon/changePassword$",
+				"^/admin/$, /admin/images/, /admin/m/images/, /admin/logon.jsp, ^/admin/m/$, /admin/m/logon.jsp, /admin/m/content/logon_body.jsp, /admin/index.jsp, /admin/logon.do, /admin/approve.jsp, /admin/skins/webjet6/css/, /admin/skins/webjet6/images/, /admin/skins/webjet6/logon, /admin/css/, /admin/m/css/, /admin/scripts/, /admin/m/jscripts/, /admin/license.jsp, /admin/licence.do, /admin/setup, /admin/FCKeditor/editor_set_user.jsp, /components/messages/refresher-ac.jsp, /admin/multiplefileupload.do, /admin/mem, /admin/FCKeditor/editor/skins/webjet/fck_dialog.css, /admin/css/tabpane-luna.css, /admin/imageeditor/load_image.jsp, /admin/skins/webjet8/assets/, /admin/mobile-api/,/components/_common/fulltext_preview.jsp,^/admin/logon$,^/admin/logon/$,^/admin/logon/changePassword$,/admin/scripts/qrcode.js",
 				"admin",
 				"URL prefixy stranok a suborov v admin casti, ktore budu pristupne aj pre neprihlaseneho pouzivatela.");
 
@@ -1378,8 +1378,8 @@ public class Constants {
 		setString("xXssProtection", "1; mode=block", MOD_SECURITY,
 				"Hodnota hlavicky X-XSS-Protection pre ochranu pred XSS utokom");
 		setString("serverName", "unknown", MOD_SECURITY, "Hodnota hlavicky Server v HTTP odpovediach");
-		setString("strictTransportSecurity", "", MOD_SECURITY,
-				"Hodnota hlavicky Strict-Transport-Security v HTTP odpovediach, odporucame nastavit na hodnotu: max-age=31536000 ; includeSubDomains");
+		setString("strictTransportSecurity", "max-age=31536000", MOD_SECURITY,
+				"Hodnota hlavicky Strict-Transport-Security v HTTP odpovediach, odporucame nastavit na hodnotu: max-age=31536000; includeSubDomains");
 		setString("xContentTypeOptions", "nosniff", MOD_SECURITY,
 				"Hodnota hlavicky X-Content-Type-Options pre nastavenie urcovania typov suborov podla obsahu (ignorovanie pripony)");
 
@@ -1955,7 +1955,7 @@ public class Constants {
 				"Predvolene sa pri autorizacii pouzivatela generuje nove heslo, nastavenim na false sa nove heslo nebude generovat ale zarovne v autorizacnom maile nemoze byt posielane heslo, kedze WebJET ho nevie zistit.");
 
 		setString("XMLDecoderAllowedClasses",
-				"java.beans.XMLDecoder, sk.iway.iwcm.sync.export.Content, java.util.ArrayList, java.util.List, java.lang.String, sk.iway.iwcm.doc.DocDetails, sk.iway.iwcm.doc.GroupDetails, sk.iway.spirit.model.Media, java.util.Vector, java.util.Date, org.eclipse.persistence.indirection.IndirectList, sk.iway.spirit.model.MediaGroupBean, sk.iway.iwcm.editor.DocNoteBean, sk.iway.iwcm.doc.TemplateDetails, sk.iway.iwcm.users.UserGroupDetails, sk.iway.iwcm.system.UpdateDBBean, sk.iway.iwcm.system.ConfDetails, sk.iway.iwcm.update.VersionBean, java.util.Hashtable, java.util.Map, sk.iway.iwcm.doc.PerexGroupBean, sk.iway.iwcm.components.monitoring.jpa.ExecutionEntry, sk.iway.iwcm.components.banner.model.BannerBean, java.lang.Integer, sk.iway.iwcm.gallery.GalleryBean, java.sql.Timestamp, java.util.HashMap, sk.iway.iwcm.inquiry.InquiryBean, sk.iway.iwcm.gallery.GalleryDimension, java.awt.Dimension, sk.iway.iwcm.inquiry.AnswerForm, sk.iway.iwcm.doc.TemplateDetailEditorFields, sk.iway.iwcm.doc.DocEditorFields",
+				"java.beans.XMLDecoder, sk.iway.iwcm.sync.export.Content, java.util.ArrayList, java.util.List, java.lang.String, sk.iway.iwcm.doc.DocDetails, sk.iway.iwcm.doc.GroupDetails, sk.iway.spirit.model.Media, java.util.Vector, java.util.Date, org.eclipse.persistence.indirection.IndirectList, sk.iway.spirit.model.MediaGroupBean, sk.iway.iwcm.editor.DocNoteBean, sk.iway.iwcm.doc.TemplateDetails, sk.iway.iwcm.users.UserGroupDetails, sk.iway.iwcm.system.UpdateDBBean, sk.iway.iwcm.system.ConfDetails, sk.iway.iwcm.update.VersionBean, java.util.Hashtable, java.util.Map, sk.iway.iwcm.doc.PerexGroupBean, sk.iway.iwcm.components.monitoring.jpa.ExecutionEntry, sk.iway.iwcm.components.banner.model.BannerBean, java.lang.Integer, sk.iway.iwcm.gallery.GalleryBean, java.sql.Timestamp, java.util.HashMap, sk.iway.iwcm.inquiry.InquiryBean, sk.iway.iwcm.gallery.GalleryDimension, java.awt.Dimension, sk.iway.iwcm.inquiry.AnswerForm, sk.iway.iwcm.doc.TemplateDetailEditorFields, sk.iway.iwcm.doc.DocEditorFields, sk.iway.iwcm.doc.GroupEditorField, sk.iway.iwcm.doc.TemplateDetailEditorFields",
 				MOD_CONFIG, "Povolene triedy pre XMLDecoder");
 
 		setBoolean("swaggerEnabled", false, MOD_SECURITY, "Povolenie zobrazovania swagger API dokumentacie");

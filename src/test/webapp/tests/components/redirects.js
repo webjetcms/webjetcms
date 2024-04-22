@@ -88,21 +88,20 @@ Scenario('odhlasenie', ({ I }) => {
 Scenario('XLS import onlynew', async ({I, DT, DTE}) => {
 
     var oldUrl = "/oldurl-onlynew-135";
+    var oldUrlSecond = "/oldurl-onlynew-2";
     var newUrl = "/oldurl-onlynew-164";
     var updateBy = "Stará URL - oldUrl";
     var excelFile = "tests/components/redirects-onlynew.xlsx";
 
-    DT.filter("oldUrl", oldUrl);
+    //
+    I.say("delete all old/failed records");
+    DT.filter("oldUrl", "/oldurl-onlynew-");
 
     //
     I.say("Delete old data");
     var totalRows = await I.getTotalRows();
     if (totalRows > 0) {
-        I.clickCss("div.dataTables_scrollHeadInner button.buttons-select-all");
-        I.clickCss("div.dt-buttons button.buttons-remove");
-        DTE.waitForEditor();
-        I.click("Zmazať", "div.DTE_Action_Remove");
-        DTE.waitForLoader();
+        DT.deleteAll();
     }
 
     I.dontSee(oldUrl, "#datatableInit_wrapper .dataTables_scrollBody");
@@ -120,10 +119,13 @@ Scenario('XLS import onlynew', async ({I, DT, DTE}) => {
 
     //Check inserted names, records and statuses
     I.waitForText(oldUrl, 15, "#datatableInit_wrapper .dataTables_scrollBody");
+    I.see(oldUrlSecond, "#datatableInit_wrapper .dataTables_scrollBody");
     I.see(newUrl+"-xls", "#datatableInit_wrapper .dataTables_scrollBody");
+
 
     //
     I.say("Edit newUrl");
+    DT.filter("oldUrl", oldUrl);
     I.click(oldUrl, "#datatableInit_wrapper .dataTables_scrollBody");
     DTE.waitForEditor();
     I.fillField("#DTE_Field_newUrl", newUrl+"-edited");
@@ -131,6 +133,13 @@ Scenario('XLS import onlynew', async ({I, DT, DTE}) => {
 
     DT.waitForLoader();
     I.dontSee(newUrl+"-xls", "#datatableInit_wrapper .dataTables_scrollBody");
+
+    //
+    I.say("Delete second row to verify it will be imported again");
+    DT.filter("oldUrl", oldUrlSecond);
+    I.see(oldUrlSecond, "#datatableInit_wrapper .dataTables_scrollBody");
+    DT.deleteAll();
+    I.dontSee(oldUrlSecond, "#datatableInit_wrapper .dataTables_scrollBody");
 
     //
     I.say("Reimport in onlyNew mode");
@@ -148,11 +157,14 @@ Scenario('XLS import onlynew', async ({I, DT, DTE}) => {
     I.clickCss("#submit-import");
 
     DT.waitForLoader();
+    DT.filter("oldUrl", "/oldurl-onlynew-");
 
     //Check inserted names, records and statuses
     I.waitForText(oldUrl, 15, "#datatableInit_wrapper .dataTables_scrollBody");
     I.see(newUrl+"-edited", "#datatableInit_wrapper .dataTables_scrollBody");
     I.dontSee(newUrl+"-xls", "#datatableInit_wrapper .dataTables_scrollBody");
+    I.see(oldUrlSecond, "#datatableInit_wrapper .dataTables_scrollBody");
+
 
     //refresh data
     I.clickCss("div.dt-buttons button.buttons-refresh");
@@ -160,10 +172,10 @@ Scenario('XLS import onlynew', async ({I, DT, DTE}) => {
     I.waitForText(oldUrl, 15, "#datatableInit_wrapper .dataTables_scrollBody");
     I.see(newUrl+"-edited", "#datatableInit_wrapper .dataTables_scrollBody");
     I.dontSee(newUrl+"-xls", "#datatableInit_wrapper .dataTables_scrollBody");
+    I.see(oldUrlSecond, "#datatableInit_wrapper .dataTables_scrollBody");
 
     //
     I.say("Delete old data");
-    I.click("td.dt-select-td.sorting_1");
-    I.clickCss("button.buttons-remove");
-    I.click("Zmazať", "div.DTE_Action_Remove");
+    DT.filter("oldUrl", "/oldurl-onlynew-");
+    DT.deleteAll();
  });

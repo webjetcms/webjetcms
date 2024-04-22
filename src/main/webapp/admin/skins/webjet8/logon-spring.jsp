@@ -160,9 +160,7 @@ String brandSuffix = InitServlet.getBrandSuffix();
     setLoginName();
 
     function checkPassword(password) {
-        //console.log("Check password: ", password);
         let result = zxcvbnts.core.zxcvbn(password);
-        //console.log("Result: ", result);
         return result;
     }
 

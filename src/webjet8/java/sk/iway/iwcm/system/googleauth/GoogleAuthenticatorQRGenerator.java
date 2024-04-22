@@ -1,8 +1,5 @@
 package sk.iway.iwcm.system.googleauth;
 
-import java.io.UnsupportedEncodingException;
-import java.net.URLEncoder;
-
 /**
  *  GoogleAuthenticatorQRGenerator.java
  *
@@ -23,30 +20,6 @@ import org.apache.http.client.utils.URIBuilder;
  * contained therein.
  */
 public final class GoogleAuthenticatorQRGenerator {
-    
-    /**
-     * The format string to generate the Google Chart HTTP API call.
-     */
-    private static final String TOTP_URI_FORMAT =
-            "https://chart.googleapis.com/chart?chs=200x200&chld=M%%7C0&cht=qr&chl=%s";
-
-    /**
-     * This method wraps the invocation of <code>URLEncoder##encode</code>
-     * method using the "UTF-8" encoding.  This call also wraps the
-     * <code>UnsupportedEncodingException</code> thrown by
-     * <code>URLEncoder##encode</code> into a <code>RuntimeException</code>.
-     * Such an exception should never be thrown.
-     *
-     * @param s The string to URL-encode.
-     * @return the URL-encoded string.
-     */
-    private static String internalURLEncode(String s) {
-        try {
-            return URLEncoder.encode(s, "UTF-8");
-        } catch (UnsupportedEncodingException e) {
-            throw new RuntimeException("UTF-8 encoding is not supported by URLEncoder.", e);
-        }
-    }
 
     /**
      * The label is used to identify which account a key is associated with.
@@ -68,7 +41,7 @@ public final class GoogleAuthenticatorQRGenerator {
         if (accountName == null || accountName.trim().length() == 0) {
             throw new IllegalArgumentException("Account name must not be empty.");
         }
-        
+
         StringBuilder sb = new StringBuilder();
         if (issuer != null) {
             if (issuer.contains(":")) {
@@ -109,9 +82,7 @@ public final class GoogleAuthenticatorQRGenerator {
                                        String accountName,
                                        GoogleAuthenticatorKey credentials) {
 
-        return String.format(
-                TOTP_URI_FORMAT,
-                internalURLEncode(getOtpAuthTotpURL(issuer, accountName, credentials)));
+        return getOtpAuthTotpURL(issuer, accountName, credentials);
     }
 
     /**
@@ -135,7 +106,7 @@ public final class GoogleAuthenticatorQRGenerator {
     public static String getOtpAuthTotpURL(String issuer,
                                            String accountName,
                                            GoogleAuthenticatorKey credentials) {
-        
+
         URIBuilder uri = new URIBuilder()
             .setScheme("otpauth")
             .setHost("totp")
@@ -150,7 +121,7 @@ public final class GoogleAuthenticatorQRGenerator {
 
             uri.setParameter("issuer", issuer);
         }
-        
+
         /*
             The following parameters aren't needed since they are all defaults.
             We can exclude them to make the URI shorter.
@@ -158,9 +129,9 @@ public final class GoogleAuthenticatorQRGenerator {
         // uri.setParameter("algorithm", "SHA1");
         // uri.setParameter("digits", "6");
         // uri.setParameter("period", "30");
-        
+
         return uri.toString();
 
     }
-    
+
 }

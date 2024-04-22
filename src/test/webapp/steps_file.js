@@ -68,7 +68,7 @@ module.exports = function () {
     },
 
     //prihlasenie usera, z nejakeho dovodu vramci scenarov nefunguje dobre autologin plugin
-    relogin(user, autologoff=true) {
+    relogin(user, autologoff=true, waitForText=true) {
       //lebo v codecept_conf mame admina, ale realne je to user tester
       if ("admin"===user) user = "tester";
       if (autologoff) {
@@ -82,7 +82,7 @@ module.exports = function () {
       this.fillField("username", user);
       this.fillField("password", secret("*********"));
       this.click("login-submit");
-      this.waitForText("Pomocník", 10);
+      if (waitForText===true) this.waitForText("Pomocník", 10);
     },
 
     //vygenerovanie nahodneho retazca

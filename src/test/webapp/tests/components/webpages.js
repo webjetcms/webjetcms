@@ -524,11 +524,14 @@ Scenario('Otestuj nove stlpce tempFieldDocId', ({ I, DT, DTE }) => {
 
     //Go to history tab
     I.click('#pills-dt-datatableInit-history-tab');
-    I.wait(2);
+    I.wait(1);
+    I.waitForInvisible("#datatableFieldDTE_Field_editorFields-history_processing", 200);
 
     I.fillField("#datatableFieldDTE_Field_editorFields-history_wrapper input.dt-filter-title", name + "_" +randomNumber);
     I.pressKey('Enter', "input.dt-filter-key");
+    //its client side paging
     I.wait(1);
+    I.waitForInvisible("#datatableFieldDTE_Field_editorFields-history_processing", 200);
 
     I.click("#datatableFieldDTE_Field_editorFields-history_wrapper button.buttons-select-all.btn.btn-sm.btn-outline-secondary.dt-filter-id");
     I.click(".buttons-history-edit");
@@ -552,6 +555,33 @@ Scenario('Otestuj nove stlpce tempFieldDocId', ({ I, DT, DTE }) => {
     //tato stranka ma ako volne pole A sablony nastavenu navigaciu a vlozenu do tela stranky, over zobrazenie
     I.amOnPage("/test-stavov/test_volnych_poli_sablony.html");
     I.see("Úvod", "div.template-object-a");
+});
+
+Scenario('Check REQUEST object filtration', async ({ I }) => {
+    I.logout();
+    //after PlayWrigt update it will be easier
+    /*I.setPlaywrightRequestHeaders({
+        'X-Sent-By': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) <strong>test</strong>',
+    });*/
+    var url = '/test-stavov/test_volnych_poli_sablony.html';
+    I.amOnPage(url);
+    I.see("<p>Toto je system priecinok</p>", "div.template-object-b-filtered");
+    I.seeInSource("<div class=\"template-object-b-filtered\">&lt;p&gt;Toto je system priecinok&lt;/p&gt;");
+    I.see("Mozilla/5.0", "div.user-agent");
+
+    var userAgentHeader = 'Mozilla/5.0 (iPhone" onMouseMove html onMouseMove="javascript:javascript:alert(\'b\')"></html onMouseMove><script>alert(\'a\')</script>" iPhone OS 5_1 like Mac OS X) AppleWebKit/534.46 (KHTML, like Gecko) Version/5.1 Mobile/9B176 Safari/7534.48.3';
+    var userAgent = 'iPhone" onMouseMove html onMouseMove="javascript:javascript:alert(\'b\')"></html';
+    var userAgentEscaped = userAgent.replace(/"/gi, "&quot;").replace(/'/gi, "&#39;").replace(/>/gi, "&gt;").replace(/</gi, "&lt;");
+    var response = await I.sendGetRequest(url, {
+        'User-Agent': userAgentHeader,
+        'x-auth-token': ''
+    });
+    //console.log("response", response);
+    var data = response.data;
+    I.assertNotContain(data, userAgent, "Contains unescaped user agent!");
+    I.assertNotContain(data, userAgent.toLowerCase(), "Contains unescaped user agent lowercase!");
+    I.assertContain(data, userAgentEscaped, "Does not contain escaped user agent!");
+    I.assertContain(data, userAgentEscaped.toLowerCase(), "Does not contain escaped user agent lowercase!");
 });
 
 Scenario('Otestuj nove stlpce show_in', ({ I, DT, DTE }) => {

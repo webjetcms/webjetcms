@@ -27,6 +27,7 @@ scratchpad*.jsp
 .vscode\settings.json
 src/main/resources/poolman-local*.xml
 src/main/webapp/WEB-INF/update/
+src/main/webapp/WEB-INF/lucene_index/
 
 #logy
 *.log
@@ -63,8 +64,9 @@ src/main/webapp/templates/usti-nad-labem
 #javadoc je generovany, nema zmysel ho mat v gite
 /docs/developer/javadoc
 /docs/javadoc
-
+            
 
 # Licensed DT Editor
 src/main/webapp/admin/v9/src/js/plugins/Editor-*.zip
 
+        

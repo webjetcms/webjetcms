@@ -99,6 +99,8 @@ Text stránky vytvorenej priamo v editore WebJET môže obsahovať špeciálne z
 			url - url adresa aktualnej stranky<br/>
 			urlQuery - url adresa + query string http dotazu (URL adresa + hodnota za znakom ? v URL)<br/>
 			path_filter_query_string - query string http dotazu (hodnota za znakom ? v URL)<br/>
+			<br/>
+			Upozornenie: hodnota je pred vložením do stránky filtrovaná (špeciálne znaky nahradené HTML entitami), nový riadok je nahradený za medzeru. Ak potrebujete ne-filtrovanú hodnotu použite prefix `unfilter.` v názve parametra. Filtrácia sa predvolene nepoužije pre štandardné objekty typu `doc_data, title`, vynútiť ju môžete prefixom `filter.`.
 		</td>
 		<td class="t_body">!REQUEST(doc_title)! - WebJET Content Management</td>
 	</tr>

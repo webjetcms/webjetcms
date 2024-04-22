@@ -41,6 +41,8 @@ public class EmailsRestController extends DatatableRestControllerV2<EmailsEntity
     private final CampaingsRepository campaingsRepository;
     private final StatClicksRepository statClicksRepository;
 
+    private static final String NEW_LINE = "<br><br>";
+
     @Autowired
     public EmailsRestController(EmailsRepository emailsRepository, CampaingsRepository campaingsRepository, StatClicksRepository statClicksRepository) {
         super(emailsRepository);
@@ -75,38 +77,71 @@ public class EmailsRestController extends DatatableRestControllerV2<EmailsEntity
 
     @Override
     public EmailsEntity editItem(EmailsEntity entity, long id) {
-        //In editor can be put more than one email adress
-        String[] emailsToInsert = Tools.getTokens(entity.getRecipientEmail(), ", ;\n", true);
+        /*Extract email - ONLY IF importing
+         * Example: from "Janko Tester <tester@test.sk>" do JUST "tester@test.sk"
+        */
+        if(isImporting() == true) {
+            entity.setRecipientEmail( DmailUtil.parseEmailFromNameEmailFormat(entity.getRecipientEmail()) );
+        }
+
+        //Now remove unwanted characters
+        entity.setRecipientEmail( entity.getRecipientEmail().replaceAll("[<>]", "") );
+
+        //In editor can be put more than one email adress BUT if it's IMPORT action it's allways 1 email
+        String[] emailsToInsert;
+        if(isImporting() == true) {
+            emailsToInsert = new String[]{entity.getRecipientEmail()};
+        } else {
+            emailsToInsert = Tools.getTokens(entity.getRecipientEmail(), ",;\n\s", true);
+        }
 
         //This is replacement for raw/hand insert of emails (not thru CSV/Excel)
         Set<String> emailsTable = new HashSet<>();
         Set<String> unsubscribedEmails = DmailUtil.getUnsubscribedEmails();
 
         Long campainId = Long.valueOf(Tools.getIntValue(getRequest().getParameter("campainId"), -1));
-        CampaingsEntity campaign = null;
-        if (campainId>0L) campaign = campaingsRepository.getById(campainId);
+        CampaingsEntity campaign = (campainId > 0L) ? campaingsRepository.getById(campainId) : null;
 
         //Load allready pushed emails in DB
         for (String email : emailsRepository.getAllCampainEmails(CampaingsRestController.getCampaignId(campaign, getUser()))) {
             emailsTable.add(email.toLowerCase());
         }
 
-        EmailsEntity saved = null;
+        //Skip wrong one so import can continue
+        //Prepare message for user
+        boolean skipWrongEmails = isImporting() == true ? isSkipWrongData() : entity.isSkipWrongEmails();
+        StringBuilder warningMsg = new StringBuilder("");
 
         //Check if emailsToInsert are valid
+        EmailsEntity saved = null;
         for(String recipientEmail : emailsToInsert) {
 
             //Get rid of white-spaces (for safety reason)
             recipientEmail = recipientEmail.replaceAll("\\s+","");
 
+            //Validate email
+            if(Tools.isEmail(recipientEmail) == false) {
+                if(skipWrongEmails == false) {
+                    throwError( getProp().getText("email_validation.error.invalid", recipientEmail) );
+                } else {
+                    //Skip
+                    warningMsg.append( getProp().getText("email_validation.error.invalid", recipientEmail) ).append(NEW_LINE);
+                    continue;
+                }
+            }
+
             //Protection against unsubscribed email addresses
-            if(unsubscribedEmails.contains(recipientEmail.toLowerCase())) continue;
+            if(unsubscribedEmails.contains(recipientEmail.toLowerCase())) {
+                warningMsg.append( getProp().getText("emails.error.unsubscribed", recipientEmail) ).append(NEW_LINE);
+                continue;
+            }
 
             //Email duplicity protection
             if(emailsTable.contains(recipientEmail.toLowerCase())) {
                 if (emailsToInsert.length==1 && (entity.getId()!=null && entity.getId()>0)) {
                     //ak je v zozname len jeden email a uz ma v DB idecko, tak pokracuj, ulozime jeho zmeny
                 } else {
+                    warningMsg.append( getProp().getText("emails.error.duplicit_or_exist", recipientEmail) ).append(NEW_LINE);
                     continue;
                 }
             }
@@ -115,21 +150,21 @@ public class EmailsRestController extends DatatableRestControllerV2<EmailsEntity
             if (emailsToInsert.length==1) emailToInsert = entity;
             else emailToInsert = new EmailsEntity(recipientEmail, entity.getRecipientName());
 
-            boolean isValid = prepareEmailForInsert(campaign, getUser().getUserId(), emailToInsert);
-            if (isValid) {
+            prepareEmailForInsert(campaign, getUser().getUserId(), emailToInsert);
+            //Save entity into DB
+            if (saved == null) saved = emailsRepository.save(emailToInsert);
+            else emailsRepository.save(emailToInsert);
 
-                //Save entity into DB
-                if (saved == null) saved = emailsRepository.save(emailToInsert);
-                else emailsRepository.save(emailToInsert);
-
-                //Update emails table (because there can be duplicity in excel)
-                emailsTable.add(recipientEmail);
-            } else {
-                addNotify(new NotifyBean(getProp().getText("datatables.error.title.js"), getProp().getText("datatable.error.importRow", String.valueOf(getLastImportedRow().intValue()+1), "`"+recipientEmail)+"` "+getProp().getText("components.dmail.emailIsNotValid"), NotifyType.ERROR));
-            }
+            //Update emails table (because there can be duplicity in excel)
+            emailsTable.add(recipientEmail.toLowerCase());
         }
 
         setForceReload(true);
+
+        //Show warning message
+        if(warningMsg.length() > 0) {
+            addNotify(new NotifyBean(getProp().getText("emails.error.title"), warningMsg.toString(), NotifyType.WARNING));
+        }
 
         return saved;
     }
@@ -147,17 +182,13 @@ public class EmailsRestController extends DatatableRestControllerV2<EmailsEntity
      * @param loggedUserId
      * @param entity
      */
-    public static boolean prepareEmailForInsert(CampaingsEntity campaign, int loggedUserId, EmailsEntity entity) {
+    public static void prepareEmailForInsert(CampaingsEntity campaign, int loggedUserId, EmailsEntity entity) {
 
         //trimni email adresu
         if (entity.getRecipientEmail()!=null) entity.setRecipientEmail(entity.getRecipientEmail().trim());
 
         //sprav lower case
         if (entity.getRecipientEmail()!=null) entity.setRecipientEmail(entity.getRecipientEmail().toLowerCase());
-
-        if(Tools.isEmail(entity.getRecipientEmail())==false) {
-            return false;
-        }
 
         //Get email recipient(user) using email
         UserDetails recipient = UsersDB.getUserByEmail(entity.getRecipientEmail(), 600);
@@ -171,7 +202,7 @@ public class EmailsRestController extends DatatableRestControllerV2<EmailsEntity
         }
 
         //Set create values
-        if (campaign == null) {
+        if (campaign == null || campaign.getId()==null || campaign.getId().longValue()<1) {
             entity.setCampainId((long)-loggedUserId);
             entity.setUrl("");
             entity.setSubject("");
@@ -185,10 +216,6 @@ public class EmailsRestController extends DatatableRestControllerV2<EmailsEntity
             entity.setSenderName(campaign.getSenderName());
             entity.setSenderEmail(campaign.getSenderEmail());
             entity.setCreatedByUserId(loggedUserId);
-
-            if (campaign.getId()==null || campaign.getId().longValue()<1) {
-                entity.setCreatedByUserId(-loggedUserId);
-            }
         }
 
         entity.setCreateDate(new Date());
@@ -197,8 +224,6 @@ public class EmailsRestController extends DatatableRestControllerV2<EmailsEntity
         if (entity.getId()==null || entity.getId().longValue()<1) {
             entity.setDisabled(true);
         }
-
-        return true;
     }
 
     @Override

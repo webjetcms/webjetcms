@@ -30,6 +30,7 @@ request.setAttribute("cmpName", "users.gauth");
 %>
 <%@ include file="layout_top_dialog.jsp" %>
 
+<script type="text/javascript" src="/admin/scripts/qrcode.js"></script>
 <script type="text/javascript">
 
 	resizeDialog(990, 680);
@@ -60,20 +61,22 @@ table.sort_table td { vertical-align: top;}
 
 		<p><iwcm:text key="user.gauth.instructions"/></p>
 
-		<table border="0" cellspacing="0" cellpadding="1">
-		<tr>
-			<td nowrap="nowrap"><label><input type="checkbox" id="gauthCheckbox"/> <iwcm:text key="user.gauth.enable"/></label></td>
-			<td nowrap="nowrap" ></td>
-		</tr>
-		<tr>
-			<td nowrap="nowrap"><img id="qrImage" alt="" src=""></td>
-			<td nowrap="nowrap" id="instructions"></td>
-		</tr><tr>
-			<td id="secret"></td>
-            <td nowrap="nowrap" id="scratchCodeCell"><iwcm:text key="user.gauth.scratchCode"/> <span id="scratchCode"></span></td>
-		</tr>
+		<table cellspacing="0" cellpadding="1">
+            <tr>
+                <td nowrap="nowrap"><label><input type="checkbox" id="gauthCheckbox"/> <iwcm:text key="user.gauth.enable"/></label></td>
+            </tr><tr>
+                <td nowrap="nowrap"><div id="qrImage"></div></td>
+            </tr><tr>
+                <td nowrap="nowrap" id="instructions"></td>
+            </tr><tr>
+                <td nowrap="nowrap" id="scratchCodeCell" style="display: none"><iwcm:text key="user.gauth.scratchCode"/> <span id="scratchCode"></span></td>
+            </tr>
 		</table>
+        <span id="secret"></span>
 
+        <p id="okToConfirm" style="display: none">
+            <strong><iwcm:text key="user.gauth.clickOkToConfirm"/></strong>
+        </p>
 
 
 </div>
@@ -88,8 +91,22 @@ function Ok()
     $.ajax({
         url: "/admin/users/2factorauth",
 		method : "POST",
-		data : {"secret" : $("#secret").text()}
-    }).done(function(msg){window.close()});
+		data : {
+            "secret" : $("#secret").text(),
+            "__token": "<%=sk.iway.iwcm.system.stripes.CSRF.getCsrfToken(session, true)%>"
+        },
+        success: function (response) {
+            if (response == ""){
+                window.close();
+            } else {
+                window.alert(response);
+            }
+        },
+        error: function (xhr, ajaxOptions, thrownError) {
+            alert(xhr.status);
+            alert(thrownError);
+        }
+    });
 }
 
 $(document).ready(function()
@@ -117,18 +134,32 @@ $(document).ready(function()
            }).done(function(msg) {
 			   data = jQuery.parseJSON(msg);
 
-			   $("#qrImage").attr("src",data.url);
-			   $("#scratchCodeCell").show();
+			   $("#qrImage").show();
+               var qrcode = new QRCode(document.getElementById("qrImage"), {
+                    text: data.url,
+                    width: 300,
+                    height: 300,
+                    colorDark : "#000000",
+                    colorLight : "#ffffff",
+                    correctLevel : QRCode.CorrectLevel.H
+                });
+
+			   //not used anymore $("#scratchCodeCell").show();
 			   $("#scratchCode").text(data.scratch);
 			   $("#secret").text(data.secret);
                $("#uniform-gauthCheckbox span").addClass("checked");
+
+               $("#instructions").html("<iwcm:text key='user.gauth.instructions2'/> "+data.secret);
+
+               $("#okToConfirm").show();
            });
 	   }else{
            $("#uniform-gauthCheckbox span").removeClass("checked");
-           $("#qrImage").attr("src","");
-           //$("#scratchCodeCell").show();
+           $("#qrImage").hide();
+           $("#scratchCodeCell").hide();
            $("#scratchCode").text("");
            $("#secret").text("");
+           $("#instructions").html("");
 
 	   }
 

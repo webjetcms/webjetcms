@@ -38,7 +38,7 @@
     <target name="define-artifact-properties">
         <property name="artifact.group" value="com.webjetcms" />
         <property name="artifact.name" value="webjetcms" />
-        <property name="artifact.version" value="2024.0.9" />
+        <property name="artifact.version" value="2024.0.17" />
         <property name="artifact.type" value="jar" />
         <property name="artifact.dir" value="${root}/artifacts" />
         <property name="artifact.pom" value="${artifact.dir}/${artifact.name}-${artifact.version}.pom" />
@@ -476,7 +476,6 @@
         </antcall>
 
         <echo message="Continue on https://s01.oss.sonatype.org/#stagingRepositories"/>
-        <echo message="   Close repository and then Release it"/>
         <echo message="Verify on https://repo1.maven.org/maven2/com/webjetcms/webjetcms/"/>
     </target>
 

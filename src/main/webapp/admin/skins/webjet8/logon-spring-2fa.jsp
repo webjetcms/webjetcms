@@ -34,6 +34,8 @@ String brandSuffix = InitServlet.getBrandSuffix();
 
     <iwcm:combine type="js" set="adminJqueryJs" />
 
+    <script type="text/javascript" src="/admin/scripts/qrcode.js"></script>
+
     <script type="text/javascript">
         <!--
         if (parent.frames.length > 0){
@@ -74,7 +76,11 @@ String brandSuffix = InitServlet.getBrandSuffix();
                     <form:form method="post" name="logonForm" modelAttribute="userForm">
                         <logic:present name="QRURL" scope="session">
                             <label class="control-label"><iwcm:text key="user.gauth.instructions"/></label>
-                            <img src="<%=session.getAttribute("QRURL")%>" style="margin: auto;margin: auto;display: block;"/><br>
+                            <div id="qrImage"></div>
+                            <p>
+                                <iwcm:text key='user.gauth.instructions2'/> <%=session.getAttribute("token")%>
+                            </p>
+                            <label class="control-label"><iwcm:text key="user.gauth.enterCodeAfterSetup"/></label>
                         </logic:present>
                         <logic:notPresent name="QRURL" scope="session">
                             <label class="control-label"><iwcm:text key="user.gauth.label"/></label>
@@ -108,10 +114,16 @@ String brandSuffix = InitServlet.getBrandSuffix();
 
 <script>
     jQuery(document).ready(function() {
-        Metronic.init(); // init metronic core components
-        Layout.init(); // init current layout
-
         document.logonForm.token.focus();
+
+        var qrcode = new QRCode(document.getElementById("qrImage"), {
+            text: "<%=session.getAttribute("QRURL")%>",
+            width: 300,
+            height: 300,
+            colorDark : "#000000",
+            colorLight : "#ffffff",
+            correctLevel : QRCode.CorrectLevel.H
+        });
     });
 
 </script>

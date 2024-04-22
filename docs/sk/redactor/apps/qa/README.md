@@ -25,4 +25,6 @@ Kliknutím na otázku, sa vám zobrazí formulár s parametrami otázky a odpove
 
 ![](admin-edit.png)
 
+V prípade, že zadáte "Odpoveď do e-mailu" a zvolíte možnosť **Zobrazovať na web stránke**, tak sa text z "Odpoveď do e-mailu" automaticky skopíruje do "Odpoveď na stránku".
+
 Aplikácia podporuje nastavenie [voliteľných polí](../../../frontend/webpages/customfields/README.md).

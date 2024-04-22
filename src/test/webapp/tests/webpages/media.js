@@ -198,6 +198,20 @@ Scenario('kontrola menu poloziek', ({I}) => {
     I.see("Média", "div.menu-wrapper");
 });
 
+function testMediaGroups(I, DTE, editorContainer, shouldSee=true) {
+    DTE.waitForEditor();
+    I.clickCss("#pills-dt-datatableInit-media-tab");
+    I.wait(1);
+    I.clickCss("button.buttons-create", "div.datatableFieldType");
+    I.waitForElement(editorContainer);
+    I.see("Media Skupina 1", editorContainer);
+    I.dontSee("Iba JetPortal4", editorContainer);
+    if (shouldSee) I.see("English a Newsletter skupina", editorContainer);
+    else I.dontSee("English a Newsletter skupina", editorContainer);
+    I.clickCss("button.btn-close-editor", editorContainer);
+    I.clickCss("div.DTE_Footer button.btn-close-editor", "#datatableInit_modal");
+}
+
 Scenario('overenie filtrovania media skupin podla adresara', ({I, DTE}) => {
     I.amOnPage("/admin/v9/webpages/web-pages-list/?groupid=0");
     I.say("Before navigate");
@@ -210,21 +224,22 @@ Scenario('overenie filtrovania media skupin podla adresara', ({I, DTE}) => {
     I.clickCss("button.buttons-create", "div.datatableFieldType");
     I.waitForElement(editorContainer);
     I.see("Media Skupina 1", editorContainer);
-    I.see("Iba JetPortal4", editorContainer);
+    I.see("Iba JetPortal4", editorContainer); //this is important, should be only on this page
     I.dontSee("English a Newsletter skupina", editorContainer);
     I.clickCss("button.btn-close-editor", editorContainer);
     I.clickCss("div.DTE_Footer button.btn-close-editor", "#datatableInit_modal");
 
     I.jstreeNavigate(["English", "Contact"]);
     I.click("Contact", "#datatableInit_wrapper");
-    DTE.waitForEditor();
-    I.clickCss("#pills-dt-datatableInit-media-tab");
-    I.wait(1);
-    I.clickCss("button.buttons-create", "div.datatableFieldType");
-    I.waitForElement(editorContainer);
-    I.see("Media Skupina 1", editorContainer);
-    I.dontSee("Iba JetPortal4", editorContainer);
-    I.see("English a Newsletter skupina", editorContainer);
+    testMediaGroups(I, DTE, editorContainer);
+
+    I.jstreeNavigate(["test", "Podadresar 1", "test_url_inherit"]);
+    I.click("test_url_inherit", "#datatableInit_wrapper");
+    testMediaGroups(I, DTE, editorContainer);
+
+    I.jstreeNavigate(["test", "Podadresar 1"]);
+    I.click("Podadresar 1", "#datatableInit_wrapper");
+    testMediaGroups(I, DTE, editorContainer, false);
 });
 
 Scenario('XSS zranitelnost', ({I, DT, DTE}) => {

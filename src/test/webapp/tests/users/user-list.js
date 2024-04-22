@@ -373,6 +373,64 @@ Scenario('Test self_delete error', ({ I, DT, DTE}) => {
      DTE.cancel();
 });
 
+/* XLSX si prepare so it's trigger both error handling in V2-initBinder and V2-handleEditor */
+
+Scenario('Test import incorrect data', ({ I, DT}) => {
+     let fileName = 'tests/users/wrong-empty-data-user-list.xlsx';
+
+     I.relogin("tester");
+     I.amOnPage("/admin/v9/users/user-list/");
+
+     checkWrongEmails(I, DT);
+
+     I.say("IF SkipWrong IS NOT checked, import will fail");
+     insertFile(I, fileName, false);
+     I.waitForText("Chyba: niektoré polia neobsahujú správne hodnoty. Skontrolujte všetky polia na chybové hodnoty (aj v jednotlivých kartách).");
+     I.waitForText("email - Nesprávna emailová adresa. Zadajte email vo formáte meno@domena.");
+     I.clickCss("#datatableImportModal > div > div > div.modal-footer > button.btn-outline-secondary");
+
+     checkWrongEmails(I, DT);
+
+     I.say("IF SkipWrong IS checked, import will NOT fail");
+     insertFile(I, fileName, true);
+     I.dontSee("Chyba: niektoré polia neobsahujú správne hodnoty. Skontrolujte všetky polia na chybové hodnoty (aj v jednotlivých kartách).");
+     I.dontSee("email - Nesprávna emailová adresa. Zadajte email vo formáte meno@domena.");
+     I.waitForInvisible("#datatableImportModal");
+
+     I.say("CHECK returned error");
+     I.waitForElement("#toast-container-webjet");
+     I.seeElement( locate("div.toast-title").withText("Chyba") );
+     I.seeElement( locate("div.toast-message").withText("Riadok 1: firstName - EMPTY - Povinné pole. Zadajte aspoň jeden znak.") );
+     I.seeElement( locate("div.toast-message").withText("Riadok 2: email - testIsnai123@interway - Nesprávna emailová adresa. Zadajte email vo formáte meno@domena.") );
+     I.seeElement( locate("div.toast-message").withText("Riadok 3: email - tes125*$as. - Nesprávna emailová adresa. Zadajte email vo formáte meno@domena.") );
+     I.seeElement( locate("div.toast-message").withText("Riadok 4: email -  - Povinné pole. Zadajte aspoň jeden znak.") );
+
+     checkWrongEmails(I, DT);
+});
+
+function checkWrongEmails(I, DT) {
+     I.say("Checking that wrong emails are NOT here");
+     DT.filter("login", "testWrongMail");
+     I.see("Nenašli sa žiadne vyhovujúce záznamy");
+}
+
+function insertFile(I, fileName, skipWrong) {
+     I.clickCss("button.btn-import-dialog");
+     I.waitForElement("#datatableImportModal");
+
+     I.wait(1);
+     I.attachFile('#insert-file', fileName);
+     I.waitForEnabled("#submit-import", 5);
+
+     if(skipWrong === true) {
+          I.checkOption( locate("#datatableImportModal").find("#skip-wrong-data") );
+     } else {
+          I.uncheckOption( locate("#datatableImportModal").find("#skip-wrong-data") );
+     }
+
+     I.click("#submit-import");
+}
+
 Scenario("logout 2", ({I}) => {
      I.logout();
 });

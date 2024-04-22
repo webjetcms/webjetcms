@@ -35,6 +35,9 @@ block content
                 extends: 'remove',
                 editor: cacheObjectsTable.EDITOR,
                 text: '<i class="fal fa-dumpster"></i>',
+                init: function ( dt, node, config ) {
+                    $.fn.dataTable.Buttons.showIfRowUnselected(this, dt);
+                },
                 action: function (e, dt, node) {
                     cacheObjectsTable.executeAction("deleteAllCacheObjects", true, "[[\#{components.data_deleting.deleteConfirm}]]");
                 },
@@ -49,6 +52,9 @@ block content
                 extends: 'remove',
                 editor: cacheObjectsTable.EDITOR,
                 text: '<i class="far fa-camera"></i>',
+                init: function ( dt, node, config ) {
+                    $.fn.dataTable.Buttons.showIfRowUnselected(this, dt);
+                },
                 action: function (e, dt, node) {
                     cacheObjectsTable.executeAction("deletePictureCache", true, "[[\#{components.data.deleting.imgcache.areYouSure}]]", "[[\#{components.data.deleting.imgcache.areYouSureNote}]]");
                 },

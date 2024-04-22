@@ -9,6 +9,17 @@
 <script type="text/javascript">
 
     function openFormHtml(id) {
+        //add print button
+        if ($("#modalPrintButton").length == 0) {
+            const printButton = document.createElement('button');
+            printButton.id = 'modalPrintButton';
+            printButton.className = 'btn btn-outline-secondary';
+            printButton.innerHTML = WJ.translate("button.print");
+            printButton.onclick = function() {
+                $("#modalIframeIframeElement")[0].contentWindow.print();
+            };
+            $('#modalIframe .modal-footer').prepend(printButton);
+        }
         WJ.openIframeModal({
             url: window.formRestUrl+"/html/?id="+id,
             width: 800,

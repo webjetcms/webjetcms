@@ -46,7 +46,7 @@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 	}
 </style>
 
-<div>
+<div class="formFileAttributes">
 	<div class="col-xs-12 form-group">
 		<div class="col-xs-6">
 			<iwcm:text key="components.forms.file_restrictions.file_size_in_kilobytes"/>:
@@ -80,4 +80,10 @@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 		</div>
 	</div>
 </div>
-
+<script>
+$("div.formFileAttributes input").on("keyup keydown", function(e) {
+	//console.log("keyup, e=", e.keyCode);
+	if (e.keyCode>=37 && e.keyCode<=40) e.stopPropagation();
+	else if (e.keyCode == 9 || e.keyCode == 13) e.stopPropagation();
+});
+</script>

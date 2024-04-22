@@ -287,6 +287,7 @@ Pre datatabuľku máme pripravené špeciálne funkcie. Sú implementované v [D
 - ```async I.getDataTableColumns(dataTableName)``` - vráti objekt DATA s definíciou datatabuľky, používa sa v automatickom testovaní datatabuľky
 - ```async getDataTableId(dataTableName)``` - vráti ID datatabuľky, volá JS funkciu ```dataTable.DATA.id```
 - [async I.getTotalRows()](../../../src/test/webapp/custom_helper.js) - vráti celkový počet záznamov v datatabuľke
+- ```DT.deleteAll(name = "datatableInit")``` - zmaže aktuálne zobrazené záznamy, pred použitím vždy použite ```DT.filter``` pre filtrovanie potrebných údajov.
 
 Pre Datatable Editor implementované v [DTE.js](../../../src/test/webapp/pages/DTE.js):
 
@@ -447,7 +448,7 @@ I.assertAbove(2, 1, 'Target data not above the given value');
 I.assertAbove(1, 2, 'Target data not below the given value');
 ```
 
-Ak je potrebné, môžete využiť aj [assert](https://www.npmjs.com/package/assert) knižnicu. Príklad použitia je v teste [galelry.js](../../../src/test/webapp/tests/components/gallery.js):
+Ak je potrebné, môžete využiť aj [assert](https://www.npmjs.com/package/assert) knižnicu. Príklad použitia je v teste [gallery.js](../../../src/test/webapp/tests/components/gallery.js):
 
 ```javascript
 const assert = require('assert');
@@ -725,7 +726,7 @@ DELETE FROM groups_scheduler WHERE group_name LIKE '%sk-mirroring-subfolder%' OR
 OPTIMIZE TABLE groups_scheduler;
 DELETE FROM documents WHERE (doc_id NOT IN (7611, 18426, 2664, 27827, 29195, 29289, 64425, 50222)) AND (title LIKE '%sk-mirroring-subfolder%' OR title LIKE '%sk-mir-subfolder%' OR title LIKE '%-autotest%' OR title LIKE '%_autotest%' OR title LIKE 'test-adresar-%' OR title='Nová web stránka' OR title LIKE 'page-%' OR title LIKE 'dobré ráno-%' OR title LIKE 'good morning-%');
 OPTIMIZE TABLE documents;
-DELETE FROM documents_history WHERE title LIKE '%sk-mirroring-subfolder%' OR title LIKE '%sk-mir-subfolder%' OR title LIKE '%-autotest%' OR title LIKE '%_autotest%' OR title LIKE 'test-adresar-%' OR title='Nová web stránka' OR title LIKE 'page-%';
+DELETE FROM documents_history WHERE title LIKE '%sk-mirroring-subfolder%' OR title LIKE '%sk-mir-subfolder%' OR title LIKE '%-autotest%' OR title LIKE '%_autotest%' OR title LIKE 'test-adresar-%' OR title='Nová web stránka' OR title LIKE 'page-%' OR title LIKE 'Test_volnych_poli_sablony%';
 DELETE FROM documents_history WHERE doc_id=4 AND history_id>26 AND actual=0 AND publicable=0;
 OPTIMIZE TABLE documents_history;
 DELETE FROM _adminlog_ WHERE log_id>10 AND log_id NOT IN (58993, 58730, 103758, 103756);

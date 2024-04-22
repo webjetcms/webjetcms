@@ -10,7 +10,13 @@ $c-toast-error: #e00029;
     position: fixed;
     z-index: 999999;
     /*overrides*/
-
+  }
+  .toast-top-right {
+    top: 0px;
+    right: 0px;
+    padding: 30px;
+    max-height: 99vh;
+    overflow: auto;
   }
   .toast-container * {
     -moz-box-sizing: border-box;

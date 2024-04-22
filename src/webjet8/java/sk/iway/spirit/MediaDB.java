@@ -1,7 +1,6 @@
 package sk.iway.spirit;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -27,6 +26,8 @@ import sk.iway.iwcm.database.JpaDB;
 import sk.iway.iwcm.doc.DebugTimer;
 import sk.iway.iwcm.doc.DocDB;
 import sk.iway.iwcm.doc.DocDetails;
+import sk.iway.iwcm.doc.GroupDetails;
+import sk.iway.iwcm.doc.GroupsDB;
 import sk.iway.iwcm.doc.MultigroupMappingDB;
 import sk.iway.iwcm.filebrowser.EditForm;
 import sk.iway.iwcm.io.IwcmFile;
@@ -377,8 +378,14 @@ public class MediaDB extends JpaDB<Media>
 	}
 
 
+	/**
+	 * Returns media groups for given WEBPAGES group
+	 * @param groupId - webpages group id
+	 * @return
+	 */
 	public static List<MediaGroupBean> getGroups(int groupId){
 		List<MediaGroupBean> groups = new ArrayList<>();
+		GroupsDB groupsDB = GroupsDB.getInstance();
 
 		for(MediaGroupBean mediaGroup : getGroups()){
 			String availableGroups =  mediaGroup.getAvailableGroups();
@@ -386,15 +393,19 @@ public class MediaDB extends JpaDB<Media>
 				groups.add(mediaGroup);
 			}else{
 
-				String[] groupsArray = availableGroups.split(",");
-				String groupsWithSubgroups = "";
-
-				for(String group: groupsArray){
-					groupsWithSubgroups+=DocDB.getSubgroups(Tools.getIntValue(group, -1));
+				boolean contains = false;
+				for(String group : availableGroups.split(",")){
+					int id = Tools.getIntValue(group, -1);
+					List<GroupDetails> subgroups = groupsDB.getGroupsTree(id, true, true, false);
+					for(GroupDetails subgroup: subgroups){
+						if (subgroup.getGroupId() == groupId){
+							contains = true;
+							break;
+						}
+					}
+					if (contains) break;
 				}
-				groupsArray = groupsWithSubgroups.split(",");
-				List<String> groupsList = Arrays.asList(groupsArray);
-				if(groupsList.indexOf(groupId+"") > -1){
+				if(contains){
 					groups.add(mediaGroup);
 				}
 			}

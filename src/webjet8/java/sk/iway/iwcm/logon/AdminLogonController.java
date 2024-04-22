@@ -28,6 +28,7 @@ import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.PageLng;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.LogonTools;
+import sk.iway.iwcm.database.SimpleQuery;
 import sk.iway.iwcm.doc.DocDB;
 import sk.iway.iwcm.doc.DocDetails;
 import sk.iway.iwcm.doc.GroupDetails;
@@ -376,10 +377,20 @@ public class AdminLogonController {
 
 				if (insertedCode == generatedCode)
 				{
+                    String token = (String)session.getAttribute("token");
 					session.removeAttribute("token");
 					Identity sessionUserAfterToken = (Identity)session.getAttribute("adminUser_waitingForToken");
 					session.removeAttribute("adminUser_waitingForToken");
-					if (sessionUserAfterToken!=null) LogonTools.setUserToSession(session, sessionUserAfterToken);
+					if (sessionUserAfterToken!=null) {
+                        LogonTools.setUserToSession(session, sessionUserAfterToken);
+
+                        //set user code
+                        String currentCode = new SimpleQuery().forString("SELECT mobile_device FROM users WHERE user_id = ?", sessionUserAfterToken.getUserId());
+                        if (Tools.isNotEmpty(token) && Tools.isEmpty(currentCode)) {
+                            new SimpleQuery().execute("UPDATE users SET mobile_device = ? WHERE user_id = ?", token, sessionUserAfterToken.getUserId());
+                            sessionUserAfterToken.setMobileDevice(currentCode);
+                        }
+                    }
 
 					return "redirect:/admin/v9/";
 				}
@@ -407,7 +418,7 @@ public class AdminLogonController {
         if (Tools.isNotEmpty(user.getMobileDevice()) || Constants.getBoolean("isGoogleAuthRequiredForAdmin") ) {
             HttpSession session = request.getSession();
 
-            if (Tools.isEmpty(user.getMobileDevice())) {  // - je forced gauth ^ cfg premennou
+            if (Tools.isEmpty(user.getMobileDevice()) || user.getMobileDevice().length()<5) {  // - je forced gauth ^ cfg premennou
                 GoogleAuthenticator gAuth = new GoogleAuthenticator();
                 final GoogleAuthenticatorKey key = gAuth.createCredentials();
                 session.setAttribute("token", key.getKey());	// hodime si do session novo vygenerovane credentials

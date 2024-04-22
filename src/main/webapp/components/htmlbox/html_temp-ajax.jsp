@@ -1,6 +1,6 @@
 <%@page import="sk.iway.iwcm.*"%>
 <%@page import="sk.iway.iwcm.filebrowser.BrowseAction"%>
-<%@page import="sk.iway.iwcm.io.IwcmFile"%>
+<%@page import="sk.iway.iwcm.io.IwcmFile"%><%@page import="org.apache.struts.util.ResponseUtils"%>
 
 <%
 sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
@@ -94,7 +94,7 @@ sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
 	<script>
 		$(document).ready(function(){
 			$("a.thumbImage").click(function(){
-				$("#previewWindow").attr("src", "<%=dir.getVirtualPath()%>/"+ $(this).data("name"));
+				$("#previewWindow").attr("src", "<%=ResponseUtils.filter(dir.getVirtualPath())%>/"+ $(this).data("name"));
 
 				$("a.thumbImage").removeClass('selected');
 				$(this).addClass('selected');

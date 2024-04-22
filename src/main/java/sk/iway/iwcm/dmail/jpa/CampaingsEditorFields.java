@@ -171,9 +171,8 @@ public class CampaingsEditorFields implements Serializable {
 
         //Check if url was changed
         DocDB  docDB = DocDB.getInstance();
-        int docId = campOriginal.getEditorFields().getPageToSend().getDocId();
-        if(docId != -1) {
-            String docLink = docDB.getDocLink(docId, null, true, request);
+        if(campOriginal.getEditorFields().getPageToSend()!=null) {
+            String docLink = docDB.getDocLink(campOriginal.getEditorFields().getPageToSend().getDocId(), null, true, request);
             if(!docLink.equals(campOriginal.getUrl())) campOriginal.setUrl(docLink);
         } else campOriginal.setUrl("");
 

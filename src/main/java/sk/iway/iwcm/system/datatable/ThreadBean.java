@@ -3,6 +3,7 @@ package sk.iway.iwcm.system.datatable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import java.util.TreeMap;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -41,6 +42,15 @@ public class ThreadBean {
     //mode of import (append, update, onlyNew)
     private String importMode;
 
+    //Rows id's that are invalid
+    private Set<Long> invalidImportedRows = null;
+
+    //Prepared error messages for each invalid row
+    private TreeMap<Integer, String> invalidImportedRowsErrors = null;
+
+    //Skip wrong data during import
+    private boolean skipWrongData = false;
+
     public void clear() {
         Logger.debug(ThreadBean.class, "clearing data, thread="+Thread.currentThread().getId());
         forceReload = false;
@@ -51,6 +61,8 @@ public class ThreadBean {
         importedColumns = null;
         updateByColumn = null;
         importMode = null;
+        invalidImportedRows = null;
+        invalidImportedRowsErrors = null;
     }
 
     public void addNotify(NotifyBean notify) {
@@ -68,5 +80,9 @@ public class ThreadBean {
         }
 
         this.notify.add(notify);
+    }
+
+    public void clearNotifyList() {
+        this.notify = null;
     }
 }

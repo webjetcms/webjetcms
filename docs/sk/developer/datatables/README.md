@@ -398,6 +398,12 @@ $('.btn-gallery-size').wrapAll('<div class="btn-group-wrapper buttons-divider-bo
 galleryTable.showButton("export");
 ```
 
+V `init` funkcii je možné použiť nasledovné volania:
+
+- `$.fn.dataTable.Buttons.showIfRowSelected(this, dt);` - tlačidlo je aktívne len ak je označený aspoň jeden riadok
+- `$.fn.dataTable.Buttons.showIfRowUnselected(this, dt);` - tlačidlo je aktívne len ak nie je označený žiaden riadok
+- `$.fn.dataTable.Buttons.showIfOneRowSelected(this, dt);` - tlačidlo je aktívne len ak je označený presne jeden riadok
+
 ## Tlačidlo pre vykonanie serverovej akcie
 
 Datatabuľka ponúka možnosť pridať tlačidlo pre vykonanie serverovej akcie (napr. rotácia obrázka, zmazanie všetkých záznamov).

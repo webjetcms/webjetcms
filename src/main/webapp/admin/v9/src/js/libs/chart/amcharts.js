@@ -5,6 +5,23 @@ import * as am5themes_Animated from "@amcharts/amcharts5/themes/Animated";
 import * as dark from "@amcharts/amcharts5/themes/Dark";
 import { Color } from "@amcharts/amcharts5/.internal/core/util/Color";
 
+import am5locales_sk_SK from "@amcharts/amcharts5/locales/sk_SK";
+import am5locales_cs_CZ from "@amcharts/amcharts5/locales/cs_CZ";
+import am5locales_en_US from "@amcharts/amcharts5/locales/en_US";
+import am5locales_de_DE from "@amcharts/amcharts5/locales/de_DE";
+
+am5locales_sk_SK._date_minute_full="HH:mm - dd. MMM, yyyy";
+am5locales_sk_SK._date_hour_full="HH:mm - dd. MMM, yyyy";
+am5locales_sk_SK._date_day="dd. MMM";
+am5locales_sk_SK._date_day_full="dd. MMM, yyyy";
+am5locales_sk_SK._date_week_full="dd. MMM, yyyy";
+
+am5locales_cs_CZ._date_minute_full="HH:mm - dd. MMM, yyyy";
+am5locales_cs_CZ._date_hour_full="HH:mm - dd. MMM, yyyy";
+am5locales_cs_CZ._date_day="dd. MMM";
+am5locales_cs_CZ._date_day_full="dd. MMM, yyyy";
+am5locales_cs_CZ._date_week_full="dd. MMM, yyyy";
+
 export class WebjetTheme extends am5.Theme {
   setupDefaultRules() {
     this.rule("InterfaceColors").setAll({
@@ -81,3 +98,7 @@ window.am5xy = am5xy;
 window.am5percent = am5percent;
 window.am5themes_Animated = am5themes_Animated.default;
 window.am5_dark = dark.default;
+window.am5locales_sk_SK = am5locales_sk_SK;
+window.am5locales_cs_CZ = am5locales_cs_CZ;
+window.am5locales_en_US = am5locales_en_US;
+window.am5locales_de_DE = am5locales_de_DE;

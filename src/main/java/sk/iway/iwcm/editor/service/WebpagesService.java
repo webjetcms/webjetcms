@@ -950,27 +950,38 @@ public class WebpagesService {
 	 */
 	public static DocDetails getBasicDocFromUrl(String url) {
 		DocDetails doc = null;
-        if (Tools.isNotEmpty(url) && url.startsWith("http")) {
-            DocDB docDB = DocDB.getInstance();
-            String domainName = url.substring(url.indexOf("://")+3, url.indexOf("/", 8));
-            int portDelimiter = domainName.indexOf(":");
-            if (portDelimiter > 0) domainName = domainName.substring(0, portDelimiter);
-            String path = url.substring(url.indexOf("/", 8));
+		try {
+			if (Tools.isNotEmpty(url) && url.startsWith("http")) {
+				DocDB docDB = DocDB.getInstance();
+				int to = url.indexOf("/", 8);
+				if (to==-1) to = url.indexOf(":", 8);
+				if (to==-1) to = url.indexOf("?", 8);
 
-            int docId = -1;
-            if (path.startsWith("/showdoc.do")) {
-                docId = Tools.getIntValue(Tools.getParameterFromUrl(path, "docid"), -1);
-            } else {
-                String pathNoParams = path;
-                int i = pathNoParams.indexOf("?");
-                if (i>0) pathNoParams = pathNoParams.substring(0, i);
+				String domainName = url.substring(url.indexOf("://")+3, to);
+				int portDelimiter = domainName.indexOf(":");
+				if (portDelimiter > 0) domainName = domainName.substring(0, portDelimiter);
 
-                docId = docDB.getDocIdFromURLImpl(pathNoParams, domainName);
-            }
-            if (docId > 0) {
-                doc = docDB.getBasicDocDetails(docId, false);
-            }
-        }
+				to = url.indexOf("/", 8);
+				String path = "/";
+				if (to>0) path = url.substring(to);
+
+				int docId = -1;
+				if (path.startsWith("/showdoc.do")) {
+					docId = Tools.getIntValue(Tools.getParameterFromUrl(path, "docid"), -1);
+				} else {
+					String pathNoParams = path;
+					int i = pathNoParams.indexOf("?");
+					if (i>0) pathNoParams = pathNoParams.substring(0, i);
+
+					docId = docDB.getDocIdFromURLImpl(pathNoParams, domainName);
+				}
+				if (docId > 0) {
+					doc = docDB.getBasicDocDetails(docId, false);
+				}
+			}
+		} catch (Exception e) {
+			Logger.error(WebpagesService.class, e);
+		}
 		return doc;
 	}
 

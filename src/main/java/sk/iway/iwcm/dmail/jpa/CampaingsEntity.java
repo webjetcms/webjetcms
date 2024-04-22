@@ -12,11 +12,13 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Table;
 import javax.persistence.Transient;
+import javax.validation.constraints.Email;
 import javax.validation.constraints.Size;
 
 import lombok.Getter;
 import lombok.Setter;
 import sk.iway.iwcm.system.adminlog.EntityListenersType;
+import sk.iway.iwcm.system.annotations.validations.MultipleEmails;
 import sk.iway.iwcm.system.datatable.DataTableColumnType;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditor;
@@ -69,6 +71,7 @@ public class CampaingsEntity implements Serializable {
         tab = "main"
     )
     @Size(max = 255)
+    @Email
     private String senderEmail;
 
     @Column(name = "url")
@@ -164,6 +167,7 @@ public class CampaingsEntity implements Serializable {
     )
     private String attachments;
 
+    @MultipleEmails(checkUnsubscribed = false, canByEmpty = true)
     @DataTableColumn(
         inputType = DataTableColumnType.TEXT,
         title="components.dmail.replyTo",
@@ -174,6 +178,7 @@ public class CampaingsEntity implements Serializable {
     @Column(name = "reply_to")
     private String replyTo;
 
+    @MultipleEmails(checkUnsubscribed = false, canByEmpty = true)
     @DataTableColumn(
         inputType = DataTableColumnType.TEXT,
         title="components.dmail.ccEmail",
@@ -184,6 +189,7 @@ public class CampaingsEntity implements Serializable {
     @Column(name = "cc_email")
     private String ccEmail;
 
+    @MultipleEmails(checkUnsubscribed = false, canByEmpty = true)
     @DataTableColumn(
         inputType = DataTableColumnType.TEXT,
         title="components.dmail.bccEmail",

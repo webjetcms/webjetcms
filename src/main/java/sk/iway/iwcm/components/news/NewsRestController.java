@@ -21,6 +21,7 @@ import sk.iway.iwcm.database.SimpleQuery;
 import sk.iway.iwcm.doc.DocDB;
 import sk.iway.iwcm.doc.GroupDetails;
 import sk.iway.iwcm.doc.GroupsDB;
+import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.system.datatable.json.LabelValue;
 
 /**
@@ -57,8 +58,11 @@ public class NewsRestController {
             String currentDomain = DocDB.getDomain(request);
 
             if (Tools.isEmpty(ids)) {
+                Prop propSystem = Prop.getInstance(Constants.getString("defaultLanguage"));
+                String trashDirName = propSystem.getText("config.trash_dir");
+
                 //we dont have any ids, try to search for NEWS include in all groups
-                List<String> dataList = new SimpleQuery().forListString("SELECT data FROM documents WHERE data LIKE '%!INCLUDE(/components/news/%'");
+                List<String> dataList = new SimpleQuery().forListString("SELECT data FROM documents WHERE data LIKE '%!INCLUDE(/components/news/%' AND file_name NOT LIKE '"+trashDirName+"%'");
                 Set<String> duplicityCheck = new HashSet<>();
 
                 for (String data : dataList) {

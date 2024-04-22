@@ -28,9 +28,11 @@ V tejto časti karty sa vyplňujú údaje o používateľskom účte ako Začiat
 - E-mailová adresa
 - Heslo
 
-Pre možnosť prihlásenia používateľa je dôležité je, aby používateľ mal zvolenú možnosť "Schválený používateľ".
-
 Pole heslo obsahuje kontrolu kvality zadaného hesla a odporúča sa, aby heslo bolo čo najbezpečnejšie. Pri zvolení možnosti "Povoliť slabé heslo", sa nebude kontrolovať kvalita zadaného hesla pri uložení používateľa.
+
+Zadaním znaku `*` alebo textu `random` do poľa heslo sa heslo náhodne vygeneruje pri uložení používateľa.
+
+Pre možnosť prihlásenia používateľa je dôležité je, aby používateľ mal zvolenú možnosť "Schválený používateľ".
 
 ## Karta - Kontaktné údaje
 

@@ -219,20 +219,8 @@ Scenario("Overenie zoznamu podla prihlaseneho pouzivatela", ({ I, DT }) => {
     I.see("formular-lahko");
     I.see("Elektornicky-formular");
 
-    I.wait(3);
-    I.logout();
-    I.wait(3);
-
     //prihlas sa ako tester2
-    //toto z nejakeho dovodu nefungovalo login('tester2');
-    I.amOnPage('/admin/');
-    //aby sme vzdy v kazdom scenari mali prednastavenu velkost okna
-    //odosli prihlasenie
-    I.fillField("username", "tester2");
-    I.fillField("password", secret("*********"));
-    I.click("login-submit");
-
-    I.wait(3);
+    I.relogin("tester2");
 
     I.amOnPage("/apps/form/admin/");
     I.see("formular-lahko");
@@ -361,6 +349,7 @@ Scenario("formsimple-encrypted", ({ I }) => {
     I.see("Technické info");
     I.see(randomNumber, "span.form-control.emailInput-text");
     I.switchTo();
+    I.see("Vytlačiť", "#modalIframe div.modal-footer button");
     I.click("#modalIframe button.btn-close");
 });
 
@@ -435,4 +424,36 @@ Scenario("form attachments", async ({ I }) => {
 
 Scenario("odhlasenie2", async ({ I }) => {
     I.logout();
+});
+
+Scenario("BUG switch tabs by arrow key", ({ I, DTE, Document }) => {
+    I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=87145");
+    DTE.waitForEditor();
+    I.waitForElement("a.cke_button__wjforms", 10);
+    I.wait(1);
+    I.clickCss("a.cke_button__wjforms");
+    I.waitForElement("iframe.cke_panel_frame");
+    I.switchTo("iframe.cke_panel_frame");
+    I.click("Formulár");
+    I.switchTo();
+
+    I.click(locate("div.cke_dialog_tabs a.cke_dialog_tab").withText("Rozšírené nastavenia"));
+
+    I.fillField(locate("input[name=attribute_subject]"), "test");
+    I.pressKey("ArrowLeft");
+    //
+    I.say("Confirm that the tab was not changed");
+    I.seeElement(locate("div.cke_dialog_tabs a.cke_dialog_tab.cke_dialog_tab_selected").withText("Rozšírené nastavenia"));
+
+    //
+    I.click(locate("div.cke_dialog_tabs a.cke_dialog_tab").withText("Limity na súbory"));
+
+    I.fillField(locate("input[name=attribute_allowedExtensions]"), "docx");
+    I.pressKey("ArrowLeft");
+    //
+    I.say("Confirm that the tab was not changed");
+    I.seeElement(locate("div.cke_dialog_tabs a.cke_dialog_tab.cke_dialog_tab_selected").withText("Limity na súbory"));
+
+    I.click(locate("table.cke_dialog_contents td.cke_dialog_footer a").withText("Zrušiť"));
+    DTE.cancel();
 });

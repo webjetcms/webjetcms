@@ -439,6 +439,17 @@ async function computeAxeInterval(chartData, dateValueName) {
 export async function createAmchart(chartForm, update) {
     //Create chart root
     var root = am5.Root.new(chartForm.chartDivId);
+
+    //Set locale file base on selected language
+    //Locale file will affect days/months names and other date related stuff like AM/PM format etc.
+    let selectedLng = window.userLng;
+    if(selectedLng == undefined || selectedLng == null || selectedLng.length < 1) selectedLng = "sk";
+
+    if("cs" === selectedLng) root.locale = window.am5locales_cs_CZ;
+    else if("en" === selectedLng) root.locale = window.am5locales_en_US;
+    else if("de" === selectedLng) root.locale = window.am5locales_de_DE;
+    else root.locale = window.am5locales_sk_SK;
+
     //Hide amcharts logo
     root._logo.dispose();
     //Set themes

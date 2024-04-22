@@ -7,6 +7,9 @@ Before(({ login }) => {
 Scenario('zoznam noviniek', ({ I, DT, DTE, Document }) => {
 
     I.amOnPage("/apps/news/admin/");
+    I.click({ css: "#pills-newsGroup-tab button.btn-outline-secondary" });
+    I.click(locate('div.dropdown-menu.show .dropdown-item').withText("/English/News"));
+
     I.see("McGregor sales force");
     I.see("News");
     I.dontSee("Čím je človek bohatší, tým má menej hotovosti")

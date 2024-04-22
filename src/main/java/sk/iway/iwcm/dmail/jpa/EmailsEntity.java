@@ -64,8 +64,19 @@ public class EmailsEntity extends ActiveRecordRepository implements Serializable
             @DataTableColumnEditor( type = "textarea" )
         }
     )
-    @Size(max = 128)
     private String recipientEmail;
+
+    /**
+     * During recipients adding, this flag is used to skip wrong emails.
+     * Used in campaigns.
+     */
+    @Transient
+    @DataTableColumn(
+        inputType = DataTableColumnType.CHECKBOX,
+        title="components.datatables.data.skip_wrong",
+        hidden = true
+    )
+    private boolean skipWrongEmails;
 
     @Column(name = "sent_date")
     @DataTableColumn(

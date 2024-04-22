@@ -10,10 +10,13 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import javax.servlet.http.HttpServletRequest;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.validation.Errors;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -22,6 +25,7 @@ import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.components.users.userdetail.UserDetailsController;
 import sk.iway.iwcm.components.users.userdetail.UserDetailsRepository;
 import sk.iway.iwcm.components.users.userdetail.UserDetailsService;
+import sk.iway.iwcm.dmail.DmailUtil;
 import sk.iway.iwcm.dmail.EmailDB;
 import sk.iway.iwcm.dmail.Sender;
 import sk.iway.iwcm.dmail.jpa.CampaingsEditorFields;
@@ -32,6 +36,7 @@ import sk.iway.iwcm.dmail.jpa.EmailsRepository;
 import sk.iway.iwcm.dmail.jpa.StatClicksRepository;
 import sk.iway.iwcm.system.datatable.Datatable;
 import sk.iway.iwcm.system.datatable.DatatablePageImpl;
+import sk.iway.iwcm.system.datatable.DatatableRequest;
 import sk.iway.iwcm.system.datatable.DatatableRestControllerV2;
 import sk.iway.iwcm.system.datatable.NotifyBean;
 import sk.iway.iwcm.system.datatable.ProcessItemAction;
@@ -107,8 +112,23 @@ public class CampaingsRestController extends DatatableRestControllerV2<Campaings
     }
 
     @Override
+    public void validateEditor(HttpServletRequest request, DatatableRequest<Long, CampaingsEntity> target, Identity currentUser, Errors errors, Long id, CampaingsEntity campaingsEntity) {
+
+        if(target.isDelete() || Tools.isNotEmpty(target.getImportMode())) return;
+
+        if(campaingsEntity.getEditorFields().getPageToSend() == null || campaingsEntity.getEditorFields().getPageToSend().getDocId() == -1) {
+            errors.rejectValue("errorField.editorFields.pageToSend", null, getProp().getText("components.dmail.campaigns.doc.error.not_null"));
+        }
+    }
+
+    @Override
 	public void beforeSave(CampaingsEntity entity) {
         Identity user = UsersDB.getCurrentUser(getRequest());
+
+        if(entity != null && entity.getId() != null && entity.getId().longValue() > 0) {
+            //Safety action - remove all unsubscribed emails from campaign (can happen)
+            EmailDB.deleteUnsubscribedEmailsFromCampaign(entity.getId().intValue());
+        }
 
         int[] selectedGroups = Tools.getTokensInt(UserDetailsService.getUserGroupIds(entity.getEditorFields().getPermisions(), entity.getEditorFields().getEmails()), ",");
         int[] originalGroups = Tools.getTokensInt(entity.getUserGroupsIds(), ",");
@@ -131,7 +151,7 @@ public class CampaingsRestController extends DatatableRestControllerV2<Campaings
     public void afterSave(CampaingsEntity entity, CampaingsEntity saved) {
         Long oldCampaignId = entity.getId();
         int userId = getUser().getUserId();
-        if (oldCampaignId == null) oldCampaignId = Long.valueOf(-userId);
+        if (oldCampaignId == null || oldCampaignId.intValue() == -1) oldCampaignId = Long.valueOf(-userId);
 
         //update vykoname vzdy, co ked sa zmenil predmet, alebo odosielatel
         emailsRepository.updateCampaingEmails(Integer.valueOf(userId), saved.getUrl(), saved.getSubject(), saved.getSenderName(), saved.getSenderEmail(), saved.getReplyTo(), saved.getCcEmail(), saved.getBccEmail(), saved.getSendAt(), saved.getAttachments(), saved.getId(), oldCampaignId);
@@ -230,16 +250,26 @@ public class CampaingsRestController extends DatatableRestControllerV2<Campaings
             }
         }
 
+        //Get all emails under selected user groups
         List<String> recpientEmails = UserDetailsController.getUserEmailsByUserGroupsIds(userDetailsRepository, groupsAdded);
 
+        //Get all unsubscribed emails
+        Set<String> unsubscribedEmails = DmailUtil.getUnsubscribedEmails();
+
         for(String recipientEmail : recpientEmails) {
+            //Unsubcribed check
+            if(unsubscribedEmails.contains(recipientEmail.toLowerCase()) == true) continue;
+
             //Check duplicity (if this emial alreadry belongs to campain)
             if(emailsTable.get(recipientEmail.toLowerCase()) != null) continue;
             else emailsTable.put(recipientEmail.toLowerCase(), emailsTable.size() + 1);
 
-            EmailsEntity emailToAdd = new EmailsEntity(recipientEmail);
-            boolean isValid = EmailsRestController.prepareEmailForInsert(entity, user.getUserId(), emailToAdd);
-            if (isValid) {
+            //Check validity then continue
+            if (Tools.isEmail(recipientEmail) == true) {
+                //Prepare and save email
+                EmailsEntity emailToAdd = new EmailsEntity(recipientEmail);
+                EmailsRestController.prepareEmailForInsert(entity, user.getUserId(), emailToAdd);
+
                 emailToAdd.setSubject(entity.getSubject());
                 emailToAdd.setUrl(entity.getUrl());
 
@@ -278,6 +308,9 @@ public class CampaingsRestController extends DatatableRestControllerV2<Campaings
 
     @Override
     public boolean processAction(CampaingsEntity entity, String action) {
+
+        //Safety action - remove all unsubscribed emails from campaign (can happen)
+        EmailDB.deleteUnsubscribedEmailsFromCampaign(entity.getId().intValue());
 
         if ("start".equals(action)) { //Send emails
             EmailDB.activateDisableEmails(false, entity.getId().intValue());

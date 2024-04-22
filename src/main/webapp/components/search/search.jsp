@@ -113,7 +113,9 @@ if (searchType != null)
         	}else{
             	$(this).val(text);
         	}
-			//nechceme token v URL vysledkov vyhladavania, je tu kvoli hlaseniu pentestov a false positive
+			<%
+				//nechceme token v URL vysledkov vyhladavania, je tu kvoli hlaseniu pentestov a false positive
+			%>
 			setTimeout( function() {	$(this.form.elements["__token"]).remove(); }, 1000 );
     	});
     	$("#searchWords").blur(function () {
