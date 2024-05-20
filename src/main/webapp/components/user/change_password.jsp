@@ -16,13 +16,13 @@ sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
 %><%@ page pageEncoding="utf-8" import="sk.iway.iwcm.*" %>
 <%@ page import="sk.iway.iwcm.database.SimpleQuery" %>
 <%@
-taglib prefix="iwcm" uri="/WEB-INF/iwcm.tld" %><%@ 
-taglib prefix="iway" uri="/WEB-INF/iway.tld" %><%@ 
-taglib prefix="bean" uri="/WEB-INF/struts-bean.tld" %><%@ 
-taglib prefix="html" uri="/WEB-INF/struts-html.tld" %><%@ 
-taglib prefix="logic" uri="/WEB-INF/struts-logic.tld" %><%@ 
-taglib prefix="display" uri="/WEB-INF/displaytag.tld" %><%@ 
-taglib prefix="stripes" uri="http://stripes.sourceforge.net/stripes.tld"%><%@ 
+taglib prefix="iwcm" uri="/WEB-INF/iwcm.tld" %><%@
+taglib prefix="iway" uri="/WEB-INF/iway.tld" %><%@
+taglib prefix="bean" uri="/WEB-INF/struts-bean.tld" %><%@
+taglib prefix="html" uri="/WEB-INF/struts-html.tld" %><%@
+taglib prefix="logic" uri="/WEB-INF/struts-logic.tld" %><%@
+taglib prefix="display" uri="/WEB-INF/displaytag.tld" %><%@
+taglib prefix="stripes" uri="http://stripes.sourceforge.net/stripes.tld"%><%@
 taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %><%!
 	public void error(JspWriter out, String message) throws Exception
 	{
@@ -58,21 +58,21 @@ if (includedIntoPage==false)
 	<div class="panel-heading"><iwcm:text key="welcome.change_password"/></div>
 
 	<div class="panel-body">
-			
+
 				<c:catch var="exc">
 				<%
 					/**
 						Called from sendPassword() - allows user to reset his/her password
-						
+
 					**/
 					Prop prop = Prop.getInstance(request);
 					String auth = request.getParameter("auth");
 					String login = request.getParameter("login");
 					login = new Password().decrypt(login);
 					auth = new Password().decrypt(auth);
-					
+
 					UserDetails user = UsersDB.getUser(login);
-					
+
 					AdminlogBean log = new ComplexQuery().
 						setSql("SELECT * FROM "+ConfDB.ADMINLOG_TABLE_NAME+" WHERE log_type=? AND user_id = ? AND sub_id1 = ?").
 						setParams(Adminlog.TYPE_USER_CHANGE_PASSWORD, user.getUserId(), Integer.valueOf(auth)).
@@ -81,31 +81,31 @@ if (includedIntoPage==false)
 								return new AdminlogBean(rs);
 							}
 					});
-					
-					
+
+
 					long timeAskedFor = log.getCreateDate().getTime();
 					long timeNow = System.currentTimeMillis();
 					long validity = Constants.getInt("passwordResetValidityInMinutes")*60L*1000L;
-					
+
 					if (timeNow - timeAskedFor > validity)
 					{
 						error(out, prop.getText("logon.password.reset_no_longer_valid"));
 						return;
 					}
-					
+
 					if (Tools.isNotEmpty(request.getParameter("newPassword")))
 					{
-						String newPassword = request.getParameter("newPassword"); 
+						String newPassword = request.getParameter("newPassword");
 						String retypePassword = request.getParameter("retypePassword");
 						ActionMessages errors = new ActionMessages();
-						
+
 						if (!newPassword.equals(retypePassword))
 						{
 							error(out, prop.getText("logon.password.passwords_not_the_same"));
 						}
 						else if(!Password.checkPassword(true, newPassword, user.isAdmin(), user.getUserId(), session, errors))
 						{
-							request.setAttribute("errors", errors);	
+							request.setAttribute("errors", errors);
 						}
 						else
 						{
@@ -113,7 +113,7 @@ if (includedIntoPage==false)
 							{
 								user.setSalt(PasswordSecurity.generateSalt());
 							}
-							user.setPassword(PasswordSecurity.calculateHash(newPassword, user.getSalt()));
+							user.setPassword(newPassword);
 							UsersDB.saveUser(user);
 							request.setAttribute("success", true);
 							//zmaz zaznam z audit tabulky (aby druhy krat linka nefungovala)

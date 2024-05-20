@@ -109,6 +109,27 @@ public class GroupMirroringServiceV9 {
                   mirror.setSyncId(group.getSyncId());
                   //nastav rovnaky sort priority (poziadavka zo zadania)
                   mirror.setSortPriority(group.getSortPriority());
+
+                  //nastav prava
+                  mirror.setForceTheUseOfGroupTemplate(group.isForceTheUseOfGroupTemplate());
+                  mirror.setHiddenInAdmin(group.isHiddenInAdmin());
+                  mirror.setHtmlHead(group.getHtmlHead());
+                  mirror.setInstallName(group.getInstallName());
+                  mirror.setInternal(group.isInternal());
+                  mirror.setLoggedShowInNavbar(group.getLoggedShowInNavbar());
+                  mirror.setLoggedShowInSitemap(group.getLoggedShowInSitemap());
+                  mirror.setLoggedShowInNavbar(group.getLoggedShowInNavbar());
+                  mirror.setLoggedShowInSitemap(group.getLoggedShowInSitemap());
+                  mirror.setPasswordProtected(group.getPasswordProtected());
+                  mirror.setShowInNavbar(group.getShowInNavbar());
+                  mirror.setShowInSitemap(group.getShowInSitemap());
+
+                  //set optional fields
+                  mirror.setFieldA( group.getFieldA() );
+                  mirror.setFieldB( group.getFieldB() );
+                  mirror.setFieldC( group.getFieldC() );
+                  mirror.setFieldD( group.getFieldD() );
+
                   groupsDB.setGroup(mirror, false);
                   MirroringService.forceReloadTree();
                }

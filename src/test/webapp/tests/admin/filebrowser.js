@@ -81,7 +81,7 @@ Scenario('dir properties', async ({I}) => {
         I.click("#elfinder-modal button.btn-primary.submit");
         I.switchTo("#elfinderIframe");
         I.waitForText("Indexujú sa súbory, prosím čakajte (môže to trvať niekoľko minút).", 200);
-        I.see("/files/protected/dir-edit-form-test/testjpgattachmentfile.jpg");
+        I.dontSee("/files/protected/dir-edit-form-test/");
         I.waitForText("Indexovanie súborov dokončené", 100);
         I.switchTo();
         //We need close windows before further testing

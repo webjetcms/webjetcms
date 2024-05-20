@@ -6014,7 +6014,7 @@ public class DocDB extends DB
 					list.add(doc);
 				}
 
-            DocumentPublishEvent documentPublishEvent = new DocumentPublishEvent(doc);
+            	DocumentPublishEvent documentPublishEvent = new DocumentPublishEvent(doc);
 
 				//aktualizovat URL schemu
 				//toto drzi hashtabulku url pre danu domenu, vzdy k tomu pristupujte cez getUrlsByUrlDomains(domena)

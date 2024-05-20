@@ -4,6 +4,7 @@ import javax.servlet.http.HttpServletRequest;
 
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -11,6 +12,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.components.users.userdetail.UserDetailsRepository;
 import sk.iway.iwcm.database.SimpleQuery;
 import sk.iway.iwcm.system.googleauth.GoogleAuthenticator;
 import sk.iway.iwcm.system.googleauth.GoogleAuthenticatorKey;
@@ -19,6 +21,13 @@ import sk.iway.iwcm.system.stripes.CSRF;
 
 @RestController
 public class UsersRestServiceController {
+
+    private final UserDetailsRepository userDetailsRepository;
+
+    @Autowired
+    public UsersRestServiceController(UserDetailsRepository userDetailsRepository) {
+        this.userDetailsRepository = userDetailsRepository;
+    }
 
     /* Vrati Key voci ktoremu sa overi token zadany uzivatelom*/
     @GetMapping(path={"/admin/users/2factorauthNew"})
@@ -63,12 +72,7 @@ public class UsersRestServiceController {
             return "CSRF token is not valid";
         }
 
-        if (Tools.isEmpty(secret) )
-            user.setMobileDevice(null);
-        else
-            user.setMobileDevice(secret);
-
-        UsersDB.saveUser(user);
+        userDetailsRepository.updateMobileDeviceByUserId((long)user.getUserId(), secret);
 
         return "";
     }

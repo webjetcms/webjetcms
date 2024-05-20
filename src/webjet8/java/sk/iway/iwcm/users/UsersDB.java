@@ -7,13 +7,15 @@ import sk.iway.iwcm.*;
 import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.common.FileBrowserTools;
 import sk.iway.iwcm.common.LogonTools;
+import sk.iway.iwcm.common.UserTools;
+import sk.iway.iwcm.components.users.userdetail.UserDetailsService;
+import sk.iway.iwcm.database.SimpleQuery;
 import sk.iway.iwcm.dmail.EmailDB;
 import sk.iway.iwcm.doc.DocDB;
 import sk.iway.iwcm.helpers.BeanDiff;
 import sk.iway.iwcm.helpers.BeanDiffPrinter;
 import sk.iway.iwcm.helpers.MailHelper;
 import sk.iway.iwcm.i18n.Prop;
-import sk.iway.iwcm.stat.SessionHolder;
 import sk.iway.iwcm.stat.StatNewDB;
 import sk.iway.iwcm.system.Modules;
 
@@ -75,17 +77,14 @@ public class UsersDB
 
 	public static void fillUserDetails(UserDetails usr, ResultSet rs) throws Exception
 	{
-		sk.iway.Password pass = new sk.iway.Password();
-
 		usr.setUserId(rs.getInt("user_id"));
 		usr.setTitle(DB.getDbString(rs, "title"));
 		usr.setFirstName(DB.getDbString(rs, "first_name"));
 		usr.setLastName(DB.getDbString(rs, "last_name"));
 		usr.setLogin(DB.getDbString(rs, "login"));
-		if (Constants.getBoolean("passwordUseHash"))
-			usr.setPassword(DB.getDbString(rs, "password"));
-		else
-			usr.setPassword(pass.decrypt(DB.getDbString(rs, "password")));
+
+		usr.setPassword(UserTools.PASS_UNCHANGED);
+
 		usr.setAdmin(rs.getBoolean("is_admin"));
 		usr.setUserGroupsIds(DB.getDbString(rs, "user_groups"));
 
@@ -145,8 +144,6 @@ public class UsersDB
 
 		usr.setPosition(DB.getDbString(rs, "position"));
 		usr.setParentId(rs.getInt("parent_id"));
-		usr.setSalt(rs.getString("password_salt"));
-		usr.setMobileDevice(rs.getString("mobile_device"));
 	}
 
 	/**
@@ -535,26 +532,16 @@ public class UsersDB
 			//user.setLogin(user.getEmail());
 			user.setLogin(UsersDB.getRandomLogin());
 		}
-		if (Tools.isEmpty(user.getPassword()))
-		{
-			user.setPasswordPlain(user.getEmail());
-		}
 
 		Connection db_conn = null;
 		PreparedStatement ps = null;
 		ResultSet rs = null;
 		try
 		{
-			sk.iway.Password pass = new sk.iway.Password();
-			if (!Constants.getBoolean("passwordUseHash"))
-				user.setPassword(pass.encrypt(user.getPassword()));
-
 			String userGroups = null;
-
 
 			sql = "SELECT * FROM  users WHERE email=?"+UsersDB.getDomainIdSqlWhere(true);
 			if (loggedUser != null) sql = "SELECT * FROM  users WHERE user_id="+loggedUser.getUserId()+UsersDB.getDomainIdSqlWhere(true);
-
 
 			String fullName = "";
 			db_conn = DBPool.getConnection(request);
@@ -694,54 +681,9 @@ public class UsersDB
 				}
 				else
 				{
-					sql = "INSERT INTO  users (title, first_name, last_name, login, password, is_admin, company, adress, city, ";
-					sql += "email, PSC, country, phone, authorized, reg_date, field_a, field_b, field_c, field_d, field_e, ";
-					sql += "date_of_birth, sex_male, photo, signature, user_groups, password_salt, domain_id) ";
-					sql += " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
-
-					ps = db_conn.prepareStatement(sql);
-					ps.setString(1, user.getTitle());
-					ps.setString(2, user.getFirstName());
-					ps.setString(3, user.getLastName());
-
-					ps.setString(4, user.getLogin());
-					ps.setString(5, user.getPassword());
-					ps.setBoolean(6, false);
-					ps.setString(7, user.getCompany());
-					ps.setString(8, user.getAdress());
-					ps.setString(9, user.getCity());
-					ps.setString(10, user.getEmail());
-					ps.setString(11, user.getPSC());
-					ps.setString(12, user.getCountry());
-					ps.setString(13, user.getPhone());
-					ps.setBoolean(14, false);
-					ps.setTimestamp(15, new Timestamp(Tools.getNow()));
-					ps.setString(16, user.getFieldA());
-					ps.setString(17, user.getFieldB());
-					ps.setString(18, user.getFieldC());
-					ps.setString(19, user.getFieldD());
-					ps.setString(20, user.getFieldE());
-
-					ps.setTimestamp(21, new Timestamp(DB.getTimestamp(user.getDateOfBirth(), null)));
-					ps.setBoolean(22, user.isSexMale());
-					ps.setString(23, user.getPhoto());
-					ps.setString(24, Html2Text.html2text(user.getSignature()));
-					ps.setString(25, userGroups);
-					ps.setString(26, user.getSalt());
-					ps.setInt(27, CloudToolsForCore.getDomainId());
-
-					ps.execute();
-					ps.close();
-
-					//ziskaj user id
-					sql = "SELECT user_id FROM  users WHERE email=? "+UsersDB.getDomainIdSqlWhere(true)+" ORDER BY user_id DESC";
-					ps = db_conn.prepareStatement(sql);
-					ps.setString(1, user.getEmail());
-					rs = ps.executeQuery();
-					if (rs.next())
-					{
-						createdUserId = rs.getInt("user_id");
-					}
+					user.setPassword(Password.generateStringHash(10));
+					saveUser(user);
+					createdUserId = user.getUserId();
 
 					Adminlog.add(Adminlog.TYPE_USER_INSERT, "subscribeUnsubscribe create new user, email="+user.getEmail(), -1, -1);
 				}
@@ -1302,12 +1244,6 @@ public class UsersDB
 		UserDetails oldUser = UsersDB.getUser(user.getLogin());
 		boolean saveOK = false;
 
-		if (Constants.getBoolean("passwordUseHash") && isEmpty(user.getSalt()))
-		{
-			user.setSalt(PasswordSecurity.generateSalt());
-			user.setPasswordPlain(user.getPassword());
-		}
-
 		Connection db_conn = null;
 		PreparedStatement ps = null;
 		ResultSet rs = null;
@@ -1319,57 +1255,35 @@ public class UsersDB
 
 		try
 		{
-
 			db_conn = DBPool.getConnection();
 
-			String sql = "INSERT INTO  users (title, first_name, last_name, login, password, is_admin, user_groups, authorized," +
+			String sql = "INSERT INTO  users (title, first_name, last_name, login, is_admin, user_groups, authorized," +
 							" company, adress, PSC, country, email, phone, editable_groups, " +
 							" city, editable_pages, writable_folders, reg_date,"+
 							" field_a, field_b, field_c, field_d, field_e, " +
 							" date_of_birth, sex_male, photo, signature, forum_rank, rating_rank, fax, "+
 							" delivery_city, delivery_company, delivery_country, delivery_first_name, delivery_last_name," +
-							" delivery_phone, delivery_psc, delivery_adress, position, parent_id, password_salt, allow_login_start, allow_login_end, domain_id, mobile_device) " +
-							" VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, 0, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+							" delivery_phone, delivery_psc, delivery_adress, position, parent_id, allow_login_start, allow_login_end, domain_id) " +
+							" VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, 0, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
 			if (user.getUserId() > 0)
 			{
-				sql = "UPDATE  users SET title=?, first_name=?, last_name=?, login=?, password=?, is_admin=?, user_groups=?, authorized=?," +
+				sql = "UPDATE  users SET title=?, first_name=?, last_name=?, login=?, is_admin=?, user_groups=?, authorized=?," +
 				" company=?, adress=?, PSC=?, country=?, email=?, phone=?, editable_groups=?, " +
 				" city=?, editable_pages=?, writable_folders=?, reg_date=?,"+
 				" field_a=?, field_b=?, field_c=?, field_d=?, field_e=?, " +
 				" date_of_birth=?, sex_male=?, photo=?, signature=?, fax=?, " +
 				" delivery_city=?, delivery_company=?, delivery_country=?, delivery_first_name=?, delivery_last_name=?, "+
-				" delivery_phone=?, delivery_psc=?, delivery_adress=?, position=?, parent_id=?, password_salt = ?, allow_login_start=?, allow_login_end=?, mobile_device = ? " +
+				" delivery_phone=?, delivery_psc=?, delivery_adress=?, position=?, parent_id=?, allow_login_start=?, allow_login_end=?" +
 				" WHERE user_id=?"+UsersDB.getDomainIdSqlWhere(true);
 			}
-			else
-			{
-				if (Constants.getBoolean("passwordUseHash") && Tools.isEmpty(user.getSalt()))
-				{
-					user.setSalt(PasswordSecurity.generateSalt());
-					user.setPassword(PasswordSecurity.calculateHash(user.getPassword(), user.getSalt()));
-				}
-			}
 
-			PasswordsHistoryBean passwordsHistoryBean = null;
 			int i=1;
 			ps = db_conn.prepareStatement(sql);
 			ps.setString(i++, DB.prepareString(user.getTitle(), 16));
 			ps.setString(i++, user.getFirstName());
 			ps.setString(i++, user.getLastName());
 			ps.setString(i++, user.getLogin());
-			Password pass = new Password();
-			if (Constants.getBoolean("passwordUseHash"))
-			{
-				ps.setString(i++, user.getPassword());
-				passwordsHistoryBean = PasswordsHistoryBean.insertAndSaveNew(user.getUserId(),user.getPassword(),user.getSalt());//password by mal byt uz zahesovany
-			}
-			else
-			{
-				ps.setString(i++, pass.encrypt(user.getPassword()));
-				passwordsHistoryBean = PasswordsHistoryBean.insertAndSaveNew(user.getUserId(),pass.encrypt(user.getPassword()),"");//tu user ID este nemusime mat a salt je prazdna
-			}
-
 			ps.setBoolean(i++, user.isAdmin());
 			String userGroups = user.getUserGroupsIds();
 			if (userGroups==null)
@@ -1457,7 +1371,6 @@ public class UsersDB
 			ps.setString(i++, user.getDeliveryAdress());
 			ps.setString(i++, user.getPositionId());
 			ps.setInt(i++, user.getParentId());
-			ps.setString(i++, user.getSalt());
 
 			if (Tools.isNotEmpty(user.getAllowLoginStart())) ps.setTimestamp(i++, new Timestamp(DB.getTimestamp(user.getAllowLoginStart())));
 			else ps.setNull(i++, Types.TIMESTAMP);
@@ -1465,8 +1378,6 @@ public class UsersDB
 			else ps.setNull(i++, Types.TIMESTAMP);
 
 			if (user.getUserId()<1) ps.setInt(i++, CloudToolsForCore.getDomainId());
-
-			ps.setString(i++, user.getMobileDevice());
 
 			if (user.getUserId() > 0)
 			{
@@ -1514,10 +1425,12 @@ public class UsersDB
 			//reset hodnoty
 			user.setSettingsDontSave(false);
 
-			passwordsHistoryBean.setUserId(user.getUserId());
-			passwordsHistoryBean.saveIfNotExists();
-
 			saveOK = true;
+
+			//save password if it's changed
+			if (Tools.isNotEmpty(user.getPassword()) && UserTools.PASS_UNCHANGED.equals(user.getPassword())==false) {
+				UserDetailsService.savePassword(user.getUserId(), user.getPassword());
+			}
 		}
 		catch (Exception ex)
 		{
@@ -1581,9 +1494,6 @@ public class UsersDB
 			return;
 		StringBuilder message = new StringBuilder().append(user.getLogin()).append('\n').append(new BeanDiffPrinter(diff));
 		Adminlog.add(Adminlog.TYPE_USER_UPDATE, message.toString(), user.getUserId(), -1);
-
-		//ak nastala zmena hesla, tak invaliduj ostatne sessions
-		if (oldUser.getPassword().equals(user.getPassword())==false) SessionHolder.getInstance().invalidateOtherUserSessions();
 	}
 
 	/**
@@ -2884,5 +2794,14 @@ public class UsersDB
 		cachedUsers.remove(userId);
 	}
 
+	/**
+	 * Get password_salt for user
+	 * @param userId
+	 * @return
+	 */
+	public static String getSalt(int userId) {
+		String salt = (new SimpleQuery()).forString("SELECT password_salt FROM users WHERE user_id=?", userId);
+		return salt;
+	}
 
 }

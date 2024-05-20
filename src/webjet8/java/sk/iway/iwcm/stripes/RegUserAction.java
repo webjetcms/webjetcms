@@ -37,6 +37,7 @@ import sk.iway.iwcm.SpamProtection;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.LogonTools;
 import sk.iway.iwcm.common.UserTools;
+import sk.iway.iwcm.database.SimpleQuery;
 import sk.iway.iwcm.doc.DocDB;
 import sk.iway.iwcm.doc.DocDetails;
 import sk.iway.iwcm.doc.ShowDoc;
@@ -70,8 +71,6 @@ public class RegUserAction extends WebJETActionBean
 
 	UserDetails usr = null;
 	FileBean userImage = null;
-
-	private String originalPassword = null;
 
 	/**
 	 * Priprav udaje pouzivatela na zobrazenie vo formulari
@@ -107,7 +106,6 @@ public class RegUserAction extends WebJETActionBean
 		//nastavime hodnotu hesla na nezmenenu
 		if (Tools.isNotEmpty(usr.getPassword()))
 		{
-			originalPassword = usr.getPassword();
 			usr.setPassword(UserTools.PASS_UNCHANGED);
 		}
 	}
@@ -232,17 +230,7 @@ public class RegUserAction extends WebJETActionBean
 			else  Adminlog.add(Adminlog.TYPE_USER_SAVE, "Update user :"+ "id= " + usr.getUserId() + "login= " + usr.getLogin()+	"name= " + usr.getFirstName() +" "+usr.getLastName(), usr.getUserId(), -1);
 
 			uploadFileProcedure();
-			//v usr.password mame momentalne plain text heslo prijate zo Stripes formularu
-			String oldPassword = usr.getPassword();
-			if (originalPassword!=null && UserTools.PASS_UNCHANGED.equals(usr.getPassword()))
-			{
-				usr.setPassword(originalPassword);
-			}
-			else if (Constants.getBoolean("passwordUseHash"))
-			{
-				usr.setSalt(PasswordSecurity.generateSalt());
-				usr.setPassword(PasswordSecurity.calculateHash(usr.getPassword(), usr.getSalt()));
-			}
+
 			if (requireAuthorizationAfterVerification)
 			{
 //				ulozi priznak do volneho pola
@@ -250,6 +238,11 @@ public class RegUserAction extends WebJETActionBean
 				usr.setFieldE(REQUIRE_AUTHORIZATION_AFTER_VERIFICATION+"-"+infoemail);
 			}
 			boolean saveOK = UsersDB.saveUser(usr);
+
+			String originalPassword = "";
+			if (isNewUser) {
+				originalPassword = usr.getPassword();
+			}
 
 			String messageKey = null;
 
@@ -288,7 +281,7 @@ public class RegUserAction extends WebJETActionBean
 						if (doNotLoginUser==false)
 						{
 							Identity user = (Identity)getSession().getAttribute(Constants.USER_KEY);
-							if (user == null) LogonTools.logonUser(getRequest(), usr.getLogin(), oldPassword);
+							if (user == null) LogonTools.logonUser(getRequest(), usr.getLogin(), originalPassword);
 						}
 						sendUserWelcomeEmail = true;
 
@@ -312,7 +305,7 @@ public class RegUserAction extends WebJETActionBean
 					{
 						if (notAuthorizedEmailDocId>0)
 						{
-							sendNotAuthorizedInfoEmail(usr.getUserId(), oldPassword, notAuthorizedEmailDocId, getRequest());
+							sendNotAuthorizedInfoEmail(usr.getUserId(), originalPassword, notAuthorizedEmailDocId, getRequest());
 							messageKey = "components.user.newuser.auth_email_sent";
 						}
 						else if (requireEmailVerification)
@@ -339,7 +332,7 @@ public class RegUserAction extends WebJETActionBean
 							authDoc.setTitle(prop.getText("components.user.requireEmailVerification.subject", Tools.getBaseHref(getRequest())));
 							authDoc.setData(prop.getText("components.user.requireEmailVerification.body", Tools.getBaseHref(getRequest()), authUrl));
 
-							boolean sendOK = sendNotAuthorizedInfoEmail(usr.getUserId(), oldPassword, authDoc, getRequest());
+							boolean sendOK = sendNotAuthorizedInfoEmail(usr.getUserId(), originalPassword, authDoc, getRequest());
 							if (sendOK) messageKey = "components.user.newuser.user_auth_email_sent";
 							else messageKey = "components.user.newuser.user_auth_email_NOTsent";
 						}
@@ -397,9 +390,9 @@ public class RegUserAction extends WebJETActionBean
 					}
 				}
 
-				if (sendUserWelcomeEmail) {
+				if (isNewUser && sendUserWelcomeEmail) {
 					//posli email
-					AuthorizeAction.sendInfoEmail(usr.getUserId(), oldPassword, null, getRequest());
+					AuthorizeAction.sendInfoEmail(usr.getUserId(), originalPassword, null, getRequest());
 				}
 			}
 			else
@@ -662,10 +655,12 @@ public class RegUserAction extends WebJETActionBean
                 try
                 {
                     sk.iway.Password pass = new sk.iway.Password();
+					String passwordHashDB = (new SimpleQuery()).forString("SELECT password FROM users WHERE user_id = ?", this.usr.getUserId());
+					String passwordSaltDB = (new SimpleQuery()).forString("SELECT password_salt FROM users WHERE user_id = ?", this.usr.getUserId());
                     if (!this.usr.isInUserGroup(Constants.getInt("socialMediaUserGroupId",-1))) {
 						if (Tools.isEmpty(this.usr.getOldPassword())) {
 							errors.add("user.oldPassword", new SimpleError(prop.getText("components.user.newuser.wrong.oldPassword")));
-						} else if (!(pass.encrypt(this.usr.getOldPassword()).equals(this.originalPassword) || PasswordSecurity.isPasswordCorrect(this.usr.getOldPassword(), this.usr.getSalt(), this.originalPassword))) { //NOSONAR
+						} else if (!(pass.encrypt(this.usr.getOldPassword()).equals(passwordHashDB) || PasswordSecurity.isPasswordCorrect(this.usr.getOldPassword(), passwordSaltDB, passwordHashDB))) { //NOSONAR
 							//nerozlisujeme typ chyby
 							errors.add("user.oldPassword", new SimpleError(prop.getText("components.user.newuser.wrong.oldPassword")));
 						}
@@ -728,9 +723,6 @@ public class RegUserAction extends WebJETActionBean
 			//vygeneruj heslo
 			String password = Password.generatePassword(5);
 			getRequest().getSession().setAttribute("randomGeneratedPassword", password);
-			//PRA: heslo sa este raz hesovalo na riadku priblizne 193: usr.setPassword(PasswordSecurity.calculateHash(usr.getPassword(), usr.getSalt()));
-			//a tu sa hesovalo tiez, cize potom sa nedalo prihlasit
-			//usr.setPasswordPlain(password);
 			usr.setPassword(password);
 		}
 

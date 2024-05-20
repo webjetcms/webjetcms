@@ -334,6 +334,8 @@ Scenario('Automaticke rozbalenie domeny-odhlasenie', ({ I }) => {
 
 Scenario('Kontrola subFolder dat', ({ I, DT }) => {
 
+    DT.resetTable();
+
     //Skontrolujem ze main pages su tam a sub pages nie
     I.click("Jet portal 4", container);
     DT.waitForLoader();
@@ -357,6 +359,12 @@ Scenario('Kontrola subFolder dat', ({ I, DT }) => {
     DT.waitForLoader();
 
     I.see("Produktová stránka - B verzia");
+
+    //
+    I.say("Test filter of fullTextIndex of files");
+    DT.filter("title", ".png");
+    I.waitForText("Nenašli sa žiadne vyhovujúce záznamy", "#datatableInit_wrapper div.dataTables_scrollBody");
+    DT.clearFilter("title");
 
     //pridaj stlpec šablon medzi videne
     I.click({ css: 'button[data-dtbtn=settings]' });
@@ -385,14 +393,7 @@ Scenario('Kontrola subFolder dat', ({ I, DT }) => {
 });
 
 Scenario('Kontrola subFolder dat - reset nastaveni stlpcov', ({ I, DT }) => {
-
-    DT.waitForLoader();
-    I.click({ css: 'button[data-dtbtn=settings]' });
-    I.waitForVisible('.btn.buttons-collection.dropdown-toggle.buttons-colvis');
-
-    I.click(locate('button').withAttr({ title: 'Zobrazenie stĺpcov' }));
-    I.click("button.buttons-colvisRestore");
-    DT.waitForLoader();
+    DT.resetTable();
 });
 
 Scenario('Overenie vyhladavania podla boolean a password_protected', ({ I, DT }) => {

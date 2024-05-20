@@ -169,3 +169,81 @@ Scenario('protected file @singlethread', ({ I }) => {
     loginIN(I, defaultPassword, true, false);
     I.waitForText("This is test file for fileforward after logon", 20);
 });
+
+Scenario('odhlasenie 4 @singlethread', ({ I }) => {
+    //I.clickIfVisible("a.js-logout-toggler");
+    I.amOnPage('/logoff.do');
+});
+
+Scenario('change passowrd by user @singlethread', ({ I, DT, DTE }) => {
+
+    //password set by admin, used to edit profile
+    var password1 = "Pas!23.1."+randomText;
+    //password set by user, used to login
+    var password2 = "Pas!23.2."+randomText;
+
+    //
+    I.say("reset password");
+    I.relogin("tester");
+    I.amOnPage("/admin/v9/users/user-list/?id=4");
+    DTE.waitForEditor();
+    DTE.fillField("password", secret(password1));
+    DTE.save();
+    I.dontSee("Chyba: niektoré polia neobsahujú správne hodnoty", "div.DTE_Form_Error");
+    I.dontSeeElement("#datatableInit_modal");
+
+    I.logout();
+
+    I.amOnPage('/apps/prihlaseny-pouzivatel/zakaznicka-zona/');
+
+    I.fillField("username", "arnoldschwarzenegger");
+    I.fillField("password", secret(password1));
+    I.click(".login-submit");
+
+    I.see("tento text sa zobrazí len prihlásenému používateľovi.");
+
+    //
+    I.say("change password");
+
+    I.amOnPage("/apps/prihlaseny-pouzivatel/moj-profil/");
+    I.see("Úprava údajov používateľa");
+    I.fillField("#usrPassword", password2);
+    I.click("#bSubmitIdAjax");
+    I.waitForElement("#ajaxFormResultContainer", 10);
+    I.waitForText("Zle zadané staré heslo", 10, "#ajaxFormResultContainer");
+    //spam protection
+    I.wait("30");
+
+    I.fillField("#usrOldPassword", secret(password1));
+    I.click("#bSubmitIdAjax");
+
+    I.waitForElement("#ajaxFormResultContainer", 10);
+    I.waitForText("Profil úspešne uložený", 10, "#ajaxFormResultContainer");
+
+    I.logout();
+
+    //
+    I.say("login with old password");
+    I.amOnPage('/apps/prihlaseny-pouzivatel/zakaznicka-zona/');
+    I.fillField("username", "arnoldschwarzenegger");
+    I.fillField("password", secret(password1));
+    I.click(".login-submit");
+    I.waitForText("Zadané meno alebo heslo je nesprávne.", 10);
+
+    I.wait(10);
+
+    //
+    I.say("login with new password");
+    I.amOnPage('/apps/prihlaseny-pouzivatel/zakaznicka-zona/');
+    I.fillField("username", "arnoldschwarzenegger");
+    I.fillField("password", secret(password2));
+    I.click(".login-submit");
+
+    I.waitForText("tento text sa zobrazí len prihlásenému používateľovi.", 10);
+
+});
+
+Scenario('odhlasenie 5 @singlethread', ({ I }) => {
+    //I.clickIfVisible("a.js-logout-toggler");
+    I.amOnPage('/logoff.do');
+});

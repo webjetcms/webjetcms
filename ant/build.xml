@@ -38,7 +38,7 @@
     <target name="define-artifact-properties">
         <property name="artifact.group" value="com.webjetcms" />
         <property name="artifact.name" value="webjetcms" />
-        <property name="artifact.version" value="2024.0.17" />
+        <property name="artifact.version" value="2024.0.21" />
         <property name="artifact.type" value="jar" />
         <property name="artifact.dir" value="${root}/artifacts" />
         <property name="artifact.pom" value="${artifact.dir}/${artifact.name}-${artifact.version}.pom" />
@@ -91,6 +91,7 @@
                 <exclude name="images/**"/>
                 <exclude name="META-INF/**"/>
                 <exclude name="templates/**"/>
+                <exclude name="static-files/**"/>
 
                 <exclude name="**/pug/**"/>
                 <exclude name="**/admin/v9/views/**"/>

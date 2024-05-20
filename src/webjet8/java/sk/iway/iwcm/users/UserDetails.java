@@ -521,6 +521,7 @@ public class UserDetails implements Serializable
 	{
 		return city;
 	}
+	@JsonIgnore
 	public String getPassword()
 	{
 		return password;
@@ -530,14 +531,15 @@ public class UserDetails implements Serializable
 		this.password = password;
 	}
 
+	/**
+	 * Set password
+	 * @param password
+	 * @deprecated - user directly setPassword, it will be hashed in UsersDB.saveUser
+	 */
+	@Deprecated
 	public void setPasswordPlain(String password)
 	{
-		if (Constants.getBoolean("passwordUseHash")){
-			this.salt = PasswordSecurity.generateSalt();
-			this.password = PasswordSecurity.calculateHash(password, this.salt);
-		}
-		else
-			this.password = password;
+		this.password = password;
 	}
 
 	public void setLastLogon(String lastLogon)

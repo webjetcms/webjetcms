@@ -70,7 +70,7 @@ public class InitServlet extends HttpServlet
 	 */
 	private static final long serialVersionUID = 3175770407979840865L;
 
-	private static String actualVersion = "2024.0.17.{minor.number} {build.date}";
+	private static String actualVersion = "2024.0.21.{minor.number} {build.date}";
 
 	private static final int DOMAIN_LEN = 10;
 
@@ -123,6 +123,9 @@ public class InitServlet extends HttpServlet
 		setLicenseId(-1);
 		String modulesEnableList = null;
 
+		//automaticke nastavenie JarPackaging ak existuje JAR subor (aby sa dala DB pouzivat aj pri standardnom vyvoji vo WJ)
+		JarPackaging.initialize();
+
 		Connection db_conn = null;
 		try
 		{
@@ -160,9 +163,9 @@ public class InitServlet extends HttpServlet
 					String proxyPassword = getInitParameter("proxyPassword", databaseValues);
 					String proxyHostsException = getInitParameter("proxyHostsException", databaseValues);
 					String proxyHostHttps = getInitParameter("proxyHostHttps", databaseValues);
-				int proxyPortHttps = Tools.getIntValue(getInitParameter("proxyPortHttps", databaseValues), 0);
+					int proxyPortHttps = Tools.getIntValue(getInitParameter("proxyPortHttps", databaseValues), 0);
 
-				//ak mame prazdne pouzi rovnake ako pre http, ak chceme vypnut httpS proxy treba v konfigu nastavit host na X a port na 1, vtedy sa nepouzije
+					//ak mame prazdne pouzi rovnake ako pre http, ak chceme vypnut httpS proxy treba v konfigu nastavit host na X a port na 1, vtedy sa nepouzije
 					if (Tools.isEmpty(proxyHostHttps)) proxyHostHttps = proxyHost;
 					if (proxyPortHttps == 0) proxyPortHttps = proxyPort;
 
@@ -173,9 +176,6 @@ public class InitServlet extends HttpServlet
 			{
 				sk.iway.iwcm.Logger.error(ex);
 			}
-
-			//automaticke nastavenie JarPackaging ak existuje JAR subor (aby sa dala DB pouzivat aj pri standardnom vyvoji vo WJ)
-			JarPackaging.initialize();
 
 			//testni kluc
 			try
@@ -1132,13 +1132,6 @@ public class InitServlet extends HttpServlet
 				Constants.setBoolean("editorEnableXHTML", param);
 			}
 
-			param = getInitParameter("statEnableOld", databaseValues);
-			skipValues.put("statEnableOld", "true");
-			if (param != null && param.length() > 0)
-			{
-				Constants.setBoolean("statEnableOld", param);
-			}
-
 			//Ak je true, vsetky nazvy konstant sa budu menit na domena-nazovKonstanty (pouzitelne napr. pri multiwebe)
 			if("true".equals(getInitParameter("constantsAliasSearch", databaseValues)))
 				Constants.setConstantsAliasSearch(true);
@@ -1254,7 +1247,7 @@ public class InitServlet extends HttpServlet
 
 		//default allowed domains
 		if (serverName.equals("iwcm.interway.sk") || serverName.equals("neweb.interway.sk") || serverName.equals("localhost") ||
-			serverName.endsWith(".iway.sk") || serverName.endsWith(".iway.local") || serverName.endsWith(".iwcp.dev"))
+			serverName.endsWith(".iway.sk") || serverName.endsWith(".iway.local") || serverName.endsWith(".iwcp.dev") || serverName.endsWith("npp.int-dev.iway"))
 		{
 			return (true);
 		}

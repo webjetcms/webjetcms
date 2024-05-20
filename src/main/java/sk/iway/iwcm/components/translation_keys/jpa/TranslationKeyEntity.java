@@ -12,6 +12,7 @@ import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 import javax.persistence.Transient;
 import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.Size;
 
 import org.apache.struts.util.ResponseUtils;
 
@@ -46,6 +47,7 @@ public class TranslationKeyEntity {
 
     //Field is not showed but used to get translation key language
     @Column(name = "lng")
+    @Size(min = 2, max = 3)
     private String lng;
 
     @Column(name = "update_date")

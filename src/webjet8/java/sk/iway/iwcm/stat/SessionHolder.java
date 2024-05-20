@@ -374,6 +374,18 @@ public class SessionHolder
 		RequestBean rb = SetCharacterEncodingFilter.getCurrentRequestBean();
 		if (rb == null || rb.getUserId()<1) return;
 
+		invalidateOtherUserSessions(rb.getUserId());
+	}
+
+	/**
+	 * Invalidate other sessions for user with userId, call this after password change
+	 * @param userId - ID of user changed password
+	 */
+	public void invalidateOtherUserSessions(int userId)
+	{
+		RequestBean rb = SetCharacterEncodingFilter.getCurrentRequestBean();
+		if (rb == null || rb.getUserId()<1) return;
+
 		for (Map.Entry<String, SessionDetails> entry : data.entrySet())
 		{
 			String sessionId = entry.getKey();
@@ -382,9 +394,9 @@ public class SessionHolder
 			SessionDetails sd = entry.getValue();
 			if (sd == null) continue;
 
-			if (sd.getLoggedUserId() == rb.getUserId() && sessionId.equals(rb.getSessionId())==false)
+			if (sd.getLoggedUserId() == userId && sessionId.equals(rb.getSessionId())==false)
 			{
-				//danu session musime destroynut
+				//destroy session
 				sd.setRemoteAddr(INVALIDATE_SESSION_ADDR);
 				Logger.debug(SessionHolder.class, "Invalidating session: " + sessionId +" uid="+sd.getLoggedUserId());
 			}

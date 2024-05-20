@@ -84,7 +84,11 @@ public class CloneStructureService {
         int syncId = group.getSyncId();
         if(syncId < 1) {
             syncId = PkeyGenerator.getNextValue("structuremirroring");
-            (new SimpleQuery()).execute("UPDATE groups SET sync_id=? WHERE group_id=? AND domain_name=?", syncId, group.getGroupId(), domainName);
+            if (Constants.getBoolean("multiDomainEnabled")) {
+                (new SimpleQuery()).execute("UPDATE groups SET sync_id=? WHERE group_id=? AND domain_name=?", syncId, group.getGroupId(), domainName);
+            } else {
+                (new SimpleQuery()).execute("UPDATE groups SET sync_id=? WHERE group_id=?", syncId, group.getGroupId());
+            }
         }
         return syncId;
     }

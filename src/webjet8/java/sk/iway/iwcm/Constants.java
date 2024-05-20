@@ -204,7 +204,7 @@ public class Constants {
 		setString("updateRemoteServer", "http://license.interway.sk");
 
 		setString("statDisableUserAgent",
-				"bot,holmes,search,dig,godzilla,ocelli,crawl,slurp,spider,wauuu,http://,teoma,ia_archiver,libwww-perl,atlas factory,xenu,indy library,link verifier,froogle,inktomi,looksmart,firefly,nationaldirectory,ask jeeves,seek,galaxy.com,scooter,appie,webbug,spade,zyborg,rabaz",
+				"bot,holmes,search,dig,godzilla,ocelli,crawl,slurp,spider,wauuu,http://,teoma,ia_archiver,libwww-perl,atlas factory,xenu,indy library,link verifier,froogle,inktomi,looksmart,firefly,nationaldirectory,ask jeeves,seek,galaxy.com,scooter,appie,webbug,spade,zyborg,rabaz,googleother",
 				MOD_STAT, "zoznam User Agent názvov oddelených čiarkami, ktoré sa nebudú evidovať v štatistike.");
 		setBoolean("exportFlash", false, MOD_EDITOR,
 				"Ak je true, bude sa obsah stranok exportovat do XML pre Flash (do adresara /flash_xml/DOCID.xml)");
@@ -240,7 +240,6 @@ public class Constants {
 
 		// deprecated - ak je true, tak sa zobrazuju v statistike linky na staru
 		// statistiku
-		setBoolean("statEnableOld", false);
 		setBoolean("statDisableNew", false);
 
 		setString("NTLMDomainController", "", MOD_NTLM, "Adresa domenoveho radica pre NTLM autorizaciu");
@@ -1244,7 +1243,7 @@ public class Constants {
 
 		// cloud WebJET
 		setString("cloudStaticFilesDir", "", "cloud",
-				"Hlavny adresar v ktorom su ukladane staticke subory jenodlitvych webov v cloude (musi koncit znakom /)");
+				"Hlavny adresar v ktorom su ukladane staticke subory jenodlitvych webov v cloude (musi koncit znakom /), mozne zadat hodnotu {FILE_ROOT}static-files/ pre umiestnenie do korenoveho-priecinka/static-files/");
 		setBoolean("templatesUseDomainLocalSystemFolder", false, mods(MOD_EDITOR, "templates"),
 				"Ak je nastavene na true su hladane objekty pre sablonu v korenovom priecinku aktualnej domeny v pod adresari System");
 

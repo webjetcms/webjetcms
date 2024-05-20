@@ -681,10 +681,10 @@ public class LogonTools {
                     {
                         Password pass = new Password();
                         String encryptedPassword = "";
-                        PasswordsHistoryBean passwordsHistoryBean = new PasswordsHistoryBean(user.getUserId(),"",user.getSalt());
+                        PasswordsHistoryBean passwordsHistoryBean = new PasswordsHistoryBean(user.getUserId(),"", UsersDB.getSalt(user.getUserId()));
                         if (Constants.getBoolean("passwordUseHash"))
                         {
-                            encryptedPassword = PasswordSecurity.calculateHash(password, user.getSalt());
+                            encryptedPassword = PasswordSecurity.calculateHash(password, UsersDB.getSalt(user.getUserId()));
                         }
                         else
                         {

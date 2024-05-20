@@ -208,7 +208,7 @@ public class BasicLdapLogon
 		UserDetails actualUser = new UserDetails();
 		actualUser.setUserId(-1);
 		actualUser.setLogin(username);
-		actualUser.setPasswordPlain(Password.generatePassword(10));
+		actualUser.setPassword(Password.generatePassword(10));
 		actualUser.setEditablePages("");
 		actualUser.setEditableGroups("");
 		actualUser.setWritableFolders("");

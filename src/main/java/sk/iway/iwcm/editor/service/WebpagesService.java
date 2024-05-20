@@ -1099,8 +1099,15 @@ public class WebpagesService {
                 if (id.endsWith("*") && id.length()>1) {
 
                     groupId = Tools.getIntValue(id.substring(0, id.length()-1), -1);
+					GroupDetails baseGroup = groupsDB.getGroup(groupId);
+					//to filter FullTextIndex of files
+					final boolean baseGroupIsFiles = baseGroup.getFullPath().contains("/files");
                     List<GroupDetails> subGroups = groupsDB.getGroupsTree(groupId, true, true);
-                    groupIds.addAll(subGroups.stream().map(g -> g.getGroupId()).collect(Collectors.toList()));
+
+                    groupIds.addAll(subGroups.stream()
+						.filter(g -> baseGroupIsFiles || !g.getFullPath().contains("/files"))
+						.map(g -> g.getGroupId())
+						.collect(Collectors.toList()));
 
                 } else {
 

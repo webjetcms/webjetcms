@@ -860,7 +860,7 @@ public class ImportStructureExcel extends ExcelImportJXL
 		usr.setFirstName(gestor);
 		usr.setLastName(gestor);
 		usr.setAuthorized(true);
-		usr.setPasswordPlain(gestor);
+		usr.setPassword(gestor);
 		UsersDB.saveUser(usr);
 		println("New user: "+gestor );
 	}

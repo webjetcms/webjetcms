@@ -586,7 +586,7 @@ public class LuceneSearchAction
 					continue;
 				}
 
-            Document luceneDocument = documents.get(i);
+            	Document luceneDocument = documents.get(i);
 				i++;
 				String externalLink = "";
 				String type = luceneDocument.getFieldable("type").stringValue();
@@ -730,6 +730,9 @@ public class LuceneSearchAction
 				{
 					if (qDet.getExternalLink().startsWith("/files/"))
 					{
+						//skip protected folder
+						if (qDet.getExternalLink()!=null && qDet.getExternalLink().startsWith("/files/protected")) continue;
+
 						//navbar pre subory generujem bez moznosti kliknutia na odkaz
 						String[] fileLink = MultiDomainFilter.fixDomainPaths(qDet.getExternalLink(), request).split("\\/");
 						link = "";

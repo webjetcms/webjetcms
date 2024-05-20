@@ -231,7 +231,7 @@ public class BasicNtlmLogon
 
 				if (Constants.getBoolean("passwordUseHash"))
 				{
-					user.setPasswordPlain(user.getLogin());
+					user.setPassword(user.getLogin());
 				}
 
 				if (isAtrAvailable(retAttrs, "thumbnailPhoto"))

@@ -1,10 +1,8 @@
 package sk.iway.iwcm.doc;
 
-import java.io.File;
 import java.io.IOException;
 
 import javax.servlet.ServletException;
-import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -17,8 +15,9 @@ import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.PathFilter;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.DocTools;
+import sk.iway.iwcm.common.FilePathTools;
 import sk.iway.iwcm.filebrowser.EditForm;
-import sk.iway.iwcm.io.IwcmInputStream;
+import sk.iway.iwcm.io.IwcmFile;
 import sk.iway.iwcm.system.context.ContextFilter;
 import sk.iway.iwcm.users.UserGroupDetails;
 import sk.iway.iwcm.users.UserGroupsDB;
@@ -41,16 +40,7 @@ public class GetProtectedFileServlet extends HttpServlet
 	/**
     *  Description of the Field
     */
-   public final static String DIR_NAME = "/files/protected";
-
-
-   /**
-    *  Description of the Method
-    *
-    *@exception  ServletException  Description of the Exception
-    */
-   @Override
-	public void init() throws ServletException { }
+   public static final String DIR_NAME = "/files/protected";
 
    /**
     *  Description of the Method
@@ -66,12 +56,6 @@ public class GetProtectedFileServlet extends HttpServlet
       String url = request.getRequestURI();
       if (ContextFilter.isRunning(request)) url = ContextFilter.removeContextPath(request.getContextPath(), url);
       //Logger.println(this,"RequestServlet: url="+url);
-
-      if (url == null || url.compareTo("/") == 0)
-      {
-         getServletContext().getRequestDispatcher("/index.jsp").forward(request, response);
-         return;
-      }
 
       request.getSession().setAttribute("afterLogonRedirect", url);
 
@@ -156,123 +140,23 @@ public class GetProtectedFileServlet extends HttpServlet
 
          //preposli to na vystup
          String realPath = Tools.getRealPath(url);
-         File inFile = null;
+         IwcmFile inFile = null;
          if (realPath != null)
          {
-            inFile = new File(realPath);
+            inFile = new IwcmFile(realPath);
          }
 
          Logger.println(this,"testujem: " + realPath);
 
          if (inFile != null && inFile.exists())
          {
-            //response.setHeader("Pragma", "No-Cache");
-            //response.setDateHeader("Expires", 0);
-            //response.setHeader("Cache-Control", "no-Cache");
-
-            String mimeType = "application/octet-stream";
-
-            try
-				{
-					mimeType = getServletContext().getMimeType(url.toLowerCase());
-				}
-				catch (Exception ex)
-				{
-					sk.iway.iwcm.Logger.error(ex);
-				}
-
-				if (Tools.isEmpty(mimeType)) mimeType = "application/octet-stream";
-
-            //debilne WebSphere nevie zistit mimeType
-
-            response.setContentType(mimeType);
-            ServletOutputStream out = response.getOutputStream();
-            byte buff[] = new byte[64000];
-            IwcmInputStream fis = new IwcmInputStream(realPath);
-            int len;
-            while ((len = fis.read(buff)) != -1)
-            {
-               out.write(buff, 0, len);
-            }
-            fis.close();
-            //out.close();
-
-            //Logger.println(this,"hotovo");
-
-            return;
+            FilePathTools.writeFileOut(inFile, request, response);
          }
          else
          {
          	Logger.debug(GetProtectedFileServlet.class, "forwarding to 404.jsp");
             getServletContext().getRequestDispatcher("/404.jsp").forward(request, response);
-            return;
          }
       }
-      else
-      {
-      	//nacitaj subor a posli na vystup
-      	String realPath = Tools.getRealPath(url);
-         File inFile = null;
-         if (realPath != null)
-         {
-            inFile = new File(realPath);
-         }
-
-         //Logger.println(this,"testujem: " + realPath);
-
-         if (inFile != null && inFile.exists())
-         {
-            //response.setHeader("Pragma", "No-Cache");
-            //response.setDateHeader("Expires", 0);
-            //response.setHeader("Cache-Control", "no-Cache");
-
-            String mimeType = "application/octet-stream";
-
-            try
-				{
-					mimeType = getServletContext().getMimeType(url.toLowerCase());
-				}
-				catch (Exception ex)
-				{
-					sk.iway.iwcm.Logger.error(ex);
-				}
-
-				if (mimeType == null || mimeType.length()==0)
-				{
-					mimeType = "application/octet-stream";
-				}
-
-            //debilne WebSphere nevie zistit mimeType
-
-            response.setContentType(mimeType);
-            ServletOutputStream out = response.getOutputStream();
-            byte buff[] = new byte[64000];
-            IwcmInputStream fis = new IwcmInputStream(realPath);
-            int len;
-            while ((len = fis.read(buff)) != -1)
-            {
-               out.write(buff, 0, len);
-            }
-            fis.close();
-            //out.close();
-
-            //Logger.println(this,"hotovo");
-
-            return;
-         }
-      }
-
-      Logger.debug(GetProtectedFileServlet.class, "forwarding to 404.jsp");
-      getServletContext().getRequestDispatcher("/404.jsp").forward(request, response);
-
-      //Logger.println(this,"subor nenajdeny");
-      return;
    }
-
-   /**
-    *  Description of the Method
-    */
-   @Override
-	public void destroy() { }
-
 }

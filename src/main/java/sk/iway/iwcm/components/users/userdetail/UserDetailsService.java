@@ -13,6 +13,7 @@ import sk.iway.iwcm.database.SimpleQuery;
 import sk.iway.iwcm.doc.DocDB;
 import sk.iway.iwcm.doc.DocDetails;
 import sk.iway.iwcm.i18n.Prop;
+import sk.iway.iwcm.stat.SessionHolder;
 import sk.iway.iwcm.users.*;
 
 import java.util.ArrayList;
@@ -180,7 +181,6 @@ public class UserDetailsService {
     }
 
     public static boolean savePassword(UserDetailsBasic entity, int userId) {
-
         //entity.getId is null for new users, saved ID is in userId parameter
         if (entity.getId()==null || entity.getId()<1) {
             if (Tools.isEmpty(entity.getPassword()) || UserTools.PASS_UNCHANGED.equals(entity.getPassword())) {
@@ -188,8 +188,32 @@ public class UserDetailsService {
                 entity.setPassword(Password.generatePassword(10));
             }
         }
+        return savePassword(userId, entity.getPassword());
+    }
 
-        if (Tools.isNotEmpty(entity.getPassword()) && entity.getPassword().equals(UserTools.PASS_UNCHANGED)==false) {
+    /**
+     * Set user password to database, also set PasswordHistory
+     * @param userId - ID of user
+     * @param password - new PLAIN TEXT password or UserTools.PASS_UNCHANGED if password is not changed
+     * @return
+     */
+    @SuppressWarnings("java:S1871")
+    public static boolean savePassword(int userId, String password) {
+
+        if (Tools.isNotEmpty(password) && password.equals(UserTools.PASS_UNCHANGED)==false) {
+
+            String currentHash = (new SimpleQuery()).forString("SELECT password FROM users WHERE user_id=?", userId);
+            if (password.startsWith("bcrypt:$2a$12") && password.length()>64) {
+                //it's allready bcrypt hash, skip save
+                return true;
+            } else if (password.length()==128) {
+                //it's old password hash
+                return true;
+            } else if (currentHash != null && Tools.isNotEmpty(currentHash) && currentHash.equals(password)) {
+                //it's allready current hash/password, skip save
+                return true;
+            }
+
             //ulozit heslo
             Logger.debug(UserDetailsService.class, "Heslo je zmenene, ukladam");
 
@@ -201,11 +225,11 @@ public class UserDetailsService {
                 if (Constants.getBoolean("passwordUseHash"))
                 {
                     salt = PasswordSecurity.generateSalt();
-                    hash = PasswordSecurity.calculateHash(entity.getPassword(), salt);
+                    hash = PasswordSecurity.calculateHash(password, salt);
                 }
                 else
                 {
-                    hash = pass.encrypt(entity.getPassword());
+                    hash = pass.encrypt(password);
                 }
 
                 PasswordsHistoryBean.insertAndSaveNew(userId, hash, salt);
@@ -213,8 +237,12 @@ public class UserDetailsService {
                 //uloz do DB
                 (new SimpleQuery()).execute("UPDATE users SET password=?, password_salt=? WHERE user_id=?", hash, salt, userId);
 
+                String login = (new SimpleQuery()).forString("SELECT login FROM users WHERE user_id=?", userId);
                 //zaauditovat zmenu hesla
-                Adminlog.add(Adminlog.TYPE_USER_CHANGE_PASSWORD, userId, "SaveUserAction - user ("+entity.getLogin()+") successfully changed password", -1, -1);
+                Adminlog.add(Adminlog.TYPE_USER_CHANGE_PASSWORD, userId, "SaveUserAction - user ("+login+") successfully changed password", -1, -1);
+
+                //invalidate other user sessions
+                SessionHolder.getInstance().invalidateOtherUserSessions(userId);
 
             } catch (Exception ex) {
                 Logger.error(UserDetailsService.class, ex);

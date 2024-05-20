@@ -28,6 +28,7 @@ import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.PageLng;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.LogonTools;
+import sk.iway.iwcm.components.users.userdetail.UserDetailsRepository;
 import sk.iway.iwcm.database.SimpleQuery;
 import sk.iway.iwcm.doc.DocDB;
 import sk.iway.iwcm.doc.DocDetails;
@@ -69,10 +70,12 @@ public class AdminLogonController {
 
     @SuppressWarnings("unused")
     private final AuthenticationManager authenticationManager;
+    private final UserDetailsRepository userDetailsRepository;
 
     @Autowired
-    public AdminLogonController(AuthenticationManager authenticationManager) {
+    public AdminLogonController(AuthenticationManager authenticationManager, UserDetailsRepository userDetailsRepository) {
         this.authenticationManager = authenticationManager;
+        this.userDetailsRepository = userDetailsRepository;
     }
 
 
@@ -92,12 +95,12 @@ public class AdminLogonController {
             return CHANGE_PASSWORD_FORM;
         }
 
-        if (Constants.getBoolean("passwordUseHash") && user.getPassword().equals(PasswordSecurity.calculateHash(userForm.getNewPassword(), user.getSalt())) || user.getPassword().equals(userForm.getNewPassword())) {
+        if (Constants.getBoolean("passwordUseHash") && user.getPassword().equals(PasswordSecurity.calculateHash(userForm.getNewPassword(), userDetailsRepository.getPasswordSaltByUserId((long)user.getUserId()))) || user.getPassword().equals(userForm.getNewPassword())) {
             // povodne heslo je rovnake ako nove heslo
             model.addAttribute("errors", prop.getText("logon.change_password.old_password_match_new"));
             return CHANGE_PASSWORD_FORM;
         } else if (Password.checkPassword(true, userForm.getNewPassword(), true, user.getUserId(), session, null)){
-            user.setPasswordPlain(userForm.getNewPassword());
+            user.setPassword(userForm.getNewPassword());
             UsersDB.saveUser(user);
             Adminlog.add(Adminlog.TYPE_USER_CHANGE_PASSWORD, user.getUserId(), "UsrLogonAction - user ("+user.getLogin()+") successfully changed password", -1, -1);
             session.removeAttribute(Constants.USER_KEY+"_changepassword");
@@ -414,26 +417,28 @@ public class AdminLogonController {
      */
     private String set2FaAuthForm(Identity user, HttpServletRequest request) {
 
+        String mobileDevice = userDetailsRepository.getMobileDeviceByUserId((long)user.getUserId());
+
         //ak je aktivovana dvojfaktorova autentifikacia a user ma nastaveny devicekey
-        if (Tools.isNotEmpty(user.getMobileDevice()) || Constants.getBoolean("isGoogleAuthRequiredForAdmin") ) {
+        if (Tools.isNotEmpty(mobileDevice) || Constants.getBoolean("isGoogleAuthRequiredForAdmin") ) {
             HttpSession session = request.getSession();
 
-            if (Tools.isEmpty(user.getMobileDevice()) || user.getMobileDevice().length()<5) {  // - je forced gauth ^ cfg premennou
+            if (Tools.isEmpty(mobileDevice) || mobileDevice.length()<5) {  // - je forced gauth ^ cfg premennou
                 GoogleAuthenticator gAuth = new GoogleAuthenticator();
                 final GoogleAuthenticatorKey key = gAuth.createCredentials();
                 session.setAttribute("token", key.getKey());	// hodime si do session novo vygenerovane credentials
                 session.setAttribute("QRURL", GoogleAuthenticatorQRGenerator.getOtpAuthURL("WebJET " + Constants.getInstallName() + " (" + Tools.getServerName(request) + ")", user.getLogin(), key));
                 session.setAttribute("scratchcode", key.getScratchCodes().get(0).toString());
             }else{
-                session.setAttribute("token", user.getMobileDevice());
+                session.setAttribute("token", mobileDevice);
             }
 
             // Google Authenticator
             //String token = RandomStringUtils.random(4, false, true);
-            //sendToken(user.getMobileDevice(), token);
+            //sendToken(mobileDevice, token);
             session.setAttribute("adminUser_waitingForToken", user);
             session.removeAttribute(Constants.USER_KEY);
-            //Logger.debug(LogonAction.class, "LogonAction dualFactorToken: "+user.getMobileDevice());
+            //Logger.debug(LogonAction.class, "LogonAction dualFactorToken: "+mobileDevice);
             // zobraz naspat admin
             return TWOFA_PASSWORD_FORM;
 

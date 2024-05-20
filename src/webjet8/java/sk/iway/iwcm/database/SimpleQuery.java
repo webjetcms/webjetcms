@@ -219,7 +219,35 @@ public class SimpleQuery
 		if (results.isEmpty()) return false;
 		if (results.get(0) == null)
 			return false;
-		return (Boolean)results.get(0);
+
+		Object o = results.get(0);
+		if (o instanceof Boolean)
+			return (Boolean)o;
+		else if (o instanceof Number) {
+			return ((Number)o).intValue() == 1;
+		} else if (o instanceof String) {
+			return "true".equals(o) || "1".equals(o);
+		} else {
+			return false;
+		}
+	}
+
+	@SuppressWarnings("unchecked")
+	public Boolean forBooleanWithNull(String sql, Object...parameters)
+	{
+		List<Object> results = forList(sql, parameters);
+		if (results.isEmpty()) return null;
+		if (results.get(0) == null) return null;
+		Object o = results.get(0);
+		if (o instanceof Boolean)
+			return (Boolean)o;
+		else if (o instanceof Number) {
+			return ((Number)o).intValue() == 1;
+		} else if (o instanceof String) {
+			return "true".equals(o) || "1".equals(o);
+		} else {
+			return false;
+		}
 	}
 
 	@SuppressWarnings("unchecked")

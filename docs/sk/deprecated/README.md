@@ -4,8 +4,6 @@
 
 **Web stránky**
 
-- V stromovej štruktúre sa zobrazujú len adresáre, nie je podporovaná možnosť nastavenia zobrazenia aj web stránok cez konf. premennú ```webpagesTreeShowPages```.
-- Atribúty stránky (trieda ```DocAtrDB```, tabuľky ```doc_atr```, ```doc_atr_def```) nie je podporovaná, odporúčané je použiť [voliteľné polia](../frontend/webpages/customfields/README.md).
 - Pri uložení stránky sa už nepoužíva EditorForm, ak používate  [WebjetEvent](../developer/backend/events.md) je potrebné ho upraviť z použitia ```EditorForm``` na ```DocDetails``` objekt.
 - Web stránke sa už nedá nastaviť atribút "Vyžadovať zabezpečené spojenie (https)", odporúčané riešenie je nastaviť presmerovanie celej domény na zabezpečené (https) spojenie. Nemá zmysel to individuálne nastavovať pre stránky ako v minulosti.
 - Právo ```Uložiť (pracovná verzia)``` je zmenené na právo ```Uložiť```. Ak používateľ nemá toto právo, nemôže ukladať existujúce web stránky. Pôvodné použitie len na pracovnú verziu nedávalo praktický zmysel.

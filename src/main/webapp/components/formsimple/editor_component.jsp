@@ -66,7 +66,6 @@ taglib prefix="iway"
 
 
 <link type="text/css" rel="stylesheet" media="screen" href="/admin/css/tabpane-luna.css" />
-<link rel="stylesheet" type="text/css" href="/components/cloud/admin/css/style_edit.css">
 
 <style type="text/css">
 	ul.tab_menu { padding: 2px 0 0 10px !important; }

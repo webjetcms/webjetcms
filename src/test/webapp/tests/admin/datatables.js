@@ -111,6 +111,7 @@ Scenario('Dynamicke urcenie poctu zaznamov', ({ I }) => {
 Scenario('Editacia bunky po presune stlpca', ({ I, DT, Browser }) => {
 
     I.amOnPage("/admin/v9/settings/redirect/");
+    DT.resetTable();
     DT.filter("newUrl", "/test-stavov/virtualpath/podla-title.html");
 
     if (Browser.isFirefox()) {
@@ -165,17 +166,24 @@ Scenario('Zobrazenie nazvu v hlavicke', ({ I, DT, DTE }) => {
     I.clickCss("#datatableInit tbody tr:nth-child(1) td.dt-row-edit a");
     DTE.waitForEditor();
     I.see("Zobrazený v menu", "#datatableInit_modal div.DTE_Header_Content h5.modal-title");
+    I.wait(3);
     DTE.cancel();
+    I.wait(1);
 
     I.say("Oznac 2 riadky a over zobrazenie nadpisu");
 
     I.forceClickCss("#datatableInit tbody tr:nth-child(1) td.dt-select-td");
     I.forceClickCss("#datatableInit tbody tr:nth-child(2) td.dt-select-td");
 
+    I.wait(1);
+
     I.clickCss("#datatableInit_wrapper button.buttons-edit");
     DTE.waitForEditor();
     I.see("Upraviť", "#datatableInit_modal div.DTE_Header_Content h5.modal-title");
+    I.wait(1);
     DTE.cancel();
+
+    I.wait(1);
 
     I.say("Overenie pri mazani");
 

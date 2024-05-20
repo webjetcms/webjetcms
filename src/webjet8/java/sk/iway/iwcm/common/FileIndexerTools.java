@@ -3,15 +3,24 @@ package sk.iway.iwcm.common;
 import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.UnsupportedEncodingException;
+import java.lang.reflect.Method;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.StringTokenizer;
 
+import javax.annotation.Nullable;
+import javax.servlet.http.HttpServletRequest;
+
+import org.apache.commons.beanutils.BeanUtils;
+
 import sk.iway.Password;
+import sk.iway.iwcm.Cache;
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.DBPool;
 import sk.iway.iwcm.FileTools;
@@ -21,6 +30,7 @@ import sk.iway.iwcm.SetCharacterEncodingFilter;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.components.file_archiv.FileArchivatorBean;
 import sk.iway.iwcm.components.file_archiv.FileArchivatorDB;
+import sk.iway.iwcm.database.SimpleQuery;
 import sk.iway.iwcm.doc.DocDB;
 import sk.iway.iwcm.doc.DocDetails;
 import sk.iway.iwcm.doc.GroupDetails;
@@ -31,6 +41,7 @@ import sk.iway.iwcm.findexer.Excel;
 import sk.iway.iwcm.findexer.FileIndexer;
 import sk.iway.iwcm.findexer.PDF;
 import sk.iway.iwcm.findexer.PoiExtractor;
+import sk.iway.iwcm.findexer.ResultBean;
 import sk.iway.iwcm.findexer.Rtf;
 import sk.iway.iwcm.findexer.Word;
 import sk.iway.iwcm.io.IwcmFile;
@@ -39,6 +50,7 @@ import sk.iway.iwcm.io.IwcmInputStream;
 import sk.iway.iwcm.system.zip.ZipEntry;
 import sk.iway.iwcm.system.zip.ZipInputStream;
 import sk.iway.iwcm.users.UserDetails;
+import sk.iway.iwcm.users.UsersDB;
 
 public class FileIndexerTools {
 
@@ -213,18 +225,65 @@ public class FileIndexerTools {
         return urlForTokenize;
     }
 
+    /**
+     * Fulltext Index File
+     * @param url - URL of the file
+     * @param user - current user
+     */
     public static void indexFile(String url, UserDetails user)
     {
-        indexFile(null, url, user);
+        indexFile(url, user, null, null);
     }
 
+    /**
+     * Fulltext Index File
+     * @param url - URL of the file
+     * @param indexedFiles - optional - list of indexed files, after indexing it will be added with indexed file
+     * @param request - HttpServletRequest - can provide additional meta data for indexing from request.getParameter(field_a... field_l, perexGroup, passwordProtected)
+     * @return
+     */
+    public static boolean indexFile(String url, List<ResultBean> indexedFiles, HttpServletRequest request)
+	{
+		return FileIndexerTools.indexFile(url, UsersDB.getCurrentUser(request), indexedFiles, request);
+	}
+
+    /**
+     * Fulltext Index File
+     * @param fileArchivatorBean
+     * @param url
+     * @param user
+     * @deprecated use {@link #indexFile(String, UserDetails)} instead
+     */
+    @Deprecated
     public static void indexFile(FileArchivatorBean fileArchivatorBean,String url, UserDetails user)
     {
-        Logger.debug(FileIndexerTools.class,"fileArchivatorBean: "+fileArchivatorBean+", url: "+url+" user: "+user);
-        if (!url.startsWith("/files/"))
-        {
-            return;
+        indexFile(url, user, null, null);
+    }
+
+    /**
+     * Fulltext Index File
+     * @param url - URL of the file
+     * @param user - current user
+     * @param indexedFiles - optional - list of indexed files, after indexing it will be added with indexed file
+     * @param request - optional - HttpServletRequest - can provide additional meta data for indexing from request.getParameter(field_a... field_l, perexGroup, passwordProtected)
+     * @return
+     */
+    private static boolean indexFile(String url, UserDetails user, @Nullable List<ResultBean> indexedFiles, @Nullable HttpServletRequest request)
+    {
+        url = Tools.replace(url, "//", "/");
+        Logger.debug(FileIndexerTools.class,"indexFile(url="+url+" user="+user+")");
+        if (!url.startsWith("/files/") || url.endsWith("/upload") || url.startsWith("/files/protected/"))
+		{
+			 Logger.error(FileIndexerTools.class,"url musi zacinat na /files/ a nesmie koncit na /upload: "+url);
+			 return false;
+		}
+
+        if (shouldIndexFile(url) == false) {
+            Logger.debug(FileIndexerTools.class, "File is in non indexable dir: " + url);
+            return false;
         }
+
+        boolean saveOk = false;
         try
         {
             String realPath = Tools.getRealPath(url);
@@ -233,7 +292,8 @@ public class FileIndexerTools {
 
             if (url.indexOf('.')==-1)
             {
-                return;
+                Logger.error(FileIndexerTools.class,"url musi obsahovat bodku: "+url);
+                return false;
             }
 
             String ext = url.substring(url.lastIndexOf('.')).toLowerCase();
@@ -246,15 +306,29 @@ public class FileIndexerTools {
             {
                 sk.iway.iwcm.Logger.error(ex);
             }
-            Logger.debug(FileIndexerTools.class,"data: "+(data != null ? data.length() : "-"));
+            //Logger.debug(FileIndexerTools.class,"data: "+(data != null ? data.length() : "-"));
 
+            if (Tools.isEmpty(data) && Constants.getBoolean("fileIndexerIndexAllFiles") && url.startsWith("/files/"))
+			{
+				data = "<p><a href='"+url+"'>"+url+"</p>";
+			}
             if (data != null && data.trim().length() > 4)
             {
                 //mame text, mozeme zaindexovat
 
-                //	uprav data tak, aby neobsahoval haluzne znaky
+				data = FileIndexerTools.cleanText(url, data);
 
-                Logger.println(FileIndexer.class,"done, size="+data.length());
+				//Logger.debug(FileIndexer.class, data);
+
+				//Logger.println(FileIndexer.class,data);
+				Logger.println(FileIndexer.class,"done, size="+data.length());
+				ResultBean result = new ResultBean();
+				result.setFile(url);
+				result.setData(data);
+
+				if (indexedFiles!=null) {
+                    indexedFiles.add(result);
+                }
 
                 StringTokenizer st = new StringTokenizer(getUrlForGroupsTokenize(url), "/");
                 int parentDirId = 0;
@@ -338,7 +412,7 @@ public class FileIndexerTools {
                         Logger.println(FileIndexer.class,"Vytvaram stranku: " + dirName);
                         DocDB docDB = DocDB.getInstance();
 
-                        int docId = DocDB.getInstance().getDocIdFromURLImpl(url+".html", domain);
+                        int docId = docDB.getDocIdFromURLImpl(url+".html", domain);
                         if (docId < 1) docId = getFileDocId(dirName, group.getGroupId());
 
                         group = groupsDB.getGroup(parentDirId);
@@ -358,16 +432,47 @@ public class FileIndexerTools {
                         doc.setExternalLink(url);
                         doc.setVirtualPath(url+".html");
                         doc.setNavbar(title +  " ("+Tools.formatFileSize(length)+")");
-                        doc.setAuthorId(user.getUserId());
 
                         boolean searchable = fab == null || fab.getShowFile();
                         doc.setSearchable(searchable);
                         doc.setAvailable(searchable);
-
                         doc.setCacheable(false);
                         if (group!=null) doc.setTempId(group.getTempId());
-                        DocDB.saveDoc(doc);
+
+                        if (request != null) {
+                            //ak mame v requeste nejake editor hodnoty, nastavme ich, tie z request.getAttribute sa pouzivaju v UnzipAction
+                            if (request.getParameter("passwordProtected")!=null) doc.setPasswordProtected(Tools.join(request.getParameterValues("passwordProtected"), ","));
+                            if (request.getAttribute("passwordProtected")!=null) doc.setPasswordProtected((String)request.getAttribute("passwordProtected"));
+
+                            String[] fields = {"A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L"};
+                            for (String pismeno : fields)
+                            {
+                                String value = request.getParameter("field"+pismeno);
+                                if (value==null) value = (String)request.getAttribute("field"+pismeno);
+
+                                if (value != null) BeanUtils.setProperty(doc, "field"+pismeno, value);
+                            }
+                            if (request.getParameter("perexGroup")!=null) doc.setPerexGroup(request.getParameterValues("perexGroup"));
+                            if(Tools.isNotEmpty(Constants.getString("beforeFileIndexerEditorSaveMathod")))
+                            {
+                                try{
+                                    String saveMethod = Constants.getString("beforeFileIndexerEditorSaveMathod");
+                                    String clazzName = saveMethod.substring( 0, saveMethod.lastIndexOf('.'));
+                                    String methodName = saveMethod.substring( clazzName.length() +1 );
+                                    Class<?> clazz = Class.forName(clazzName);
+                                    Method method = clazz.getMethod(methodName, Class.forName("sk.iway.iwcm.editor.EditorForm"),Class.forName("javax.servlet.http.HttpServletRequest"));
+                                    method.invoke(null, doc, request);
+                                }
+                                catch(Exception e){
+                                    Logger.debug(FileIndexer.class, "Exception while trying to invoke "+Constants.getString("beforeFileIndexerEditorSaveMathod")+" , cause: "+e.getMessage());
+                                }
+                            }
+                        }
+
+                        saveOk = DocDB.saveDoc(doc);
                         docDB.updateInternalCaches(doc.getDocId());
+
+                        result.setDocId(doc.getDocId());
                     }
                 }
             }
@@ -376,6 +481,7 @@ public class FileIndexerTools {
         {
             sk.iway.iwcm.Logger.error(ex);
         }
+        return saveOk;
     }
 
     /**
@@ -603,5 +709,47 @@ public class FileIndexerTools {
         }
         dir.delete();
         return data.toString();
+    }
+
+    /**
+     * Check database table dirprop for dir_url, return index_fulltext, search to parents dir
+     * @param fileUrl
+     * @return
+     */
+    private static boolean shouldIndexFile(String fileUrl) {
+
+        String testDir = fileUrl;
+
+        int i = testDir.lastIndexOf("/");
+        if (i>0) testDir = testDir.substring(0, i);
+        else return false;
+
+        Cache c = Cache.getInstance();
+        String key = "FileIndexerTools.shouldIndexDir";
+        @SuppressWarnings("unchecked")
+        Map<String, Boolean> cachedMap = (Map<String, Boolean>)c.getObject(key);
+        if (cachedMap == null) {
+            cachedMap = new HashMap<>();
+            c.setObjectSeconds(key, cachedMap, 300);
+        }
+
+
+        int failsafe = 0;
+        while (testDir.length() > 0 && failsafe++<50) {
+
+            Logger.debug(FileIndexerTools.class, "Checking dirprop for dir_url: " + testDir);
+
+            Boolean isIndexed = (new SimpleQuery()).forBooleanWithNull("SELECT index_fulltext FROM dirprop WHERE dir_url=?", testDir);
+            if (isIndexed != null) {
+                cachedMap.put(testDir, isIndexed);
+                return isIndexed.booleanValue();
+            }
+
+            i = testDir.lastIndexOf("/");
+            if (i>0) testDir = testDir.substring(0, i);
+            else testDir = "";
+        }
+
+        return false;
     }
 }

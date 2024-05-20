@@ -6,8 +6,10 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
 @Repository
 public interface UserDetailsRepository extends JpaRepository<UserDetailsEntity, Long>, JpaSpecificationExecutor<UserDetailsEntity> {
@@ -24,4 +26,15 @@ public interface UserDetailsRepository extends JpaRepository<UserDetailsEntity, 
 
     @Query(value = "SELECT api_key FROM users WHERE user_id=?1", nativeQuery=true)
     String getApiKeyByUserId(Long userId);
+
+    @Query(value = "SELECT mobile_device FROM users WHERE user_id=?1", nativeQuery=true)
+    String getMobileDeviceByUserId(Long userId);
+
+    @Query(value = "SELECT password_salt FROM users WHERE user_id=?1", nativeQuery=true)
+    String getPasswordSaltByUserId(Long userId);
+
+    @Transactional
+    @Modifying
+    @Query(value = "UPDATE users SET mobile_device = ?2 WHERE user_id = ?1", nativeQuery=true)
+    void updateMobileDeviceByUserId(Long userId, String mobileDevice);
 }

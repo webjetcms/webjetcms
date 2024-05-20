@@ -220,7 +220,7 @@ public class NtlmLogonAction
 			user = new UserDetails();
 			user.setUserId(-1);
 			user.setLogin(loginName);
-			user.setPasswordPlain(Password.generatePassword(10));
+			user.setPassword(Password.generatePassword(10));
 		}
 
 		doLdapQuery(user);
@@ -320,7 +320,7 @@ public class NtlmLogonAction
 		if (Constants.getBoolean("passwordUseHash"))
 		{
 			password = user.getLogin();
-			user.setPasswordPlain(password);
+			user.setPassword(password);
 			Logger.debug(NtlmLogonAction.class, "NtlmLogonAction - Pass use hash, nastavujem na "+user.getLogin());
 		}
 
@@ -597,7 +597,7 @@ public class NtlmLogonAction
 
 			if (Constants.getBoolean("passwordUseHash"))
 			{
-				user.setPasswordPlain(user.getLogin());
+				user.setPassword(user.getLogin());
 			}
 
 	     }

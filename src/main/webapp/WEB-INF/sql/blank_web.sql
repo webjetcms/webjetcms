@@ -13,15 +13,11 @@ CREATE TABLE _conf_ (
 #
 # Dumping data for table '_conf_'
 #
-INSERT INTO _conf_ VALUES ('editorEnableXHTML','true');
-INSERT INTO _conf_ VALUES ('adminEnableIPs','127.0.0.1,10.,192.168.,195.168.35.4,195.168.35.5');
-INSERT INTO _conf_ VALUES ('statNoLogIP','127.0.0.1,192.168.');
-INSERT INTO _conf_ VALUES ('statEnableOld','false');
 INSERT INTO _conf_ VALUES ('defaultDisableUpload','false');
 INSERT INTO _conf_ VALUES ('showDocActionAllowedDocids','4');
-INSERT INTO _conf_ VALUES ('webEnableIPs','#localhost,127.0.0.1,10.,192.168.,#interway,85.248.107.8,195.168.35.4,195.168.35.5,#klient,');
 INSERT INTO _conf_ VALUES ('inlineEditingEnabled','true');
 INSERT INTO _conf_ VALUES ('disableWebJETToolbar','true');
+INSERT INTO _conf_ VALUES ('logLevel','debug');
 
 #
 # Table structure for table '_db_'

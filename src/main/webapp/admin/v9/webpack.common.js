@@ -9,9 +9,9 @@ const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPl
 const MomentLocalesPlugin = require('moment-locales-webpack-plugin');
 
 const WP_DATA = {
-    name: "WebJET CMS 2023",
-    lng: "SK",
-    author: "InterWay",
+    name: "WebJET CMS",
+    generator: "WebJET CMS",
+    author: "InterWay, a. s. - www.interway.sk",
     publicPath: "/admin/v9/dist/"
 };
 

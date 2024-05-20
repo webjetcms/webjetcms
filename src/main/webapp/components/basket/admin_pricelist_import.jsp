@@ -4,7 +4,7 @@
 <%@ taglib prefix="iwcm" uri="/WEB-INF/iwcm.tld" %>
 <%@ taglib prefix="iway" uri="/WEB-INF/iway.tld" %>
 <%@ taglib prefix="bean" uri="/WEB-INF/struts-bean.tld" %>
-<%@ taglib prefix="html" uri="/WEB-INF/struts-html.tld" %>
+<%@ taglib prefix="form" uri="http://www.springframework.org/tags/form" %>
 <%@ taglib prefix="logic" uri="/WEB-INF/struts-logic.tld" %>
 <%@ taglib prefix="display" uri="/WEB-INF/displaytag.tld" %>
 <%@ taglib prefix="stripes" uri="http://stripes.sourceforge.net/stripes.tld"%>
@@ -37,14 +37,14 @@
 	function Ok()
 	{
 		//musi to ist takto, inak by sa nezavolal check form
-		document.xlsImportForm.submit.click();	
+		document.xlsImportForm.submit.click();
 	}
 //-->
 </script>
 <div class="padding10">
 	<div class="col-sm-12 col-xs-12 form-group">
 
-		<% 
+		<%
 			if (displayByPartNo)
 			{
 		%>
@@ -59,15 +59,15 @@
 			}
 		%>
 	</div>
-	<html:form action="/admin/importxls.do" name="xlsImportForm" type="sk.iway.iwcm.xls.ImportXLSForm" enctype="multipart/form-data"> 
+	<form:form method="post" modelAttribute="xlsImportForm" action="/admin/import/excel/" name="xlsImportForm" enctype="multipart/form-data">
 		<div class="col-sm-12 col-xs-12 form-group">
 			<div class="col-sm-10 col-xs-10 form-group">
 				<div class="col-sm-6 col-xs-6">
 					<iwcm:text key="components.basket.price_import.file_label"/>:
 				</div>
 				<div class="col-sm-6 col-xs-6">
-					<html:file property="file" styleClass="input" />
-					<html:hidden name="type" value="sk.iway.iwcm.components.basket.PricelistExcelImport" property="type" styleClass="required" />
+					<input type="file" name="file" class="input" />
+					<input type="hidden" value="sk.iway.iwcm.components.basket.PricelistExcelImport" name="type" class="required" />
 				</div>
 			</div>
 			<div class="col-sm-10 col-xs-10 form-group">
@@ -121,10 +121,10 @@
 			<div class="col-sm-10 col-xs-10 form-group">
 				<div class="col-sm-6 col-xs-6">
 					<label for="partNumberId"><iwcm:text key="components.basket.price_import.map_number_label"/></label>
-				</div> 
+				</div>
 				<div class="col-sm-6 col-xs-6">
 					<input type="text" id="partNumberId" name="partNumber" class="required" value="<iwcm:text key="components.basket.price_import.default_map_number_header"/>"/>
-				</div> 
+				</div>
 			</div>
 			<%
 				}
@@ -149,6 +149,6 @@
 				</div>
 			</div>
 		</div>
-	</html:form>
+	</form:form>
 </div>
 <%@ include file="/admin/layout_bottom_dialog.jsp" %>

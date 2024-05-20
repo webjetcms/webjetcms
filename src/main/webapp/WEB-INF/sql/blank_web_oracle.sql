@@ -7,15 +7,11 @@ ALTER TABLE webjet_conf MODIFY (name DEFAULT '');
 ALTER TABLE webjet_conf MODIFY (value DEFAULT '');
 ALTER TABLE webjet_conf add CONSTRAINT name UNIQUE  (name);
 
-INSERT INTO webjet_conf VALUES ('editorEnableXHTML','true');
-INSERT INTO webjet_conf VALUES ('adminEnableIPs','127.0.0.1,10.,192.168.,195.168.35.4,195.168.35.5');
-INSERT INTO webjet_conf VALUES ('statNoLogIP','127.0.0.1,192.168.');
-INSERT INTO webjet_conf VALUES ('statEnableOld','false');
 INSERT INTO webjet_conf VALUES ('defaultDisableUpload','false');
 INSERT INTO webjet_conf VALUES ('showDocActionAllowedDocids','4');
-INSERT INTO webjet_conf VALUES ('webEnableIPs','#localhost,127.0.0.1,10.,192.168.,#interway,85.248.107.8,195.168.35.4,195.168.35.5,#klient,');
 INSERT INTO webjet_conf VALUES ('inlineEditingEnabled','true');
 INSERT INTO webjet_conf VALUES ('disableWebJETToolbar','true');
+INSERT INTO webjet_conf VALUES ('logLevel','debug');
 
 CREATE TABLE webjet_db (
   id INTEGER NOT NULL,

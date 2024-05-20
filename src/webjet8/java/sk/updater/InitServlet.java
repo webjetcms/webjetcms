@@ -626,7 +626,6 @@ public class InitServlet extends HttpServlet
 		files.add("/WEB-INF/classes/sk/iway/iwcm/PKeyGeneratorJUnit.class");
 		files.add("/WEB-INF/classes/sk/iway/iwcm/dmail/DomainLimitsActionBean.class");
 		files.add("/WEB-INF/classes/sk/iway/iwcm/dmail/EmailCsvImport.class");
-		files.add("/WEB-INF/classes/sk/iway/iwcm/dmail/EMailAction.class");
 
 		files.add("/WEB-INF/classes/sk/iway/spirit/ProjectForm.class");
 		files.add("/WEB-INF/classes/sk/iway/spirit/BranchAction.class");

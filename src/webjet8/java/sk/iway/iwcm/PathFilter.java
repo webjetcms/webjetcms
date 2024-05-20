@@ -692,7 +692,7 @@ public class PathFilter implements Filter
 						else
 						{
 							user.setLoginName(username);
-							user.setPasswordPlain(password);
+							user.setPassword(UserTools.PASS_UNCHANGED);
 							user.setValid(true);
 							//je korektne prihlaseny
 							LogonTools.setUserToSession(req.getSession(), user);
@@ -1200,7 +1200,7 @@ public class PathFilter implements Filter
 				}
 			}
 
-			if (FilePathTools.isExternalDir(path))
+			if (FilePathTools.isExternalDir(path) && path.startsWith("/files/protected/")==false)
 			{
 				//externy adresar pre cloudStaticFilesDir folder
 				boolean fileWritten = FilePathTools.writeFileOut(path, req, res);

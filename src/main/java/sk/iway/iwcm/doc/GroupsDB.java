@@ -3697,7 +3697,7 @@ public class GroupsDB extends DB
 			}
 
 			if (parentGroupId>0) {
-				//zaskis - neklonujme field_a az field_d pretoze to je nezmysel (mame tam info pre root a daju sa ziskat rekurzivne)
+				//nekopirujeme field_a az field_d pretoze to je nepotrebne (daju sa ziskat rekurzivne)
 				ctxGroup.setFieldA("");
 				ctxGroup.setFieldB("");
 				ctxGroup.setFieldC("");

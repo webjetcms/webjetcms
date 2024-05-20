@@ -25,7 +25,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public class XhrFileUploadServlet extends HttpServlet
 {
 	private static final long serialVersionUID = 1L;
-	private static final Map<String,PathHolder> temporary = new ConcurrentHashMap<String, PathHolder>();
+	private static final Map<String,PathHolder> temporary = new ConcurrentHashMap<>();
 
 	private static final String ALLOWED_EXTENSIONS = "doc docx xls xlsx xml ppt pptx pdf jpeg jpg bmp tiff psd zip rar png mp4";
 
@@ -35,13 +35,14 @@ public class XhrFileUploadServlet extends HttpServlet
 		try {
 			String name = request.getParameter("name");
 			Logger.debug(XhrFileUploadServlet.class, "doPost, name from parameter: "+name);
-			if (name == null) {
-				//dropzone.js kompatibilita
-				Part filePart = request.getPart("file");
-				name = filePart.getSubmittedFileName();
 
-				Logger.debug(XhrFileUploadServlet.class, "doPost, name from filePart: "+name);
+			//dropzone.js kompatibilita
+			Part filePart = request.getPart("file");
+			if (filePart != null && filePart.getSubmittedFileName() != null) {
+				name = filePart.getSubmittedFileName();
 			}
+
+			Logger.debug(XhrFileUploadServlet.class, "doPost, name from filePart: "+name);
 
 			String extension = FileTools.getFileExtension(name);
 
@@ -65,7 +66,6 @@ public class XhrFileUploadServlet extends HttpServlet
 			if (request.getParameter("dztotalchunkcount") != null) chunks = Tools.getIntValue(request.getParameter("dztotalchunkcount"), 0);
 
 			Logger.debug(XhrFileUploadServlet.class, "doPost, chunk="+chunk+", chunks="+chunks);
-			Part filePart = request.getPart("file");
 
 			HttpSession session = request.getSession();
 			PartialUploadHolder holder = (PartialUploadHolder) session.getAttribute("partialUploadFile-" + name);

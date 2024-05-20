@@ -63,6 +63,7 @@ static {
 	replaces.add(new OptionDto("<html:password property=\"password\" size=\"16\" maxlength=\"16\" redisplay=\"true\" styleClass=\"input\" styleId=\"oldpass\" />", "<input type=\"password\" name=\"password\" size=\"16\" maxlength=\"16\" class=\"input\" id=\"oldpass\" />", null));
 	replaces.add(new OptionDto("<html:password property=\"newPassword\" size=\"16\" maxlength=\"16\" redisplay=\"true\" styleClass=\"input\" styleId=\"newpass\" />", "<input type=\"password\" name=\"newPassword\" size=\"16\" maxlength=\"16\" class=\"input\" id=\"newpass\" />", null));
 	replaces.add(new OptionDto("<html:password property=\"retypeNewPassword\" size=\"16\" maxlength=\"16\" redisplay=\"true\" styleClass=\"input\" styleId=\"retypepass\" />", "<input type=\"password\" name=\"retypeNewPassword\" size=\"16\" maxlength=\"16\" class=\"input\" id=\"retypepass\" />", null));
+	replaces.add(new OptionDto("user.setPassword(PasswordSecurity.calculateHash(newPassword, user.getSalt()));", "user.setPassword(newPassword);", null));
 
 	//Import XLS
 	replaces.add(new OptionDto("uri=\"/WEB-INF/struts-html.tld\" prefix=\"html\"", "prefix=\"form\" uri=\"http://www.springframework.org/tags/form\"", "import_xls_struct.jsp"));
@@ -304,6 +305,7 @@ private void checkDir(String url, boolean saveFile, boolean compileFile, JspWrit
 						if (to.contains("<form:form")) {
 							content = Tools.replace(content, "</html:form>", "</form:form>");
 							content = Tools.replace(content, "uri=\"/WEB-INF/struts-html.tld\" prefix=\"html\"", "prefix=\"form\" uri=\"http://www.springframework.org/tags/form\"");
+							content = Tools.replace(content, "prefix=\"html\" uri=\"/WEB-INF/struts-html.tld\"", "prefix=\"form\" uri=\"http://www.springframework.org/tags/form\"");
 						} else content = Tools.replace(content, "</html:form>", "</form>");
 					}
 				}

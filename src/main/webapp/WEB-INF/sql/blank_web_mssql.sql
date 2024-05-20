@@ -1233,12 +1233,8 @@ insert into _db_ (create_date, note) values ('2005-1-1', '18.8.2004 [joruz] caso
 insert into _db_ (create_date, note) values ('2005-1-1', '31.3.2005 [jeeff] banner_banners - zrusenie identity stlpcov')
 ;
 
-INSERT INTO _conf_ VALUES ('editorEnableXHTML','true');
-INSERT INTO _conf_ VALUES ('adminEnableIPs','127.0.0.1,10.,192.168.,195.168.35.4,195.168.35.5');
-INSERT INTO _conf_ VALUES ('statNoLogIP','127.0.0.1,192.168.');
-INSERT INTO _conf_ VALUES ('statEnableOld','false');
 INSERT INTO _conf_ VALUES ('defaultDisableUpload','false');
 INSERT INTO _conf_ VALUES ('showDocActionAllowedDocids','4');
-INSERT INTO _conf_ VALUES ('webEnableIPs','#localhost,127.0.0.1,10.,192.168.,#interway,85.248.107.8,195.168.35.4,195.168.35.5,#klient,');
 INSERT INTO _conf_ VALUES ('inlineEditingEnabled','true');
 INSERT INTO _conf_ VALUES ('disableWebJETToolbar','true');
+INSERT INTO _conf_ VALUES ('logLevel','debug');

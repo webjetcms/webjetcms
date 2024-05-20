@@ -78,7 +78,7 @@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %><%!
 		}
 		else
 		{
-			user.setPassword(PasswordSecurity.calculateHash(newPassword, user.getSalt()));
+			user.setPassword(newPassword);
 			UsersDB.saveUser(user);
 			request.setAttribute("success", true);
 		}

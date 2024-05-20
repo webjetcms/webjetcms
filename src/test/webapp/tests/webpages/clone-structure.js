@@ -36,6 +36,12 @@ function createGroup(I, DTE, groupName, language, isRootGroup) {
         I.groupSetRootParent();
         I.clickCss("#pills-dt-groups-datatable-template-tab");
         DTE.selectOption("lng", language);
+    } else {
+        I.click("#pills-dt-groups-datatable-fields-tab");
+        I.fillField("#DTE_Field_fieldA", "field_a_value");
+        I.fillField("#DTE_Field_fieldB", "field_b_value");
+        I.fillField("#DTE_Field_fieldC", "field_c_value");
+        I.fillField("#DTE_Field_fieldD", "field_d_value");
     }
 
     DTE.save();
@@ -58,7 +64,7 @@ async function checkBodyEN(I, DT, DTE, title, values) {
     I.click(doc_edit_button);
     DTE.waitForEditor();
 
-    //Check EN translated body
+    I.say("Check EN translated body");
     I.switchTo("iframe.cke_wysiwyg_frame");
     for(var i = 0; i < values.length; i++)
         I.see( values[i] );
@@ -67,7 +73,7 @@ async function checkBodyEN(I, DT, DTE, title, values) {
     DTE.cancel();
 }
 
-Scenario("Structure clonning with translate", async ({ I, DTE, DT, Document })  => {
+Scenario("Structure clonning with translate", async ({ I, DTE, DT })  => {
 
     //
     I.say("Preparing source folder");
@@ -118,7 +124,7 @@ Scenario("Structure clonning with translate", async ({ I, DTE, DT, Document })  
         I.waitForText("Klonovanie štruktúry dokončené", 100);
 
     //
-    I.say("Check clonningresult");
+    I.say("Check clonning result");
         I.amOnPage("/admin/v9/webpages/web-pages-list/");
         I.click( locate("a.jstree-anchor").withText(destGroupName) );
 
@@ -127,6 +133,16 @@ Scenario("Structure clonning with translate", async ({ I, DTE, DT, Document })  
         I.click( locate("a.jstree-anchor").withText("Subfolder") );
 
         await checkBodyEN(I, DT, DTE, "Subfolder", ["new", "old", "oldest"]);
+
+        I.say("Check folder optional fields");
+        I.jstreeNavigate([destGroupName, srcGroupChildName]);
+        I.click(edit_button);
+        DTE.waitForEditor("groups-datatable");
+        I.click("#pills-dt-groups-datatable-fields-tab");
+        I.seeInField(locate("#groups-datatable_modal").find("#DTE_Field_fieldA"), "field_a_value");
+        I.seeInField(locate("#groups-datatable_modal").find("#DTE_Field_fieldB"), "field_b_value");
+        I.seeInField(locate("#groups-datatable_modal").find("#DTE_Field_fieldC"), "field_c_value");
+        I.seeInField(locate("#groups-datatable_modal").find("#DTE_Field_fieldD"), "field_d_value");
 });
 
 Scenario('delete data', ({ I, DTE }) => {

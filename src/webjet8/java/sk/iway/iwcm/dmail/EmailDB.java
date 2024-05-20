@@ -24,6 +24,7 @@ import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.DB;
 import sk.iway.iwcm.DBPool;
 import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.PageParams;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.LogonTools;
 import sk.iway.iwcm.database.ComplexQuery;
@@ -1761,6 +1762,52 @@ public class EmailDB
 		}
 
 		return isEmailDisabled;
+	}
+
+	/**
+	 * You can use this main method in cron to periodically send emails.
+	 * It expect one argument in pageParams format. Params are:
+	 * - groupId - userGroupId
+	 * - url - url to be sent in email
+	 * - senderName - name of sender
+	 * - senderEmail - email of sender
+	 * - subject - subject of email
+	 * - instanceId - unique ID of instance to verify last sending, it's verified against Audit DMAIL_AUTOSENDER
+	 * @param args
+	 */
+	public static void main(String[] args)
+	{
+		Logger.println(EmailDB.class, "EMailAction main:");
+		if (args != null && args.length > 0)
+		{
+			for (int i = 0; i < args.length; i++)
+				Logger.println(EmailDB.class,"   args[" + i + "]=" + args[i]);
+
+			PageParams pageParams = new PageParams(args[0]);
+
+			long createDate = Tools.getNow();
+			int userGroup = pageParams.getIntValue("groupId", -1);
+			StringBuilder url = new StringBuilder(pageParams.getValue("url", null));
+			String senderName = pageParams.getValue("senderName", null);
+			String senderEmail = pageParams.getValue("senderEmail", null);
+			String subject = pageParams.getValue("subject", null);
+			int instanceId = pageParams.getIntValue("instanceId", 0);
+
+			//otestuj, kedy sme boli naposledy spusteny
+			long lastDate = Adminlog.getLastDate(Adminlog.TYPE_DMAIL_AUTOSENDER, instanceId);
+
+			if (url.indexOf("?") == -1)
+				url.append('?');
+			else
+				url.append('&');
+
+			url.append("lastDmailDate=").append(lastDate);
+
+			EmailDB.saveEmails(userGroup, url.toString(), senderName, senderEmail, subject, null, -1, new Timestamp(createDate), null, null);
+			EmailDB.activateEmails(createDate);
+
+			Adminlog.add(Adminlog.TYPE_DMAIL_AUTOSENDER, instanceId, "sending email " + url, userGroup, instanceId);
+		}
 	}
 
 }

@@ -68,8 +68,8 @@ import sk.iway.iwcm.system.fulltext.lucene.LuceneUtils;
  */
 public class Documents extends Indexed
 {
-	private static final String SELECTING_SQL = "SELECT * FROM documents WHERE available=1 and searchable=1 ";
-	private static final String TOTAL_SQL = "SELECT count(doc_id) FROM documents WHERE available=1 and searchable=1" ;
+	private static final String SELECTING_SQL = "SELECT * FROM documents WHERE available=1 and searchable=1 AND (external_link IS NULL OR external_link NOT LIKE '/files/protected%') ";
+	private static final String TOTAL_SQL = "SELECT count(doc_id) FROM documents WHERE available=1 and searchable=1 AND (external_link IS NULL OR external_link NOT LIKE '/files/protected%') " ;
 	private String language;
 	private Collection<String> paths;
 
@@ -610,7 +610,7 @@ public class Documents extends Indexed
 					IndexWriterConfig config = new IndexWriterConfig(Version.LUCENE_31, AnalyzerFactory.getAnalyzer(Version.LUCENE_31, lng));
 					config.setOpenMode(OpenMode.APPEND);
 					writer = new IndexWriter(FulltextSearch.getIndexDirectory(lng), config);
-					if(rs.getBoolean("available") == false || rs.getBoolean("searchable") == false)
+					if(rs.getBoolean("available") == false || rs.getBoolean("searchable") == false || isProtectedFile(rs.getString("external_link")))
 					{
 						writer.deleteDocuments(new Term("doc_id", Integer.toString(docId)));
 					}
@@ -678,7 +678,7 @@ public class Documents extends Indexed
 			try
 			{
 				db_conn = DBPool.getConnection();
-				ps = db_conn.prepareStatement("select * from documents where doc_id = ? ");
+				ps = db_conn.prepareStatement("SELECT * FROM documents WHERE doc_id = ? ");
 				ps.setInt(1, docId);
 				rs = ps.executeQuery();
 				while (rs.next())
@@ -744,5 +744,10 @@ public class Documents extends Indexed
 		if (Tools.isEmpty(defaultLanguage)) defaultLanguage = "sk";
 
 		return defaultLanguage;
+	}
+
+	private static boolean isProtectedFile(String externalLink) {
+		if (Tools.isNotEmpty(externalLink) && externalLink.startsWith("/files/protected")) return true;
+		return false;
 	}
 }
